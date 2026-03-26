@@ -1,0 +1,5 @@
+/finanzas-app/backend/dist/
+/finanzas-app/backend/node_modules/
+/finanzas-app/frontend/.next/
+/finanzas-app/frontend/node_modules/
+/AGENTS.md

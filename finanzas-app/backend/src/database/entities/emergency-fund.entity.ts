@@ -1,0 +1,24 @@
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { User } from './user.entity';
+
+@Entity('emergency_funds')
+export class EmergencyFund {
+  @PrimaryGeneratedColumn('uuid') id: string;
+  @Column() name: string;
+  @Column({ type: 'int', default: 6 }) targetMonths: number;
+  @Column({ type: 'int', default: 3 }) minimumMonths: number;
+  @Column({ type: 'int', default: 24 }) savingPeriodMonths: number;
+  @OneToMany(() => ExpenseCategory, cat => cat.fund, { cascade: true, eager: true }) categories: ExpenseCategory[];
+  @ManyToOne(() => User, { nullable: true }) owner: User;
+  @CreateDateColumn() createdAt: Date;
+  @UpdateDateColumn() updatedAt: Date;
+}
+
+@Entity('expense_categories')
+export class ExpenseCategory {
+  @PrimaryGeneratedColumn('uuid') id: string;
+  @Column() name: string;
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) monthlyAmount: number;
+  @Column({ default: 0 }) sortOrder: number;
+  @ManyToOne(() => EmergencyFund, fund => fund.categories, { onDelete: 'CASCADE' }) fund: EmergencyFund;
+}
