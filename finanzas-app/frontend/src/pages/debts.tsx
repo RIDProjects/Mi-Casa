@@ -5,7 +5,7 @@ import { debtsAPI } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, CheckCircle, DollarSign, Calendar, Clock } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, DollarSign, Calendar, Clock, User } from 'lucide-react';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me' };
@@ -18,43 +18,53 @@ export default function DebtsPage() {
   const [form, setForm] = useState<any>(defaultForm);
   const [paidDebtInfo, setPaidDebtInfo] = useState<any>(null);
 
-  const { data: debts = [], isLoading: loadingDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0, refetchOnMount: true });
-  const { data: summary, isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0, refetchOnMount: true });
+  const { data: debts = [], isLoading: loadingDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
+  const { data: summary, isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
+
+  // Función para actualizar el cache directamente sin parpadeo
+  const updateDebtsCache = () => {
+    debtsAPI.getAll().then(r => {
+      qc.setQueryData('debts', r.data);
+    });
+    debtsAPI.getSummary().then(r => {
+      qc.setQueryData('debtsSummary', r.data);
+    });
+  };
 
   const createMut = useMutation((d: any) => debtsAPI.create(d), {
     onSuccess: () => {
       toast.success('Deuda registrada');
       setShowModal(false);
       setForm(defaultForm);
-      // Refrescar datos inmediatamente
-      qc.invalidateQueries(['debts', 'debtsSummary']);
-      qc.refetchQueries(['debts', 'debtsSummary']);
+      // Actualizar cache inmediatamente
+      updateDebtsCache();
     },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
+  
   const updateMut = useMutation((d: any) => debtsAPI.update(editDebt?.id, d), {
     onSuccess: () => {
       toast.success('Deuda actualizada');
       setEditDebt(null);
       setShowModal(false);
-      // Refrescar datos inmediatamente
-      qc.invalidateQueries(['debts', 'debtsSummary']);
-      qc.refetchQueries(['debts', 'debtsSummary']);
+      // Actualizar cache inmediatamente
+      updateDebtsCache();
     },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
+  
   const deleteMut = useMutation((id: string) => debtsAPI.delete(id), {
     onSuccess: () => {
       toast.success('Eliminada');
       setDeleteId(null);
-      // Refrescar datos inmediatamente
-      qc.invalidateQueries(['debts', 'debtsSummary']);
-      qc.refetchQueries(['debts', 'debtsSummary']);
+      // Actualizar cache inmediatamente
+      updateDebtsCache();
     },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
+  
   const markPaidMut = useMutation((id: string) => debtsAPI.update(id, { isPaid: true }), {
-    onSuccess: (response, id) => {
+    onSuccess: (res, id) => {
       const debt = debts.find((d: any) => d.id === id);
       const now = new Date();
       setPaidDebtInfo({
@@ -65,9 +75,8 @@ export default function DebtsPage() {
         originalNote: debt?.note,
       });
       toast.success('Marcada como pagada ✅');
-      // Refrescar datos inmediatamente
-      qc.invalidateQueries(['debts', 'debtsSummary']);
-      qc.refetchQueries(['debts', 'debtsSummary']);
+      // Actualizar cache inmediatamente
+      updateDebtsCache();
     },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
@@ -76,10 +85,6 @@ export default function DebtsPage() {
     setForm({ personName: d.personName, amount: d.amount, note: d.note || '', type: d.type });
     setEditDebt(d);
     setShowModal(true);
-  };
-
-  const handleMarkPaid = (d: any) => {
-    markPaidMut.mutate(d.id);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,6 +112,7 @@ export default function DebtsPage() {
 
   return (
     <Layout>
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">💸 Gestor de Deudas</h1>
@@ -117,6 +123,7 @@ export default function DebtsPage() {
         </button>
       </div>
 
+      {/* Summary Banner */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -138,13 +145,15 @@ export default function DebtsPage() {
         </div>
       </div>
 
+      {/* Main Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 💙 ME DEBEN */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="bg-blue-50 dark:bg-blue-900/30 px-4 py-3 border-b border-blue-100 dark:border-blue-800">
             <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">💙 ME DEBEN</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">👤 Persona</th>
                 <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">💰 Monto</th>
@@ -160,7 +169,7 @@ export default function DebtsPage() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => handleMarkPaid(d)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
+                      <button onClick={() => markPaidMut.mutate(d.id)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
                         <CheckCircle size={16} />
                       </button>
                       <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
@@ -189,12 +198,13 @@ export default function DebtsPage() {
           </table>
         </div>
 
+        {/* ❤️ LES DEBO */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="bg-red-50 dark:bg-red-900/30 px-4 py-3 border-b border-red-100 dark:border-red-800">
             <h2 className="text-lg font-semibold text-red-900 dark:text-red-300">❤️ LES DEBO</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">👤 Persona</th>
                 <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">💰 Monto</th>
@@ -210,7 +220,7 @@ export default function DebtsPage() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => handleMarkPaid(d)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
+                      <button onClick={() => markPaidMut.mutate(d.id)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
                         <CheckCircle size={16} />
                       </button>
                       <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
@@ -240,13 +250,14 @@ export default function DebtsPage() {
         </div>
       </div>
 
+      {/* Paid Debts History */}
       {paidDebts.length > 0 && (
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b">
             <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">✅ Deudas Pagadas ({paidDebts.length})</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Persona</th>
                 <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Monto</th>
@@ -266,6 +277,7 @@ export default function DebtsPage() {
         </div>
       )}
 
+      {/* Modal for Create/Edit */}
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditDebt(null); }} title={editDebt ? 'Editar deuda' : 'Registrar deuda'}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -300,53 +312,44 @@ export default function DebtsPage() {
         </form>
       </Modal>
 
-      <Modal isOpen={!!paidDebtInfo} onClose={() => setPaidDebtInfo(null)} title="✅ Pago Registrado">
-        <div className="space-y-4">
-          <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-              <div>
-                <p className="font-semibold text-green-900 dark:text-green-300">Pago confirmado</p>
-                <p className="text-sm text-green-700 dark:text-green-400">
-                  {paidDebtInfo?.type === 'they_owe_me' ? 'Te pagaron' : 'Pagaste a'} <span className="font-medium">{paidDebtInfo?.personName}</span>
-                </p>
+      {/* Modal for Paid Debt Info */}
+      <Modal isOpen={!!paidDebtInfo} onClose={() => setPaidDebtInfo(null)} title="✅ Deuda Pagada">
+        {paidDebtInfo && (
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
+              <CheckCircle size={48} className="mx-auto text-green-600 dark:text-green-400 mb-2" />
+              <p className="text-green-800 dark:text-green-300 font-semibold">¡Pago registrado!</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <User size={18} className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Persona</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{paidDebtInfo.personName}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <DollarSign size={18} className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Monto pagado</p>
+                  <p className="font-medium text-green-600 dark:text-green-400">${fmt(paidDebtInfo.amount)}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <Calendar size={18} className="text-gray-500 dark:text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Fecha de pago</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{paidDebtInfo.paidAt?.toString()}</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-              <DollarSign className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm">Monto:</span>
-              <span className="font-bold ml-auto">${fmt(paidDebtInfo?.amount || 0)}</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-              <Calendar className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm">Fecha:</span>
-              <span className="font-medium ml-auto">{paidDebtInfo?.paidAt ? new Date(paidDebtInfo.paidAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) : '-'}</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-              <Clock className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-              <span className="text-sm">Hora:</span>
-              <span className="font-medium ml-auto">{paidDebtInfo?.paidAt ? new Date(paidDebtInfo.paidAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : '-'}</span>
-            </div>
+            <button onClick={() => setPaidDebtInfo(null)} className="btn-primary w-full">Cerrar</button>
           </div>
-
-          {paidDebtInfo?.originalNote && (
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Nota original:</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg p-2">
-                {paidDebtInfo.originalNote}
-              </p>
-            </div>
-          )}
-
-          <div className="flex justify-end pt-2">
-            <button onClick={() => setPaidDebtInfo(null)} className="btn-primary">
-              Entendido
-            </button>
-          </div>
-        </div>
+        )}
       </Modal>
 
       <ConfirmDialog isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => deleteMut.mutate(deleteId!)} loading={deleteMut.isLoading} />

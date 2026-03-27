@@ -12,7 +12,7 @@ export default function UsersPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', email: '', password: '', whatsappNumber: '', roleIds: [] as string[] });
+  const [form, setForm] = useState({ name: '', email: '', password: '', roleIds: [] as string[] });
 
   const { data: users = [] } = useQuery('users', () => usersAPI.getAll().then(r => r.data));
   const { data: roles = [] } = useQuery('roles', () => rolesAPI.getAll().then(r => r.data));
@@ -31,10 +31,10 @@ export default function UsersPage() {
     onSuccess: () => { qc.invalidateQueries('users'); toast.success('Usuario eliminado'); setDeleteId(null); },
   });
 
-  const resetForm = () => setForm({ name: '', email: '', password: '', whatsappNumber: '', roleIds: [] });
+  const resetForm = () => setForm({ name: '', email: '', password: '', roleIds: [] });
 
   const handleEdit = (user: any) => {
-    setForm({ name: user.name, email: user.email, password: '', whatsappNumber: user.whatsappNumber || '', roleIds: user.roles?.map(r => r.id) || [] });
+    setForm({ name: user.name, email: user.email, password: '', roleIds: user.roles?.map(r => r.id) || [] });
     setEditUser(user);
   };
 
@@ -58,10 +58,6 @@ export default function UsersPage() {
       <div>
         <label className="label">Contraseña {editUser && '(dejar vacío para no cambiar)'}</label>
         <input type="password" className="input" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} {...(!editUser && { required: true })} />
-      </div>
-      <div>
-        <label className="label">WhatsApp (para alertas)</label>
-        <input className="input" value={form.whatsappNumber} onChange={e => setForm({ ...form, whatsappNumber: e.target.value })} placeholder="+5491112345678" />
       </div>
       <div>
         <label className="label">Roles</label>
@@ -103,7 +99,7 @@ export default function UsersPage() {
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-700 border-b">
             <tr>
-              {['Nombre', 'Email', 'Roles', 'Estado', 'WhatsApp', 'Acciones'].map(h => (
+              {['Nombre', 'Email', 'Roles', 'Estado', 'Acciones'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -134,7 +130,6 @@ export default function UsersPage() {
                     <span className="badge-out flex items-center gap-1 w-fit"><UserX size={12} /> Inactivo</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{user.whatsappNumber || '-'}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <button onClick={() => handleEdit(user)} className="text-blue-600 hover:text-blue-700 p-1">

@@ -24,6 +24,12 @@ interface Product {
   unitPrice: number;
 }
 
+interface ProductFormData {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 interface MonthData {
   products: Product[];
   montoUSD: number;
@@ -34,7 +40,7 @@ type StorageData = Record<string, MonthData>;
 
 const generateId = () => Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 
-const defaultProduct = { name: '', quantity: 1, unitPrice: 0 };
+const defaultProduct: ProductFormData = { name: '', quantity: 1, unitPrice: 0 };
 
 export default function PurchasesPage() {
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`);
@@ -43,7 +49,7 @@ export default function PurchasesPage() {
   const [tasaCambio, setTasaCambio] = useState<number>(515);
   const [showProductModal, setShowProductModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
-  const [productForm, setProductForm] = useState<Product>(defaultProduct);
+  const [productForm, setProductForm] = useState<ProductFormData>(defaultProduct);
 
   useEffect(() => {
     const stored = localStorage.getItem('purchases-data');
@@ -126,7 +132,7 @@ export default function PurchasesPage() {
   };
 
   const handleOpenEdit = (product: Product) => {
-    setProductForm({ id: product.id, name: product.name, quantity: product.quantity, unitPrice: product.unitPrice });
+    setProductForm({ name: product.name, quantity: product.quantity, unitPrice: product.unitPrice });
     setEditProduct(product);
     setShowProductModal(true);
   };

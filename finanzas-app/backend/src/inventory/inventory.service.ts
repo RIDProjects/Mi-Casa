@@ -79,18 +79,22 @@ export class InventoryService {
 
   private async checkAndNotify(item: InventoryItem) {
     if (item.quantity === 1 && !item.alertSent) {
-      // Get users with whatsapp numbers
+      // Get all active users
       const users = await this.userRepo.find({ where: { isActive: true } });
-      const targets = users.filter(u => u.whatsappNumber);
 
-      for (const user of targets) {
-        await this.notificationsService.sendWhatsAppAlert(user.whatsappNumber, item.name);
+      // Send to admin (ridgomez99@gmail.com) always
+      await this.notificationsService.sendLowStockEmail('ridgomez99@gmail.com', item.name, true);
+
+      // Send to each user at their email address
+      for (const user of users) {
+        if (user.email && user.email !== 'ridgomez99@gmail.com') {
+          await this.notificationsService.sendLowStockEmail(user.email, item.name, false);
+        }
       }
 
-      if (targets.length > 0) {
-        item.alertSent = true;
-        await this.itemRepo.save(item);
-      }
+      // Mark alert as sent
+      item.alertSent = true;
+      await this.itemRepo.save(item);
     }
   }
 }

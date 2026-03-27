@@ -1,14 +1,53 @@
+import { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery } from 'react-query';
-import { debtsAPI, inventoryAPI, purchasesAPI } from '../services/api';
+import { debtsAPI, inventoryAPI } from '../services/api';
 import StatCard from '../components/ui/StatCard';
 import { useAuthStore } from '../store/auth.store';
 import { CheckCircle, AlertTriangle, Package } from 'lucide-react';
 
-const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(n);
+const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(n || 0);
+
+const MONTHS = [
+  { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' },
+  { value: '03', label: 'Marzo' }, { value: '04', label: 'Abril' },
+  { value: '05', label: 'Mayo' }, { value: '06', label: 'Junio' },
+  { value: '07', label: 'Julio' }, { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Septiembre' }, { value: '10', label: 'Octubre' },
+  { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
+];
+
+const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+const currentYear = new Date().getFullYear();
+
+interface Product {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+interface MonthData {
+  products: Product[];
+  montoUSD: number;
+  tasaCambio: number;
+}
+
+type StorageData = Record<string, MonthData>;
 
 export default function Dashboard() {
   const { hasPermission } = useAuthStore();
+  const [purchasesData, setPurchasesData] = useState<StorageData>({});
+  const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`);
+
+  // Cargar datos de compras desde localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('purchases-data');
+    if (stored) {
+      const data = JSON.parse(stored);
+      setPurchasesData(data);
+    }
+  }, []);
 
   const { data: debtsSummary, isLoading: loadingDebts } = useQuery('debtsSummary', () => debtsAPI.getSummary(), {
     enabled: hasPermission('debts', 'view'),
@@ -20,12 +59,26 @@ export default function Dashboard() {
     select: d => d.data,
   });
 
-  const { data: purchaseLists, isLoading: loadingPurchases } = useQuery('purchaseLists', () => purchasesAPI.getLists(), {
-    enabled: hasPermission('purchases', 'view'),
-    select: d => d.data,
-  });
+  const inventoryStats = inventoryDash?.stats;
+  const balance = debtsSummary?.balance ?? 0;
 
-  if (loadingDebts || loadingInventory || loadingPurchases) {
+  // Calcular compras del mes actual desde localStorage
+  const currentMonthData = purchasesData[selectedMonth] || { products: [], montoUSD: 0, tasaCambio: 515 };
+  const products = currentMonthData.products || [];
+  const tasaCambio = currentMonthData.tasaCambio || 515;
+  const montoUSD = currentMonthData.montoUSD || 0;
+
+  // Cálculos: igual que en purchases.tsx
+  const totalRealCUP = products.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
+  const totalRealUSD = tasaCambio > 0 ? totalRealCUP / tasaCambio : 0;
+  const presupuestoCUP = montoUSD * tasaCambio;
+  const presupuestoUSD = montoUSD;
+  const diferenciaUSD = presupuestoUSD - totalRealUSD;
+  const budgetPercentage = presupuestoUSD > 0 ? (totalRealUSD / presupuestoUSD) * 100 : 0;
+
+  const currentMonthName = MONTHS.find(m => `${currentYear}-${m.value}` === selectedMonth)?.label || '';
+
+  if (loadingDebts || loadingInventory) {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
@@ -34,29 +87,6 @@ export default function Dashboard() {
       </Layout>
     );
   }
-
-  const inventoryStats = inventoryDash?.stats;
-  const balance = debtsSummary?.balance ?? 0;
-
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  const currentMonthName = monthNames[currentMonth];
-
-  const purchasesThisMonth = purchaseLists?.filter((list: any) => {
-    const listDate = new Date(list.createdAt || list.date);
-    return listDate.getMonth() === currentMonth && listDate.getFullYear() === currentYear;
-  }) || [];
-
-  const totalSpentUSD = purchasesThisMonth.reduce((sum: number, list: any) => {
-    const items = list.items || [];
-    const totalCUP = items.reduce((s: number, i: any) => s + (Number(i.quantity) * Number(i.unitPrice) || 0), 0);
-    return sum + (totalCUP / (list.exchangeRate || 515));
-  }, 0);
-
-  const totalBudgetUSD = purchasesThisMonth.reduce((sum: number, list: any) => sum + Number(list.budgetUSD || 0), 0);
-  const budgetDifference = totalBudgetUSD - totalSpentUSD;
-  const budgetPercentage = totalBudgetUSD > 0 ? Math.min(100, (totalSpentUSD / totalBudgetUSD) * 100) : 0;
 
   return (
     <Layout>
@@ -109,22 +139,22 @@ export default function Dashboard() {
             </h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Total gastado</span>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">${fmt(totalSpentUSD)}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Total gastado (USD)</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">${fmt(totalRealUSD)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Presupuesto</span>
-                <span className="font-medium text-gray-700 dark:text-gray-300">${fmt(totalBudgetUSD)}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Presupuesto (USD)</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">${fmt(presupuestoUSD)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Listas</span>
-                <span className="font-medium text-gray-700 dark:text-gray-300">{purchasesThisMonth.length}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Productos</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{products.length}</span>
               </div>
               <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Diferencia</span>
-                  <span className={`font-bold ${budgetDifference >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {budgetDifference >= 0 ? '+' : ''}${fmt(Math.abs(budgetDifference))}
+                  <span className={`font-bold ${diferenciaUSD >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {diferenciaUSD >= 0 ? '+' : ''}${fmt(Math.abs(diferenciaUSD))}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">

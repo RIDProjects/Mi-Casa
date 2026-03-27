@@ -315,7 +315,7 @@ export default function InventoryPage() {
           </div>
           {form.quantity === 1 && (
             <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
-              ⚠️ Cantidad = 1: Se enviará alerta por WhatsApp a los usuarios configurados.
+              ⚠️ Cantidad = 1: Se enviará alerta por email a los usuarios.
             </div>
           )}
           <div className="flex justify-end gap-3 pt-2">
