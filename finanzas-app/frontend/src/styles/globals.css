@@ -3,13 +3,73 @@
 @tailwind utilities;
 
 @layer components {
-  .card { @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6; }
-  .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer; }
-  .btn-secondary { @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer; }
-  .btn-danger { @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer; }
-  .input { @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent; }
-  .label { @apply block text-sm font-medium text-gray-700 mb-1; }
-  .badge-ok { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700; }
-  .badge-last { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700; }
-  .badge-out { @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700; }
+  /* Cards - white in light mode, dark gray in dark mode */
+  .card { 
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6;
+    @apply transition-colors duration-200;
+  }
+  
+  /* Primary button */
+  .btn-primary { 
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer;
+    @apply dark:bg-blue-600 dark:hover:bg-blue-700;
+  }
+  
+  /* Secondary button */
+  .btn-secondary { 
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer;
+    @apply dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200;
+  }
+  
+  /* Danger button */
+  .btn-danger { 
+    @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer;
+  }
+  
+  /* Input fields */
+  .input { 
+    @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm;
+    @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    @apply placeholder-gray-400 dark:placeholder-gray-500;
+  }
+  
+  /* Labels */
+  .label { 
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; 
+  }
+  
+  /* Badges */
+  .badge-ok { 
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300;
+  }
+  .badge-last { 
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300;
+  }
+  .badge-out { 
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300;
+  }
+}
+
+/* Dark mode specific overrides for tables */
+@layer utilities {
+  .dark table thead {
+    @apply bg-gray-700;
+  }
+  
+  .dark table th {
+    @apply text-gray-300;
+  }
+  
+  .dark table td {
+    @apply text-gray-300;
+  }
+  
+  .dark table tbody tr {
+    @apply hover:bg-gray-700;
+  }
+  
+  .dark .card th {
+    @apply text-gray-400 uppercase tracking-wider;
+  }
 }

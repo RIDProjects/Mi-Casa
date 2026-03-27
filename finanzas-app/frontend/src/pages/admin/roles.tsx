@@ -70,69 +70,98 @@ export default function RolesPage() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-8">
-        <div><h1 className="text-2xl font-bold text-gray-900">🛡️ Roles y Permisos</h1><p className="text-gray-500 mt-1">Control de acceso basado en roles (RBAC)</p></div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🛡️ Roles y Permisos</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Control de acceso basado en roles (RBAC)</p>
+        </div>
         <button onClick={() => { setForm({ name: '', description: '', permissionIds: [] }); setEditRole(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Nuevo rol
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Roles Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {roles.map((role: any) => (
-          <div key={role.id} className="card">
+          <div key={role.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-100 rounded-lg text-primary-600"><Shield size={20}/></div>
-                <div><p className="font-semibold text-gray-900">{role.name}</p><p className="text-xs text-gray-400">{role.description}</p></div>
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{role.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{role.description}</p>
+                </div>
               </div>
               <div className="flex gap-1">
-                <button onClick={() => handleEdit(role)} className="text-primary-600 hover:text-primary-700 p-1"><Edit2 size={16}/></button>
-                <button onClick={() => setDeleteId(role.id)} className="text-danger-600 hover:text-danger-700 p-1"><Trash2 size={16}/></button>
+                <button onClick={() => handleEdit(role)} className="text-blue-600 hover:text-blue-700 p-1">
+                  <Edit2 size={16} />
+                </button>
+                <button onClick={() => setDeleteId(role.id)} className="text-red-600 hover:text-red-700 p-1">
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {role.permissions?.slice(0, 8).map((p: any) => (
-                <span key={p.id} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{p.module}:{p.action}</span>
+                <span key={p.id} className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
+                  {p.module}:{p.action}
+                </span>
               ))}
               {role.permissions?.length > 8 && <span className="text-xs text-gray-400">+{role.permissions.length - 8} más</span>}
             </div>
           </div>
         ))}
+        {roles.length === 0 && (
+          <div className="col-span-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-center text-gray-400 dark:text-gray-500 py-12">
+            No hay roles creados
+          </div>
+        )}
       </div>
 
+      {/* Modal */}
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditRole(null); }} title={editRole ? 'Editar rol' : 'Nuevo rol'} size="lg">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Nombre del rol</label><input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /></div>
-            <div><label className="label">Descripción</label><input className="input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} /></div>
+            <div>
+              <label className="label">Nombre del rol</label>
+              <input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
+            </div>
+            <div>
+              <label className="label">Descripción</label>
+              <input className="input" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+            </div>
           </div>
           <div>
             <label className="label">Permisos por módulo</label>
-            <div className="border rounded-xl overflow-hidden">
+            <div className="border dark:border-gray-600 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr><th className="px-3 py-2 text-left font-medium text-gray-600">Módulo</th>
-                    {ACTIONS.map(a => <th key={a} className="px-3 py-2 text-center font-medium text-gray-600 capitalize">{a}</th>)}
-                    <th className="px-3 py-2 text-center font-medium text-gray-600">Todos</th>
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Módulo</th>
+                    {ACTIONS.map(a => <th key={a} className="px-3 py-2 text-center font-medium text-gray-600 dark:text-gray-300 capitalize">{a}</th>)}
+                    <th className="px-3 py-2 text-center font-medium text-gray-600 dark:text-gray-300">Todos</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {MODULES.map(mod => (
-                    <tr key={mod} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 font-medium text-gray-700">{moduleLabels[mod]}</td>
+                    <tr key={mod} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-3 py-2 font-medium text-gray-700 dark:text-gray-300">{moduleLabels[mod]}</td>
                       {ACTIONS.map(action => {
                         const pid = getPermId(mod, action);
                         return (
                           <td key={action} className="px-3 py-2 text-center">
                             {pid && <input type="checkbox" checked={form.permissionIds.includes(pid)}
-                              onChange={() => togglePerm(pid)} className="cursor-pointer" />}
+                              onChange={() => togglePerm(pid)} className="cursor-pointer accent-blue-600" />}
                           </td>
                         );
                       })}
                       <td className="px-3 py-2 text-center">
                         <input type="checkbox" onChange={() => toggleModule(mod)}
                           checked={permissions.filter(p => p.module === mod).every(p => form.permissionIds.includes(p.id))}
-                          className="cursor-pointer accent-primary-600" />
+                          className="cursor-pointer accent-blue-600" />
                       </td>
                     </tr>
                   ))}

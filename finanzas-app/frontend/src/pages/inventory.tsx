@@ -4,9 +4,8 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { inventoryAPI } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import StatCard from '../components/ui/StatCard';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, Package } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 
 const LOCATIONS = [
   { value: 'nevera', label: '🥶 Nevera' },
@@ -28,11 +27,10 @@ export default function InventoryPage() {
   const qc = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
-  const [deleteId, setDeleteId] = useState<string|null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
   const [search, setSearch] = useState('');
   const [filterLoc, setFilterLoc] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
 
   const { data: dashboard, isLoading, error } = useQuery('inventoryDash', () => inventoryAPI.getDashboard().then(r => r.data));
 
@@ -67,7 +65,7 @@ export default function InventoryPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Cargando inventario...</div>
+          <div className="text-gray-500 dark:text-gray-400">Cargando inventario...</div>
         </div>
       </Layout>
     );
@@ -77,137 +75,246 @@ export default function InventoryPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-red-500">Error al cargar inventario. ¿Estás autenticado?</div>
+          <div className="text-red-500 dark:text-red-400">Error al cargar inventario. ¿Estás autenticado?</div>
         </div>
       </Layout>
     );
   }
 
   const items = dashboard?.items || [];
-  const stats = dashboard?.stats || { total: 0, ok: 0, last: 0, outOfStock: 0 };
+
+  const itemsByLocation = LOCATIONS.reduce((acc, loc) => {
+    acc[loc.value] = items.filter((i: any) => i.location === loc.value);
+    return acc;
+  }, {} as Record<string, any[]>);
+
+  const outOfStock = items.filter((i: any) => i.quantity === 0);
+
   const filtered = items.filter((item: any) => {
     const matchSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
     const matchLoc = filterLoc === 'all' || item.location === filterLoc;
-    const matchStatus = filterStatus === 'all' || item.status === filterStatus;
-    return matchSearch && matchLoc && matchStatus;
+    return matchSearch && matchLoc;
   });
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">📦 Inventario</h1>
-          <p className="text-gray-500 mt-1">Control de productos y stock</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📦 Inventario</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Control de productos y stock</p>
         </div>
         <button onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18}/> Agregar producto
+          <Plus size={18} /> Agregar producto
         </button>
       </div>
 
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard title="Total productos" value={stats.total} icon={<Package size={20}/>} color="blue" />
-          <StatCard title="✅ OK" value={stats.ok} color="green" />
-          <StatCard title="⚠️ Último" value={stats.last} color="yellow" />
-          <StatCard title="❌ Sin stock" value={stats.outOfStock} color="red" />
-        </div>
-      )}
-
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
-        <input className="input w-64" placeholder="🔍 Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input 
+          className="input w-64" 
+          placeholder="🔍 Buscar producto..." 
+          value={search} 
+          onChange={e => setSearch(e.target.value)} 
+        />
         <select className="input w-48" value={filterLoc} onChange={e => setFilterLoc(e.target.value)}>
           <option value="all">📍 Todas las ubicaciones</option>
           {LOCATIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
         </select>
-        <select className="input w-44" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-          <option value="all">💡 Todos los estados</option>
-          <option value="ok">✅ OK</option>
-          <option value="last">⚠️ Último</option>
-          <option value="out_of_stock">❌ Sin stock</option>
-        </select>
       </div>
 
-      {/* Grouped by location */}
-      {filterLoc === 'all' && filterStatus === 'all' && !search ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {LOCATIONS.map(loc => {
-            const locItems = items.filter((i: any) => i.location === loc.value);
-            if (!locItems.length) return null;
-            return (
-              <div key={loc.value} className="card">
-                <h3 className="font-semibold text-gray-900 mb-4">{loc.label} <span className="text-gray-400 font-normal">({locItems.length})</span></h3>
-                <div className="space-y-2">
-                  {locItems.map((item: any) => (
-                    <div key={item.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">{item.name}</p>
-                        <p className="text-xs text-gray-400">Cant: {item.quantity}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <StatusBadge status={item.status} />
-                        <button onClick={() => handleEdit(item)} className="text-primary-500 hover:text-primary-700 p-1"><Edit2 size={14}/></button>
-                        <button onClick={() => setDeleteId(item.id)} className="text-danger-500 hover:text-danger-700 p-1"><Trash2 size={14}/></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                {['Producto','Cantidad','Ubicación','Estado','Acciones'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {filtered.map((item: any) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900 text-sm">{item.name}</td>
-                  <td className="px-4 py-3">
-                    <span className={`font-bold text-sm ${item.quantity === 0 ? 'text-danger-600' : item.quantity === 1 ? 'text-warning-600' : 'text-success-600'}`}>
-                      {item.quantity}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{LOCATIONS.find(l=>l.value===item.location)?.label || item.location}</td>
-                  <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button onClick={() => handleEdit(item)} className="text-primary-600 hover:text-primary-700 p-1"><Edit2 size={16}/></button>
-                      <button onClick={() => setDeleteId(item.id)} className="text-danger-600 hover:text-danger-700 p-1"><Trash2 size={16}/></button>
-                    </div>
-                  </td>
+      {filterLoc === 'all' && !search && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-cyan-50 dark:bg-cyan-900/30 px-4 py-2 border-b border-cyan-100 dark:border-cyan-800">
+              <h3 className="font-semibold text-cyan-900 dark:text-cyan-300">🧊 Frío</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs text-gray-500 dark:text-gray-400">Producto</th>
+                  <th className="px-3 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Cant.</th>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={5} className="text-center text-gray-400 py-12">No se encontraron productos</td></tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {(itemsByLocation['frio'] || []).map((item: any) => (
+                  <tr key={item.id}>
+                    <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.name}</td>
+                    <td className={`px-3 py-2 text-right font-medium ${item.quantity <= 1 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}`}>{item.quantity}</td>
+                  </tr>
+                ))}
+                {(!itemsByLocation['frio'] || itemsByLocation['frio'].length === 0) && (
+                  <tr><td colSpan={2} className="px-3 py-4 text-center text-gray-400 dark:text-gray-500 text-xs">Sin productos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-blue-50 dark:bg-blue-900/30 px-4 py-2 border-b border-blue-100 dark:border-blue-800">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-300">🥶 Nevera</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs text-gray-500 dark:text-gray-400">Producto</th>
+                  <th className="px-3 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Cant.</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {(itemsByLocation['nevera'] || []).map((item: any) => (
+                  <tr key={item.id}>
+                    <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.name}</td>
+                    <td className={`px-3 py-2 text-right font-medium ${item.quantity <= 1 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}`}>{item.quantity}</td>
+                  </tr>
+                ))}
+                {(!itemsByLocation['nevera'] || itemsByLocation['nevera'].length === 0) && (
+                  <tr><td colSpan={2} className="px-3 py-4 text-center text-gray-400 dark:text-gray-500 text-xs">Sin productos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-green-50 dark:bg-green-900/30 px-4 py-2 border-b border-green-100 dark:border-green-800">
+              <h3 className="font-semibold text-green-900 dark:text-green-300">🌽 Viandero</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs text-gray-500 dark:text-gray-400">Producto</th>
+                  <th className="px-3 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Cant.</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {(itemsByLocation['viandero'] || []).map((item: any) => (
+                  <tr key={item.id}>
+                    <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.name}</td>
+                    <td className={`px-3 py-2 text-right font-medium ${item.quantity <= 1 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}`}>{item.quantity}</td>
+                  </tr>
+                ))}
+                {(!itemsByLocation['viandero'] || itemsByLocation['viandero'].length === 0) && (
+                  <tr><td colSpan={2} className="px-3 py-4 text-center text-gray-400 dark:text-gray-500 text-xs">Sin productos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-orange-50 dark:bg-orange-900/30 px-4 py-2 border-b border-orange-100 dark:border-orange-800">
+              <h3 className="font-semibold text-orange-900 dark:text-orange-300">🏪 Alacena</h3>
+            </div>
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs text-gray-500 dark:text-gray-400">Producto</th>
+                  <th className="px-3 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Cant.</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {(itemsByLocation['alacena'] || []).map((item: any) => (
+                  <tr key={item.id}>
+                    <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.name}</td>
+                    <td className={`px-3 py-2 text-right font-medium ${item.quantity <= 1 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-600 dark:text-gray-400'}`}>{item.quantity}</td>
+                  </tr>
+                ))}
+                {(!itemsByLocation['alacena'] || itemsByLocation['alacena'].length === 0) && (
+                  <tr><td colSpan={2} className="px-3 py-4 text-center text-gray-400 dark:text-gray-500 text-xs">Sin productos</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {outOfStock.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-red-200 dark:border-red-800 overflow-hidden">
+              <div className="bg-red-50 dark:bg-red-900/30 px-4 py-2 border-b border-red-100 dark:border-red-800">
+                <h3 className="font-semibold text-red-900 dark:text-red-300">🚫 Sin Stock ({outOfStock.length})</h3>
+              </div>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs text-gray-500 dark:text-gray-400">Producto</th>
+                    <th className="px-3 py-2 text-right text-xs text-gray-500 dark:text-gray-400">Cant.</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {outOfStock.map((item: any) => (
+                    <tr key={item.id}>
+                      <td className="px-3 py-2 text-gray-800 dark:text-gray-200">{item.name}</td>
+                      <td className="px-3 py-2 text-right font-medium text-red-600 dark:text-red-400">{item.quantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">📋 Todos los Productos</h2>
+        </div>
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <tr>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">🧾 Producto</th>
+              <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">📊 Cant.</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">📍 Ubicación</th>
+              <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">💡 Estado</th>
+              <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Acc.</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            {filtered.map((item: any) => (
+              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{item.name}</td>
+                <td className="px-4 py-3 text-right">
+                  <span className={`font-bold ${item.quantity === 0 ? 'text-red-600 dark:text-red-400' : item.quantity === 1 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'}`}>
+                    {item.quantity}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{LOCATIONS.find(l => l.value === item.location)?.label || item.location}</td>
+                <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-center gap-1">
+                    <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"><Edit2 size={16} /></button>
+                    <button onClick={() => setDeleteId(item.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500">No se encontraron productos</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditItem(null); }} title={editItem ? 'Editar producto' : 'Agregar producto'}>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div><label className="label">Nombre del producto</label><input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /></div>
+          <div>
+            <label className="label">Nombre del producto</label>
+            <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+          </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="label">Cantidad</label><input type="number" min="0" className="input" value={form.quantity} onChange={e => setForm({...form, quantity: parseInt(e.target.value)||0})} required /></div>
+            <div>
+              <label className="label">Cantidad</label>
+              <input type="number" min="0" className="input" value={form.quantity} onChange={e => setForm({ ...form, quantity: parseInt(e.target.value) || 0 })} required />
+            </div>
             <div>
               <label className="label">Ubicación</label>
-              <select className="input" value={form.location} onChange={e => setForm({...form, location: e.target.value})}>
+              <select className="input" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })}>
                 {LOCATIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
               </select>
             </div>
           </div>
-          <div><label className="label">Notas (opcional)</label><input className="input" value={form.notes} onChange={e => setForm({...form, notes: e.target.value})} /></div>
+          <div>
+            <label className="label">Notas (opcional)</label>
+            <input className="input" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
           {form.quantity === 1 && (
-            <div className="bg-warning-50 border border-warning-200 rounded-lg p-3 text-sm text-warning-700">
+            <div className="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 text-sm text-yellow-700 dark:text-yellow-300">
               ⚠️ Cantidad = 1: Se enviará alerta por WhatsApp a los usuarios configurados.
             </div>
           )}

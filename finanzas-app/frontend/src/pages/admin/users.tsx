@@ -47,19 +47,30 @@ export default function UsersPage() {
 
   const UserForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div><label className="label">Nombre</label><input className="input" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required /></div>
-      <div><label className="label">Email</label><input type="email" className="input" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required /></div>
-      <div><label className="label">Contraseña {editUser && '(dejar vacío para no cambiar)'}</label>
-        <input type="password" className="input" value={form.password} onChange={e => setForm({...form, password: e.target.value})} {...(!editUser && { required: true })} /></div>
-      <div><label className="label">WhatsApp (para alertas)</label><input className="input" value={form.whatsappNumber} onChange={e => setForm({...form, whatsappNumber: e.target.value})} placeholder="+5491112345678" /></div>
+      <div>
+        <label className="label">Nombre</label>
+        <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+      </div>
+      <div>
+        <label className="label">Email</label>
+        <input type="email" className="input" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+      </div>
+      <div>
+        <label className="label">Contraseña {editUser && '(dejar vacío para no cambiar)'}</label>
+        <input type="password" className="input" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} {...(!editUser && { required: true })} />
+      </div>
+      <div>
+        <label className="label">WhatsApp (para alertas)</label>
+        <input className="input" value={form.whatsappNumber} onChange={e => setForm({ ...form, whatsappNumber: e.target.value })} placeholder="+5491112345678" />
+      </div>
       <div>
         <label className="label">Roles</label>
-        <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
+        <div className="space-y-2 max-h-40 overflow-y-auto border dark:border-gray-600 rounded-lg p-3">
           {roles.map((role: any) => (
             <label key={role.id} className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.roleIds.includes(role.id)}
-                onChange={e => setForm({...form, roleIds: e.target.checked ? [...form.roleIds, role.id] : form.roleIds.filter(id => id !== role.id)})} />
-              <span className="text-sm font-medium">{role.name}</span>
+                onChange={e => setForm({ ...form, roleIds: e.target.checked ? [...form.roleIds, role.id] : form.roleIds.filter(id => id !== role.id) })} />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{role.name}</span>
               <span className="text-xs text-gray-400">{role.description}</span>
             </label>
           ))}
@@ -76,57 +87,71 @@ export default function UsersPage() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-8">
-        <div><h1 className="text-2xl font-bold text-gray-900">👥 Usuarios</h1><p className="text-gray-500 mt-1">Gestión de usuarios del sistema</p></div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">👥 Usuarios</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gestión de usuarios del sistema</p>
+        </div>
         <button onClick={() => { resetForm(); setShowCreate(true); }} className="btn-primary flex items-center gap-2">
           <Plus size={18} /> Nuevo usuario
         </button>
       </div>
 
-      <div className="card overflow-hidden p-0">
+      {/* Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-gray-50 dark:bg-gray-700 border-b">
             <tr>
               {['Nombre', 'Email', 'Roles', 'Estado', 'WhatsApp', 'Acciones'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{h}</th>
+                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {users.map((user: any) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-bold">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
                       {user.name?.[0]?.toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">{user.email}</td>
+                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {user.roles?.map((r: any) => (
-                      <span key={r.id} className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-700">{r.name}</span>
+                      <span key={r.id} className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300">{r.name}</span>
                     ))}
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  {user.isActive ? <span className="badge-ok flex items-center gap-1 w-fit"><UserCheck size={12}/> Activo</span>
-                    : <span className="badge-out flex items-center gap-1 w-fit"><UserX size={12}/> Inactivo</span>}
+                  {user.isActive ? (
+                    <span className="badge-ok flex items-center gap-1 w-fit"><UserCheck size={12} /> Activo</span>
+                  ) : (
+                    <span className="badge-out flex items-center gap-1 w-fit"><UserX size={12} /> Inactivo</span>
+                  )}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500">{user.whatsappNumber || '-'}</td>
+                <td className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{user.whatsappNumber || '-'}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleEdit(user)} className="text-primary-600 hover:text-primary-700 p-1"><Edit2 size={16}/></button>
-                    <button onClick={() => setDeleteId(user.id)} className="text-danger-600 hover:text-danger-700 p-1"><Trash2 size={16}/></button>
+                    <button onClick={() => handleEdit(user)} className="text-blue-600 hover:text-blue-700 p-1">
+                      <Edit2 size={16} />
+                    </button>
+                    <button onClick={() => setDeleteId(user.id)} className="text-red-600 hover:text-red-700 p-1">
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {users.length === 0 && <p className="text-center text-gray-400 py-12">No hay usuarios registrados</p>}
+        {users.length === 0 && (
+          <div className="text-center text-gray-400 dark:text-gray-500 py-12">No hay usuarios registrados</div>
+        )}
       </div>
 
       <Modal isOpen={showCreate || !!editUser} onClose={() => { setShowCreate(false); setEditUser(null); }}
