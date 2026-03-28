@@ -28,10 +28,10 @@ export class JwtAuthGuard implements CanActivate {
       const payload = this.jwtService.verify(token) as { sub: string; email: string };
       console.log('[JWT Guard] Payload:', payload);
       
-      // Load user with roles and permissions from database
+      // Load user with roles, permissions and house from database
       const user = await this.userRepo.findOne({
         where: { id: payload.sub, isActive: true },
-        relations: ['roles', 'roles.permissions']
+        relations: ['roles', 'roles.permissions', 'house']
       });
       
       console.log('[JWT Guard] User loaded:', user?.email, 'roles:', user?.roles?.length);

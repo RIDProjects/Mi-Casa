@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import { useThemeStore } from '../store/theme.store';
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const router = useRouter();
@@ -12,6 +12,7 @@ export default function Login() {
   const { theme, toggleTheme } = useThemeStore();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +24,10 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(data.user));
       setAuth(data.user, data.access_token);
       toast.success('¡Bienvenido!');
-      router.push('/dashboard');
+      
+      // Redirect based on role
+      const isAdminGlobal = data.user.roles?.some((r: any) => r.name === 'admin');
+      router.push(isAdminGlobal ? '/admin' : '/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Credenciales inválidas');
     } finally {
@@ -47,9 +51,9 @@ export default function Login() {
 
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">💰</div>
-          <h1 className="text-3xl font-bold text-white">FinanzasApp</h1>
-          <p className="text-blue-200 mt-2">Sistema de gestión financiera</p>
+          <div className="text-5xl mb-4">🏠</div>
+          <h1 className="text-3xl font-bold text-white">Mi Casa Pro</h1>
+          <p className="text-blue-200 mt-2">Gestión financiera de tu hogar</p>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
@@ -62,13 +66,37 @@ export default function Login() {
             </div>
             <div>
               <label className="label">Contraseña</label>
-              <input type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})}
-                className="input" placeholder="••••••••" required />
+              <div className="relative">
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  value={form.password} 
+                  onChange={e => setForm({...form, password: e.target.value})}
+                  className="input pr-10" 
+                  placeholder="••••••••" 
+                  required 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              ¿No tienes una cuenta?{' '}
+              <button onClick={() => router.push('/register')} className="text-blue-600 hover:text-blue-700 font-medium">
+                Regístrate aquí
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

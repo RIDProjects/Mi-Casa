@@ -13,16 +13,26 @@ export class DebtsController {
   constructor(private debtsService: DebtsService) {}
 
   @Get() @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Listar todas las deudas' })
-  findAll(@Request() req) { return this.debtsService.findAll(); }
+  findAll(@Request() req) {
+    const houseId = req.user.house?.id;
+    return this.debtsService.findAll(houseId);
+  }
 
   @Get('summary') @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Resumen de deudas' })
-  getSummary(@Request() req) { return this.debtsService.getSummary(); }
+  getSummary(@Request() req) {
+    const houseId = req.user.house?.id;
+    return this.debtsService.getSummary(houseId);
+  }
 
   @Get(':id') @RequirePermission('debts', 'view')
   findOne(@Param('id') id: string) { return this.debtsService.findOne(id); }
 
   @Post() @RequirePermission('debts', 'create') @ApiOperation({ summary: 'Registrar deuda' })
-  create(@Body() dto: any, @Request() req) { return this.debtsService.create(dto, req.user.id); }
+  create(@Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id;
+    if (!houseId) throw new Error('Usuario no pertenece a una casa');
+    return this.debtsService.create(dto, houseId);
+  }
 
   @Put(':id') @RequirePermission('debts', 'edit')
   update(@Param('id') id: string, @Body() dto: any) { return this.debtsService.update(id, dto); }

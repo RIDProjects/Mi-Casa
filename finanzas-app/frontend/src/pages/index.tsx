@@ -4,9 +4,13 @@ import { useAuthStore } from '../store/auth.store';
 
 export default function Home() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isAdminGlobal } = useAuthStore();
   useEffect(() => {
-    router.replace(isAuthenticated ? '/dashboard' : '/login');
-  }, [isAuthenticated]);
+    if (isAuthenticated) {
+      router.replace(isAdminGlobal() ? '/admin' : '/dashboard');
+    } else {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, isAdminGlobal]);
   return null;
 }

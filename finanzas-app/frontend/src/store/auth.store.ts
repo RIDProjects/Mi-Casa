@@ -1,13 +1,23 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface User { id: string; name: string; email: string; roles: any[]; }
+interface House { id: string; name: string; }
+
+interface User { 
+  id: string; 
+  name: string; 
+  email: string; 
+  roles: any[]; 
+  house?: House;
+}
 
 interface AuthStore {
   user: User | null; token: string | null; isAuthenticated: boolean;
   setAuth: (user: User, token: string) => void;
   logout: () => void;
   hasPermission: (module: string, action: string) => boolean;
+  isAdminGlobal: () => boolean;
+  isHouseAdmin: () => boolean;
 }
 
 // Initialize from localStorage to avoid hydration issues
@@ -36,9 +46,19 @@ export const useAuthStore = create<AuthStore>()(
       hasPermission: (module, action) => {
         const { user } = get();
         if (!user) return false;
-        const isAdmin = user.roles?.some(r => r.name === 'admin');
+        const isAdmin = user.roles?.some(r => r.name === 'admin' || r.name === 'house_admin');
         if (isAdmin) return true;
         return user.roles?.some(role => role.permissions?.some(p => p.module === module && p.action === action)) ?? false;
+      },
+      isAdminGlobal: () => {
+        const { user } = get();
+        if (!user) return false;
+        return user.roles?.some(r => r.name === 'admin') ?? false;
+      },
+      isHouseAdmin: () => {
+        const { user } = get();
+        if (!user) return false;
+        return user.roles?.some(r => r.name === 'house_admin') ?? false;
       },
     }),
     { name: 'auth-store' }

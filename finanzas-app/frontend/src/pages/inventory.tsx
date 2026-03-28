@@ -2,10 +2,11 @@ import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { inventoryAPI } from '../services/api';
+import { useAuthStore } from '../store/auth.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Lock } from 'lucide-react';
 
 const LOCATIONS = [
   { value: 'nevera', label: '🥶 Nevera' },
@@ -25,6 +26,11 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export default function InventoryPage() {
   const qc = useQueryClient();
+  const { hasPermission } = useAuthStore();
+  const canCreate = hasPermission('inventory', 'create');
+  const canEdit = hasPermission('inventory', 'edit');
+  const canDelete = hasPermission('inventory', 'delete');
+  
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -34,19 +40,22 @@ export default function InventoryPage() {
 
   const { data: dashboard, isLoading, error } = useQuery('inventoryDash', () => inventoryAPI.getDashboard().then(r => r.data));
 
+  // Helper to extract error message safely
+  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
+
   const createMut = useMutation((d: any) => inventoryAPI.create(d), {
     onSuccess: () => { toast.success('Producto creado'); setShowModal(false); setForm(defaultForm); },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('inventoryDash'); },
   });
   const updateMut = useMutation((d: any) => inventoryAPI.update(editItem?.id, d), {
     onSuccess: () => { toast.success('Actualizado'); setEditItem(null); setShowModal(false); },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('inventoryDash'); },
   });
   const deleteMut = useMutation((id: string) => inventoryAPI.delete(id), {
     onSuccess: () => { toast.success('Eliminado'); setDeleteId(null); },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('inventoryDash'); },
   });
 
@@ -103,9 +112,15 @@ export default function InventoryPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">📦 Inventario</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Control de productos y stock</p>
         </div>
-        <button onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Agregar producto
-        </button>
+        {canCreate ? (
+          <button onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Agregar producto
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+            <Lock size={16} /> Sin permisos para agregar
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3 mb-6">
@@ -276,8 +291,15 @@ export default function InventoryPage() {
                 <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-1">
-                    <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"><Edit2 size={16} /></button>
-                    <button onClick={() => setDeleteId(item.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                    {canEdit && (
+                      <button onClick={() => handleEdit(item)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1"><Edit2 size={16} /></button>
+                    )}
+                    {canDelete && (
+                      <button onClick={() => setDeleteId(item.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1"><Trash2 size={16} /></button>
+                    )}
+                    {!canEdit && !canDelete && (
+                      <span className="text-xs text-gray-400">Solo vista</span>
+                    )}
                   </div>
                 </td>
               </tr>

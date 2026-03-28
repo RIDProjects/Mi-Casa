@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Layout from '../components/layout/Layout';
 import { useQuery } from 'react-query';
 import { debtsAPI, inventoryAPI } from '../services/api';
@@ -36,7 +37,15 @@ interface MonthData {
 type StorageData = Record<string, MonthData>;
 
 export default function Dashboard() {
-  const { hasPermission } = useAuthStore();
+  const router = useRouter();
+  const { hasPermission, isAdminGlobal, isAuthenticated } = useAuthStore();
+
+  // Redirect admin global to admin dashboard
+  useEffect(() => {
+    if (isAuthenticated && isAdminGlobal()) {
+      router.replace('/admin');
+    }
+  }, [isAuthenticated, isAdminGlobal, router]);
   const [purchasesData, setPurchasesData] = useState<StorageData>({});
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`);
 

@@ -6,6 +6,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
+import { HousesModule } from './houses/houses.module';
 import { DebtsModule } from './debts/debts.module';
 import { PurchasesModule } from './purchases/purchases.module';
 import { InventoryModule } from './inventory/inventory.module';
@@ -27,7 +28,7 @@ import { NotificationsModule } from './notifications/notifications.module';
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
     }),
-    AuthModule, UsersModule, RolesModule, DebtsModule,
+    AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
     PurchasesModule, InventoryModule, EmergencyFundModule, NotificationsModule,
   ],
 })

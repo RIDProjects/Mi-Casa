@@ -3,31 +3,25 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import '../styles/globals.css';
 import { useThemeStore } from '../store/theme.store';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
 function ThemeInitializer({ children }: { children: React.ReactNode }) {
-  const { theme, setTheme } = useThemeStore();
+  const theme = useThemeStore(s => s.theme);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Initialize theme from store on mount
-    const stored = localStorage.getItem('theme-store');
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.state?.theme) {
-          document.documentElement.classList.remove('light', 'dark');
-          document.documentElement.classList.add(parsed.state.theme);
-        }
-      } catch (e) {
-        // ignore
-      }
-    } else {
-      // Default to light
-      document.documentElement.classList.add('light');
-    }
-  }, []);
+    setMounted(true);
+    // Apply theme class to document
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+  }, [theme]);
+
+  // Prevent hydration mismatch by not rendering theme-dependent content until mounted
+  if (!mounted) {
+    return <div className="min-h-screen bg-white dark:bg-gray-900" />;
+  }
 
   return <>{children}</>;
 }

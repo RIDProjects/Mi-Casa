@@ -2,10 +2,11 @@ import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { emergencyFundAPI } from '../services/api';
+import { useAuthStore } from '../store/auth.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, PiggyBank, Target } from 'lucide-react';
+import { Plus, Edit2, Trash2, PiggyBank, Target, Lock } from 'lucide-react';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(Number(n) || 0);
 
@@ -33,6 +34,11 @@ const defaultForm = {
 
 export default function EmergencyFundPage() {
   const qc = useQueryClient();
+  const { hasPermission } = useAuthStore();
+  const canCreate = hasPermission('emergency_fund', 'create');
+  const canEdit = hasPermission('emergency_fund', 'edit');
+  const canDelete = hasPermission('emergency_fund', 'delete');
+  
   const [showModal, setShowModal] = useState(false);
   const [editFund, setEditFund] = useState<any>(null);
   const [selectedFund, setSelectedFund] = useState<any>(null);
@@ -41,19 +47,22 @@ export default function EmergencyFundPage() {
 
   const { data: funds = [] } = useQuery('emergencyFunds', () => emergencyFundAPI.getAll().then(r => r.data));
 
+  // Helper to extract error message safely
+  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
+
   const createMut = useMutation((d: any) => emergencyFundAPI.create(d), {
     onSuccess: (res) => { toast.success('Fondo creado'); setShowModal(false); setSelectedFund(res.data); },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('emergencyFunds'); },
   });
   const updateMut = useMutation((d: any) => emergencyFundAPI.update(editFund?.id, d), {
     onSuccess: (res) => { toast.success('Actualizado'); setEditFund(null); setShowModal(false); setSelectedFund(res.data); },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('emergencyFunds'); },
   });
   const deleteMut = useMutation((id: string) => emergencyFundAPI.delete(id), {
     onSuccess: () => { toast.success('Eliminado'); setDeleteId(null); setSelectedFund(null); },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('emergencyFunds'); },
   });
 
@@ -100,9 +109,15 @@ export default function EmergencyFundPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">💰 Calculadora de Fondo de Emergencia</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Calcula cuánto necesitas para estar seguro</p>
         </div>
-        <button onClick={() => { setForm(defaultForm); setEditFund(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Nueva calculadora
-        </button>
+        {canCreate ? (
+          <button onClick={() => { setForm(defaultForm); setEditFund(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Nueva calculadora
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+            <Lock size={16} /> Sin permisos para agregar
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -129,12 +144,19 @@ export default function EmergencyFundPage() {
                     <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{f.name}</span>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={e => { e.stopPropagation(); handleEdit(f); }} className="text-blue-500 hover:text-blue-700 p-1">
-                      <Edit2 size={14} />
-                    </button>
-                    <button onClick={e => { e.stopPropagation(); setDeleteId(f.id); }} className="text-red-500 hover:text-red-700 p-1">
-                      <Trash2 size={14} />
-                    </button>
+                    {canEdit && (
+                      <button onClick={e => { e.stopPropagation(); handleEdit(f); }} className="text-blue-500 hover:text-blue-700 p-1">
+                        <Edit2 size={14} />
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button onClick={e => { e.stopPropagation(); setDeleteId(f.id); }} className="text-red-500 hover:text-red-700 p-1">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                    {!canEdit && !canDelete && (
+                      <span className="text-xs text-gray-400">Solo vista</span>
+                    )}
                   </div>
                 </div>
                 {fCalc && (

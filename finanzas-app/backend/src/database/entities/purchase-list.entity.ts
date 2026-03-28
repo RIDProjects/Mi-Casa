@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne } from 'typeorm';
 import { PurchaseItem } from './purchase-item.entity';
-import { User } from './user.entity';
+import { House } from './house.entity';
 
 @Entity('purchase_lists')
 export class PurchaseList {
@@ -11,7 +11,7 @@ export class PurchaseList {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) budgetUSD: number;
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 515 }) exchangeRate: number;
   @OneToMany(() => PurchaseItem, item => item.list, { cascade: true, eager: true }) items: PurchaseItem[];
-  @ManyToOne(() => User, { nullable: true }) createdBy: User;
+  @ManyToOne(() => House, { nullable: true }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

@@ -25,6 +25,7 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: (data: any) => api.post('/auth/login', data),
+  register: (data: any) => api.post('/auth/register', data),
   profile: () => api.get('/auth/profile'),
 };
 
@@ -42,6 +43,16 @@ export const rolesAPI = {
   create: (data: any) => api.post('/roles', data),
   update: (id: string, data: any) => api.put(`/roles/${id}`, data),
   delete: (id: string) => api.delete(`/roles/${id}`),
+};
+
+export const housesAPI = {
+  getAll: () => api.get('/houses'),
+  getOne: (id: string) => api.get(`/houses/${id}`),
+  getMembers: (id: string) => api.get(`/houses/${id}/members`),
+  switchHouse: (id: string) => api.post(`/houses/${id}/switch`),
+  updateHouse: (id: string, data: any) => api.put(`/houses/${id}`, data),
+  toggleUserActive: (houseId: string, userId: string) => api.post(`/houses/${houseId}/members/${userId}/toggle-active`, {}),
+  removeUserFromHouse: (houseId: string, userId: string) => api.delete(`/houses/${houseId}/members/${userId}`),
 };
 
 export const debtsAPI = {

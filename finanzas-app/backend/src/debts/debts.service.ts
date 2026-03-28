@@ -7,8 +7,8 @@ import { Debt, DebtType } from '../database/entities/debt.entity';
 export class DebtsService {
   constructor(@InjectRepository(Debt) private debtRepo: Repository<Debt>) {}
 
-  async findAll(userId?: string) {
-    return this.debtRepo.find({ where: userId ? { createdBy: { id: userId } } : {}, order: { createdAt: 'DESC' } });
+  async findAll(houseId?: string) {
+    return this.debtRepo.find({ where: houseId ? { house: { id: houseId } } : {}, order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string) {
@@ -17,8 +17,8 @@ export class DebtsService {
     return debt;
   }
 
-  async create(dto: any, userId: string) {
-    const debt = this.debtRepo.create({ ...dto, createdBy: { id: userId } });
+  async create(dto: any, houseId: string) {
+    const debt = this.debtRepo.create({ ...dto, house: { id: houseId } });
     return this.debtRepo.save(debt);
   }
 
@@ -35,8 +35,8 @@ export class DebtsService {
     return { message: 'Deuda eliminada' };
   }
 
-  async getSummary(userId?: string) {
-    const debts = await this.findAll(userId);
+  async getSummary(houseId?: string) {
+    const debts = await this.findAll(houseId);
     const active = debts.filter(d => !d.isPaid);
 
     const theyOweMe = active

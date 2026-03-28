@@ -5,7 +5,7 @@ import { usersAPI, rolesAPI } from '../../services/api';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Edit2, Trash2, UserCheck, UserX, Eye, EyeOff } from 'lucide-react';
 
 export default function UsersPage() {
   const qc = useQueryClient();
@@ -13,6 +13,7 @@ export default function UsersPage() {
   const [editUser, setEditUser] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', email: '', password: '', roleIds: [] as string[] });
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data: users = [] } = useQuery('users', () => usersAPI.getAll().then(r => r.data));
   const { data: roles = [] } = useQuery('roles', () => rolesAPI.getAll().then(r => r.data));
@@ -57,7 +58,22 @@ export default function UsersPage() {
       </div>
       <div>
         <label className="label">Contraseña {editUser && '(dejar vacío para no cambiar)'}</label>
-        <input type="password" className="input" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} {...(!editUser && { required: true })} />
+        <div className="relative">
+          <input 
+            type={showPassword ? 'text' : 'password'} 
+            className="input pr-10" 
+            value={form.password} 
+            onChange={e => setForm({ ...form, password: e.target.value })} 
+            {...(!editUser && { required: true })} 
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
       </div>
       <div>
         <label className="label">Roles</label>

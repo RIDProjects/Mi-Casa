@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
-import { User } from './user.entity';
+import { House } from './house.entity';
 
 export enum InventoryLocation { NEVERA = 'nevera', FRIO = 'frio', ALACENA = 'alacena', VIANDERO = 'viandero', OTRO = 'otro' }
 export enum InventoryStatus { OK = 'ok', LAST = 'last', OUT_OF_STOCK = 'out_of_stock' }
@@ -12,7 +12,7 @@ export class InventoryItem {
   @Column({ type: 'enum', enum: InventoryLocation, default: InventoryLocation.ALACENA }) location: InventoryLocation;
   @Column({ nullable: true }) notes: string;
   @Column({ default: false }) alertSent: boolean;
-  @ManyToOne(() => User, { nullable: true }) createdBy: User;
+  @ManyToOne(() => House, { nullable: true }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 

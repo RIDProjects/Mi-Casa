@@ -7,6 +7,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
+import { Role } from '../database/entities/role.entity';
+import { House } from '../database/entities/house.entity';
 
 @Module({
   imports: [
@@ -15,7 +17,7 @@ import { User } from '../database/entities/user.entity';
       secret: process.env.JWT_SECRET || 'supersecret',
       signOptions: { expiresIn: '24h' },
     }),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Role, House]),
   ],
   controllers: [AuthController],
   providers: [

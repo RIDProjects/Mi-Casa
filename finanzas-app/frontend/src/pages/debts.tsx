@@ -2,16 +2,22 @@ import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { debtsAPI } from '../services/api';
+import { useAuthStore } from '../store/auth.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, CheckCircle, DollarSign, Calendar, Clock, User } from 'lucide-react';
+import { Plus, Edit2, Trash2, CheckCircle, DollarSign, Calendar, Clock, User, Lock } from 'lucide-react';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me' };
 
 export default function DebtsPage() {
   const qc = useQueryClient();
+  const { hasPermission } = useAuthStore();
+  const canCreate = hasPermission('debts', 'create');
+  const canEdit = hasPermission('debts', 'edit');
+  const canDelete = hasPermission('debts', 'delete');
+  
   const [showModal, setShowModal] = useState(false);
   const [editDebt, setEditDebt] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -20,6 +26,9 @@ export default function DebtsPage() {
 
   const { data: debts = [], isLoading: loadingDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
   const { data: summary, isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
+
+  // Helper to extract error message safely
+  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   // Función para actualizar el cache directamente sin parpadeo
   const updateDebtsCache = () => {
@@ -39,7 +48,7 @@ export default function DebtsPage() {
       // Actualizar cache inmediatamente
       updateDebtsCache();
     },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
   
   const updateMut = useMutation((d: any) => debtsAPI.update(editDebt?.id, d), {
@@ -50,7 +59,7 @@ export default function DebtsPage() {
       // Actualizar cache inmediatamente
       updateDebtsCache();
     },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
   
   const deleteMut = useMutation((id: string) => debtsAPI.delete(id), {
@@ -60,7 +69,7 @@ export default function DebtsPage() {
       // Actualizar cache inmediatamente
       updateDebtsCache();
     },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
   
   const markPaidMut = useMutation((id: string) => debtsAPI.update(id, { isPaid: true }), {
@@ -78,7 +87,7 @@ export default function DebtsPage() {
       // Actualizar cache inmediatamente
       updateDebtsCache();
     },
-    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const handleEdit = (d: any) => {
@@ -118,9 +127,15 @@ export default function DebtsPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">💸 Gestor de Deudas</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Control de lo que te deben y lo que debes</p>
         </div>
-        <button onClick={() => { setForm(defaultForm); setEditDebt(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Registrar deuda
-        </button>
+        {canCreate ? (
+          <button onClick={() => { setForm(defaultForm); setEditDebt(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+            <Plus size={18} /> Registrar deuda
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+            <Lock size={16} /> Sin permisos para agregar
+          </div>
+        )}
       </div>
 
       {/* Summary Banner */}
@@ -169,15 +184,20 @@ export default function DebtsPage() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
+                      {/* Marcar pagada siempre habilitado */}
                       <button onClick={() => markPaidMut.mutate(d.id)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
                         <CheckCircle size={16} />
                       </button>
-                      <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => setDeleteId(d.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1">
-                        <Trash2 size={16} />
-                      </button>
+                      {canEdit ? (
+                        <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                          <Edit2 size={16} />
+                        </button>
+                      ) : <span className="w-4" />}
+                      {canDelete ? (
+                        <button onClick={() => setDeleteId(d.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1">
+                          <Trash2 size={16} />
+                        </button>
+                      ) : <span className="w-4" />}
                     </div>
                   </td>
                 </tr>
@@ -220,15 +240,20 @@ export default function DebtsPage() {
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-1">
+                      {/* Marcar pagada siempre habilitado */}
                       <button onClick={() => markPaidMut.mutate(d.id)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
                         <CheckCircle size={16} />
                       </button>
-                      <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => setDeleteId(d.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1">
-                        <Trash2 size={16} />
-                      </button>
+                      {canEdit ? (
+                        <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
+                          <Edit2 size={16} />
+                        </button>
+                      ) : <span className="w-4" />}
+                      {canDelete ? (
+                        <button onClick={() => setDeleteId(d.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1">
+                          <Trash2 size={16} />
+                        </button>
+                      ) : <span className="w-4" />}
                     </div>
                   </td>
                 </tr>

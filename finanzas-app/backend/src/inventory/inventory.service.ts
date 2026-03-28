@@ -4,18 +4,20 @@ import { Repository } from 'typeorm';
 import { InventoryItem, InventoryLocation, InventoryStatus } from '../database/entities/inventory-item.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '../database/entities/user.entity';
-import { InjectRepository as IR } from '@nestjs/typeorm';
+import { House } from '../database/entities/house.entity';
 
 @Injectable()
 export class InventoryService {
   constructor(
     @InjectRepository(InventoryItem) private itemRepo: Repository<InventoryItem>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(House) private houseRepo: Repository<House>,
     private notificationsService: NotificationsService,
   ) {}
 
-  async findAll() {
-    const items = await this.itemRepo.find({ order: { location: 'ASC', name: 'ASC' } });
+  async findAll(houseId?: string) {
+    const where = houseId ? { house: { id: houseId } } : {};
+    const items = await this.itemRepo.find({ where, order: { location: 'ASC', name: 'ASC' } });
     return items.map(item => ({ ...item, status: item.status }));
   }
 
@@ -25,9 +27,8 @@ export class InventoryService {
     return { ...item, status: item.status };
   }
 
-  async create(dto: any, userId: string) {
-    const user = await this.userRepo.findOne({ where: { id: userId } });
-    const item = this.itemRepo.create({ ...dto, createdBy: user });
+  async create(dto: any, houseId: string) {
+    const item = this.itemRepo.create({ ...dto, house: { id: houseId } });
     const saved = await this.itemRepo.save(item);
     const savedItem = Array.isArray(saved) ? saved[0] : saved;
     await this.checkAndNotify(savedItem);
@@ -59,8 +60,8 @@ export class InventoryService {
     return { message: 'Producto eliminado' };
   }
 
-  async getDashboard() {
-    const items = await this.findAll();
+  async getDashboard(houseId?: string) {
+    const items = await this.findAll(houseId);
     const grouped = items.reduce((acc, item) => {
       if (!acc[item.location]) acc[item.location] = [];
       acc[item.location].push(item);
@@ -78,14 +79,16 @@ export class InventoryService {
   }
 
   private async checkAndNotify(item: InventoryItem) {
-    if (item.quantity === 1 && !item.alertSent) {
-      // Get all active users
-      const users = await this.userRepo.find({ where: { isActive: true } });
+    if (item.quantity === 1 && !item.alertSent && item.house) {
+      // Get all active users in the same house
+      const users = await this.userRepo.find({ 
+        where: { isActive: true, house: { id: item.house.id } } 
+      });
 
       // Send to admin (ridgomez99@gmail.com) always
       await this.notificationsService.sendLowStockEmail('ridgomez99@gmail.com', item.name, true);
 
-      // Send to each user at their email address
+      // Send to each user in the house at their email address
       for (const user of users) {
         if (user.email && user.email !== 'ridgomez99@gmail.com') {
           await this.notificationsService.sendLowStockEmail(user.email, item.name, false);

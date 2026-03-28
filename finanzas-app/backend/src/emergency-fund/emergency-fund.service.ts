@@ -10,8 +10,9 @@ export class EmergencyFundService {
     @InjectRepository(ExpenseCategory) private catRepo: Repository<ExpenseCategory>,
   ) {}
 
-  async findAll(userId?: string) {
-    const funds = await this.fundRepo.find({ relations: ['categories'], order: { createdAt: 'DESC' } });
+  async findAll(houseId?: string) {
+    const where = houseId ? { house: { id: houseId } } : {};
+    const funds = await this.fundRepo.find({ where, relations: ['categories'], order: { createdAt: 'DESC' } });
     return funds.map(f => ({ ...f, calculations: this.calculate(f) }));
   }
 
@@ -21,9 +22,9 @@ export class EmergencyFundService {
     return { ...fund, calculations: this.calculate(fund) };
   }
 
-  async create(dto: any, userId: string) {
+  async create(dto: any, houseId: string) {
     const { categories, ...fundData } = dto;
-    const fund = this.fundRepo.create({ ...fundData, owner: { id: userId } });
+    const fund = this.fundRepo.create({ ...fundData, house: { id: houseId } });
     const saved = await this.fundRepo.save(fund);
     const savedFund = Array.isArray(saved) ? saved[0] : saved;
 

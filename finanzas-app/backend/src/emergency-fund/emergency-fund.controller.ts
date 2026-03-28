@@ -12,10 +12,21 @@ import { RequirePermission } from '../common/decorators/require-permission.decor
 export class EmergencyFundController {
   constructor(private service: EmergencyFundService) {}
 
-  @Get() @RequirePermission('emergency_fund', 'view') findAll(@Request() req) { return this.service.findAll(); }
+  @Get() @RequirePermission('emergency_fund', 'view') 
+  findAll(@Request() req) {
+    const houseId = req.user.house?.id;
+    return this.service.findAll(houseId);
+  }
+  
   @Get(':id') @RequirePermission('emergency_fund', 'view') findOne(@Param('id') id: string) { return this.service.findOne(id); }
+  
   @Post() @RequirePermission('emergency_fund', 'create') @ApiOperation({ summary: 'Crear calculadora de fondo' })
-  create(@Body() dto: any, @Request() req) { return this.service.create(dto, req.user.id); }
+  create(@Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id;
+    if (!houseId) throw new Error('Usuario no pertenece a una casa');
+    return this.service.create(dto, houseId);
+  }
+  
   @Put(':id') @RequirePermission('emergency_fund', 'edit') update(@Param('id') id: string, @Body() dto: any) { return this.service.update(id, dto); }
   @Delete(':id') @RequirePermission('emergency_fund', 'delete') remove(@Param('id') id: string) { return this.service.remove(id); }
 }

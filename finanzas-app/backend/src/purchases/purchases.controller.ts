@@ -12,9 +12,21 @@ import { RequirePermission } from '../common/decorators/require-permission.decor
 export class PurchasesController {
   constructor(private purchasesService: PurchasesService) {}
 
-  @Get('lists') @RequirePermission('purchases', 'view') findAllLists() { return this.purchasesService.findAllLists(); }
+  @Get('lists') @RequirePermission('purchases', 'view') 
+  findAllLists(@Request() req) {
+    const houseId = req.user.house?.id;
+    return this.purchasesService.findAllLists(houseId);
+  }
+  
   @Get('lists/:id') @RequirePermission('purchases', 'view') findOneList(@Param('id') id: string) { return this.purchasesService.findOneList(id); }
-  @Post('lists') @RequirePermission('purchases', 'create') createList(@Body() dto: any, @Request() req) { return this.purchasesService.createList(dto, req.user.id); }
+  
+  @Post('lists') @RequirePermission('purchases', 'create') 
+  createList(@Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id;
+    if (!houseId) throw new Error('Usuario no pertenece a una casa');
+    return this.purchasesService.createList(dto, houseId);
+  }
+  
   @Put('lists/:id') @RequirePermission('purchases', 'edit') updateList(@Param('id') id: string, @Body() dto: any) { return this.purchasesService.updateList(id, dto); }
   @Delete('lists/:id') @RequirePermission('purchases', 'delete') removeList(@Param('id') id: string) { return this.purchasesService.removeList(id); }
 

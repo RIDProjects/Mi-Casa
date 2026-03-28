@@ -47,6 +47,51 @@ export async function seed() {
     console.log('✅ Viewer role created');
   }
 
+  // Create user role with limited permissions (view + create only for: debts, purchases, inventory, emergency_fund)
+  let userRole = await roleRepo.findOne({ where: { name: 'user' }, relations: ['permissions'] });
+  if (!userRole) {
+    const userModules = [
+      PermissionModule.DEBTS,
+      PermissionModule.PURCHASES,
+      PermissionModule.INVENTORY,
+      PermissionModule.EMERGENCY_FUND,
+    ];
+    const userActions = [PermissionAction.VIEW, PermissionAction.CREATE];
+    const userPerms = permissions.filter(
+      p => userModules.includes(p.module as PermissionModule) && userActions.includes(p.action as PermissionAction)
+    );
+    userRole = roleRepo.create({ 
+      name: 'user', 
+      description: 'Usuario regular: puede ver y crear en deudas, compras, inventario y fondo de emergencia', 
+      permissions: userPerms 
+    });
+    userRole = await roleRepo.save(userRole);
+    console.log('✅ User role created (limited permissions)');
+  }
+
+  // Create house_admin role (full permissions within their house)
+  let houseAdminRole = await roleRepo.findOne({ where: { name: 'house_admin' }, relations: ['permissions'] });
+  if (!houseAdminRole) {
+    // Same as user but with edit + delete for house-specific modules
+    const houseAdminModules = [
+      PermissionModule.DEBTS,
+      PermissionModule.PURCHASES,
+      PermissionModule.INVENTORY,
+      PermissionModule.EMERGENCY_FUND,
+    ];
+    const houseAdminActions = [PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT, PermissionAction.DELETE];
+    const houseAdminPerms = permissions.filter(
+      p => houseAdminModules.includes(p.module as PermissionModule) && houseAdminActions.includes(p.action as PermissionAction)
+    );
+    houseAdminRole = roleRepo.create({
+      name: 'house_admin',
+      description: 'Admin de casa: permisos completos en su casa (deudas, compras, inventario, fondo emergencia)',
+      permissions: houseAdminPerms
+    });
+    houseAdminRole = await roleRepo.save(houseAdminRole);
+    console.log('✅ House Admin role created');
+  }
+
   // Create admin user
   const adminExists = await userRepo.findOne({ where: { email: 'admin@finanzas.com' } });
   if (!adminExists) {
