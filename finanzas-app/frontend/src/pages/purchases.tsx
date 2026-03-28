@@ -484,18 +484,6 @@ export default function PurchasesPage() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="label">Plan CUP (último precio)</label>
-                <input 
-                  className="input" 
-                  type="number" 
-                  min="0" 
-                  step="0.01"
-                  value={itemForm.planCUP} 
-                  onChange={e => setItemForm({ ...itemForm, planCUP: Number(e.target.value) })} 
-                  placeholder="0"
-                />
-              </div>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <button onClick={() => setShowItemModal(false)} className="btn-secondary">Cancelar</button>

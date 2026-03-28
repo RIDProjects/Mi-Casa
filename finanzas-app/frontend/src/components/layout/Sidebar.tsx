@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, Package, ShoppingCart, PiggyBank, LogOut, Moon, Sun, Home, Building2, Cookie } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, Package, ShoppingCart, PiggyBank, LogOut, Moon, Sun, Home, Building2, Cookie, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
 import clsx from 'clsx';
@@ -22,6 +22,7 @@ const houseNavItems = [
   { href: '/purchases', label: 'Compras', icon: ShoppingCart, module: 'purchases' },
   { href: '/candy', label: 'Chuches', icon: Cookie, module: 'purchases' },
   { href: '/emergency-fund', label: 'Fondo Emergencia', icon: PiggyBank, module: 'emergency_fund' },
+  { href: '/house-members', label: 'Miembros', icon: UserPlus, module: 'house_members' },
 ];
 
 export default function Sidebar() {
@@ -30,8 +31,8 @@ export default function Sidebar() {
   const { theme, toggleTheme } = useThemeStore();
 
   const isGlobalAdmin = isAdminGlobal();
-  // Also check if user has admin role in their roles array
   const userHasAdminRole = user?.roles?.some((r: any) => r.name === 'admin') ?? false;
+  const userHasHouseAdminRole = user?.roles?.some((r: any) => r.name === 'house_admin') ?? false;
   const isActuallyAdmin = isGlobalAdmin || userHasAdminRole;
   
   const houseName = (user as any)?.house?.name;
@@ -43,9 +44,10 @@ export default function Sidebar() {
   const showAdminMenu = isActuallyAdmin || isAdminRoute;
   const navItems = showAdminMenu ? adminNavItems : houseNavItems;
 
-  const visibleItems = navItems.filter(item =>
-    !item.module || hasPermission(item.module, 'view')
-  );
+  const visibleItems = navItems.filter(item => {
+    if (item.href === '/house-members' && !userHasHouseAdminRole) return false;
+    return !item.module || hasPermission(item.module, 'view');
+  });
 
   return (
     <aside className="w-64 bg-gray-900 dark:bg-gray-950 text-white flex flex-col min-h-screen border-r border-gray-800">
