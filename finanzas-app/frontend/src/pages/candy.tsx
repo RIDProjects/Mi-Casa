@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/auth.store';
 import { purchasesAPI } from '../services/api';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, BarChart3 } from 'lucide-react';
+import { Plus, Edit2, Trash2, BarChart3 } from 'lucide-react';
 
 /**
  * Formats a number as currency in Spanish locale
@@ -28,7 +28,14 @@ const MONTHS = [
 const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
 const currentYear = new Date().getFullYear();
 
-export default function PurchasesPage() {
+/**
+ * Generates the list name for candy purchases (prefixed with 'chuches-')
+ * @param month - Month in YYYY-MM format
+ * @returns List name string (e.g., 'chuches-2024-01')
+ */
+const getListName = (month: string) => `chuches-${month}`;
+
+export default function CandyPage() {
   const qc = useQueryClient();
   const { hasPermission } = useAuthStore();
   const canCreate = hasPermission('purchases', 'create');
@@ -67,17 +74,21 @@ export default function PurchasesPage() {
     purchasesAPI.getLists().then(r => r.data)
   );
 
+  const listName = getListName(selectedMonth);
+  
   /**
-   * Finds the selected month's list from all lists
+   * Finds the selected month's candy list from all lists
    */
-  const selectedList = lists.find((l: any) => l.name === selectedMonth) || null;
+  const selectedList = lists.find((l: any) => l.name === listName) || null;
   const items = selectedList?.items || [];
 
   /**
    * Creates a new purchase list
    */
   const createListMut = useMutation((d: any) => purchasesAPI.createList(d), {
-    onSuccess: () => { qc.invalidateQueries('purchaseLists'); },
+    onSuccess: () => { 
+      qc.invalidateQueries('purchaseLists'); 
+    },
     onError: (e: any) => { toast.error(e?.response?.data?.message || e?.message || 'Error'); },
   });
 
@@ -173,7 +184,7 @@ export default function PurchasesPage() {
     
     if (!selectedList) {
       createListMut.mutate({ 
-        name: selectedMonth, 
+        name: listName, 
         budgetUSD: configForm.budgetUSD || 0, 
         exchangeRate: configForm.exchangeRate || 515 
       });
@@ -206,7 +217,7 @@ export default function PurchasesPage() {
   const handleSaveConfig = () => {
     if (!selectedList) {
       createListMut.mutate({ 
-        name: selectedMonth, 
+        name: listName, 
         budgetUSD: configForm.budgetUSD, 
         exchangeRate: configForm.exchangeRate 
       });
@@ -214,7 +225,7 @@ export default function PurchasesPage() {
       updateListMut.mutate({ 
         id: selectedList.id, 
         d: { 
-          name: selectedMonth, 
+          name: listName, 
           budgetUSD: configForm.budgetUSD, 
           exchangeRate: configForm.exchangeRate 
         } 
@@ -269,8 +280,8 @@ export default function PurchasesPage() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🛒 Lista de la Compra</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Gestión de compras mensuales</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🍬 Chuches</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Gastos en golosinas y snacks</p>
         </div>
         {canCreate && (
           <button 
@@ -307,13 +318,14 @@ export default function PurchasesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">📋 Lista de la Compra - {fullMonthLabel}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">🍬 Chuches - {fullMonthLabel}</h2>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                 <tr>
                   <th className="px-2 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">🧾 Producto</th>
@@ -350,12 +362,17 @@ export default function PurchasesPage() {
                       </td>
                       <td className="px-2 py-2 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => handleEditItem(item)} className="text-blue-600 hover:text-blue-700 p-1">
-                            <span className="text-xs">✏️</span>
-                          </button>
-                          <button onClick={() => handleDeleteItem(item.id)} className="text-red-600 hover:text-red-700 p-1">
-                            <Trash2 size={14} />
-                          </button>
+                          {canEdit && (
+                            <button onClick={() => handleEditItem(item)} className="text-blue-600 hover:text-blue-700 p-1">
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button onClick={() => handleDeleteItem(item.id)} className="text-red-600 hover:text-red-700 p-1">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                          {!canEdit && !canDelete && <span className="text-xs text-gray-400">Solo vista</span>}
                         </div>
                       </td>
                     </tr>
@@ -363,7 +380,7 @@ export default function PurchasesPage() {
                 })}
                 {items.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">
+                    <td colSpan={6} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">
                       Sin productos. Agrega productos abajo.
                     </td>
                   </tr>
@@ -459,7 +476,7 @@ export default function PurchasesPage() {
                   className="input" 
                   value={itemForm.name} 
                   onChange={e => setItemForm({ ...itemForm, name: e.target.value })} 
-                  placeholder="Arroz, Leche, Pan..." 
+                  placeholder="Chicle, Chocolate, Papas..." 
                   autoFocus
                 />
               </div>

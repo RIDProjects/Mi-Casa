@@ -11,8 +11,36 @@ export class PurchasesService {
     @InjectRepository(PurchaseItem) private itemRepo: Repository<PurchaseItem>,
   ) {}
 
-  async findAllLists() {
-    const lists = await this.listRepo.find({ relations: ['items'], order: { createdAt: 'DESC' } });
+  private getPriceStatus(item: PurchaseItem): string {
+    const qty = Number(item.quantity || 0);
+    const unitPrice = Number(item.unitPrice || 0);
+    const planCUP = Number(item.plannedPriceCUP || 0);
+    const realCUP = Number(item.realPriceCUP || 0);
+
+    if (!qty || !unitPrice) return 'pendiente';
+    if (!planCUP) return 'pendiente';
+    if (realCUP < planCUP) return 'ahorro';
+    if (realCUP > planCUP) return 'mas_caro';
+    return 'exacto';
+  }
+
+  private getPriceDifferenceCUP(item: PurchaseItem): number {
+    const planCUP = Number(item.plannedPriceCUP || 0);
+    const realCUP = Number(item.realPriceCUP || 0);
+    return planCUP - realCUP;
+  }
+
+  private formatItemResponse(item: PurchaseItem): any {
+    return {
+      ...item,
+      priceStatus: this.getPriceStatus(item),
+      priceDifferenceCUP: this.getPriceDifferenceCUP(item),
+    };
+  }
+
+  async findAllLists(houseId?: string) {
+    const where = houseId ? { house: { id: houseId } } : {};
+    const lists = await this.listRepo.find({ where, relations: ['items'], order: { createdAt: 'DESC' } });
     return lists.map(list => ({ ...list, summary: this.calcSummary(list) }));
   }
 
@@ -22,8 +50,8 @@ export class PurchasesService {
     return { ...list, summary: this.calcSummary(list) };
   }
 
-  async createList(dto: any, userId: string) {
-    const list = this.listRepo.create({ ...dto, createdBy: { id: userId } });
+  async createList(dto: any, houseId: string) {
+    const list = this.listRepo.create({ ...dto, house: { id: houseId } });
     return this.listRepo.save(list);
   }
 
@@ -56,7 +84,8 @@ export class PurchasesService {
     }
 
     const item = this.itemRepo.create({ ...dto, list });
-    return this.itemRepo.save(item);
+    const saved = await this.itemRepo.save(item);
+    return this.formatItemResponse(saved as unknown as PurchaseItem);
   }
 
   async updateItem(itemId: string, dto: any) {
@@ -75,7 +104,8 @@ export class PurchasesService {
       }
     }
 
-    return this.itemRepo.save(item);
+    const saved = await this.itemRepo.save(item);
+    return this.formatItemResponse(saved as unknown as PurchaseItem);
   }
 
   async removeItem(itemId: string) {
@@ -100,6 +130,17 @@ export class PurchasesService {
     if (remainingCUP < 0) statusCUP = '🔴 Excedido';
     else if (remainingCUP < Number(list.budgetCUP) * 0.1) statusCUP = '⚠️ Ajustado';
 
+    const priceStatusCounts = {
+      pendiente: 0,
+      ahorro: 0,
+      mas_caro: 0,
+      exacto: 0,
+    };
+    items.forEach(i => {
+      const ps = this.getPriceStatus(i);
+      if (ps in priceStatusCounts) priceStatusCounts[ps as keyof typeof priceStatusCounts]++;
+    });
+
     return {
       totalRealCUP, totalRealUSD, totalPlanCUP, totalPlanUSD,
       differenceCUP, differenceUSD, remainingCUP, remainingUSD,
@@ -107,6 +148,7 @@ export class PurchasesService {
       purchased: items.filter(i => i.status === PurchaseStatus.PURCHASED).length,
       pending: items.filter(i => i.status === PurchaseStatus.PENDING).length,
       total: items.length,
+      priceStatus: priceStatusCounts,
     };
   }
 }
