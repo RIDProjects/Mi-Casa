@@ -38,6 +38,7 @@ export default function PurchasesPage() {
   // ==================== STATE ====================
   const [selectedMonth, setSelectedMonth] = useState(`${currentYear}-${currentMonth}`);
   const [showItemModal, setShowItemModal] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
   /**
@@ -423,25 +424,21 @@ export default function PurchasesPage() {
               </h3>
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
-                  <input 
-                    type="number" 
-                    className="input text-center font-bold text-xl w-full"
-                    value={configForm.budgetUSD}
-                    onChange={e => setConfigForm({...configForm, budgetUSD: Number(e.target.value)})}
-                    onBlur={() => handleSaveConfig()}
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">↑ Ingreso USD</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">${fmt(configForm.budgetUSD)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Ingreso USD</p>
                 </div>
                 <div>
-                  <input 
-                    type="number" 
-                    className="input text-center font-bold text-xl w-full"
-                    value={configForm.exchangeRate}
-                    onChange={e => setConfigForm({...configForm, exchangeRate: Number(e.target.value)})}
-                    onBlur={() => handleSaveConfig()}
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">↑ Tasa</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{fmt(configForm.exchangeRate)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Tasa CUP</p>
                 </div>
+              </div>
+              <div className="mt-3">
+                <button 
+                  onClick={() => setShowConfigModal(true)}
+                  className="btn-secondary w-full text-sm"
+                >
+                  ✏️ Editar Configuración
+                </button>
               </div>
             </div>
           </div>
@@ -502,6 +499,47 @@ export default function PurchasesPage() {
             <div className="flex justify-end gap-2 mt-6">
               <button onClick={() => setShowItemModal(false)} className="btn-secondary">Cancelar</button>
               <button onClick={handleSaveItem} className="btn-primary">Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Configuración */}
+      {showConfigModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">⚙️ Configuración</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="label">Ingreso USD</label>
+                <input 
+                  className="input" 
+                  type="number" 
+                  min="0" 
+                  step="0.01"
+                  value={configForm.budgetUSD} 
+                  onChange={e => setConfigForm({ ...configForm, budgetUSD: Number(e.target.value) })} 
+                />
+              </div>
+              <div>
+                <label className="label">Tasa CUP por USD</label>
+                <input 
+                  className="input" 
+                  type="number" 
+                  min="1"
+                  value={configForm.exchangeRate} 
+                  onChange={e => setConfigForm({ ...configForm, exchangeRate: Number(e.target.value) })} 
+                />
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Presupuesto en CUP: <span className="font-bold">${fmt(configForm.budgetUSD * configForm.exchangeRate)}</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <button onClick={() => setShowConfigModal(false)} className="btn-secondary">Cancelar</button>
+              <button onClick={() => { handleSaveConfig(); setShowConfigModal(false); }} className="btn-primary">Guardar</button>
             </div>
           </div>
         </div>
