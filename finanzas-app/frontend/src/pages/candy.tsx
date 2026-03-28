@@ -195,11 +195,12 @@ export default function CandyPage() {
     }
     
     // El precio unitario es en CUP
+    // El Plan CUP se actualiza automáticamente con el precio de esta compra (para comparar la próxima vez)
     const dto = {
       name: itemForm.name,
       quantity: itemForm.quantity,
       unitPrice: itemForm.unitPrice, // Precio en CUP
-      plannedPriceCUP: itemForm.planCUP || 0, // Presupuesto planificado
+      plannedPriceCUP: itemForm.planCUP > 0 ? itemForm.planCUP : itemForm.unitPrice, // Si no hay plan, usa el precio actual
       realPriceCUP: Number(itemForm.quantity) * Number(itemForm.unitPrice),
       realPriceUSD: Math.ceil(Number(itemForm.quantity) * Number(itemForm.unitPrice) / exchangeRate),
     };
@@ -501,7 +502,7 @@ export default function CandyPage() {
                 </div>
               </div>
               <div>
-                <label className="label">Plan CUP (presupuesto)</label>
+                <label className="label">Plan CUP (último precio)</label>
                 <input 
                   className="input" 
                   type="number" 
