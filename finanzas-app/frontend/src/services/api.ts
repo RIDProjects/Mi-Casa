@@ -90,4 +90,61 @@ export const emergencyFundAPI = {
   delete: (id: string) => api.delete(`/emergency-fund/${id}`),
 };
 
+export const budgetAPI = {
+  getAll: () => api.get('/budget'),
+  getOne: (id: string) => api.get(`/budget/${id}`),
+  create: (data: any) => api.post('/budget', data),
+  update: (id: string, data: any) => api.put(`/budget/${id}`, data),
+  delete: (id: string) => api.delete(`/budget/${id}`),
+
+  addIncome: (budgetId: string, data: any) => api.post(`/budget/${budgetId}/income`, data),
+  updateIncome: (id: string, data: any) => api.put(`/budget/income/${id}`, data),
+  deleteIncome: (id: string) => api.delete(`/budget/income/${id}`),
+
+  addCategory: (budgetId: string, data: any) => api.post(`/budget/${budgetId}/categories`, data),
+  deleteCategory: (id: string) => api.delete(`/budget/categories/${id}`),
+
+  addExpense: (categoryId: string, data: any) => api.post(`/budget/categories/${categoryId}/expenses`, data),
+  updateExpense: (id: string, data: any) => api.put(`/budget/expenses/${id}`, data),
+  deleteExpense: (id: string) => api.delete(`/budget/expenses/${id}`),
+};
+
+export const transactionsAPI = {
+  getByMonth: (year: number, month: number) => api.get(`/transactions?year=${year}&month=${month}`),
+  getSummary: (year: number, month: number, expectedIncome?: number, expectedExpenses?: number) =>
+    api.get(`/transactions/summary?year=${year}&month=${month}&expectedIncome=${expectedIncome || 0}&expectedExpenses=${expectedExpenses || 0}`),
+  create: (data: any) => api.post('/transactions', data),
+  update: (id: string, data: any) => api.put(`/transactions/${id}`, data),
+  delete: (id: string) => api.delete(`/transactions/${id}`),
+};
+
+export const savingsGoalsAPI = {
+  getAll: () => api.get('/savings-goals'),
+  create: (data: any) => api.post('/savings-goals', data),
+  update: (id: string, data: any) => api.put(`/savings-goals/${id}`, data),
+  delete: (id: string) => api.delete(`/savings-goals/${id}`),
+};
+
+export const creditCardsAPI = {
+  getAll: () => api.get('/credit-cards'),
+  create: (data: any) => api.post('/credit-cards', data),
+  update: (id: string, data: any) => api.put(`/credit-cards/${id}`, data),
+  delete: (id: string) => api.delete(`/credit-cards/${id}`),
+};
+
+export const loansAPI = {
+  getAll: () => api.get('/loans'),
+  create: (data: any) => api.post('/loans', data),
+  update: (id: string, data: any) => api.put(`/loans/${id}`, data),
+  delete: (id: string) => api.delete(`/loans/${id}`),
+};
+
+export const assetsAPI = {
+  getAll: (totalCardBalances?: number, totalLoanDebt?: number) =>
+    api.get(`/net-worth?totalCardBalances=${totalCardBalances || 0}&totalLoanDebt=${totalLoanDebt || 0}`),
+  create: (data: any) => api.post('/net-worth', data),
+  update: (id: string, data: any) => api.put(`/net-worth/${id}`, data),
+  delete: (id: string) => api.delete(`/net-worth/${id}`),
+};
+
 export default api;

@@ -21,140 +21,116 @@ export class AuthService {
   async register(dto: RegisterDto) {
     // Check if email already exists
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
-    if (existing) {
-      throw new ConflictException('El email ya está registrado');
-    }
+    if (existing) throw new ConflictException('El email ya está registrado');
 
     // Hash passwords
     const hashedPassword = await bcrypt.hash(dto.password, 12);
     const hashedHousePassword = await bcrypt.hash(dto.housePassword, 12);
 
-    // Check if house exists by name
-    let house = await this.houseRepo.findOne({ where: { name: dto.houseName } });
-    
+    // Find or create house, loading members to determine admin status
+    let house = await this.houseRepo.findOne({ where: { name: dto.houseName }, relations: ['members'] });
+
     if (house) {
-      // Verify house password
       const validHousePassword = await bcrypt.compare(dto.housePassword, house.password);
-      if (!validHousePassword) {
-        throw new UnauthorizedException('Contraseña de casa incorrecta');
-      }
+      if (!validHousePassword) throw new UnauthorizedException('Contraseña de casa incorrecta');
     } else {
-      // Create new house (first user creates the house)
-      house = this.houseRepo.create({
-        name: dto.houseName,
-        password: hashedHousePassword,
-      });
+      house = this.houseRepo.create({ name: dto.houseName, password: hashedHousePassword });
       house = await this.houseRepo.save(house);
+      house.members = [];
     }
 
-    // Get user role
-    const userRole = await this.roleRepo.findOne({
-      where: { name: 'user' },
-      relations: ['permissions'],
-    });
+    // First member becomes house_admin; subsequent members get user role
+    const houseMembers = house.members?.length ?? 0;
+    const isHouseAdmin = houseMembers === 0;
 
-    // Check if house already has members to determine if user gets house_admin role
-    const houseMembers = await this.userRepo.count({ where: { house: { id: house.id } } });
-    const isHouseAdmin = houseMembers === 0; // First user is house admin
+    const roleName = isHouseAdmin ? 'house_admin' : 'user';
+    const roleToAssign =
+      (await this.roleRepo.findOne({ where: { name: roleName }, relations: ['permissions'] })) ||
+      (await this.roleRepo.findOne({ where: { name: 'user' }, relations: ['permissions'] }));
 
-    const houseAdminRole = await this.roleRepo.findOne({
-      where: { name: 'house_admin' },
-      relations: ['permissions'],
-    });
+    if (!roleToAssign) throw new Error('Rol no encontrado. Contacte al administrador.');
 
-    // Determine role: first user = house_admin, others = user
-    const roleToAssign = isHouseAdmin && houseAdminRole ? houseAdminRole : userRole;
-
-    if (!roleToAssign) {
-      throw new Error('Rol no encontrado. Contacte al administrador.');
-    }
-
-    // Create the user with house relationship
     const newUser = this.userRepo.create({
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
       roles: [roleToAssign],
-      house: house,
+      houses: [house],
+      activeHouseId: house.id,
       isActive: true,
     });
 
     const savedUser = await this.userRepo.save(newUser);
 
-    // Generate token
     const isAdmin = roleToAssign.name === 'admin' || roleToAssign.name === 'house_admin';
-    const expiresIn = isAdmin ? '24h' : '8h';
-
     const token = this.jwtService.sign(
       { sub: savedUser.id, email: savedUser.email },
-      { expiresIn }
+      { expiresIn: isAdmin ? '24h' : '8h' },
     );
 
     const { password, ...result } = savedUser;
-    return { 
-      access_token: token, 
-      user: { 
-        ...result, 
+    return {
+      access_token: token,
+      user: {
+        ...result,
         roles: [roleToAssign],
-        house: { id: house.id, name: house.name }
+        house: { id: house.id, name: house.name },
+        houses: [{ id: house.id, name: house.name }],
       },
-      isHouseAdmin: isHouseAdmin
+      isHouseAdmin,
     };
   }
 
   async login(dto: LoginDto) {
     const user = await this.userRepo.findOne({
       where: { email: dto.email, isActive: true },
-      select: ['id', 'email', 'name', 'password', 'isActive', 'whatsappNumber'],
-      relations: ['roles', 'roles.permissions', 'house'],
+      select: ['id', 'email', 'name', 'password', 'isActive', 'whatsappNumber', 'activeHouseId'],
+      relations: ['roles', 'roles.permissions', 'houses'],
     });
     if (!user) throw new UnauthorizedException('Credenciales inválidas');
 
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciales inválidas');
 
-    // Dynamic JWT expiration based on role
     const isAdmin = user.roles?.some(r => r.name === 'admin');
-    const expiresIn = isAdmin ? '24h' : '8h';
-
     const { password, ...result } = user;
     const token = this.jwtService.sign(
       { sub: user.id, email: user.email },
-      { expiresIn }
+      { expiresIn: isAdmin ? '24h' : '8h' },
     );
-    
-    // Admin global should never have a house
-    const houseData = isAdmin ? null : (user.house ? { id: user.house.id, name: user.house.name } : null);
-    
-    return { 
-      access_token: token, 
+
+    const activeHouse = isAdmin
+      ? null
+      : (user.houses?.find(h => h.id === user.activeHouseId) || user.houses?.[0] || null);
+
+    return {
+      access_token: token,
       user: {
         ...result,
-        house: houseData
-      }
+        house: activeHouse ? { id: activeHouse.id, name: activeHouse.name } : null,
+        houses: isAdmin ? [] : (user.houses?.map(h => ({ id: h.id, name: h.name })) || []),
+      },
     };
   }
 
   async getProfile(userId: string) {
-    const user = await this.userRepo.findOne({ 
-      where: { id: userId }, 
-      relations: ['roles', 'roles.permissions', 'house'] 
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      relations: ['roles', 'roles.permissions', 'houses'],
     });
-    
+
     if (!user) return user;
-    
-    // Admin global should never have a house
+
     const isAdmin = user.roles?.some(r => r.name === 'admin');
-    if (isAdmin) {
-      return { ...user, house: null };
-    }
-    
-    if (user.house) {
-      return {
-        ...user,
-        house: { id: user.house.id, name: user.house.name }
-      };
-    }
-    return user;
+    if (isAdmin) return { ...user, house: null, houses: [] };
+
+    const activeHouse =
+      user.houses?.find(h => h.id === user.activeHouseId) || user.houses?.[0] || null;
+
+    return {
+      ...user,
+      house: activeHouse ? { id: activeHouse.id, name: activeHouse.name } : null,
+      houses: user.houses?.map(h => ({ id: h.id, name: h.name })) || [],
+    };
   }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { LayoutDashboard, Users, ShieldCheck, CreditCard, Package, ShoppingCart, PiggyBank, LogOut, Moon, Sun, Home, Building2, Cookie, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, CreditCard, Package, ShoppingCart, PiggyBank, LogOut, Moon, Sun, Home, Building2, Cookie, UserPlus, Calculator, Receipt, Target, Landmark, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
 import clsx from 'clsx';
@@ -21,6 +21,13 @@ const houseNavItems = [
   { href: '/inventory', label: 'Inventario', icon: Package, module: 'inventory' },
   { href: '/purchases', label: 'Compras', icon: ShoppingCart, module: 'purchases' },
   { href: '/candy', label: 'Chuches', icon: Cookie, module: 'purchases' },
+  { href: '/presupuesto', label: 'Presupuesto', icon: Calculator, module: null },
+  { href: '/transacciones', label: 'Transacciones', icon: Receipt, module: null },
+  { href: '/metas', label: 'Metas de Ahorro', icon: Target, module: null },
+  { href: '/tarjetas', label: 'Tarjetas', icon: CreditCard, module: null },
+  { href: '/creditos', label: 'Créditos', icon: Landmark, module: null },
+  { href: '/patrimonio', label: 'Patrimonio', icon: TrendingUp, module: null },
+  { href: '/simulador', label: 'Simulador', icon: Calculator, module: null },
   { href: '/emergency-fund', label: 'Fondo Emergencia', icon: PiggyBank, module: 'emergency_fund' },
   { href: '/house-members', label: 'Miembros', icon: UserPlus, module: 'house_members' },
 ];

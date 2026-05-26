@@ -12,6 +12,12 @@ import { PurchasesModule } from './purchases/purchases.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { EmergencyFundModule } from './emergency-fund/emergency-fund.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { BudgetModule } from './budget/budget.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { SavingsGoalsModule } from './savings-goals/savings-goals.module';
+import { CreditCardsModule } from './credit-cards/credit-cards.module';
+import { LoansModule } from './loans/loans.module';
+import { NetWorthModule } from './net-worth/net-worth.module';
 
 @Module({
   imports: [
@@ -30,6 +36,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     }),
     AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
     PurchasesModule, InventoryModule, EmergencyFundModule, NotificationsModule,
+    BudgetModule, TransactionsModule, SavingsGoalsModule,
+    CreditCardsModule, LoansModule, NetWorthModule,
   ],
 })
 export class AppModule {}

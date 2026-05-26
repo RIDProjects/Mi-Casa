@@ -81,9 +81,11 @@ export class InventoryService {
   private async checkAndNotify(item: InventoryItem) {
     if (item.quantity === 1 && !item.alertSent && item.house) {
       // Get all active users in the same house
-      const users = await this.userRepo.find({ 
-        where: { isActive: true, house: { id: item.house.id } } 
-      });
+      const users = await this.userRepo
+        .createQueryBuilder('user')
+        .innerJoin('user.houses', 'house', 'house.id = :houseId', { houseId: item.house.id })
+        .where('user.isActive = true')
+        .getMany();
 
       // Send to admin (ridgomez99@gmail.com) always
       await this.notificationsService.sendLowStockEmail('ridgomez99@gmail.com', item.name, true);
