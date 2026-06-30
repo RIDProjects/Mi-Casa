@@ -39,6 +39,11 @@
     @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; 
   }
   
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
+  }
+
   /* Badges */
   .badge-ok { 
     @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300;

@@ -6,7 +6,8 @@ import { useAuthStore } from '../store/auth.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, PiggyBank, Target, Lock } from 'lucide-react';
+import ActionButtons from '../components/ui/ActionButtons';
+import { Plus, PiggyBank, Target, Lock } from 'lucide-react';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(Number(n) || 0);
 
@@ -143,18 +144,15 @@ export default function EmergencyFundPage() {
                     <PiggyBank size={18} className="text-blue-600 dark:text-blue-400" />
                     <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{f.name}</span>
                   </div>
-                  <div className="flex gap-1">
-                    {canEdit && (
-                      <button onClick={e => { e.stopPropagation(); handleEdit(f); }} className="text-blue-500 hover:text-blue-700 p-1">
-                        <Edit2 size={14} />
-                      </button>
-                    )}
-                    {canDelete && (
-                      <button onClick={e => { e.stopPropagation(); setDeleteId(f.id); }} className="text-red-500 hover:text-red-700 p-1">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                    {!canEdit && !canDelete && (
+                  <div onClick={e => e.stopPropagation()}>
+                    {(canEdit || canDelete) ? (
+                      <ActionButtons
+                        onEdit={canEdit ? () => handleEdit(f) : undefined}
+                        onDelete={canDelete ? () => setDeleteId(f.id) : undefined}
+                        canEdit={canEdit}
+                        canDelete={canDelete}
+                      />
+                    ) : (
                       <span className="text-xs text-gray-400">Solo vista</span>
                     )}
                   </div>
@@ -198,15 +196,14 @@ export default function EmergencyFundPage() {
                     </ol>
                   </div>
 
-                  {/* Months Input */}
+                  {/* Months Display */}
                   <div className="mb-6">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">¿En cuántos meses lo harás?</label>
-                    <input 
-                      type="number" 
-                      className="input w-32" 
-                      value={fund.savingPeriodMonths}
-                      readOnly
-                    />
+                    <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{fund.savingPeriodMonths}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">meses</span>
+                    </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Editá el valor desde el panel lateral</p>
                   </div>
 
                   {/* Results Display */}

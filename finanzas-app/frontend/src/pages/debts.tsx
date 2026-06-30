@@ -5,8 +5,9 @@ import { debtsAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import ActionButtons from '../components/ui/ActionButtons';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, CheckCircle, DollarSign, Calendar, Clock, User, Lock } from 'lucide-react';
+import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me' };
@@ -24,7 +25,7 @@ export default function DebtsPage() {
   const [form, setForm] = useState<any>(defaultForm);
   const [paidDebtInfo, setPaidDebtInfo] = useState<any>(null);
 
-  const { data: debts = [], isLoading: loadingDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
+  const { data: debts = [], isLoading: loadingDebts, isError: errorDebts, refetch: refetchDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
   const { data: summary, isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
 
   // Helper to extract error message safely
@@ -104,8 +105,27 @@ export default function DebtsPage() {
   if (loadingDebts || loadingSummary) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500 dark:text-gray-400">Cargando deudas...</div>
+        <div className="space-y-4 mb-6">
+          <div className="skeleton h-8 w-64" />
+          <div className="skeleton h-20 w-full" />
+          <div className="grid grid-cols-2 gap-6">
+            <div className="skeleton h-48 w-full" />
+            <div className="skeleton h-48 w-full" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (errorDebts) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <AlertTriangle size={40} className="text-red-400" />
+          <p className="text-gray-500 dark:text-gray-400">Error al cargar las deudas</p>
+          <button onClick={() => refetchDebts()} className="btn-secondary flex items-center gap-2">
+            <RefreshCw size={16} /> Reintentar
+          </button>
         </div>
       </Layout>
     );
@@ -183,22 +203,13 @@ export default function DebtsPage() {
                   <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">{fmt(d.amount)}</td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      {/* Marcar pagada siempre habilitado */}
-                      <button onClick={() => markPaidMut.mutate(d.id)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
-                        <CheckCircle size={16} />
-                      </button>
-                      {canEdit ? (
-                        <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
-                          <Edit2 size={16} />
-                        </button>
-                      ) : <span className="w-4" />}
-                      {canDelete ? (
-                        <button onClick={() => setDeleteId(d.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1">
-                          <Trash2 size={16} />
-                        </button>
-                      ) : <span className="w-4" />}
-                    </div>
+                    <ActionButtons
+                      onMarkPaid={() => markPaidMut.mutate(d.id)}
+                      onEdit={canEdit ? () => handleEdit(d) : undefined}
+                      onDelete={canDelete ? () => setDeleteId(d.id) : undefined}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                    />
                   </td>
                 </tr>
               ))}
@@ -239,22 +250,13 @@ export default function DebtsPage() {
                   <td className="px-4 py-3 text-right font-medium text-red-600 dark:text-red-400">{fmt(d.amount)}</td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      {/* Marcar pagada siempre habilitado */}
-                      <button onClick={() => markPaidMut.mutate(d.id)} title="Marcar pagada" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 p-1">
-                        <CheckCircle size={16} />
-                      </button>
-                      {canEdit ? (
-                        <button onClick={() => handleEdit(d)} className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 p-1">
-                          <Edit2 size={16} />
-                        </button>
-                      ) : <span className="w-4" />}
-                      {canDelete ? (
-                        <button onClick={() => setDeleteId(d.id)} className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1">
-                          <Trash2 size={16} />
-                        </button>
-                      ) : <span className="w-4" />}
-                    </div>
+                    <ActionButtons
+                      onMarkPaid={() => markPaidMut.mutate(d.id)}
+                      onEdit={canEdit ? () => handleEdit(d) : undefined}
+                      onDelete={canDelete ? () => setDeleteId(d.id) : undefined}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                    />
                   </td>
                 </tr>
               ))}
@@ -367,7 +369,11 @@ export default function DebtsPage() {
                 <Calendar size={18} className="text-gray-500 dark:text-gray-400" />
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Fecha de pago</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{paidDebtInfo.paidAt?.toString()}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {paidDebtInfo.paidAt instanceof Date
+                      ? paidDebtInfo.paidAt.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      : paidDebtInfo.paidAt}
+                  </p>
                 </div>
               </div>
             </div>

@@ -52,22 +52,22 @@ interface NavCard {
 }
 
 const NAV_CARDS: NavCard[] = [
-  { label: 'Presupuesto',   href: '/budget',        icon: <TrendingUp  className="w-5 h-5" /> },
-  { label: 'Transacciones', href: '/transactions',  icon: <Receipt     className="w-5 h-5" /> },
-  { label: 'Metas',         href: '/savings-goals', icon: <Target      className="w-5 h-5" /> },
-  { label: 'Tarjetas',      href: '/credit-cards',  icon: <CreditCard  className="w-5 h-5" /> },
-  { label: 'Créditos',      href: '/loans',         icon: <Landmark    className="w-5 h-5" /> },
-  { label: 'Patrimonio',    href: '/net-worth',     icon: <Calculator  className="w-5 h-5" /> },
+  { label: 'Presupuesto',   href: '/presupuesto',   icon: <TrendingUp  className="w-5 h-5" /> },
+  { label: 'Transacciones', href: '/transacciones', icon: <Receipt     className="w-5 h-5" /> },
+  { label: 'Metas',         href: '/metas',         icon: <Target      className="w-5 h-5" /> },
+  { label: 'Tarjetas',      href: '/tarjetas',      icon: <CreditCard  className="w-5 h-5" /> },
+  { label: 'Créditos',      href: '/creditos',      icon: <Landmark    className="w-5 h-5" /> },
+  { label: 'Patrimonio',    href: '/patrimonio',    icon: <Calculator  className="w-5 h-5" /> },
 ];
 
 // ─── Advisory badge ──────────────────────────────────────────────────────────
 
 type AdvisoryStatus = 'ok' | 'warning' | 'danger';
 
-const ADVISORY: Record<AdvisoryStatus, { label: string; className: string }> = {
-  ok:      { label: '✅ En camino con tus metas',     className: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800' },
-  warning: { label: '⚠️ Cuidado con los gastos',      className: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800' },
-  danger:  { label: '❌ Gastos superan ingresos',     className: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800' },
+const ADVISORY: Record<AdvisoryStatus, { label: string; sub: string; className: string }> = {
+  ok:      { label: '✅ En camino con tus metas',  sub: 'Tus gastos están dentro del presupuesto.',        className: 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700' },
+  warning: { label: '⚠️ Cuidado con los gastos',   sub: 'Estás cerca del límite del presupuesto mensual.', className: 'bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-700' },
+  danger:  { label: '❌ Gastos superan ingresos',  sub: 'Revisá tu presupuesto — estás en déficit.',       className: 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-700' },
 };
 
 // ─── Thermometer helpers ─────────────────────────────────────────────────────
@@ -200,13 +200,12 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* Advisory badge */}
-          <div className="flex">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${ADVISORY[advisoryStatus].className}`}
-            >
-              {ADVISORY[advisoryStatus].label}
-            </span>
+          {/* Advisory banner */}
+          <div className={`w-full px-4 py-3 rounded-xl flex items-center gap-3 ${ADVISORY[advisoryStatus].className}`}>
+            <div className="flex-1">
+              <p className="font-semibold text-sm">{ADVISORY[advisoryStatus].label}</p>
+              <p className="text-xs opacity-80 mt-0.5">{ADVISORY[advisoryStatus].sub}</p>
+            </div>
           </div>
         </div>
       )}
