@@ -9,11 +9,25 @@ export class NetWorthService {
     @InjectRepository(Asset) private repo: Repository<Asset>,
   ) {}
 
-  async findByHouse(houseId: string) {
-    return this.repo.find({
-      where: { house: { id: houseId } },
-      order: { createdAt: 'DESC' },
-    });
+  private toFrontend(a: Asset) {
+    return {
+      id:             a.id,
+      nombre:         a.name,
+      valorEstimado:  a.value,
+      assetType:      a.assetType,
+      notas:          a.notes,
+      createdAt:      a.createdAt,
+      updatedAt:      a.updatedAt,
+    };
+  }
+
+  private fromFrontend(dto: any): Partial<Asset> {
+    return {
+      name:      dto.nombre,
+      value:     dto.valorEstimado,
+      assetType: dto.assetType,
+      notes:     dto.notas,
+    };
   }
 
   async getNetWorthSummary(
@@ -21,40 +35,38 @@ export class NetWorthService {
     totalCardBalances: number = 0,
     totalLoanDebt: number = 0,
   ) {
-    const assets = await this.findByHouse(houseId);
+    if (!houseId) return { physicalAssets: 0, cashAssets: 0, totalAssets: 0, totalDebts: 0, netWorth: 0, assets: [] };
 
-    const physicalAssets = assets
-      .filter((a) => a.assetType === AssetType.PHYSICAL)
-      .reduce((s, a) => s + Number(a.value), 0);
+    const raw = await this.repo.find({
+      where: { house: { id: houseId } },
+      order: { createdAt: 'DESC' },
+    });
 
-    const cashAssets = assets
-      .filter((a) => a.assetType === AssetType.CASH)
-      .reduce((s, a) => s + Number(a.value), 0);
-
-    const totalAssets = physicalAssets + cashAssets;
-    const totalDebts = totalCardBalances + totalLoanDebt;
-    const netWorth = totalAssets - totalDebts;
+    const physical = raw.filter(a => a.assetType === AssetType.PHYSICAL).reduce((s, a) => s + Number(a.value), 0);
+    const cash     = raw.filter(a => a.assetType === AssetType.CASH).reduce((s, a) => s + Number(a.value), 0);
+    const totalAssets = physical + cash;
+    const totalDebts  = totalCardBalances + totalLoanDebt;
 
     return {
-      physicalAssets: Math.round(physicalAssets * 100) / 100,
-      cashAssets: Math.round(cashAssets * 100) / 100,
-      totalAssets: Math.round(totalAssets * 100) / 100,
-      totalDebts: Math.round(totalDebts * 100) / 100,
-      netWorth: Math.round(netWorth * 100) / 100,
-      assets,
+      physicalAssets: Math.round(physical * 100) / 100,
+      cashAssets:     Math.round(cash * 100) / 100,
+      totalAssets:    Math.round(totalAssets * 100) / 100,
+      totalDebts:     Math.round(totalDebts * 100) / 100,
+      netWorth:       Math.round((totalAssets - totalDebts) * 100) / 100,
+      assets:         raw.map(a => this.toFrontend(a)),
     };
   }
 
   async create(dto: any, houseId: string) {
-    const asset = this.repo.create({ ...dto, house: { id: houseId } });
-    return this.repo.save(asset);
+    const asset = this.repo.create({ ...this.fromFrontend(dto), house: { id: houseId } as any });
+    return this.toFrontend(await this.repo.save(asset));
   }
 
   async update(id: string, dto: any) {
     const asset = await this.repo.findOne({ where: { id } });
     if (!asset) throw new NotFoundException('Activo no encontrado');
-    Object.assign(asset, dto);
-    return this.repo.save(asset);
+    Object.assign(asset, this.fromFrontend(dto));
+    return this.toFrontend(await this.repo.save(asset));
   }
 
   async remove(id: string) {

@@ -11,20 +11,13 @@ export class NetWorthController {
   constructor(private readonly service: NetWorthService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Listar activos de la casa' })
-  findAll(@Request() req) {
-    const houseId = req.user.house?.id;
-    return this.service.findByHouse(houseId);
-  }
-
-  @Get('summary')
-  @ApiOperation({ summary: 'Resumen de patrimonio neto' })
-  @ApiQuery({ name: 'cardBalances', required: false, type: Number })
-  @ApiQuery({ name: 'loanDebt', required: false, type: Number })
-  getSummary(
+  @ApiOperation({ summary: 'Resumen de patrimonio neto con activos' })
+  @ApiQuery({ name: 'totalCardBalances', required: false, type: Number })
+  @ApiQuery({ name: 'totalLoanDebt', required: false, type: Number })
+  findAll(
     @Request() req,
-    @Query('cardBalances') cardBalances?: string,
-    @Query('loanDebt') loanDebt?: string,
+    @Query('totalCardBalances') cardBalances?: string,
+    @Query('totalLoanDebt') loanDebt?: string,
   ) {
     const houseId = req.user.house?.id;
     return this.service.getNetWorthSummary(

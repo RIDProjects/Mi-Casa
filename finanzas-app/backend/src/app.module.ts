@@ -18,6 +18,7 @@ import { SavingsGoalsModule } from './savings-goals/savings-goals.module';
 import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { LoansModule } from './loans/loans.module';
 import { NetWorthModule } from './net-worth/net-worth.module';
+import { HouseholdExpensesModule } from './household-expenses/household-expenses.module';
 
 @Module({
   imports: [
@@ -37,7 +38,7 @@ import { NetWorthModule } from './net-worth/net-worth.module';
     AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
     PurchasesModule, InventoryModule, EmergencyFundModule, NotificationsModule,
     BudgetModule, TransactionsModule, SavingsGoalsModule,
-    CreditCardsModule, LoansModule, NetWorthModule,
+    CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
   ],
 })
 export class AppModule {}

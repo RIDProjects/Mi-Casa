@@ -9,35 +9,66 @@ export class LoansService {
     @InjectRepository(Loan) private repo: Repository<Loan>,
   ) {}
 
-  private withSummary(loan: Loan) {
+  private toFrontend(loan: Loan) {
     const progressPercent =
       loan.initialDebt > 0
-        ? Math.min(100, Math.round(((1 - Number(loan.currentDebt) / Number(loan.initialDebt)) * 100) * 10) / 10)
+        ? Math.min(
+            100,
+            Math.round(
+              ((1 - Number(loan.currentDebt) / Number(loan.initialDebt)) * 100) * 10,
+            ) / 10,
+          )
         : 0;
-    return { ...loan, progressPercent };
+
+    return {
+      id:           loan.id,
+      tipo:         loan.loanType,
+      institucion:  loan.institution,
+      deudaInicial: loan.initialDebt,
+      deudaActual:  loan.currentDebt,
+      cuotaMensual: loan.monthlyPayment,
+      notas:        loan.notes,
+      createdAt:    loan.createdAt,
+      updatedAt:    loan.updatedAt,
+      progressPercent,
+    };
   }
 
-  async findByHouse(houseId: string) {
+  private fromFrontend(dto: any): Partial<Loan> {
+    return {
+      loanType:      dto.tipo,
+      institution:   dto.institucion,
+      initialDebt:   dto.deudaInicial,
+      currentDebt:   dto.deudaActual,
+      monthlyPayment:dto.cuotaMensual,
+      notes:         dto.notas,
+    };
+  }
+
+  async findByHouse(houseId: string): Promise<any[]> {
+    if (!houseId) return [];
     const loans = await this.repo.find({
       where: { house: { id: houseId } },
       order: { createdAt: 'DESC' },
     });
-    const withSummary = loans.map((l) => this.withSummary(l));
-    const totalDebt = loans.reduce((s, l) => s + Number(l.currentDebt), 0);
-    const totalMonthlyPayment = loans.reduce((s, l) => s + Number(l.monthlyPayment), 0);
-    return { loans: withSummary, totals: { totalDebt, totalMonthlyPayment } };
+    return loans.map(l => this.toFrontend(l));
   }
 
   async create(dto: any, houseId: string) {
-    const loan = this.repo.create({ ...dto, house: { id: houseId } });
-    return this.withSummary(await this.repo.save(loan));
+    const loan = this.repo.create({
+      ...this.fromFrontend(dto),
+      house: { id: houseId } as any,
+    });
+    const saved = await this.repo.save(loan);
+    return this.toFrontend(saved);
   }
 
   async update(id: string, dto: any) {
     const loan = await this.repo.findOne({ where: { id } });
     if (!loan) throw new NotFoundException('Crédito no encontrado');
-    Object.assign(loan, dto);
-    return this.withSummary(await this.repo.save(loan));
+    Object.assign(loan, this.fromFrontend(dto));
+    const saved = await this.repo.save(loan);
+    return this.toFrontend(saved);
   }
 
   async remove(id: string) {

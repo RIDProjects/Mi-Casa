@@ -9,12 +9,7 @@ export class SavingsGoalsService {
     @InjectRepository(SavingsGoal) private repo: Repository<SavingsGoal>,
   ) {}
 
-  private computePMT(
-    goal: number,
-    current: number,
-    months: number,
-    annualRate: number,
-  ): number {
+  private computePMT(goal: number, current: number, months: number, annualRate: number): number {
     if (months <= 0) return 0;
     const r = annualRate / 12;
     if (r === 0) return Math.max(0, (goal - current) / months);
@@ -24,7 +19,7 @@ export class SavingsGoalsService {
     return (needed * r) / (Math.pow(1 + r, months) - 1);
   }
 
-  private withSummary(goal: SavingsGoal) {
+  private toFrontend(goal: SavingsGoal) {
     const monthlyContribution = this.computePMT(
       Number(goal.goalAmount),
       Number(goal.currentSavings),
@@ -33,33 +28,57 @@ export class SavingsGoalsService {
     );
     const progress =
       goal.goalAmount > 0
-        ? (Number(goal.currentSavings) / Number(goal.goalAmount)) * 100
+        ? Math.min(100, Math.round((Number(goal.currentSavings) / Number(goal.goalAmount)) * 1000) / 10)
         : 0;
+
     return {
-      ...goal,
-      monthlyContribution: Math.round(monthlyContribution * 100) / 100,
-      progress: Math.min(100, Math.round(progress * 10) / 10),
+      id:                   goal.id,
+      nombre:               goal.name,
+      montoMeta:            goal.goalAmount,
+      ahorrosActuales:      goal.currentSavings,
+      mesesParaAhorrarla:   goal.months,
+      tasaInteresAnual:     goal.annualInterestRate,
+      emoji:                goal.emoji,
+      createdAt:            goal.createdAt,
+      updatedAt:            goal.updatedAt,
+      monthlyContribution:  Math.round(monthlyContribution * 100) / 100,
+      progress,
+    };
+  }
+
+  private fromFrontend(dto: any): Partial<SavingsGoal> {
+    return {
+      name:               dto.nombre,
+      goalAmount:         dto.montoMeta,
+      currentSavings:     dto.ahorrosActuales,
+      months:             dto.mesesParaAhorrarla,
+      annualInterestRate: dto.tasaInteresAnual,
+      emoji:              dto.emoji,
     };
   }
 
   async findByHouse(houseId: string) {
+    if (!houseId) return [];
     const goals = await this.repo.find({
       where: { house: { id: houseId } },
       order: { createdAt: 'DESC' },
     });
-    return goals.map((g) => this.withSummary(g));
+    return goals.map(g => this.toFrontend(g));
   }
 
   async create(dto: any, houseId: string) {
-    const goal = this.repo.create({ ...dto, house: { id: houseId } });
-    return this.withSummary(await this.repo.save(goal));
+    const goal = this.repo.create({
+      ...this.fromFrontend(dto),
+      house: { id: houseId } as any,
+    });
+    return this.toFrontend(await this.repo.save(goal));
   }
 
   async update(id: string, dto: any) {
     const goal = await this.repo.findOne({ where: { id } });
     if (!goal) throw new NotFoundException('Meta no encontrada');
-    Object.assign(goal, dto);
-    return this.withSummary(await this.repo.save(goal));
+    Object.assign(goal, this.fromFrontend(dto));
+    return this.toFrontend(await this.repo.save(goal));
   }
 
   async remove(id: string) {

@@ -147,4 +147,11 @@ export const assetsAPI = {
   delete: (id: string) => api.delete(`/net-worth/${id}`),
 };
 
+export const householdExpensesAPI = {
+  getMonth: (month: string) => api.get(`/household-expenses?month=${month}`),
+  create: (data: any) => api.post('/household-expenses', data),
+  update: (id: string, data: any) => api.put(`/household-expenses/${id}`, data),
+  delete: (id: string) => api.delete(`/household-expenses/${id}`),
+};
+
 export default api;

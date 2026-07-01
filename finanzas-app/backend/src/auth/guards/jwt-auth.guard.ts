@@ -31,15 +31,25 @@ export class JwtAuthGuard implements CanActivate {
       // Load user with roles, permissions and house from database
       const user = await this.userRepo.findOne({
         where: { id: payload.sub, isActive: true },
-        relations: ['roles', 'roles.permissions', 'house']
+        relations: ['roles', 'roles.permissions', 'houses'],
       });
-      
+
       console.log('[JWT Guard] User loaded:', user?.email, 'roles:', user?.roles?.length);
-      
+
       if (!user) {
         throw new UnauthorizedException('Usuario no encontrado o inactivo');
       }
-      
+
+      // Resolver casa activa y exponerla como user.house para todos los controllers
+      if (user.houses?.length > 0) {
+        const activeHouse = user.activeHouseId
+          ? user.houses.find(h => h.id === user.activeHouseId) ?? user.houses[0]
+          : user.houses[0];
+        (user as any).house = activeHouse ?? null;
+      } else {
+        (user as any).house = null;
+      }
+
       request.user = user;
       return true;
     } catch (err) {

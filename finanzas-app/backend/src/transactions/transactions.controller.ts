@@ -21,12 +21,10 @@ interface AuthRequest extends Request {
 }
 
 function resolveHouseId(user: User): string {
-  // The guard loads relations: ['roles', 'roles.permissions', 'house']
-  // but User entity has houses[] + activeHouseId, not house singular.
-  // activeHouseId is the reliable source; fall back to first house in array.
   return (
+    (user as any).house?.id ??
     user.activeHouseId ??
-    (Array.isArray((user as any).houses) && (user as any).houses[0]?.id) ??
+    ((user as any).houses?.[0]?.id) ??
     ''
   );
 }

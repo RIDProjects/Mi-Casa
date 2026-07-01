@@ -2,9 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
-  LayoutDashboard, Users, ShieldCheck, CreditCard, Package, ShoppingCart,
-  PiggyBank, LogOut, Moon, Sun, Home, Building2, Cookie, UserPlus,
-  Calculator, Receipt, Target, Landmark, TrendingUp,
+  LayoutDashboard, Users, ShieldCheck, CreditCard, ShoppingCart,
+  PiggyBank, LogOut, Moon, Sun, Home, Building2, UserPlus,
+  Calculator, Receipt, Target, Landmark, TrendingUp, BookOpen,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
@@ -63,10 +63,9 @@ const houseNavGroups: NavGroup[] = [
   {
     label: 'Hogar',
     items: [
-      { href: '/inventory', label: 'Inventario', icon: Package,      module: 'inventory' },
-      { href: '/purchases', label: 'Compras',    icon: ShoppingCart, module: 'purchases' },
-      { href: '/candy',     label: 'Chuches',   icon: Cookie,       module: 'purchases' },
-      { href: '/house-members', label: 'Miembros', icon: UserPlus,   module: 'house_members' },
+      { href: '/purchases',       label: 'Lista Compra',  icon: ShoppingCart, module: 'purchases' },
+      { href: '/registro-gastos', label: 'Reg. Gastos',   icon: BookOpen,     module: 'purchases' },
+      { href: '/house-members',   label: 'Miembros',      icon: UserPlus,     module: 'house_members' },
     ],
   },
 ];

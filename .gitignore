@@ -2,5 +2,18 @@
 /finanzas-app/backend/node_modules/
 /finanzas-app/frontend/.next/
 /finanzas-app/frontend/node_modules/
+/finanzas-app/mobile/node_modules/
 /AGENTS.md
 /node_modules/
+
+# Archivos reservados de Windows que no deben entrar al repo
+nul
+con
+prn
+aux
+com[0-9]
+lpt[0-9]
+
+# Credenciales EAS (no commitear)
+/finanzas-app/mobile/google-service-account.json
+
