@@ -10,9 +10,9 @@ export default function Register() {
   const router = useRouter();
   const setAuth = useAuthStore(s => s.setAuth);
   const { theme, toggleTheme } = useThemeStore();
-  const [form, setForm] = useState({ 
-    name: '', 
-    email: '', 
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
     password: '',
     houseName: '',
     housePassword: ''
@@ -20,10 +20,11 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showHousePassword, setShowHousePassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (form.password.length < 6) {
       toast.error('La contraseña debe tener al menos 6 caracteres');
       return;
@@ -34,19 +35,23 @@ export default function Register() {
       return;
     }
 
+    setError(null);
     setLoading(true);
     try {
       const { data } = await authAPI.register(form);
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
       setAuth(data.user, data.access_token);
       toast.success('¡Registro exitoso! Bienvenido a tu casa.');
-      
-      // Redirect based on role
+
       const isAdminGlobal = data.user.roles?.some((r: any) => r.name === 'admin');
       router.push(isAdminGlobal ? '/admin' : '/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al registrarse');
+      const status = err.response?.status;
+      if (status === 401) {
+        setError('No autorizado. Verificá los datos ingresados.');
+      } else {
+        setError(err.response?.data?.message || 'Error al registrarse. Intentá de nuevo.');
+      }
+      setForm(f => ({ ...f, password: '' }));
     } finally {
       setLoading(false);
     }
@@ -93,26 +98,26 @@ export default function Register() {
               <div className="space-y-3">
                 <div>
                   <label className="label">Nombre de la casa</label>
-                  <input 
-                    type="text" 
-                    value={form.houseName} 
-                    onChange={e => setForm({...form, houseName: e.target.value})}
-                    className="input" 
-                    placeholder="Mi Casa" 
-                    required 
+                  <input
+                    type="text"
+                    value={form.houseName}
+                    onChange={e => { setError(null); setForm({ ...form, houseName: e.target.value }); }}
+                    className="input"
+                    placeholder="Mi Casa"
+                    required
                     minLength={2}
                   />
                 </div>
                 <div>
                   <label className="label">Contraseña de la casa</label>
                   <div className="relative">
-                    <input 
-                      type={showHousePassword ? 'text' : 'password'} 
-                      value={form.housePassword} 
-                      onChange={e => setForm({...form, housePassword: e.target.value})}
-                      className="input pr-10" 
-                      placeholder="••••••••" 
-                      required 
+                    <input
+                      type={showHousePassword ? 'text' : 'password'}
+                      value={form.housePassword}
+                      onChange={e => { setError(null); setForm({ ...form, housePassword: e.target.value }); }}
+                      className="input pr-10"
+                      placeholder="••••••••"
+                      required
                       minLength={3}
                     />
                     <button
@@ -132,37 +137,37 @@ export default function Register() {
 
             <div>
               <label className="label">Nombre completo</label>
-              <input 
-                type="text" 
-                value={form.name} 
-                onChange={e => setForm({...form, name: e.target.value})}
-                className="input" 
-                placeholder="Juan Pérez" 
-                required 
+              <input
+                type="text"
+                value={form.name}
+                onChange={e => { setError(null); setForm({ ...form, name: e.target.value }); }}
+                className="input"
+                placeholder="Juan Pérez"
+                required
                 minLength={2}
               />
             </div>
             <div>
               <label className="label">Correo electrónico</label>
-              <input 
-                type="email" 
-                value={form.email} 
-                onChange={e => setForm({...form, email: e.target.value})}
-                className="input" 
-                placeholder="juan@email.com" 
-                required 
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => { setError(null); setForm({ ...form, email: e.target.value }); }}
+                className="input"
+                placeholder="juan@email.com"
+                required
               />
             </div>
             <div>
               <label className="label">Tu contraseña</label>
               <div className="relative">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  value={form.password} 
-                  onChange={e => setForm({...form, password: e.target.value})}
-                  className="input pr-10" 
-                  placeholder="••••••••" 
-                  required 
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={e => { setError(null); setForm({ ...form, password: e.target.value }); }}
+                  className="input pr-10"
+                  placeholder="••••••••"
+                  required
                   minLength={6}
                 />
                 <button
@@ -175,11 +180,19 @@ export default function Register() {
               </div>
               <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
             </div>
+            {error && (
+              <div
+                aria-live="polite"
+                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center gap-2"
+              >
+                <span className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</span>
+              </div>
+            )}
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
               {loading ? 'Creando cuenta...' : 'Registrarse'}
             </button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               ¿Ya tienes una cuenta?{' '}

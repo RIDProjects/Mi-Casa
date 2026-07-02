@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { creditCardsAPI } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import PageHeader from '../components/ui/PageHeader';
+import { Badge } from '../components/ui/Badge';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -69,17 +71,17 @@ export default function TarjetasPage() {
 
   const createMut = useMutation((d: any) => creditCardsAPI.create(d), {
     onSuccess: () => { toast.success('Tarjeta registrada'); setShowModal(false); setForm(defaultForm); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const updateMut = useMutation((d: any) => creditCardsAPI.update(editItem?.id, d), {
     onSuccess: () => { toast.success('Tarjeta actualizada'); setEditItem(null); setShowModal(false); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const deleteMut = useMutation((id: string) => creditCardsAPI.delete(id), {
     onSuccess: () => { toast.success('Tarjeta eliminada'); setDeleteId(null); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const handleEdit = (c: any) => {
@@ -112,21 +114,22 @@ export default function TarjetasPage() {
     totalUtilPct < 50 ? 'text-amber-600 dark:text-amber-400' :
     'text-red-600 dark:text-red-400';
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="space-y-4">
-          <div className="skeleton h-8 w-56" />
-          <div className="skeleton h-20 w-full" />
-          <div className="skeleton h-48 w-full" />
-        </div>
-      </Layout>
-    );
-  }
+  return (
+    <Layout>
+      <PageHeader
+        title={<><CreditCard size={24} /> Tarjetas de Crédito</>}
+        subtitle="Gestión de tus tarjetas y deuda"
+        action={
+          <button
+            onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} /> Nueva Tarjeta
+          </button>
+        }
+      />
 
-  if (isError) {
-    return (
-      <Layout>
+      {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <AlertTriangle size={40} className="text-red-400" />
           <p className="text-gray-500 dark:text-gray-400">Error al cargar las tarjetas</p>
@@ -134,30 +137,10 @@ export default function TarjetasPage() {
             <RefreshCw size={16} /> Reintentar
           </button>
         </div>
-      </Layout>
-    );
-  }
-
-  return (
-    <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <CreditCard size={24} /> Tarjetas de Crédito
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Gestión de tus tarjetas y deuda</p>
-        </div>
-        <button
-          onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} /> Nueva Tarjeta
-        </button>
-      </div>
+      )}
 
       {/* Summary bar */}
-      {cards.length > 0 && (
+      {!isLoading && !isError && cards.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
           <div className="flex flex-wrap gap-6 items-center">
             <div>
@@ -185,13 +168,23 @@ export default function TarjetasPage() {
       )}
 
       {/* Cards table */}
-      {cards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
-          <CreditCard size={48} className="mb-4 opacity-40" />
-          <p className="text-lg font-medium mb-1">No hay tarjetas registradas</p>
-          <p className="text-sm">Agregá tu primera tarjeta de crédito</p>
+      {isLoading && (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+          ))}
         </div>
-      ) : (
+      )}
+      {!isLoading && !isError && cards.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-5xl mb-4">💳</div>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No hay tarjetas registradas</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Agregá tu primera tarjeta para empezar a hacer seguimiento</p>
+          <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
+            Agregar tarjeta
+          </button>
+        </div>
+      ) : !isLoading && !isError ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -211,11 +204,29 @@ export default function TarjetasPage() {
                   const saldo = Number(c.saldoActual || 0);
                   const limite = Number(c.lineaCredito || 0);
                   const util = limite > 0 ? (saldo / limite) * 100 : 0;
+                  const utilVariant = util < 30 ? 'green' : util < 60 ? 'amber' : 'red';
+                  const utilLabel = util < 30 ? 'Saludable' : util < 60 ? 'Cuidado' : util < 90 ? 'Alto' : 'Crítico';
+                  const payDay = Number(c.fechaPago);
+                  let daysLeft: number | null = null;
+                  let urgVariant: 'red' | 'amber' | 'gray' = 'gray';
+                  if (payDay) {
+                    const today = new Date();
+                    const nextPayment = new Date(today.getFullYear(), today.getMonth(), payDay);
+                    if (nextPayment <= today) nextPayment.setMonth(nextPayment.getMonth() + 1);
+                    daysLeft = Math.ceil((nextPayment.getTime() - today.getTime()) / 86400000);
+                    urgVariant = daysLeft <= 3 ? 'red' : daysLeft <= 7 ? 'amber' : 'gray';
+                  }
                   return (
                     <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900 dark:text-gray-100">{c.banco}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{c.nombreTarjeta}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                          {c.banco}
+                          <Badge variant={utilVariant}>{utilLabel} {util.toFixed(0)}%</Badge>
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                          {c.nombreTarjeta}
+                          {daysLeft !== null && <Badge variant={urgVariant}>Pago en {daysLeft}d</Badge>}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right font-semibold text-red-600 dark:text-red-400">${fmt(saldo)}</td>
                       <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">${fmt(limite)}</td>
@@ -248,7 +259,7 @@ export default function TarjetasPage() {
             </table>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Modal */}
       <Modal
@@ -260,8 +271,9 @@ export default function TarjetasPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Banco</label>
+              <label className="label" htmlFor="tarjeta-banco">Banco</label>
               <input
+                id="tarjeta-banco"
                 className="input"
                 value={form.banco}
                 onChange={e => setForm({ ...form, banco: e.target.value })}
@@ -270,8 +282,9 @@ export default function TarjetasPage() {
               />
             </div>
             <div>
-              <label className="label">Nombre tarjeta</label>
+              <label className="label" htmlFor="tarjeta-nombre">Nombre tarjeta</label>
               <input
+                id="tarjeta-nombre"
                 className="input"
                 value={form.nombreTarjeta}
                 onChange={e => setForm({ ...form, nombreTarjeta: e.target.value })}
@@ -283,8 +296,9 @@ export default function TarjetasPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Saldo actual</label>
+              <label className="label" htmlFor="tarjeta-saldo">Saldo actual</label>
               <input
+                id="tarjeta-saldo"
                 type="number"
                 step="0.01"
                 min="0"
@@ -296,8 +310,9 @@ export default function TarjetasPage() {
               />
             </div>
             <div>
-              <label className="label">Línea de crédito</label>
+              <label className="label" htmlFor="tarjeta-limite">Línea de crédito</label>
               <input
+                id="tarjeta-limite"
                 type="number"
                 step="0.01"
                 min="0"
@@ -311,8 +326,9 @@ export default function TarjetasPage() {
           </div>
 
           <div>
-            <label className="label">Tasa anual %</label>
+            <label className="label" htmlFor="tarjeta-tasa">Tasa anual %</label>
             <input
+              id="tarjeta-tasa"
               type="number"
               step="0.01"
               min="0"
@@ -326,8 +342,9 @@ export default function TarjetasPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Fecha de corte (día)</label>
+              <label className="label" htmlFor="tarjeta-fecha-corte">Fecha de corte (día)</label>
               <input
+                id="tarjeta-fecha-corte"
                 type="number"
                 min="1"
                 max="31"
@@ -338,8 +355,9 @@ export default function TarjetasPage() {
               />
             </div>
             <div>
-              <label className="label">Fecha de pago (día)</label>
+              <label className="label" htmlFor="tarjeta-fecha-pago">Fecha de pago (día)</label>
               <input
+                id="tarjeta-fecha-pago"
                 type="number"
                 min="1"
                 max="31"

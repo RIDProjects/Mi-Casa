@@ -1,0 +1,16 @@
+# Normalizar line endings: LF en repo, conversión automática en checkout
+* text=auto eol=lf
+
+# Binarios — sin conversión
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.apk binary
+*.ipa binary
+*.aab binary

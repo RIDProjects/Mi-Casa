@@ -3,6 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
 
+interface SavingsGoalFrontendDto {
+  nombre?: string;
+  montoMeta?: number;
+  ahorrosActuales?: number;
+  mesesParaAhorrarla?: number;
+  tasaInteresAnual?: number;
+  emoji?: string;
+}
+
 @Injectable()
 export class SavingsGoalsService {
   constructor(
@@ -46,7 +55,7 @@ export class SavingsGoalsService {
     };
   }
 
-  private fromFrontend(dto: any): Partial<SavingsGoal> {
+  private fromFrontend(dto: SavingsGoalFrontendDto): Partial<SavingsGoal> {
     return {
       name:               dto.nombre,
       goalAmount:         dto.montoMeta,
@@ -66,7 +75,7 @@ export class SavingsGoalsService {
     return goals.map(g => this.toFrontend(g));
   }
 
-  async create(dto: any, houseId: string) {
+  async create(dto: SavingsGoalFrontendDto, houseId: string) {
     const goal = this.repo.create({
       ...this.fromFrontend(dto),
       house: { id: houseId } as any,
@@ -74,15 +83,15 @@ export class SavingsGoalsService {
     return this.toFrontend(await this.repo.save(goal));
   }
 
-  async update(id: string, dto: any) {
-    const goal = await this.repo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: SavingsGoalFrontendDto) {
+    const goal = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!goal) throw new NotFoundException('Meta no encontrada');
     Object.assign(goal, this.fromFrontend(dto));
     return this.toFrontend(await this.repo.save(goal));
   }
 
-  async remove(id: string) {
-    const goal = await this.repo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const goal = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!goal) throw new NotFoundException('Meta no encontrada');
     await this.repo.remove(goal);
     return { message: 'Meta eliminada' };

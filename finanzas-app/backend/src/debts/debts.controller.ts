@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, ParseFloatPipe, DefaultValuePipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DebtsService } from './debts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -24,6 +24,15 @@ export class DebtsController {
     return this.debtsService.getSummary(houseId);
   }
 
+  @Get('payoff') @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Estrategias de pago de deudas' })
+  getPayoffStrategies(
+    @Request() req,
+    @Query('extraPayment', new DefaultValuePipe(0), ParseFloatPipe) extraPayment: number,
+  ) {
+    const houseId = req.user.house?.id ?? '';
+    return this.debtsService.getPayoffStrategies(houseId, extraPayment);
+  }
+
   @Get(':id') @RequirePermission('debts', 'view')
   findOne(@Param('id') id: string) { return this.debtsService.findOne(id); }
 
@@ -35,8 +44,14 @@ export class DebtsController {
   }
 
   @Put(':id') @RequirePermission('debts', 'edit')
-  update(@Param('id') id: string, @Body() dto: any) { return this.debtsService.update(id, dto); }
+  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.debtsService.update(id, houseId, dto);
+  }
 
   @Delete(':id') @RequirePermission('debts', 'delete')
-  remove(@Param('id') id: string) { return this.debtsService.remove(id); }
+  remove(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.debtsService.remove(id, houseId);
+  }
 }

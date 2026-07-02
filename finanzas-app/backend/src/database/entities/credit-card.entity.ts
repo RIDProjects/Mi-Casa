@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { House } from './house.entity';
 
 export enum CardPaymentType {
@@ -19,7 +19,7 @@ export class CreditCard {
   @Column({ nullable: true }) cutDate: string;
   @Column({ nullable: true }) paymentDate: string;
   @Column({ type: 'enum', enum: CardPaymentType, default: CardPaymentType.FULL }) paymentType: CardPaymentType;
-  @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
+  @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

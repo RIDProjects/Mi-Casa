@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { House } from './house.entity';
 
@@ -61,12 +62,14 @@ export class Transaction {
   cardName: string;
 
   /** ISO date string YYYY-MM-DD */
+  @Index()
   @Column({ type: 'date' })
   date: string;
 
   @Column({ nullable: true })
   notes: string;
 
+  @Index()
   @ManyToOne(() => House, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'house_id' })
   house: House;

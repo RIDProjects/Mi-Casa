@@ -3,11 +3,11 @@ import { persist } from 'zustand/middleware';
 
 interface House { id: string; name: string; }
 
-interface User { 
-  id: string; 
-  name: string; 
-  email: string; 
-  roles: any[]; 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  roles: any[];
   house?: House;
 }
 
@@ -20,7 +20,6 @@ interface AuthStore {
   isHouseAdmin: () => boolean;
 }
 
-// Initialize from localStorage to avoid hydration issues
 const getInitialState = () => {
   if (typeof window === 'undefined') return { user: null, token: null, isAuthenticated: false };
   const token = localStorage.getItem('token');
@@ -33,15 +32,18 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       ...getInitialState(),
-      setAuth: (user, token) => { 
+      setAuth: (user, token) => {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        set({ user, token, isAuthenticated: true }); 
+        set({ user, token, isAuthenticated: true });
       },
-      logout: () => { 
+      logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        set({ user: null, token: null, isAuthenticated: false }); 
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth:logout'));
+        }
+        set({ user: null, token: null, isAuthenticated: false });
       },
       hasPermission: (module, action) => {
         const { user } = get();

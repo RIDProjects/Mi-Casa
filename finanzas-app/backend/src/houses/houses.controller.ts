@@ -26,8 +26,8 @@ export class HousesController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Ver detalles de una casa' })
-  findOne(@Param('id') id: string) {
-    return this.housesService.findOne(id);
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.housesService.findOne(id, req.user.id);
   }
 
   @Get(':id/members')
@@ -64,5 +64,15 @@ export class HousesController {
     const isAdminGlobal = req.user.roles?.some((r: any) => r.name === 'admin');
     if (!isAdminGlobal) throw new ForbiddenException('Solo el admin global puede eliminar miembros');
     return this.housesService.removeUserFromHouse(houseId, userId);
+  }
+
+  @Post(':id/invite')
+  @ApiOperation({ summary: 'Invitar un usuario al hogar por email' })
+  inviteUser(
+    @Param('id') houseId: string,
+    @Body() dto: { email: string; role?: string },
+    @Request() req,
+  ) {
+    return this.housesService.inviteUser(houseId, dto.email, dto.role || 'member', req.user.id);
   }
 }

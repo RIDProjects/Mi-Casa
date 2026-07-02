@@ -9,8 +9,13 @@ import {
   Query,
   Request,
   UseGuards,
+  Res,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Transaction } from '../database/entities/transaction.entity';
@@ -36,15 +41,57 @@ function resolveHouseId(user: User): string {
 export class TransactionsController {
   constructor(private readonly txService: TransactionsService) {}
 
+  @Get('export/csv')
+  @ApiQuery({ name: 'year', required: false, type: Number })
+  @ApiQuery({ name: 'month', required: false, type: Number })
+  async exportCsv(
+    @Query('year') year: string,
+    @Query('month') month: string,
+    @Request() req: AuthRequest,
+    @Res() res: Response,
+  ) {
+    const houseId = resolveHouseId(req.user);
+    const result = await this.txService.findByHouseAndMonth(
+      houseId,
+      parseInt(year) || new Date().getFullYear(),
+      parseInt(month) || new Date().getMonth() + 1,
+      1,
+      10000,
+    );
+    const rows = result.data
+      .map(t => `${t.fecha},${t.concepto},${t.monto},${t.categoria ?? ''}`)
+      .join('\n');
+    const csv = `Fecha,Concepto,Monto,Categoría\n${rows}`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=transacciones-${year}-${month}.csv`,
+    );
+    res.send(csv);
+  }
+
   @Get()
   @ApiQuery({ name: 'year', required: false, type: Number })
   @ApiQuery({ name: 'month', required: false, type: Number })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
   findByMonth(
     @Request() req: AuthRequest,
     @Query('year') year?: string,
     @Query('month') month?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
     const houseId = resolveHouseId(req.user);
+    if (page !== undefined || limit !== undefined) {
+      return this.txService.findByHouseAndMonth(
+        houseId,
+        parseInt(year) || new Date().getFullYear(),
+        parseInt(month) || new Date().getMonth() + 1,
+        parseInt(page) || 1,
+        parseInt(limit) || 50,
+      );
+    }
     return this.txService.findByMonth(
       houseId,
       parseInt(year) || new Date().getFullYear(),
@@ -74,6 +121,13 @@ export class TransactionsController {
     );
   }
 
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file'))
+  importCsv(@UploadedFile() file: Express.Multer.File, @Request() req: AuthRequest) {
+    const houseId = resolveHouseId(req.user);
+    return this.txService.importFromCsv(file.buffer, houseId);
+  }
+
   @Post()
   create(@Body() dto: Partial<Transaction>, @Request() req: AuthRequest) {
     const houseId = resolveHouseId(req.user);
@@ -81,12 +135,14 @@ export class TransactionsController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: Partial<Transaction>) {
-    return this.txService.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: Partial<Transaction>, @Request() req: AuthRequest) {
+    const houseId = resolveHouseId(req.user);
+    return this.txService.update(id, houseId, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.txService.remove(id);
+  remove(@Param('id') id: string, @Request() req: AuthRequest) {
+    const houseId = resolveHouseId(req.user);
+    return this.txService.remove(id, houseId);
   }
 }

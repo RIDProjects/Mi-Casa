@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { House } from '../database/entities/house.entity';
@@ -15,9 +15,19 @@ export class HousesService {
     return this.houseRepo.find({ order: { createdAt: 'DESC' }, relations: ['members'] });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, requestingUserId?: string) {
     const house = await this.houseRepo.findOne({ where: { id }, relations: ['members'] });
     if (!house) throw new NotFoundException('Casa no encontrada');
+
+    if (requestingUserId) {
+      const isMember = house.members?.some(m => m.id === requestingUserId);
+      if (!isMember) {
+        const user = await this.userRepo.findOne({ where: { id: requestingUserId }, relations: ['roles'] });
+        const isAdmin = user?.roles?.some((r: any) => r.name === 'admin');
+        if (!isAdmin) throw new ForbiddenException('No tenés acceso a esta casa');
+      }
+    }
+
     return house;
   }
 
@@ -92,6 +102,25 @@ export class HousesService {
     }
     await this.userRepo.save(user);
     return { message: 'Usuario eliminado de la casa' };
+  }
+
+  // Invite a user by email — returns status object instead of throwing for not-found
+  async inviteUser(houseId: string, email: string, role: string, invitedById: string) {
+    const house = await this.houseRepo.findOne({ where: { id: houseId } });
+    if (!house) throw new NotFoundException('Casa no encontrada');
+
+    const user = await this.userRepo.findOne({ where: { email }, relations: ['houses'] });
+    if (!user) {
+      return { status: 'not_found', message: 'Usuario no registrado' };
+    }
+
+    const alreadyMember = user.houses?.some(h => h.id === houseId);
+    if (alreadyMember) throw new ConflictException('Ya es miembro de este hogar');
+
+    user.houses = [...(user.houses || []), house];
+    if (!user.activeHouseId) user.activeHouseId = houseId;
+    await this.userRepo.save(user);
+    return { status: 'added', userId: user.id };
   }
 
   // Invite an existing user to a house by email

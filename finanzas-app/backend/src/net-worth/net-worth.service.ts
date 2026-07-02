@@ -2,11 +2,20 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Asset, AssetType } from '../database/entities/asset.entity';
+import { NetWorthSnapshot } from '../database/entities/net-worth-snapshot.entity';
+
+interface AssetFrontendDto {
+  nombre?: string;
+  valorEstimado?: number;
+  assetType?: AssetType;
+  notas?: string;
+}
 
 @Injectable()
 export class NetWorthService {
   constructor(
     @InjectRepository(Asset) private repo: Repository<Asset>,
+    @InjectRepository(NetWorthSnapshot) private snapshotRepo: Repository<NetWorthSnapshot>,
   ) {}
 
   private toFrontend(a: Asset) {
@@ -21,13 +30,52 @@ export class NetWorthService {
     };
   }
 
-  private fromFrontend(dto: any): Partial<Asset> {
+  private fromFrontend(dto: AssetFrontendDto): Partial<Asset> {
     return {
       name:      dto.nombre,
       value:     dto.valorEstimado,
       assetType: dto.assetType,
       notes:     dto.notas,
     };
+  }
+
+  private currentMonthFirstDay(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  }
+
+  async saveSnapshot(houseId: string, totalAssets: number, totalLiabilities: number) {
+    const snapshotDate = this.currentMonthFirstDay();
+    const netWorth = totalAssets - totalLiabilities;
+
+    const existing = await this.snapshotRepo.findOne({
+      where: { house: { id: houseId }, snapshotDate: new Date(snapshotDate) },
+    });
+
+    if (existing) {
+      existing.totalAssets = totalAssets;
+      existing.totalLiabilities = totalLiabilities;
+      existing.netWorth = netWorth;
+      await this.snapshotRepo.save(existing);
+    } else {
+      await this.snapshotRepo.save(
+        this.snapshotRepo.create({
+          snapshotDate: new Date(snapshotDate) as any,
+          totalAssets,
+          totalLiabilities,
+          netWorth,
+          house: { id: houseId } as any,
+        }),
+      );
+    }
+  }
+
+  async getHistory(houseId: string, months = 12) {
+    return this.snapshotRepo.find({
+      where: { house: { id: houseId } },
+      order: { snapshotDate: 'DESC' },
+      take: months,
+    });
   }
 
   async getNetWorthSummary(
@@ -47,6 +95,8 @@ export class NetWorthService {
     const totalAssets = physical + cash;
     const totalDebts  = totalCardBalances + totalLoanDebt;
 
+    this.saveSnapshot(houseId, totalAssets, totalDebts).catch(() => undefined);
+
     return {
       physicalAssets: Math.round(physical * 100) / 100,
       cashAssets:     Math.round(cash * 100) / 100,
@@ -57,20 +107,20 @@ export class NetWorthService {
     };
   }
 
-  async create(dto: any, houseId: string) {
+  async create(dto: AssetFrontendDto, houseId: string) {
     const asset = this.repo.create({ ...this.fromFrontend(dto), house: { id: houseId } as any });
     return this.toFrontend(await this.repo.save(asset));
   }
 
-  async update(id: string, dto: any) {
-    const asset = await this.repo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: AssetFrontendDto) {
+    const asset = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!asset) throw new NotFoundException('Activo no encontrado');
     Object.assign(asset, this.fromFrontend(dto));
     return this.toFrontend(await this.repo.save(asset));
   }
 
-  async remove(id: string) {
-    const asset = await this.repo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const asset = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!asset) throw new NotFoundException('Activo no encontrado');
     await this.repo.remove(asset);
     return { message: 'Activo eliminado' };

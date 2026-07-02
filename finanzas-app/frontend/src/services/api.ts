@@ -17,7 +17,10 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:logout'));
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(err);
   }
@@ -63,13 +66,6 @@ export const debtsAPI = {
   delete: (id: string) => api.delete(`/debts/${id}`),
 };
 
-export const inventoryAPI = {
-  getAll: () => api.get('/inventory'),
-  getDashboard: () => api.get('/inventory/dashboard'),
-  create: (data: any) => api.post('/inventory', data),
-  update: (id: string, data: any) => api.put(`/inventory/${id}`, data),
-  delete: (id: string) => api.delete(`/inventory/${id}`),
-};
 
 export const purchasesAPI = {
   getLists: () => api.get('/purchases/lists'),
@@ -152,6 +148,99 @@ export const householdExpensesAPI = {
   create: (data: any) => api.post('/household-expenses', data),
   update: (id: string, data: any) => api.put(`/household-expenses/${id}`, data),
   delete: (id: string) => api.delete(`/household-expenses/${id}`),
+};
+
+export const exportTransactionsCSV = async (year: number, month: number) => {
+  const response = await api.get(`/transactions/export/csv?year=${year}&month=${month}`, {
+    responseType: 'blob',
+  });
+  const url = window.URL.createObjectURL(new Blob([response.data]));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `transacciones-${year}-${month}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+};
+
+export const importTransactionsCSV = async (file: File, year: number, month: number) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return api.post(`/transactions/import?year=${year}&month=${month}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+export const recurringAPI = {
+  getAll: () => api.get('/recurring-transactions'),
+  create: (data: any) => api.post('/recurring-transactions', data),
+  update: (id: string, data: any) => api.put(`/recurring-transactions/${id}`, data),
+  remove: (id: string) => api.delete(`/recurring-transactions/${id}`),
+  generateForMonth: (year: number, month: number) => api.post('/recurring-transactions/generate', { year, month }),
+};
+
+export const summaryAPI = {
+  getGlobal: () => api.get('/summary'),
+};
+
+export const cuotasAPI = {
+  getAll: () => api.get('/cuotas'),
+  getSummary: () => api.get('/cuotas/summary'),
+  create: (data: any) => api.post('/cuotas', data),
+  update: (id: string, data: any) => api.put(`/cuotas/${id}`, data),
+  remove: (id: string) => api.delete(`/cuotas/${id}`),
+  pay: (id: string) => api.post(`/cuotas/${id}/pay`),
+};
+
+export const upcomingBillsAPI = {
+  get: (days?: number) => api.get(`/summary/upcoming-bills?days=${days || 30}`),
+};
+
+export const debtPayoffAPI = {
+  getStrategies: (extraPayment: number) => api.get(`/debts/payoff?extraPayment=${extraPayment}`),
+};
+
+export const netWorthHistoryAPI = {
+  get: (months?: number) => api.get(`/net-worth/history?months=${months || 12}`),
+};
+
+export const notificationsAPI = {
+  getAll: () => api.get('/notifications'),
+  markRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch('/notifications/read-all'),
+};
+
+export const emergencyFundCoverageAPI = {
+  getCoverage: () => api.get('/emergency-fund/coverage'),
+};
+
+export const houseInviteAPI = {
+  invite: (houseId: string, email: string, role?: string) =>
+    api.post(`/houses/${houseId}/invite`, { email, role }),
+};
+
+export const insightsAPI = {
+  get: () => api.get('/summary/insights'),
+};
+
+export const investmentsAPI = {
+  getAll: () => api.get('/investments'),
+  create: (data: any) => api.post('/investments', data),
+  update: (id: string, data: any) => api.put(`/investments/${id}`, data),
+  remove: (id: string) => api.delete(`/investments/${id}`),
+};
+
+export const exchangeRatesAPI = {
+  getLatest: () => api.get('/exchange-rates/latest'),
+  create: (data: any) => api.post('/exchange-rates', data),
+};
+
+export const pushAPI = {
+  getPublicKey: () => api.get('/push/vapid-public-key'),
+  subscribe: (subscription: any) => api.post('/push/subscribe', subscription),
+};
+
+export const healthScoreAPI = {
+  get: () => api.get('/summary/health-score'),
 };
 
 export default api;

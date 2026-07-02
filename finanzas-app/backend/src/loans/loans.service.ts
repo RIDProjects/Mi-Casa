@@ -3,6 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Loan } from '../database/entities/loan.entity';
 
+interface LoanFrontendDto {
+  tipo?: string;
+  institucion?: string;
+  deudaInicial?: number;
+  deudaActual?: number;
+  cuotaMensual?: number;
+  notas?: string;
+}
+
 @Injectable()
 export class LoansService {
   constructor(
@@ -34,7 +43,7 @@ export class LoansService {
     };
   }
 
-  private fromFrontend(dto: any): Partial<Loan> {
+  private fromFrontend(dto: LoanFrontendDto): Partial<Loan> {
     return {
       loanType:      dto.tipo,
       institution:   dto.institucion,
@@ -54,7 +63,7 @@ export class LoansService {
     return loans.map(l => this.toFrontend(l));
   }
 
-  async create(dto: any, houseId: string) {
+  async create(dto: LoanFrontendDto, houseId: string) {
     const loan = this.repo.create({
       ...this.fromFrontend(dto),
       house: { id: houseId } as any,
@@ -63,16 +72,16 @@ export class LoansService {
     return this.toFrontend(saved);
   }
 
-  async update(id: string, dto: any) {
-    const loan = await this.repo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: LoanFrontendDto) {
+    const loan = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!loan) throw new NotFoundException('Crédito no encontrado');
     Object.assign(loan, this.fromFrontend(dto));
     const saved = await this.repo.save(loan);
     return this.toFrontend(saved);
   }
 
-  async remove(id: string) {
-    const loan = await this.repo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const loan = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!loan) throw new NotFoundException('Crédito no encontrado');
     await this.repo.remove(loan);
     return { message: 'Crédito eliminado' };

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -8,14 +8,66 @@ import {
   IncomeSource,
   Periodicity,
 } from '../database/entities/budget.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const PERIODICITY_FACTOR: Record<Periodicity, number> = {
-  [Periodicity.MONTHLY]: 1,
-  [Periodicity.BIMONTHLY]: 2,
-  [Periodicity.QUARTERLY]: 3,
-  [Periodicity.SEMIANNUAL]: 6,
-  [Periodicity.ANNUAL]: 12,
+  [Periodicity.DAILY]:       1 / 30,
+  [Periodicity.WEEKLY]:      1 / 4,
+  [Periodicity.BIWEEKLY]:    1 / 2,
+  [Periodicity.MONTHLY]:     1,
+  [Periodicity.BIMONTHLY]:   2,
+  [Periodicity.QUARTERLY]:   3,
+  [Periodicity.FOURMONTHLY]: 4,
+  [Periodicity.SEMIANNUAL]:  6,
+  [Periodicity.ANNUAL]:      12,
 };
+
+interface CreateBudgetDto {
+  name?: string;
+  year?: number;
+  savingsTargetPercent?: number;
+}
+
+interface UpdateBudgetDto {
+  name?: string;
+  year?: number;
+  savingsTargetPercent?: number;
+}
+
+interface AddIncomeDto {
+  name: string;
+  type?: string;
+  amount: number;
+}
+
+interface UpdateIncomeDto {
+  name?: string;
+  type?: string;
+  amount?: number;
+}
+
+interface AddCategoryDto {
+  name: string;
+  sortOrder?: number;
+}
+
+interface AddExpenseDto {
+  name: string;
+  amount: number;
+  periodicity?: Periodicity;
+  isFixed?: boolean;
+  isCreditCard?: boolean;
+  isAntExpense?: boolean;
+}
+
+interface UpdateExpenseDto {
+  name?: string;
+  amount?: number;
+  periodicity?: Periodicity;
+  isFixed?: boolean;
+  isCreditCard?: boolean;
+  isAntExpense?: boolean;
+}
 
 const DEFAULT_CATEGORIES = [
   'Casa',
@@ -43,6 +95,8 @@ export class BudgetService {
 
     @InjectRepository(IncomeSource)
     private incomeRepo: Repository<IncomeSource>,
+
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private computeMonthlyAmount(
@@ -83,6 +137,8 @@ export class BudgetService {
       advisory = 'danger';
     }
 
+    const savingsShortfall = Math.max(0, savingsTargetAmount - available);
+
     return {
       totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
@@ -90,7 +146,35 @@ export class BudgetService {
       savingsTargetAmount: Math.round(savingsTargetAmount * 100) / 100,
       antExpensesTotal: Math.round(antExpensesTotal * 100) / 100,
       advisory,
+      alerts: {
+        overBudget: totalMonthlyExpenses > totalMonthlyIncome,
+        nearLimit: totalMonthlyExpenses > totalMonthlyIncome * 0.8,
+        savingsShortfall: Math.round(savingsShortfall * 100) / 100,
+        antExpensesWarning: totalMonthlyIncome > 0 && antExpensesTotal > totalMonthlyIncome * 0.15,
+      },
     };
+  }
+
+  private async notifyBudgetAlerts(houseId: string, summary: any): Promise<void> {
+    try {
+      const to = process.env.SMTP_USER || 'ridgomez99@gmail.com';
+      if (summary.alerts?.overBudget) {
+        await this.notificationsService.sendBudgetAlert(
+          to,
+          'Gastos superan ingresos',
+          'Tus gastos del mes superan tus ingresos. Revisá tu presupuesto.',
+        );
+      }
+      if (summary.alerts?.antExpensesWarning) {
+        await this.notificationsService.sendBudgetAlert(
+          to,
+          'Alerta gastos hormiga',
+          'Los gastos hormiga superan el 15% de tus ingresos.',
+        );
+      }
+    } catch (e) {
+      // swallow — never fail the main request due to notification errors
+    }
   }
 
   async findByHouse(houseId: string) {
@@ -99,7 +183,12 @@ export class BudgetService {
       relations: ['incomeSources', 'categories', 'categories.expenses'],
       order: { createdAt: 'DESC' },
     });
-    return budgets.map((b) => ({ ...b, summary: this.computeSummary(b) }));
+    const result = budgets.map((b) => ({ ...b, summary: this.computeSummary(b) }));
+    if (result[0]) {
+      // Fire-and-forget — do NOT await so budget response is never delayed
+      void this.notifyBudgetAlerts(houseId, result[0].summary);
+    }
+    return result;
   }
 
   async findOne(id: string) {
@@ -111,10 +200,11 @@ export class BudgetService {
     return { ...budget, summary: this.computeSummary(budget) };
   }
 
-  async create(dto: any, houseId: string) {
+  async create(dto: CreateBudgetDto, houseId: string) {
     const defaultCategories = DEFAULT_CATEGORIES.map((name, i) => ({
       name,
       sortOrder: i,
+      isDefault: true,
       expenses: [],
     }));
 
@@ -131,8 +221,8 @@ export class BudgetService {
     return this.findOne(saved.id);
   }
 
-  async update(id: string, dto: any) {
-    const budget = await this.budgetRepo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: UpdateBudgetDto) {
+    const budget = await this.budgetRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
 
     if (dto.name !== undefined) budget.name = dto.name;
@@ -144,8 +234,8 @@ export class BudgetService {
     return this.findOne(id);
   }
 
-  async remove(id: string) {
-    const budget = await this.budgetRepo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const budget = await this.budgetRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     await this.budgetRepo.remove(budget);
     return { message: 'Presupuesto eliminado' };
@@ -153,7 +243,9 @@ export class BudgetService {
 
   // ── Income sources ──────────────────────────────────────────────────────────
 
-  async addIncome(budgetId: string, dto: any) {
+  async addIncome(budgetId: string, houseId: string, dto: AddIncomeDto) {
+    const budget = await this.budgetRepo.findOne({ where: { id: budgetId, house: { id: houseId } } });
+    if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     const income = this.incomeRepo.create({
       ...dto,
       budget: { id: budgetId },
@@ -161,15 +253,25 @@ export class BudgetService {
     return this.incomeRepo.save(income);
   }
 
-  async updateIncome(id: string, dto: any) {
-    const income = await this.incomeRepo.findOne({ where: { id } });
+  async updateIncome(id: string, houseId: string, dto: UpdateIncomeDto) {
+    const income = await this.incomeRepo
+      .createQueryBuilder('i')
+      .innerJoin('i.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('i.id = :id AND house.id = :houseId', { id, houseId })
+      .getOne();
     if (!income) throw new NotFoundException('Fuente de ingreso no encontrada');
     Object.assign(income, dto);
     return this.incomeRepo.save(income);
   }
 
-  async removeIncome(id: string) {
-    const income = await this.incomeRepo.findOne({ where: { id } });
+  async removeIncome(id: string, houseId: string) {
+    const income = await this.incomeRepo
+      .createQueryBuilder('i')
+      .innerJoin('i.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('i.id = :id AND house.id = :houseId', { id, houseId })
+      .getOne();
     if (!income) throw new NotFoundException('Fuente de ingreso no encontrada');
     await this.incomeRepo.remove(income);
     return { message: 'Ingreso eliminado' };
@@ -177,7 +279,9 @@ export class BudgetService {
 
   // ── Categories ───────────────────────────────────────────────────────────────
 
-  async addCategory(budgetId: string, dto: any) {
+  async addCategory(budgetId: string, houseId: string, dto: AddCategoryDto) {
+    const budget = await this.budgetRepo.findOne({ where: { id: budgetId, house: { id: houseId } } });
+    if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     const cat = this.categoryRepo.create({
       ...dto,
       budget: { id: budgetId },
@@ -186,16 +290,41 @@ export class BudgetService {
     return this.categoryRepo.save(cat);
   }
 
-  async removeCategory(id: string) {
-    const cat = await this.categoryRepo.findOne({ where: { id } });
+  async updateCategory(id: string, houseId: string, dto: { name?: string; sortOrder?: number }) {
+    const cat = await this.categoryRepo
+      .createQueryBuilder('c')
+      .innerJoin('c.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('c.id = :id AND house.id = :houseId', { id, houseId })
+      .getOne();
     if (!cat) throw new NotFoundException('Categoría no encontrada');
+    Object.assign(cat, dto);
+    return this.categoryRepo.save(cat);
+  }
+
+  async removeCategory(id: string, houseId: string) {
+    const cat = await this.categoryRepo
+      .createQueryBuilder('c')
+      .innerJoin('c.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('c.id = :id AND house.id = :houseId', { id, houseId })
+      .getOne();
+    if (!cat) throw new NotFoundException('Categoría no encontrada');
+    if (cat.isDefault) throw new BadRequestException('Las categorías predeterminadas no se pueden eliminar');
     await this.categoryRepo.remove(cat);
     return { message: 'Categoría eliminada' };
   }
 
   // ── Expenses ─────────────────────────────────────────────────────────────────
 
-  async addExpense(categoryId: string, dto: any) {
+  async addExpense(categoryId: string, houseId: string, dto: AddExpenseDto) {
+    const cat = await this.categoryRepo
+      .createQueryBuilder('c')
+      .innerJoin('c.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('c.id = :id AND house.id = :houseId', { id: categoryId, houseId })
+      .getOne();
+    if (!cat) throw new NotFoundException('Categoría no encontrada');
     const expense = this.expenseRepo.create({
       ...dto,
       category: { id: categoryId },
@@ -203,15 +332,27 @@ export class BudgetService {
     return this.expenseRepo.save(expense);
   }
 
-  async updateExpense(id: string, dto: any) {
-    const expense = await this.expenseRepo.findOne({ where: { id } });
+  async updateExpense(id: string, houseId: string, dto: UpdateExpenseDto) {
+    const expense = await this.expenseRepo
+      .createQueryBuilder('e')
+      .innerJoin('e.category', 'cat')
+      .innerJoin('cat.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('e.id = :id AND house.id = :houseId', { id, houseId })
+      .getOne();
     if (!expense) throw new NotFoundException('Gasto no encontrado');
     Object.assign(expense, dto);
     return this.expenseRepo.save(expense);
   }
 
-  async removeExpense(id: string) {
-    const expense = await this.expenseRepo.findOne({ where: { id } });
+  async removeExpense(id: string, houseId: string) {
+    const expense = await this.expenseRepo
+      .createQueryBuilder('e')
+      .innerJoin('e.category', 'cat')
+      .innerJoin('cat.budget', 'budget')
+      .innerJoin('budget.house', 'house')
+      .where('e.id = :id AND house.id = :houseId', { id, houseId })
+      .getOne();
     if (!expense) throw new NotFoundException('Gasto no encontrado');
     await this.expenseRepo.remove(expense);
     return { message: 'Gasto eliminado' };

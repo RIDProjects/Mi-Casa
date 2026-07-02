@@ -26,13 +26,15 @@ export class LoansController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar crédito' })
-  update(@Param('id') id: string, @Body() dto: any) {
-    return this.service.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
+    return this.service.update(id, houseId, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar crédito' })
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
+    return this.service.remove(id, houseId);
   }
 }

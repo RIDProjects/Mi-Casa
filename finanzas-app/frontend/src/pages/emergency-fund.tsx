@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { emergencyFundAPI } from '../services/api';
+import { emergencyFundAPI, emergencyFundCoverageAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, PiggyBank, Target, Lock } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import { Input } from '../components/ui/Input';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(Number(n) || 0);
 
@@ -47,6 +49,12 @@ export default function EmergencyFundPage() {
   const [form, setForm] = useState<any>(defaultForm);
 
   const { data: funds = [] } = useQuery('emergencyFunds', () => emergencyFundAPI.getAll().then(r => r.data));
+
+  const { data: coverage } = useQuery(
+    'emergencyFundCoverage',
+    () => emergencyFundCoverageAPI.getCoverage().then(r => r.data),
+    { retry: false }
+  );
 
   // Helper to extract error message safely
   const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
@@ -104,22 +112,21 @@ export default function EmergencyFundPage() {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">💰 Calculadora de Fondo de Emergencia</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Calcula cuánto necesitas para estar seguro</p>
-        </div>
-        {canCreate ? (
-          <button onClick={() => { setForm(defaultForm); setEditFund(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-            <Plus size={18} /> Nueva calculadora
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
-            <Lock size={16} /> Sin permisos para agregar
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="💰 Calculadora de Fondo de Emergencia"
+        subtitle="Calcula cuánto necesitas para estar seguro"
+        action={
+          canCreate ? (
+            <button onClick={() => { setForm(defaultForm); setEditFund(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+              <Plus size={18} /> Nueva calculadora
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+              <Lock size={16} /> Sin permisos para agregar
+            </div>
+          )
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Fund selector */}
@@ -222,6 +229,16 @@ export default function EmergencyFundPage() {
                     </div>
                   </div>
 
+                  {coverage && (
+                    <div className={`rounded-xl p-4 border mb-6 ${coverage.status === 'safe' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' : coverage.status === 'low' ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700' : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'}`}>
+                      <p className="font-semibold text-sm">Cobertura: {coverage.monthsCovered.toFixed(1)} meses</p>
+                      <p className="text-xs text-gray-500 mt-1">Meta: 6 meses | Gastos promedio: ${fmt(coverage.monthlyExpenses)}/mes</p>
+                      <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                        <div className="h-2 bg-green-500 rounded-full" style={{ width: `${Math.min(100, (coverage.monthsCovered / 6) * 100)}%` }} />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Categories Table - Like Excel */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
                     <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
@@ -272,36 +289,47 @@ export default function EmergencyFundPage() {
       {/* Create/Edit Modal */}
       <Modal isOpen={showModal} onClose={() => { setShowModal(false); setEditFund(null); }} title={editFund ? 'Editar fondo' : 'Nueva calculadora'} size="lg">
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="label">Nombre</label>
-            <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-          </div>
+          <Input
+            label="Nombre"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            required
+          />
           <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="label">Meses óptimo</label>
-              <input type="number" min="1" className="input" value={form.targetMonths} onChange={e => setForm({ ...form, targetMonths: Number(e.target.value) })} />
-            </div>
-            <div>
-              <label className="label">Meses mínimo</label>
-              <input type="number" min="1" className="input" value={form.minimumMonths} onChange={e => setForm({ ...form, minimumMonths: Number(e.target.value) })} />
-            </div>
-            <div>
-              <label className="label">¿En cuántos meses?</label>
-              <input type="number" min="1" className="input" value={form.savingPeriodMonths} onChange={e => setForm({ ...form, savingPeriodMonths: Number(e.target.value) })} />
-            </div>
+            <Input
+              label="Meses óptimo"
+              type="number"
+              min="1"
+              value={form.targetMonths}
+              onChange={e => setForm({ ...form, targetMonths: Number(e.target.value) })}
+            />
+            <Input
+              label="Meses mínimo"
+              type="number"
+              min="1"
+              value={form.minimumMonths}
+              onChange={e => setForm({ ...form, minimumMonths: Number(e.target.value) })}
+            />
+            <Input
+              label="¿En cuántos meses?"
+              type="number"
+              min="1"
+              value={form.savingPeriodMonths}
+              onChange={e => setForm({ ...form, savingPeriodMonths: Number(e.target.value) })}
+            />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="label mb-0">Gastos mensuales por categoría</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gastos mensuales por categoría</label>
               <button type="button" onClick={addCategory} className="text-sm text-blue-600 hover:text-blue-700 font-medium">+ Agregar</button>
             </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto border dark:border-gray-600 rounded-xl p-3">
+            <div className="space-y-2 max-h-72 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-xl p-3">
               {form.categories.map((cat: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-2">
                   <input className="input flex-1 text-sm" placeholder="Categoría" value={cat.name} onChange={e => updateCategory(idx, 'name', e.target.value)} />
                   <input type="number" step="0.01" min="0" className="input w-32 text-sm" placeholder="0.00" value={cat.monthlyAmount} onChange={e => updateCategory(idx, 'monthlyAmount', Number(e.target.value))} />
-                  <button type="button" onClick={() => removeCategory(idx)} className="text-red-500 hover:text-red-700 shrink-0 p-1">✕</button>
+                  <button type="button" onClick={() => removeCategory(idx)} className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 shrink-0 p-1">✕</button>
                 </div>
               ))}
             </div>

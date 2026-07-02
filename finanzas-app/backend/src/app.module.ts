@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -19,11 +20,17 @@ import { CreditCardsModule } from './credit-cards/credit-cards.module';
 import { LoansModule } from './loans/loans.module';
 import { NetWorthModule } from './net-worth/net-worth.module';
 import { HouseholdExpensesModule } from './household-expenses/household-expenses.module';
+import { RecurringTransactionsModule } from './recurring-transactions/recurring-transactions.module';
+import { SummaryModule } from './summary/summary.module';
+import { CuotasModule } from './cuotas/cuotas.module';
+import { InvestmentsModule } from './investments/investments.module';
+import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
+import { PushModule } from './push/push.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
@@ -34,11 +41,15 @@ import { HouseholdExpensesModule } from './household-expenses/household-expenses
       entities: [__dirname + '/database/entities/*.entity{.ts,.js}'],
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
     PurchasesModule, InventoryModule, EmergencyFundModule, NotificationsModule,
     BudgetModule, TransactionsModule, SavingsGoalsModule,
     CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
+    RecurringTransactionsModule, SummaryModule, CuotasModule,
+    InvestmentsModule, ExchangeRatesModule, PushModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

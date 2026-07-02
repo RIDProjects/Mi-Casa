@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn, Index } from 'typeorm';
 import { House } from './house.entity';
 
 @Entity('emergency_funds')
@@ -9,7 +9,7 @@ export class EmergencyFund {
   @Column({ type: 'int', default: 3 }) minimumMonths: number;
   @Column({ type: 'int', default: 24 }) savingPeriodMonths: number;
   @OneToMany(() => ExpenseCategory, cat => cat.fund, { cascade: true, eager: true }) categories: ExpenseCategory[];
-  @ManyToOne(() => House, { nullable: true }) house: House;
+  @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

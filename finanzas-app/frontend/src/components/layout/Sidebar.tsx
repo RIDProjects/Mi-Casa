@@ -4,7 +4,8 @@ import { useRouter } from 'next/router';
 import {
   LayoutDashboard, Users, ShieldCheck, CreditCard, ShoppingCart,
   PiggyBank, LogOut, Moon, Sun, Home, Building2, UserPlus,
-  Calculator, Receipt, Target, Landmark, TrendingUp, BookOpen,
+  Calculator, Receipt, Target, Landmark, TrendingUp, TrendingDown, BookOpen,
+  BarChart2, Bell, RefreshCw, Calendar, X,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
@@ -41,7 +42,17 @@ const houseNavGroups: NavGroup[] = [
     items: [
       { href: '/presupuesto',   label: 'Presupuesto',    icon: Calculator, module: null },
       { href: '/transacciones', label: 'Transacciones',  icon: Receipt,    module: null },
+      { href: '/recurrentes',   label: 'Recurrentes',    icon: RefreshCw,  module: null },
       { href: '/metas',         label: 'Metas de Ahorro',icon: Target,     module: null },
+      { href: '/analytics',     label: 'Analíticas',     icon: BarChart2,  module: null },
+    ],
+  },
+  {
+    label: 'Finanzas',
+    items: [
+      { href: '/cuotas',      label: 'Cuotas',           icon: Receipt,      module: null },
+      { href: '/vencimientos',label: 'Vencimientos',     icon: Calendar,     module: null },
+      { href: '/payoff',      label: 'Estrategia Deuda', icon: TrendingDown, module: null },
     ],
   },
   {
@@ -56,6 +67,7 @@ const houseNavGroups: NavGroup[] = [
     label: 'Patrimonio',
     items: [
       { href: '/patrimonio',     label: 'Patrimonio',      icon: TrendingUp, module: null },
+      { href: '/inversiones',    label: 'Inversiones',     icon: TrendingUp, module: null },
       { href: '/simulador',      label: 'Simulador',       icon: Calculator, module: null },
       { href: '/emergency-fund', label: 'Fondo Emergencia',icon: PiggyBank,  module: 'emergency_fund' },
     ],
@@ -68,9 +80,20 @@ const houseNavGroups: NavGroup[] = [
       { href: '/house-members',   label: 'Miembros',      icon: UserPlus,     module: 'house_members' },
     ],
   },
+  {
+    label: 'Notificaciones',
+    items: [
+      { href: '/notificaciones', label: 'Notificaciones', icon: Bell, module: null },
+    ],
+  },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
   const { user, logout, hasPermission, isAdminGlobal } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -78,23 +101,33 @@ export default function Sidebar() {
   const isGlobalAdmin = isAdminGlobal();
   const userHasAdminRole = user?.roles?.some((r: any) => r.name === 'admin') ?? false;
   const userHasHouseAdminRole = user?.roles?.some((r: any) => r.name === 'house_admin') ?? false;
-  const isActuallyAdmin = isGlobalAdmin || userHasAdminRole;
 
   const houseName = (user as any)?.house?.name;
   const isAdminRoute = router.pathname.startsWith('/admin');
-  const showAdminMenu = isActuallyAdmin || isAdminRoute;
+  const showAdminMenu = isAdminRoute;
 
-  return (
-    <aside className="w-64 bg-gray-900 dark:bg-gray-950 text-white flex flex-col min-h-screen border-r border-gray-800">
-      <div className="p-4 border-b border-gray-700 dark:border-gray-800">
-        <div className="flex items-center gap-2 mb-2">
-          <Home size={20} className="text-primary-400" />
-          <h1 className="text-lg font-bold text-primary-400">🏠 Mi Casa Pro</h1>
+  const handleLinkClick = () => {
+    if (onClose) onClose();
+  };
+
+  const sidebarContent = (
+    <aside className="w-64 bg-gray-900 dark:bg-gray-950 text-white flex flex-col h-full border-r border-gray-800">
+      <div className="p-4 border-b border-gray-700 dark:border-gray-800 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Home size={20} className="text-primary-400" />
+            <h1 className="text-lg font-bold text-primary-400">Mi Casa Pro</h1>
+          </div>
+          {!showAdminMenu && houseName && (
+            <p className="text-xs text-gray-400 mt-1">
+              Casa: <span className="text-white font-medium">{houseName}</span>
+            </p>
+          )}
         </div>
-        {!showAdminMenu && houseName && (
-          <p className="text-xs text-gray-400 mt-1">
-            Casa: <span className="text-white font-medium">{houseName}</span>
-          </p>
+        {onClose && (
+          <button onClick={onClose} className="md:hidden p-1 text-gray-400 hover:text-white">
+            <X size={18} />
+          </button>
         )}
       </div>
 
@@ -105,7 +138,7 @@ export default function Sidebar() {
               if (module && !hasPermission(module, 'view')) return null;
               const isActive = router.pathname === href;
               return (
-                <Link key={href} href={href}
+                <Link key={href} href={href} onClick={handleLinkClick}
                   className={clsx(
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
@@ -136,7 +169,7 @@ export default function Sidebar() {
                   {visibleItems.map(({ href, label, icon: Icon }) => {
                     const isActive = router.pathname === href;
                     return (
-                      <Link key={href} href={href}
+                      <Link key={href} href={href} onClick={handleLinkClick}
                         className={clsx(
                           'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                           isActive
@@ -181,5 +214,28 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex w-64 min-h-screen flex-shrink-0">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {isOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+          <div className="relative z-10 flex w-64 flex-col">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

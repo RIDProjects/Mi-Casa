@@ -7,12 +7,104 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, UserCheck, UserX, Eye, EyeOff } from 'lucide-react';
 
+interface UserFormValues {
+  name: string;
+  email: string;
+  password: string;
+  roleIds: string[];
+}
+
+interface UserFormProps {
+  form: UserFormValues;
+  setForm: (v: UserFormValues) => void;
+  editUser: any;
+  showPassword: boolean;
+  setShowPassword: (v: boolean) => void;
+  onCancel: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+  roles: any[];
+  isLoading: boolean;
+}
+
+function UserForm({
+  form,
+  setForm,
+  editUser,
+  showPassword,
+  setShowPassword,
+  onCancel,
+  onSubmit,
+  roles,
+  isLoading,
+}: UserFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <label className="label">Nombre</label>
+        <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+      </div>
+      <div>
+        <label className="label">Email</label>
+        <input type="email" className="input" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+      </div>
+      <div>
+        <label className="label">Contraseña {editUser && '(dejar vacío para no cambiar)'}</label>
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            className="input pr-10"
+            value={form.password}
+            onChange={e => setForm({ ...form, password: e.target.value })}
+            {...(!editUser && { required: true })}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label className="label">Roles</label>
+        <div className="space-y-2 max-h-40 overflow-y-auto border dark:border-gray-600 rounded-lg p-3">
+          {roles.map((role: any) => (
+            <label key={role.id} className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.roleIds.includes(role.id)}
+                onChange={e =>
+                  setForm({
+                    ...form,
+                    roleIds: e.target.checked
+                      ? [...form.roleIds, role.id]
+                      : form.roleIds.filter(id => id !== role.id),
+                  })
+                }
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{role.name}</span>
+              <span className="text-xs text-gray-400">{role.description}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="btn-secondary">Cancelar</button>
+        <button type="submit" disabled={isLoading} className="btn-primary">
+          {isLoading ? 'Guardando...' : editUser ? 'Actualizar' : 'Crear'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function UsersPage() {
   const qc = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', email: '', password: '', roleIds: [] as string[] });
+  const [form, setForm] = useState<UserFormValues>({ name: '', email: '', password: '', roleIds: [] });
   const [showPassword, setShowPassword] = useState(false);
 
   const { data: users = [] } = useQuery('users', () => usersAPI.getAll().then(r => r.data));
@@ -35,67 +127,18 @@ export default function UsersPage() {
   const resetForm = () => setForm({ name: '', email: '', password: '', roleIds: [] });
 
   const handleEdit = (user: any) => {
-    setForm({ name: user.name, email: user.email, password: '', roleIds: user.roles?.map(r => r.id) || [] });
+    setForm({ name: user.name, email: user.email, password: '', roleIds: user.roles?.map((r: any) => r.id) || [] });
     setEditUser(user);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...form };
+    const payload: any = { ...form };
     if (!payload.password) delete payload.password;
     editUser ? updateMut.mutate(payload) : createMut.mutate(payload);
   };
 
-  const UserForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="label">Nombre</label>
-        <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-      </div>
-      <div>
-        <label className="label">Email</label>
-        <input type="email" className="input" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
-      </div>
-      <div>
-        <label className="label">Contraseña {editUser && '(dejar vacío para no cambiar)'}</label>
-        <div className="relative">
-          <input 
-            type={showPassword ? 'text' : 'password'} 
-            className="input pr-10" 
-            value={form.password} 
-            onChange={e => setForm({ ...form, password: e.target.value })} 
-            {...(!editUser && { required: true })} 
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        </div>
-      </div>
-      <div>
-        <label className="label">Roles</label>
-        <div className="space-y-2 max-h-40 overflow-y-auto border dark:border-gray-600 rounded-lg p-3">
-          {roles.map((role: any) => (
-            <label key={role.id} className="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" checked={form.roleIds.includes(role.id)}
-                onChange={e => setForm({ ...form, roleIds: e.target.checked ? [...form.roleIds, role.id] : form.roleIds.filter(id => id !== role.id) })} />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{role.name}</span>
-              <span className="text-xs text-gray-400">{role.description}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-      <div className="flex justify-end gap-3 pt-2">
-        <button type="button" onClick={() => { setShowCreate(false); setEditUser(null); }} className="btn-secondary">Cancelar</button>
-        <button type="submit" disabled={createMut.isLoading || updateMut.isLoading} className="btn-primary">
-          {createMut.isLoading || updateMut.isLoading ? 'Guardando...' : editUser ? 'Actualizar' : 'Crear'}
-        </button>
-      </div>
-    </form>
-  );
+  const handleCancel = () => { setShowCreate(false); setEditUser(null); };
 
   return (
     <Layout>
@@ -165,13 +208,31 @@ export default function UsersPage() {
         )}
       </div>
 
-      <Modal isOpen={showCreate || !!editUser} onClose={() => { setShowCreate(false); setEditUser(null); }}
-        title={editUser ? 'Editar usuario' : 'Nuevo usuario'}>
-        <UserForm />
+      <Modal
+        isOpen={showCreate || !!editUser}
+        onClose={handleCancel}
+        title={editUser ? 'Editar usuario' : 'Nuevo usuario'}
+      >
+        <UserForm
+          form={form}
+          setForm={setForm}
+          editUser={editUser}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          onCancel={handleCancel}
+          onSubmit={handleSubmit}
+          roles={roles}
+          isLoading={createMut.isLoading || updateMut.isLoading}
+        />
       </Modal>
 
-      <ConfirmDialog isOpen={!!deleteId} onClose={() => setDeleteId(null)} onConfirm={() => deleteMut.mutate(deleteId!)}
-        loading={deleteMut.isLoading} message="¿Eliminar este usuario permanentemente?" />
+      <ConfirmDialog
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteMut.mutate(deleteId!)}
+        loading={deleteMut.isLoading}
+        message="¿Eliminar este usuario permanentemente?"
+      />
     </Layout>
   );
 }

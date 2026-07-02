@@ -45,15 +45,25 @@
   }
 
   /* Badges */
-  .badge-ok { 
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300;
+  .badge-ok {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300;
   }
-  .badge-last { 
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300;
+  .badge-last {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300;
   }
-  .badge-out { 
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300;
+  .badge-out {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300;
   }
+}
+
+@media print {
+  nav, aside, button, .no-print, [role="navigation"] { display: none !important; }
+  main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+  body { background: white !important; color: black !important; }
+  .dark body { background: white !important; color: black !important; }
+  .page-break { page-break-before: always; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ccc; padding: 4px 8px; }
 }
 
 /* Dark mode specific overrides for tables */
@@ -61,20 +71,29 @@
   .dark table thead {
     @apply bg-gray-700;
   }
-  
+
   .dark table th {
     @apply text-gray-300;
   }
-  
+
   .dark table td {
     @apply text-gray-300;
   }
-  
+
   .dark table tbody tr {
     @apply hover:bg-gray-700;
   }
-  
+
   .dark .card th {
     @apply text-gray-400 uppercase tracking-wider;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }

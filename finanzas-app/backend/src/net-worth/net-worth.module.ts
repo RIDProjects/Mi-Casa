@@ -3,10 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { NetWorthController } from './net-worth.controller';
 import { NetWorthService } from './net-worth.service';
 import { Asset } from '../database/entities/asset.entity';
+import { NetWorthSnapshot } from '../database/entities/net-worth-snapshot.entity';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Asset]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Asset, NetWorthSnapshot]), AuthModule],
   controllers: [NetWorthController],
   providers: [NetWorthService],
   exports: [NetWorthService],

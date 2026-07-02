@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { House } from './house.entity';
 
 @Entity('loans')
@@ -10,7 +10,7 @@ export class Loan {
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) currentDebt: number;
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) monthlyPayment: number;
   @Column({ nullable: true }) notes: string;
-  @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
+  @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

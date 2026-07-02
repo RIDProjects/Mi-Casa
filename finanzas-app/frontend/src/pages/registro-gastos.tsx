@@ -4,6 +4,10 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { householdExpensesAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import { Plus, ChevronLeft, ChevronRight, Trash2, Edit2, BookOpen, ShoppingCart, AlertTriangle, RefreshCw } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import { CardSkeleton } from '../components/ui/Skeleton';
+import { Input } from '../components/ui/Input';
+import { Select } from '../components/ui/Select';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -65,17 +69,17 @@ export default function RegistroGastosPage() {
 
   const createMut = useMutation((d: any) => householdExpensesAPI.create(d), {
     onSuccess: () => { toast.success('Gasto registrado'); setShowModal(false); setForm(defaultForm); qc.invalidateQueries(qKey); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
   const updateMut = useMutation((d: any) => householdExpensesAPI.update(editItem?.id, d), {
     onSuccess: () => { toast.success('Gasto actualizado'); setShowModal(false); setEditItem(null); qc.invalidateQueries(qKey); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
   const deleteMut = useMutation((id: string) => householdExpensesAPI.delete(id), {
     onSuccess: () => { toast.success('Eliminado'); qc.invalidateQueries(qKey); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
   const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); };
@@ -103,35 +107,30 @@ export default function RegistroGastosPage() {
 
   if (isLoading) return (
     <Layout>
-      <div className="space-y-4">
-        <div className="skeleton h-8 w-56" />
-        <div className="skeleton h-40 w-full" />
-        <div className="skeleton h-64 w-full" />
-      </div>
-    </Layout>
-  );
-
-  if (isError) return (
-    <Layout>
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <AlertTriangle size={40} className="text-red-400" />
-        <p className="text-gray-500">Error al cargar el registro</p>
-        <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
-          <RefreshCw size={16} /> Reintentar
-        </button>
+      <div className="space-y-3">
+        {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
       </div>
     </Layout>
   );
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <BookOpen size={24} /> Registro de Gastos
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Compras del mercado + salidas y otros gastos</p>
-      </div>
+      {isError && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 mb-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+            <AlertTriangle size={16} />
+            Error al cargar el registro de gastos.
+          </div>
+          <button onClick={() => refetch()} className="flex items-center gap-1 text-xs font-medium text-red-700 dark:text-red-300 hover:underline">
+            <RefreshCw size={13} /> Reintentar
+          </button>
+        </div>
+      )}
+
+      <PageHeader
+        title={<><BookOpen size={24} /> Registro de Gastos</>}
+        subtitle="Compras del mercado + salidas y otros gastos"
+      />
 
       {/* Month navigator */}
       <div className="flex items-center justify-center gap-4 mb-6">
@@ -316,60 +315,45 @@ export default function RegistroGastosPage() {
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Fecha</label>
-                  <input
-                    className="input"
-                    type="date"
-                    value={form.fecha}
-                    onChange={e => setForm({ ...form, fecha: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="label">Categoría</label>
-                  <select
-                    className="input"
-                    value={form.categoria}
-                    onChange={e => setForm({ ...form, categoria: e.target.value })}
-                  >
-                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="label">Descripción</label>
-                <input
-                  className="input"
-                  value={form.descripcion}
-                  onChange={e => setForm({ ...form, descripcion: e.target.value })}
-                  placeholder="Cena en restaurante, Taxi, Farmacia..."
-                  autoFocus
+                <Input
+                  label="Fecha"
+                  type="date"
+                  value={form.fecha}
+                  onChange={e => setForm({ ...form, fecha: e.target.value })}
                   required
                 />
+                <Select
+                  label="Categoría"
+                  value={form.categoria}
+                  onChange={e => setForm({ ...form, categoria: e.target.value })}
+                >
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </Select>
               </div>
+              <Input
+                label="Descripción"
+                value={form.descripcion}
+                onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                placeholder="Cena en restaurante, Taxi, Farmacia..."
+                autoFocus
+                required
+              />
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Monto CUP</label>
-                  <input
-                    className="input"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.montoCUP}
-                    onChange={e => setForm({ ...form, montoCUP: e.target.value })}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="label">Lugar (opcional)</label>
-                  <input
-                    className="input"
-                    value={form.lugar}
-                    onChange={e => setForm({ ...form, lugar: e.target.value })}
-                    placeholder="Dónde fue..."
-                  />
-                </div>
+                <Input
+                  label="Monto CUP"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.montoCUP}
+                  onChange={e => setForm({ ...form, montoCUP: e.target.value })}
+                  required
+                />
+                <Input
+                  label="Lugar (opcional)"
+                  value={form.lugar}
+                  onChange={e => setForm({ ...form, lugar: e.target.value })}
+                  placeholder="Dónde fue..."
+                />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => { setShowModal(false); setEditItem(null); }} className="btn-secondary">

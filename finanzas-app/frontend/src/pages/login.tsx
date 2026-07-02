@@ -13,23 +13,27 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
     try {
       const { data } = await authAPI.login(form);
-      // Save token directly to localStorage to ensure it's available immediately
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
       setAuth(data.user, data.access_token);
       toast.success('¡Bienvenido!');
-      
-      // Redirect based on role
+
       const isAdminGlobal = data.user.roles?.some((r: any) => r.name === 'admin');
       router.push(isAdminGlobal ? '/admin' : '/dashboard');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Credenciales inválidas');
+      const status = err.response?.status;
+      if (status === 401) {
+        setError('Credenciales incorrectas. Verificá tu email y contraseña.');
+      } else {
+        setError(err.response?.data?.message || 'Error al iniciar sesión. Intentá de nuevo.');
+      }
+      setForm(f => ({ ...f, password: '' }));
     } finally {
       setLoading(false);
     }
@@ -61,19 +65,25 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label">Correo electrónico</label>
-              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
-                className="input" placeholder="admin@finanzas.com" required />
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => { setError(null); setForm({ ...form, email: e.target.value }); }}
+                className="input"
+                placeholder="admin@finanzas.com"
+                required
+              />
             </div>
             <div>
               <label className="label">Contraseña</label>
               <div className="relative">
-                <input 
-                  type={showPassword ? 'text' : 'password'} 
-                  value={form.password} 
-                  onChange={e => setForm({...form, password: e.target.value})}
-                  className="input pr-10" 
-                  placeholder="••••••••" 
-                  required 
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={e => { setError(null); setForm({ ...form, password: e.target.value }); }}
+                  className="input pr-10"
+                  placeholder="••••••••"
+                  required
                 />
                 <button
                   type="button"
@@ -84,11 +94,19 @@ export default function Login() {
                 </button>
               </div>
             </div>
+            {error && (
+              <div
+                aria-live="polite"
+                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center gap-2"
+              >
+                <span className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</span>
+              </div>
+            )}
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               ¿No tienes una cuenta?{' '}

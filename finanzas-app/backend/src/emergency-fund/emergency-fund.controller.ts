@@ -12,10 +12,16 @@ import { RequirePermission } from '../common/decorators/require-permission.decor
 export class EmergencyFundController {
   constructor(private service: EmergencyFundService) {}
 
-  @Get() @RequirePermission('emergency_fund', 'view') 
+  @Get() @RequirePermission('emergency_fund', 'view')
   findAll(@Request() req) {
     const houseId = req.user.house?.id;
     return this.service.findAll(houseId);
+  }
+
+  @Get('coverage') @RequirePermission('emergency_fund', 'view')
+  getCoverage(@Request() req) {
+    const houseId = req.user.house?.id ?? req.user.activeHouseId;
+    return this.service.getCoverage(houseId);
   }
   
   @Get(':id') @RequirePermission('emergency_fund', 'view') findOne(@Param('id') id: string) { return this.service.findOne(id); }

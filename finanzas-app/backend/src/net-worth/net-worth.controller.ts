@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NetWorthService } from './net-worth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -27,6 +27,17 @@ export class NetWorthController {
     );
   }
 
+  @Get('history')
+  @ApiOperation({ summary: 'Historial mensual de patrimonio neto' })
+  @ApiQuery({ name: 'months', required: false, type: Number })
+  getHistory(
+    @Request() req,
+    @Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number,
+  ) {
+    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
+    return this.service.getHistory(houseId, months);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Registrar activo' })
   create(@Body() dto: any, @Request() req) {
@@ -36,13 +47,15 @@ export class NetWorthController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar activo' })
-  update(@Param('id') id: string, @Body() dto: any) {
-    return this.service.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
+    return this.service.update(id, houseId, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar activo' })
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
+    return this.service.remove(id, houseId);
   }
 }

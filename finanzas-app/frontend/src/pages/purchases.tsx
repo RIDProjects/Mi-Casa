@@ -5,6 +5,7 @@ import { purchasesAPI } from '../services/api';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Edit2, ShoppingCart, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw } from 'lucide-react';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -30,6 +31,7 @@ export default function PurchasesPage() {
   const [editItem, setEditItem]       = useState<any>(null);
   const [itemForm, setItemForm]       = useState<any>(defaultForm);
   const [configForm, setConfigForm]   = useState({ budgetCUP: 0, exchangeRate: 515 });
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
 
   const monthStr = `${year}-${String(month).padStart(2, '0')}`;
 
@@ -65,23 +67,23 @@ export default function PurchasesPage() {
 
   const createListMut = useMutation((d: any) => purchasesAPI.createList(d), {
     onSuccess: () => qc.invalidateQueries('purchaseLists'),
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
   const updateListMut = useMutation(({ id, d }: any) => purchasesAPI.updateList(id, d), {
     onSuccess: () => { toast.success('Configuración guardada'); qc.invalidateQueries('purchaseLists'); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
   const addItemMut = useMutation(({ listId, d }: any) => purchasesAPI.addItem(listId, d), {
     onSuccess: () => { toast.success('Producto agregado'); setShowItemModal(false); setItemForm(defaultForm); qc.invalidateQueries('purchaseLists'); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
   const updateItemMut = useMutation(({ id, d }: any) => purchasesAPI.updateItem(id, d), {
     onSuccess: () => { toast.success('Producto actualizado'); setShowItemModal(false); setEditItem(null); qc.invalidateQueries('purchaseLists'); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
   const deleteItemMut = useMutation((id: string) => purchasesAPI.deleteItem(id), {
-    onSuccess: () => { toast.success('Eliminado'); qc.invalidateQueries('purchaseLists'); },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Error'),
+    onSuccess: () => { toast.success('Eliminado'); setDeleteItemId(null); qc.invalidateQueries('purchaseLists'); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
   const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); };
@@ -94,7 +96,7 @@ export default function PurchasesPage() {
     const ensureList = () => {
       if (!selectedList) {
         createListMut.mutate({ name: monthStr, budgetCUP: configForm.budgetCUP, exchangeRate: configForm.exchangeRate });
-        toast.error('Lista creada, volvé a agregar el producto');
+        toast('Lista del mes creada. Agregá tu producto.');
         setShowItemModal(false);
         return false;
       }
@@ -191,6 +193,24 @@ export default function PurchasesPage() {
         </button>
       </div>
 
+      {!selectedList && (
+        <div className="text-center py-16 mb-4">
+          <div className="text-5xl mb-4">🛒</div>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin lista para este mes</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            No hay lista de compras creada para {MONTH_NAMES[month - 1]} {year}
+          </p>
+          {canCreate && (
+            <button
+              onClick={() => { setItemForm(defaultForm); setEditItem(null); setShowItemModal(true); }}
+              className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm"
+            >
+              Agregar producto
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main table */}
         <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -247,7 +267,7 @@ export default function PurchasesPage() {
                               <Edit2 size={13} />
                             </button>
                             {canDelete && (
-                              <button onClick={() => deleteItemMut.mutate(item.id)} className="p-1.5 text-red-400 hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+                              <button onClick={() => setDeleteItemId(item.id)} className="p-1.5 text-red-400 hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
                                 <Trash2 size={13} />
                               </button>
                             )}
@@ -414,7 +434,7 @@ export default function PurchasesPage() {
                   list="lugares-list"
                 />
                 <datalist id="lugares-list">
-                  {[...new Set(items.map((i: any) => i.lugar).filter(Boolean))].map((l: string) => (
+                  {Array.from(new Set(items.map((i: any) => i.lugar).filter(Boolean))).map((l: string) => (
                     <option key={l} value={l} />
                   ))}
                 </datalist>
@@ -427,6 +447,15 @@ export default function PurchasesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deleteItemId}
+        onClose={() => setDeleteItemId(null)}
+        onConfirm={() => deleteItemMut.mutate(deleteItemId!)}
+        title="¿Eliminar producto?"
+        message="Se eliminará este producto de la lista. Esta acción no se puede deshacer."
+        loading={deleteItemMut.isLoading}
+      />
 
       {/* Modal: configuración */}
       {showConfigModal && (

@@ -9,11 +9,13 @@ import {
   IncomeSource,
 } from '../database/entities/budget.entity';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Budget, BudgetCategory, BudgetExpense, IncomeSource]),
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [BudgetController],
   providers: [BudgetService],

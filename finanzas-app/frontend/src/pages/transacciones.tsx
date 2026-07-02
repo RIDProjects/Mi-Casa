@@ -1,12 +1,14 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import Layout from '../components/layout/Layout';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { transactionsAPI } from '../services/api';
+import { useQuery, useQueries, useMutation, useQueryClient } from 'react-query';
+import { transactionsAPI, exportTransactionsCSV, importTransactionsCSV } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
-import { Plus, ChevronLeft, ChevronRight, Receipt, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Receipt, AlertTriangle, RefreshCw, Download, Upload } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -71,8 +73,32 @@ export default function TransaccionesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const qKey = ['transactions', year, month];
   const summaryKey = ['transactions-summary', year, month];
+
+  const last6Months = useMemo(() => {
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(year, month - 1 - (5 - i));
+      return { year: d.getFullYear(), month: d.getMonth() + 1 };
+    });
+  }, [year, month]);
+
+  const monthlyResults = useQueries(
+    last6Months.map(m => ({
+      queryKey: ['tx-monthly', m.year, m.month],
+      queryFn: () => transactionsAPI.getSummary(m.year, m.month).then((r: any) => r.data),
+      staleTime: 5 * 60 * 1000,
+    }))
+  );
+
+  const chartData = useMemo(() => {
+    return last6Months.map((m, i) => ({
+      name: MONTH_NAMES[m.month - 1].slice(0, 3),
+      Gastos: (monthlyResults[i].data as any)?.totalExpenses ?? 0,
+      Ingresos: (monthlyResults[i].data as any)?.totalIncome ?? 0,
+    }));
+  }, [last6Months, monthlyResults]);
 
   const { data: transactions = [], isLoading, isError, refetch } = useQuery(
     qKey,
@@ -95,18 +121,32 @@ export default function TransaccionesPage() {
 
   const createMut = useMutation((d: any) => transactionsAPI.create(d), {
     onSuccess: () => { toast.success('Transacción registrada'); setShowModal(false); setForm(defaultForm); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const updateMut = useMutation((d: any) => transactionsAPI.update(editItem?.id, d), {
     onSuccess: () => { toast.success('Transacción actualizada'); setEditItem(null); setShowModal(false); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const deleteMut = useMutation((id: string) => transactionsAPI.delete(id), {
     onSuccess: () => { toast.success('Eliminada'); setDeleteId(null); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await importTransactionsCSV(file, year, month);
+      toast.success(`Importadas ${result.data.imported} transacciones`);
+      qc.invalidateQueries('transactions');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Error al importar CSV');
+    } finally {
+      e.target.value = '';
+    }
+  };
 
   const prevMonth = () => {
     if (month === 1) { setMonth(12); setYear(y => y - 1); }
@@ -166,18 +206,6 @@ export default function TransaccionesPage() {
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [transactions]);
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="space-y-4">
-          <div className="skeleton h-8 w-56" />
-          <div className="skeleton h-20 w-full" />
-          <div className="skeleton h-64 w-full" />
-        </div>
-      </Layout>
-    );
-  }
-
   if (isError) {
     return (
       <Layout>
@@ -194,33 +222,70 @@ export default function TransaccionesPage() {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Receipt size={24} /> Transacciones
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Registro mensual de ingresos y gastos</p>
-        </div>
-        <button
-          onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} /> Nueva transacción
-        </button>
-      </div>
+      <PageHeader
+        title={<><Receipt size={24} /> Transacciones</>}
+        subtitle="Registro mensual de ingresos y gastos"
+        action={
+          <button
+            onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} /> Nueva transacción
+          </button>
+        }
+      />
 
       {/* Month navigator */}
-      <div className="flex items-center justify-center gap-4 mb-6">
-        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-          <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
-        </button>
-        <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[160px] text-center">
-          {MONTH_NAMES[month - 1]} {year}
-        </span>
-        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-          <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
-        </button>
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-2 flex-1">
+          <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
+          </button>
+          <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[160px] text-center">
+            {MONTH_NAMES[month - 1]} {year}
+          </span>
+          <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            accept=".csv"
+            ref={fileInputRef}
+            onChange={handleImport}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <Upload size={16} /> Importar CSV
+          </button>
+          <button
+            onClick={() => exportTransactionsCSV(year, month)}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <Download size={16} /> Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      {/* 6-month bar chart */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+          Gastos e ingresos — últimos 6 meses
+        </h2>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={50} />
+            <Tooltip formatter={(value: number) => `$${fmt(value)}`} />
+            <Bar dataKey="Ingresos" fill="#22c55e" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="Gastos" fill="#ef4444" radius={[3, 3, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
 
       {/* KPI Cards */}
@@ -253,8 +318,13 @@ export default function TransaccionesPage() {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Termómetro de gasto</span>
           <span className={`text-sm font-semibold ${thermoLabel.color}`}>{thermoLabel.text}</span>
         </div>
-        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3">
+        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3" role="presentation">
           <div
+            role="progressbar"
+            aria-valuenow={Math.round(usoPct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Uso del presupuesto mensual: ${Math.round(usoPct)}%`}
             className={`h-3 rounded-full transition-all duration-500 ${thermoLabel.bar}`}
             style={{ width: `${usoPct}%` }}
           />
@@ -281,40 +351,54 @@ export default function TransaccionesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {transactions.map((t: any) => (
-                <tr
-                  key={t.id}
-                  className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                    t.tipo !== 'gasto' ? 'bg-green-50/40 dark:bg-green-900/10' : ''
-                  }`}
-                >
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                    {t.fecha ? new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '-'}
-                  </td>
-                  <td className="px-4 py-3">{typeBadge(t.tipo)}</td>
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{t.concepto}</td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{t.categoria || '-'}</td>
-                  <td className={`px-4 py-3 text-right font-semibold ${t.tipo !== 'gasto' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {t.tipo !== 'gasto' ? '+' : '-'}${fmt(t.monto)}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500 dark:text-gray-400 capitalize">
-                    {t.metodoPago}
-                    {t.nombreTarjeta ? ` (${t.nombreTarjeta})` : ''}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <ActionButtons
-                      onEdit={() => handleEdit(t)}
-                      onDelete={() => setDeleteId(t.id)}
-                    />
-                  </td>
-                </tr>
-              ))}
-              {transactions.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
-                    No hay transacciones en {MONTH_NAMES[month - 1]} {year}
-                  </td>
-                </tr>
+              {isLoading ? (
+                [1, 2, 3, 4, 5].map(i => (
+                  <tr key={i}>
+                    {[1, 2, 3, 4, 5, 6, 7].map(j => (
+                      <td key={j} className="px-4 py-3">
+                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : (
+                <>
+                  {transactions.map((t: any) => (
+                    <tr
+                      key={t.id}
+                      className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
+                        t.tipo !== 'gasto' ? 'bg-green-50/40 dark:bg-green-900/10' : ''
+                      }`}
+                    >
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        {t.fecha ? new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '-'}
+                      </td>
+                      <td className="px-4 py-3">{typeBadge(t.tipo)}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{t.concepto}</td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{t.categoria || '-'}</td>
+                      <td className={`px-4 py-3 text-right font-semibold ${t.tipo !== 'gasto' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {t.tipo !== 'gasto' ? '+' : '-'}${fmt(t.monto)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 capitalize">
+                        {t.metodoPago}
+                        {t.nombreTarjeta ? ` (${t.nombreTarjeta})` : ''}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <ActionButtons
+                          onEdit={() => handleEdit(t)}
+                          onDelete={() => setDeleteId(t.id)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  {transactions.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
+                        No hay transacciones en {MONTH_NAMES[month - 1]} {year}
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
@@ -366,8 +450,9 @@ export default function TransaccionesPage() {
           </div>
 
           <div>
-            <label className="label">Concepto</label>
+            <label className="label" htmlFor="tx-concepto">Concepto</label>
             <input
+              id="tx-concepto"
               className="input"
               value={form.concepto}
               onChange={e => setForm({ ...form, concepto: e.target.value })}
@@ -378,8 +463,9 @@ export default function TransaccionesPage() {
 
           {form.tipo === 'gasto' && (
             <div>
-              <label className="label">Categoría</label>
+              <label className="label" htmlFor="tx-categoria">Categoría</label>
               <select
+                id="tx-categoria"
                 className="input"
                 value={form.categoria}
                 onChange={e => setForm({ ...form, categoria: e.target.value })}
@@ -392,8 +478,9 @@ export default function TransaccionesPage() {
           )}
 
           <div>
-            <label className="label">Monto</label>
+            <label className="label" htmlFor="tx-monto">Monto</label>
             <input
+              id="tx-monto"
               type="number"
               step="0.01"
               min="0"
@@ -426,8 +513,9 @@ export default function TransaccionesPage() {
 
           {form.metodoPago === 'tarjeta' && (
             <div>
-              <label className="label">Nombre de la tarjeta</label>
+              <label className="label" htmlFor="tx-tarjeta-nombre">Nombre de la tarjeta</label>
               <input
+                id="tx-tarjeta-nombre"
                 className="input"
                 value={form.nombreTarjeta}
                 onChange={e => setForm({ ...form, nombreTarjeta: e.target.value })}
@@ -437,8 +525,9 @@ export default function TransaccionesPage() {
           )}
 
           <div>
-            <label className="label">Fecha</label>
+            <label className="label" htmlFor="tx-fecha">Fecha</label>
             <input
+              id="tx-fecha"
               type="date"
               className="input"
               value={form.fecha}

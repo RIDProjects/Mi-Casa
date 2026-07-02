@@ -103,6 +103,28 @@ Mi Casa Pro - Sistema de Notificaciones
   }
 
   /**
+   * Send a budget alert email (overBudget, antExpensesWarning, etc.)
+   */
+  async sendBudgetAlert(to: string, title: string, message: string): Promise<void> {
+    if (!this.isConfigured) {
+      this.logger.warn(`Budget alert skipped (SMTP not configured): ${title}`);
+      return;
+    }
+    try {
+      await this.transporter.sendMail({
+        from: `"Mi Casa Pro" <${process.env.SMTP_USER || 'noreply@micasa.pro'}>`,
+        to,
+        subject: `⚠️ ${title}`,
+        text: message,
+        html: `<p>${message}</p>`,
+      });
+      this.logger.log(`Budget alert sent to ${to}: ${title}`);
+    } catch (err) {
+      this.logger.error(`Failed to send budget alert "${title}": ${err.message}`);
+    }
+  }
+
+  /**
    * Legacy method - kept for backwards compatibility but now redirects to email
    * @deprecated Use sendLowStockEmail instead
    */

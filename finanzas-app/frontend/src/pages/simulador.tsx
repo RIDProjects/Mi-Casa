@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react';
 import Layout from '../components/layout/Layout';
 import { Calculator } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import { Input } from '../components/ui/Input';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
+import StatCard from '../components/ui/StatCard';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -72,13 +76,10 @@ export default function SimuladorPage() {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <Calculator size={24} /> Simulador de Crédito
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Calculá cuotas, intereses y tabla de amortización</p>
-      </div>
+      <PageHeader
+        title={<><Calculator size={24} /> Simulador de Crédito</>}
+        subtitle="Calculá cuotas, intereses y tabla de amortización"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Inputs */}
@@ -88,48 +89,36 @@ export default function SimuladorPage() {
           </h2>
 
           <div className="space-y-5">
-            <div>
-              <label className="label">Monto del préstamo</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  className="input pl-8"
-                  value={amount}
-                  onChange={e => setAmount(e.target.value)}
-                  placeholder="100,000.00"
-                />
-              </div>
-            </div>
+            <CurrencyInput
+              id="sim-monto"
+              label="Monto del préstamo"
+              value={amount}
+              onChange={value => setAmount(value)}
+              placeholder="100,000.00"
+            />
 
-            <div>
-              <label className="label">Tasa de interés anual %</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="200"
-                  className="input pr-8"
-                  value={rate}
-                  onChange={e => setRate(e.target.value)}
-                  placeholder="12.00"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">%</span>
-              </div>
-            </div>
+            <Input
+              id="sim-tasa"
+              label="Tasa de interés anual (%)"
+              type="number"
+              step="0.01"
+              min="0"
+              max="200"
+              value={rate}
+              onChange={e => setRate(e.target.value)}
+              placeholder="12.00"
+            />
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="label mb-0">Plazo</label>
+                <label className="label mb-0" htmlFor="sim-plazo">Plazo</label>
                 <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
                   {months} {months === 1 ? 'mes' : 'meses'}
                   {months >= 12 ? ` (${(months / 12).toFixed(1)} años)` : ''}
                 </span>
               </div>
               <input
+                id="sim-plazo"
                 type="range"
                 min="1"
                 max="360"
@@ -206,12 +195,18 @@ export default function SimuladorPage() {
                   <span>Capital: ${fmt(numAmount)}</span>
                   <span>Intereses: ${fmt(totalIntereses)}</span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex">
+                <div
+                  className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex"
+                  role="img"
+                  aria-label={`Distribución del préstamo: ${(totalPago > 0 ? (numAmount / totalPago) * 100 : 0).toFixed(1)}% capital, ${pctIntereses.toFixed(1)}% intereses`}
+                >
                   <div
+                    aria-hidden="true"
                     className="h-full bg-blue-500 transition-all duration-500"
                     style={{ width: `${totalPago > 0 ? (numAmount / totalPago) * 100 : 0}%` }}
                   />
                   <div
+                    aria-hidden="true"
                     className="h-full bg-red-400 transition-all duration-500"
                     style={{ width: `${pctIntereses}%` }}
                   />
@@ -229,6 +224,16 @@ export default function SimuladorPage() {
           )}
         </div>
       </div>
+
+      {/* Summary StatCards */}
+      {hasResults && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <StatCard title="Cuota mensual" value={`$${fmt(payment)}`} color="blue" />
+          <StatCard title="Total a pagar" value={`$${fmt(totalPago)}`} color="gray" />
+          <StatCard title="Total intereses" value={`$${fmt(totalIntereses)}`} color="red" />
+          <StatCard title="Costo financiero" value={`${pctIntereses.toFixed(1)}%`} color="yellow" />
+        </div>
+      )}
 
       {/* Amortization table */}
       {amortization.length > 0 && (

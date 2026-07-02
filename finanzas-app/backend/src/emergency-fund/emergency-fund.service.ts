@@ -2,12 +2,15 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmergencyFund, ExpenseCategory } from '../database/entities/emergency-fund.entity';
+import { TransactionsService } from '../transactions/transactions.service';
+import { TransactionType } from '../database/entities/transaction.entity';
 
 @Injectable()
 export class EmergencyFundService {
   constructor(
     @InjectRepository(EmergencyFund) private fundRepo: Repository<EmergencyFund>,
     @InjectRepository(ExpenseCategory) private catRepo: Repository<ExpenseCategory>,
+    private readonly transactionsService: TransactionsService,
   ) {}
 
   async findAll(houseId?: string) {
@@ -59,6 +62,44 @@ export class EmergencyFundService {
     if (!fund) throw new NotFoundException('Fondo no encontrado');
     await this.fundRepo.remove(fund);
     return { message: 'Fondo eliminado' };
+  }
+
+  async getCoverage(houseId: string) {
+    const funds = await this.findAll(houseId);
+    const latestFund = funds[0] as any;
+    const balance = latestFund?.calculations?.optimalFund ?? 0;
+
+    // Last 3 months of transactions to compute average monthly expenses
+    const now = new Date();
+    const threeMonthsAgo = new Date(now);
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const transactions = await this.transactionsService.findByRange(
+      houseId,
+      threeMonthsAgo.toISOString().slice(0, 10),
+      now.toISOString().slice(0, 10),
+    );
+
+    const expenseTxs = transactions.filter(t => t.type === TransactionType.EXPENSE);
+    const totalExpenses = expenseTxs.reduce((s, t) => s + Number(t.amount), 0);
+    const monthlyExpenses = Math.round((totalExpenses / 3) * 100) / 100;
+
+    const monthsCovered = monthlyExpenses > 0
+      ? Math.round((balance / monthlyExpenses) * 10) / 10
+      : 0;
+
+    let status: 'safe' | 'low' | 'critical';
+    if (monthsCovered >= 6) status = 'safe';
+    else if (monthsCovered >= 3) status = 'low';
+    else status = 'critical';
+
+    return {
+      balance: Math.round(balance * 100) / 100,
+      monthlyExpenses,
+      monthsCovered,
+      targetMonths: 6,
+      status,
+    };
   }
 
   // Core business logic replicating Excel formulas:

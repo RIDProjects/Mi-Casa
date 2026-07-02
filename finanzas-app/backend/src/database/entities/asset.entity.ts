@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { House } from './house.entity';
 
 export enum AssetType {
@@ -13,7 +13,7 @@ export class Asset {
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) value: number;
   @Column({ type: 'enum', enum: AssetType, default: AssetType.PHYSICAL }) assetType: AssetType;
   @Column({ nullable: true }) notes: string;
-  @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
+  @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

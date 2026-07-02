@@ -25,12 +25,14 @@ export class HouseholdExpensesController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: any) {
-    return this.service.update(id, dto);
+  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.service.update(id, houseId, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.service.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.service.remove(id, houseId);
   }
 }

@@ -8,6 +8,8 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ActionButtons from '../components/ui/ActionButtons';
 import toast from 'react-hot-toast';
 import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
+import PageHeader from '../components/ui/PageHeader';
+import { Badge } from '../components/ui/Badge';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me' };
@@ -105,13 +107,14 @@ export default function DebtsPage() {
   if (loadingDebts || loadingSummary) {
     return (
       <Layout>
-        <div className="space-y-4 mb-6">
-          <div className="skeleton h-8 w-64" />
-          <div className="skeleton h-20 w-full" />
-          <div className="grid grid-cols-2 gap-6">
-            <div className="skeleton h-48 w-full" />
-            <div className="skeleton h-48 w-full" />
-          </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 space-y-3">
+              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-4 w-1/3" />
+              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-8 w-1/2" />
+              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-3 w-2/3" />
+            </div>
+          ))}
         </div>
       </Layout>
     );
@@ -141,22 +144,21 @@ export default function DebtsPage() {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">💸 Gestor de Deudas</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Control de lo que te deben y lo que debes</p>
-        </div>
-        {canCreate ? (
-          <button onClick={() => { setForm(defaultForm); setEditDebt(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-            <Plus size={18} /> Registrar deuda
-          </button>
-        ) : (
-          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
-            <Lock size={16} /> Sin permisos para agregar
-          </div>
-        )}
-      </div>
+      <PageHeader
+        title="💸 Gestor de Deudas"
+        subtitle="Control de lo que te deben y lo que debes"
+        action={
+          canCreate ? (
+            <button onClick={() => { setForm(defaultForm); setEditDebt(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+              <Plus size={18} /> Registrar deuda
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+              <Lock size={16} /> Sin permisos para agregar
+            </div>
+          )
+        }
+      />
 
       {/* Summary Banner */}
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
@@ -179,6 +181,22 @@ export default function DebtsPage() {
           </div>
         </div>
       </div>
+
+      {theyOweMe.length === 0 && iOwe.length === 0 && (
+        <div className="text-center py-16">
+          <div className="text-5xl mb-4">🤝</div>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin deudas activas</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No hay deudas pendientes en este momento</p>
+          {canCreate && (
+            <button
+              onClick={() => { setForm(defaultForm); setEditDebt(null); setShowModal(true); }}
+              className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm"
+            >
+              Registrar deuda
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Main Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -280,7 +298,7 @@ export default function DebtsPage() {
       {/* Paid Debts History */}
       {paidDebts.length > 0 && (
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b">
+          <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
             <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">✅ Deudas Pagadas ({paidDebts.length})</h2>
           </div>
           <table className="w-full text-sm">
@@ -295,8 +313,13 @@ export default function DebtsPage() {
               {paidDebts.map((d: any) => (
                 <tr key={d.id} className="opacity-60">
                   <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{d.personName}</td>
-                  <td className="px-4 py-2 text-right text-gray-500 line-through">{fmt(d.amount)}</td>
-                  <td className="px-4 py-2 text-gray-500">{d.type === 'they_owe_me' ? 'Me debía' : 'Le debía'}</td>
+                  <td className="px-4 py-2 text-right text-gray-500 dark:text-gray-400 line-through">{fmt(d.amount)}</td>
+                  <td className="px-4 py-2">
+                    {d.type === 'they_owe_me'
+                      ? <Badge variant="green">Me debían</Badge>
+                      : <Badge variant="red">Les debía</Badge>
+                    }
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { House } from './house.entity';
 
 export enum DebtType { THEY_OWE_ME = 'they_owe_me', I_OWE = 'i_owe' }
@@ -12,7 +12,7 @@ export class Debt {
   @Column({ type: 'enum', enum: DebtType }) type: DebtType;
   @Column({ default: false }) isPaid: boolean;
   @Column({ nullable: true }) paidAt: Date;
-  @ManyToOne(() => House, { nullable: true }) house: House;
+  @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

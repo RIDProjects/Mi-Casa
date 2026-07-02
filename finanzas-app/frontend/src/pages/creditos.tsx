@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { loansAPI } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, Landmark, AlertTriangle, RefreshCw, Clock } from 'lucide-react';
@@ -41,17 +42,17 @@ export default function CreditosPage() {
 
   const createMut = useMutation((d: any) => loansAPI.create(d), {
     onSuccess: () => { toast.success('Crédito registrado'); setShowModal(false); setForm(defaultForm); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const updateMut = useMutation((d: any) => loansAPI.update(editItem?.id, d), {
     onSuccess: () => { toast.success('Crédito actualizado'); setEditItem(null); setShowModal(false); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const deleteMut = useMutation((id: string) => loansAPI.delete(id), {
     onSuccess: () => { toast.success('Crédito eliminado'); setDeleteId(null); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const handleEdit = (l: any) => {
@@ -75,21 +76,22 @@ export default function CreditosPage() {
   const totalDeuda = loans.reduce((s: number, l: any) => s + Number(l.deudaActual || 0), 0);
   const totalCuota = loans.reduce((s: number, l: any) => s + Number(l.cuotaMensual || 0), 0);
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="space-y-4">
-          <div className="skeleton h-8 w-44" />
-          <div className="skeleton h-20 w-full" />
-          {[1, 2].map(i => <div key={i} className="skeleton h-32 w-full" />)}
-        </div>
-      </Layout>
-    );
-  }
+  return (
+    <Layout>
+      <PageHeader
+        title={<><Landmark size={24} /> Créditos</>}
+        subtitle="Seguimiento de préstamos y financiamientos"
+        action={
+          <button
+            onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} /> Nuevo Crédito
+          </button>
+        }
+      />
 
-  if (isError) {
-    return (
-      <Layout>
+      {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <AlertTriangle size={40} className="text-red-400" />
           <p className="text-gray-500 dark:text-gray-400">Error al cargar los créditos</p>
@@ -97,30 +99,10 @@ export default function CreditosPage() {
             <RefreshCw size={16} /> Reintentar
           </button>
         </div>
-      </Layout>
-    );
-  }
-
-  return (
-    <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Landmark size={24} /> Créditos
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Seguimiento de préstamos y financiamientos</p>
-        </div>
-        <button
-          onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} /> Nuevo Crédito
-        </button>
-      </div>
+      )}
 
       {/* Summary */}
-      {loans.length > 0 && (
+      {!isLoading && !isError && loans.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm flex flex-wrap gap-8">
           <div>
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-0.5">Deuda total</p>
@@ -134,13 +116,23 @@ export default function CreditosPage() {
       )}
 
       {/* Loans list */}
-      {loans.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
-          <Landmark size={48} className="mb-4 opacity-40" />
-          <p className="text-lg font-medium mb-1">No hay créditos registrados</p>
-          <p className="text-sm">Registrá tus préstamos para llevar el control</p>
+      {isLoading && (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+          ))}
         </div>
-      ) : (
+      )}
+      {!isLoading && !isError && loans.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-5xl mb-4">🏦</div>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No hay créditos registrados</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Registrá tu primer préstamo para llevar el control</p>
+          <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
+            Agregar crédito
+          </button>
+        </div>
+      ) : !isLoading && !isError ? (
         <div className="space-y-4">
           {loans.map((l: any) => {
             const inicial = Number(l.deudaInicial || 0);
@@ -196,15 +188,19 @@ export default function CreditosPage() {
                 </div>
 
                 {/* Progress */}
-                <div>
+                <div className="mt-3">
                   <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    <span>{pct.toFixed(0)}% completado</span>
-                    <span>${fmt(pagado)} pagado</span>
+                    <span>Pagado: ${fmt(pagado)}</span>
+                    <span>{pct.toFixed(0)}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                  <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-2 rounded-full bg-blue-500 transition-all duration-500"
-                      style={{ width: `${pct}%` }}
+                      role="progressbar"
+                      aria-valuenow={Math.round(pct)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      className="h-1.5 bg-green-500 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
                 </div>
@@ -212,7 +208,7 @@ export default function CreditosPage() {
             );
           })}
         </div>
-      )}
+      ) : null}
 
       {/* Modal */}
       <Modal
@@ -224,8 +220,9 @@ export default function CreditosPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Tipo de crédito</label>
+              <label className="label" htmlFor="credito-tipo">Tipo de crédito</label>
               <input
+                id="credito-tipo"
                 className="input"
                 value={form.tipo}
                 onChange={e => setForm({ ...form, tipo: e.target.value })}
@@ -234,8 +231,9 @@ export default function CreditosPage() {
               />
             </div>
             <div>
-              <label className="label">Institución</label>
+              <label className="label" htmlFor="credito-institucion">Institución</label>
               <input
+                id="credito-institucion"
                 className="input"
                 value={form.institucion}
                 onChange={e => setForm({ ...form, institucion: e.target.value })}
@@ -247,8 +245,9 @@ export default function CreditosPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Deuda inicial</label>
+              <label className="label" htmlFor="credito-deuda-inicial">Deuda inicial</label>
               <input
+                id="credito-deuda-inicial"
                 type="number"
                 step="0.01"
                 min="0"
@@ -260,8 +259,9 @@ export default function CreditosPage() {
               />
             </div>
             <div>
-              <label className="label">Deuda actual</label>
+              <label className="label" htmlFor="credito-deuda-actual">Deuda actual</label>
               <input
+                id="credito-deuda-actual"
                 type="number"
                 step="0.01"
                 min="0"
@@ -275,8 +275,9 @@ export default function CreditosPage() {
           </div>
 
           <div>
-            <label className="label">Cuota mensual</label>
+            <label className="label" htmlFor="credito-cuota">Cuota mensual</label>
             <input
+              id="credito-cuota"
               type="number"
               step="0.01"
               min="0"
@@ -289,8 +290,9 @@ export default function CreditosPage() {
           </div>
 
           <div>
-            <label className="label">Notas (opcional)</label>
+            <label className="label" htmlFor="credito-notas">Notas (opcional)</label>
             <textarea
+              id="credito-notas"
               className="input resize-none"
               rows={3}
               value={form.notas}

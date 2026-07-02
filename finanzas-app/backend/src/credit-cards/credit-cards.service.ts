@@ -3,6 +3,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreditCard, CardPaymentType } from '../database/entities/credit-card.entity';
 
+interface CreditCardFrontendDto {
+  banco?: string;
+  nombreTarjeta?: string;
+  tasaAnual?: number;
+  saldoActual?: number;
+  lineaCredito?: number;
+  fechaCorte?: string;
+  fechaPago?: string;
+  tipoPago?: CardPaymentType;
+}
+
 @Injectable()
 export class CreditCardsService {
   constructor(
@@ -39,7 +50,7 @@ export class CreditCardsService {
     };
   }
 
-  private fromFrontend(dto: any): Partial<CreditCard> {
+  private fromFrontend(dto: CreditCardFrontendDto): Partial<CreditCard> {
     return {
       bankName:      dto.banco,
       cardName:      dto.nombreTarjeta,
@@ -61,7 +72,7 @@ export class CreditCardsService {
     return cards.map(c => this.toFrontend(c));
   }
 
-  async create(dto: any, houseId: string) {
+  async create(dto: CreditCardFrontendDto, houseId: string) {
     const card = this.repo.create({
       ...this.fromFrontend(dto),
       house: { id: houseId } as any,
@@ -70,16 +81,16 @@ export class CreditCardsService {
     return this.toFrontend(saved);
   }
 
-  async update(id: string, dto: any) {
-    const card = await this.repo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: CreditCardFrontendDto) {
+    const card = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!card) throw new NotFoundException('Tarjeta no encontrada');
     Object.assign(card, this.fromFrontend(dto));
     const saved = await this.repo.save(card);
     return this.toFrontend(saved);
   }
 
-  async remove(id: string) {
-    const card = await this.repo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const card = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!card) throw new NotFoundException('Tarjeta no encontrada');
     await this.repo.remove(card);
     return { message: 'Tarjeta eliminada' };

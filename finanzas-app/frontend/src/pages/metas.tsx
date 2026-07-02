@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { savingsGoalsAPI } from '../services/api';
+import { RadialBarChart, RadialBar, ResponsiveContainer, Tooltip } from 'recharts';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, Target, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -43,17 +45,17 @@ export default function MetasPage() {
 
   const createMut = useMutation((d: any) => savingsGoalsAPI.create(d), {
     onSuccess: () => { toast.success('Meta creada'); setShowModal(false); setForm(defaultForm); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const updateMut = useMutation((d: any) => savingsGoalsAPI.update(editItem?.id, d), {
     onSuccess: () => { toast.success('Meta actualizada'); setEditItem(null); setShowModal(false); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const deleteMut = useMutation((id: string) => savingsGoalsAPI.delete(id), {
     onSuccess: () => { toast.success('Meta eliminada'); setDeleteId(null); refreshCache(); },
-    onError: (e: any) => toast.error(getErrorMessage(e)),
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
 
   const handleEdit = (g: any) => {
@@ -76,22 +78,30 @@ export default function MetasPage() {
 
   const totalMensual = goals.reduce((s: number, g: any) => s + Number(g.monthlyContribution || 0), 0);
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="space-y-4">
-          <div className="skeleton h-8 w-48" />
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => <div key={i} className="skeleton h-48" />)}
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  const progressChartData = useMemo(() => {
+    return goals.slice(0, 5).map((g: any, i: number) => ({
+      name: g.nombre,
+      value: Math.min(g.montoMeta > 0 ? (Number(g.ahorrosActuales) / Number(g.montoMeta)) * 100 : 0, 100),
+      fill: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'][i % 5],
+    }));
+  }, [goals]);
 
-  if (isError) {
-    return (
-      <Layout>
+  return (
+    <Layout>
+      <PageHeader
+        title={<><Target size={24} /> Metas de Ahorro</>}
+        subtitle="Tus objetivos financieros a plazo"
+        action={
+          <button
+            onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} /> Nueva Meta
+          </button>
+        }
+      />
+
+      {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <AlertTriangle size={40} className="text-red-400" />
           <p className="text-gray-500 dark:text-gray-400">Error al cargar las metas</p>
@@ -99,30 +109,23 @@ export default function MetasPage() {
             <RefreshCw size={16} /> Reintentar
           </button>
         </div>
-      </Layout>
-    );
-  }
+      )}
 
-  return (
-    <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Target size={24} /> Metas de Ahorro
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Tus objetivos financieros a plazo</p>
+      {/* Progress radial chart */}
+      {!isLoading && !isError && progressChartData.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">Progreso de metas</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="100%" data={progressChartData} startAngle={90} endAngle={-270}>
+              <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#f3f4f6' }} />
+              <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+            </RadialBarChart>
+          </ResponsiveContainer>
         </div>
-        <button
-          onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} /> Nueva Meta
-        </button>
-      </div>
+      )}
 
       {/* Summary footer stat */}
-      {goals.length > 0 && (
+      {!isLoading && !isError && goals.length > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 flex items-center justify-between">
           <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Total mensual comprometido</span>
           <span className="text-xl font-bold text-blue-700 dark:text-blue-300">${fmt(totalMensual)}/mes</span>
@@ -130,13 +133,23 @@ export default function MetasPage() {
       )}
 
       {/* Goals grid */}
-      {goals.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-400 dark:text-gray-500">
-          <Target size={48} className="mb-4 opacity-40" />
-          <p className="text-lg font-medium mb-1">No hay metas de ahorro</p>
-          <p className="text-sm">Creá tu primera meta para empezar a planificar</p>
+      {isLoading && (
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+          ))}
         </div>
-      ) : (
+      )}
+      {!isLoading && !isError && goals.length === 0 ? (
+        <div className="text-center py-16">
+          <div className="text-5xl mb-4">🎯</div>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No hay metas de ahorro</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Creá tu primera meta para empezar a planificar</p>
+          <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
+            Agregar meta
+          </button>
+        </div>
+      ) : !isLoading && !isError ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {goals.map((g: any) => {
             const pct = Math.min(
@@ -147,6 +160,13 @@ export default function MetasPage() {
             const monthly = Number(g.monthlyContribution || 0);
             const meses = Number(g.mesesParaAhorrarla || 0);
             const tasa = Number(g.tasaInteres || 0);
+            const targetAmount = Number(g.montoMeta);
+            const targetMonths = meses || 12;
+            const monthlyRate = targetAmount / targetMonths;
+            const monthsLeft = monthlyRate > 0 && faltante > 0 ? Math.ceil(faltante / monthlyRate) : null;
+            const completionDate = monthsLeft != null
+              ? new Date(Date.now() + monthsLeft * 30 * 24 * 60 * 60 * 1000)
+              : null;
 
             return (
               <div
@@ -172,12 +192,24 @@ export default function MetasPage() {
                     <span>{pct.toFixed(0)}%</span>
                     <span>${fmt(Number(g.montoMeta))}</span>
                   </div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5">
+                  <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5" role="presentation">
                     <div
+                      role="progressbar"
+                      aria-valuenow={Math.round(pct)}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-label={`Progreso de meta de ahorro: ${Math.round(pct)}%`}
                       className={`h-2.5 rounded-full transition-all duration-500 ${pct >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
-                      style={{ width: `${pct}%` }}
+                      style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>
+                  {pct >= 100 ? (
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">Meta alcanzada!</p>
+                  ) : completionDate ? (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Estimado: {completionDate.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })}
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Details */}
@@ -228,7 +260,7 @@ export default function MetasPage() {
             );
           })}
         </div>
-      )}
+      ) : null}
 
       {/* Modal */}
       <Modal
@@ -239,8 +271,9 @@ export default function MetasPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="label">Nombre</label>
+            <label className="label" htmlFor="meta-nombre">Nombre</label>
             <input
+              id="meta-nombre"
               className="input"
               value={form.nombre}
               onChange={e => setForm({ ...form, nombre: e.target.value })}
@@ -269,8 +302,9 @@ export default function MetasPage() {
           </div>
 
           <div>
-            <label className="label">Monto meta</label>
+            <label className="label" htmlFor="meta-monto">Monto meta</label>
             <input
+              id="meta-monto"
               type="number"
               step="0.01"
               min="0"
@@ -283,8 +317,9 @@ export default function MetasPage() {
           </div>
 
           <div>
-            <label className="label">Ahorros actuales</label>
+            <label className="label" htmlFor="meta-ahorro-actual">Ahorros actuales</label>
             <input
+              id="meta-ahorro-actual"
               type="number"
               step="0.01"
               min="0"
@@ -297,8 +332,9 @@ export default function MetasPage() {
           </div>
 
           <div>
-            <label className="label">Meses para ahorrarla</label>
+            <label className="label" htmlFor="meta-meses">Meses para ahorrarla</label>
             <input
+              id="meta-meses"
               type="number"
               min="1"
               className="input"
@@ -310,8 +346,9 @@ export default function MetasPage() {
           </div>
 
           <div>
-            <label className="label">Tasa de interés anual % (opcional)</label>
+            <label className="label" htmlFor="meta-tasa">Tasa de interés anual % (opcional)</label>
             <input
+              id="meta-tasa"
               type="number"
               step="0.01"
               min="0"

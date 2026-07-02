@@ -60,8 +60,8 @@ export class HouseholdExpensesService {
     return this.toFrontend(await this.repo.save(expense));
   }
 
-  async update(id: string, dto: any) {
-    const expense = await this.repo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: any) {
+    const expense = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!expense) throw new NotFoundException('Gasto no encontrado');
     Object.assign(expense, {
       date:        dto.fecha        ?? expense.date,
@@ -74,8 +74,8 @@ export class HouseholdExpensesService {
     return this.toFrontend(await this.repo.save(expense));
   }
 
-  async remove(id: string) {
-    const expense = await this.repo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const expense = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!expense) throw new NotFoundException('Gasto no encontrado');
     await this.repo.remove(expense);
     return { message: 'Gasto eliminado' };
