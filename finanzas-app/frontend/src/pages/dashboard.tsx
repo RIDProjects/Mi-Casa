@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
+import { OnboardingBanner } from '../components/ui/OnboardingBanner';
 import { useQuery } from 'react-query';
 import { debtsAPI, budgetAPI, transactionsAPI, summaryAPI, insightsAPI, investmentsAPI } from '../services/api';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -173,6 +174,11 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      <OnboardingBanner
+        hasBudget={!!firstBudget}
+        hasTransactions={(txSummary?.totalIncome ?? 0) + (txSummary?.totalExpenses ?? 0) > 0}
+        hasGoals={(globalSummary as any)?.totalSavings > 0}
+      />
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>

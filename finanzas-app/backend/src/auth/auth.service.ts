@@ -1,4 +1,5 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +11,7 @@ import { HouseCurrency } from '../database/entities/house-currency.entity';
 import { CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +22,7 @@ export class AuthService {
     @InjectRepository(HouseCurrency)
     private houseCurrencyRepo: Repository<HouseCurrency>,
     private jwtService: JwtService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -152,5 +155,36 @@ export class AuthService {
       house: activeHouse ? { id: activeHouse.id, name: activeHouse.name } : null,
       houses: user.houses?.map(h => ({ id: h.id, name: h.name })) || [],
     };
+  }
+
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { email } });
+    // No revelar si el email existe o no (seguridad)
+    if (!user || !user.isActive) return;
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    await this.userRepo.update(user.id, { resetToken: token, resetTokenExpiry: expiry });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
+
+    await this.notificationsService.sendPasswordReset(user.email, user.name, resetUrl);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { resetToken: token } });
+
+    if (!user || !user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
+      throw new BadRequestException('Token inválido o expirado');
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await this.userRepo.update(user.id, {
+      password: hashed,
+      resetToken: null,
+      resetTokenExpiry: null,
+    });
   }
 }

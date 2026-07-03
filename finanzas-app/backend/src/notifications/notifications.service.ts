@@ -124,12 +124,49 @@ Mi Casa Pro - Sistema de Notificaciones
     }
   }
 
-  /**
-   * Legacy method - kept for backwards compatibility but now redirects to email
-   * @deprecated Use sendLowStockEmail instead
-   */
+  async sendPasswordReset(to: string, name: string, resetUrl: string): Promise<void> {
+    if (!this.isConfigured) {
+      this.logger.warn(`Password reset email skipped (SMTP not configured). Token URL: ${resetUrl}`);
+      return;
+    }
+    try {
+      await this.transporter.sendMail({
+        from: `"Mi Casa Pro" <${process.env.SMTP_USER}>`,
+        to,
+        subject: '🔑 Recuperación de contraseña — Mi Casa Pro',
+        html: `
+          <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f8fafc;border-radius:16px">
+            <div style="text-align:center;margin-bottom:24px">
+              <span style="font-size:48px">🏠</span>
+              <h1 style="color:#0f172a;font-size:22px;margin:8px 0 0">Mi Casa Pro</h1>
+            </div>
+            <div style="background:#fff;border-radius:12px;padding:24px;border:1px solid #e2e8f0">
+              <h2 style="color:#0f172a;font-size:18px;margin:0 0 12px">Hola ${name},</h2>
+              <p style="color:#475569;line-height:1.6;margin:0 0 20px">
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta.
+                Hacé clic en el botón de abajo para crear una nueva contraseña.
+              </p>
+              <div style="text-align:center;margin:24px 0">
+                <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">
+                  Restablecer contraseña
+                </a>
+              </div>
+              <p style="color:#94a3b8;font-size:13px;margin:16px 0 0;line-height:1.5">
+                Este enlace expira en <strong>1 hora</strong>.<br>
+                Si no solicitaste este cambio, podés ignorar este email.
+              </p>
+            </div>
+            <p style="text-align:center;color:#cbd5e1;font-size:12px;margin:20px 0 0">Mi Casa Pro · Sistema de gestión financiera</p>
+          </div>
+        `,
+      });
+      this.logger.log(`Password reset email sent to ${to}`);
+    } catch (err) {
+      this.logger.error(`Failed to send password reset email to ${to}: ${err.message}`);
+    }
+  }
+
   async sendWhatsAppAlert(phoneNumber: string, productName: string): Promise<void> {
-    // This method is kept for backwards compatibility but we don't use WhatsApp anymore
     this.logger.warn('WhatsApp alerts are deprecated. Use email notifications instead.');
   }
 }

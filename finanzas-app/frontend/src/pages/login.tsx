@@ -110,6 +110,13 @@ export default function Login() {
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
+
+            <div className="text-center mt-3">
+              <button type="button" onClick={() => router.push('/forgot-password')}
+                className="text-sm text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
           </form>
 
           <div className="mt-6 text-center">

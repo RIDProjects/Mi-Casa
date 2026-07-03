@@ -11,6 +11,7 @@ import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
 import { House } from '../database/entities/house.entity';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { HouseCurrency } from '../database/entities/house-currency.entity';
       },
     }),
     TypeOrmModule.forFeature([User, Role, House, HouseCurrency]),
+    NotificationsModule,
   ],
   controllers: [AuthController],
   providers: [
