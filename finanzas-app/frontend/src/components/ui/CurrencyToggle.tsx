@@ -1,6 +1,6 @@
 import { useCurrencyStore } from '../../store/currency.store';
 
-const CURRENCIES = ['ARS', 'USD', 'CUP'] as const;
+const CURRENCIES = ['CUP', 'MLC', 'USD'] as const;
 
 export function CurrencyToggle() {
   const { activeCurrency, setActiveCurrency } = useCurrencyStore();

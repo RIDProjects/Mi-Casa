@@ -1,20 +1,21 @@
 import { useCurrencyStore } from '../store/currency.store';
 
-const SYMBOLS: Record<string, string> = { ARS: '$', USD: 'US$', CUP: 'CUP$' };
-const LOCALES: Record<string, string> = { ARS: 'es-AR', USD: 'en-US', CUP: 'es-CU' };
+const SYMBOLS: Record<string, string> = { CUP: '$', MLC: 'MLC$', USD: 'US$' };
+const LOCALES: Record<string, string> = { CUP: 'es-CU', MLC: 'es-CU', USD: 'en-US' };
 
 export function useCurrencyFormatter() {
   const { activeCurrency, rates } = useCurrencyStore();
 
-  const convert = (amountARS: number): number => {
-    if (activeCurrency === 'ARS') return amountARS;
-    if (activeCurrency === 'USD') return amountARS / rates.USD;
-    if (activeCurrency === 'CUP') return amountARS / rates.CUP;
-    return amountARS;
+  // amountCUP: value denominated in CUP (base currency)
+  const convert = (amountCUP: number): number => {
+    if (activeCurrency === 'CUP') return amountCUP;
+    if (activeCurrency === 'MLC') return amountCUP / rates.MLC;
+    if (activeCurrency === 'USD') return amountCUP / rates.USD;
+    return amountCUP;
   };
 
-  const fmt = (amountARS: number): string => {
-    const converted = convert(amountARS);
+  const fmt = (amountCUP: number): string => {
+    const converted = convert(amountCUP);
     return `${SYMBOLS[activeCurrency]}${new Intl.NumberFormat(LOCALES[activeCurrency], { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(converted)}`;
   };
 

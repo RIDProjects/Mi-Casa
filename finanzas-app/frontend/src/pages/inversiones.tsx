@@ -13,7 +13,11 @@ import { Plus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type InvestmentType = 'plazo_fijo' | 'fci' | 'acciones' | 'crypto' | 'dolar' | 'propiedades' | 'otros';
-type InvestmentCurrency = 'ARS' | 'USD' | 'CUP';
+type InvestmentCurrency = 'CUP' | 'MLC' | 'USD';
+
+const calcTEA = (tna: number): number => {
+  return (Math.pow(1 + (tna / 100) / 365, 365) - 1) * 100;
+};
 
 const TYPE_LABELS: Record<InvestmentType, string> = {
   plazo_fijo: 'Plazo Fijo',
@@ -36,13 +40,13 @@ const TYPE_BADGE: Record<InvestmentType, BadgeVariant> = {
 };
 
 const CURRENCY_SYMBOLS: Record<InvestmentCurrency, string> = {
-  ARS: '$',
+  CUP: '$',
+  MLC: 'MLC$',
   USD: 'US$',
-  CUP: 'CUP$',
 };
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
 
 function calcCurrentValue(inv: any): number {
   const amount = Number(inv.monto ?? inv.amount ?? 0);
@@ -62,11 +66,13 @@ const defaultForm = {
   nombre: '',
   tipo: 'plazo_fijo' as InvestmentType,
   monto: '',
-  moneda: 'ARS' as InvestmentCurrency,
+  moneda: 'CUP' as InvestmentCurrency,
   tna: '',
   fechaInicio: '',
   fechaFin: '',
   notas: '',
+  quantity: '',
+  ticker: '',
 };
 
 export default function InversionesPage() {
@@ -82,7 +88,8 @@ export default function InversionesPage() {
     { retry: false }
   );
 
-  const { data: exchangeRates } = useQuery(
+  // exchangeRates kept for potential future use
+  useQuery(
     'exchangeRates',
     () => exchangeRatesAPI.getLatest().then(r => r.data),
     { retry: false }
@@ -124,11 +131,13 @@ export default function InversionesPage() {
       nombre: inv.nombre ?? inv.name ?? '',
       tipo: inv.tipo ?? inv.type ?? 'plazo_fijo',
       monto: String(inv.monto ?? inv.amount ?? ''),
-      moneda: inv.moneda ?? inv.currency ?? 'ARS',
+      moneda: inv.moneda ?? inv.currency ?? 'CUP',
       tna: String(inv.tna ?? inv.rate ?? ''),
       fechaInicio: inv.fechaInicio ?? inv.startDate ?? '',
       fechaFin: inv.fechaFin ?? inv.endDate ?? '',
       notas: inv.notas ?? inv.notes ?? '',
+      quantity: String(inv.quantity ?? ''),
+      ticker: inv.ticker ?? '',
     });
     setEditItem(inv);
     setShowModal(true);
@@ -140,21 +149,25 @@ export default function InversionesPage() {
       ...form,
       monto: Number(form.monto),
       tna: form.tna ? Number(form.tna) : 0,
+      quantity: form.quantity ? Number(form.quantity) : undefined,
+      ticker: form.ticker || undefined,
     };
     editItem ? updateMut.mutate(payload) : createMut.mutate(payload);
   };
 
   const list = Array.isArray(investments) ? (investments as any[]) : [];
 
-  const totalARS = list
-    .filter(i => (i.moneda ?? i.currency) === 'ARS')
+  const totalCUP = list
+    .filter(i => (i.moneda ?? i.currency) === 'CUP')
+    .reduce((s, i) => s + calcCurrentValue(i), 0);
+  const totalMLC = list
+    .filter(i => (i.moneda ?? i.currency) === 'MLC')
     .reduce((s, i) => s + calcCurrentValue(i), 0);
   const totalUSD = list
     .filter(i => (i.moneda ?? i.currency) === 'USD')
     .reduce((s, i) => s + calcCurrentValue(i), 0);
-  const totalCUP = list
-    .filter(i => (i.moneda ?? i.currency) === 'CUP')
-    .reduce((s, i) => s + calcCurrentValue(i), 0);
+
+  const showQuantityFields = form.tipo === 'crypto' || form.tipo === 'dolar' || form.tipo === 'otros';
 
   if (isLoading) {
     return (
@@ -184,16 +197,16 @@ export default function InversionesPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total ARS</p>
-          <p className="text-xl font-bold text-blue-600 dark:text-blue-400">${fmt(totalARS)}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total CUP</p>
+          <p className="text-xl font-bold text-blue-600 dark:text-blue-400">${fmt(totalCUP)}</p>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total MLC</p>
+          <p className="text-xl font-bold text-purple-600 dark:text-purple-400">MLC${fmt(totalMLC)}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
           <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total USD</p>
           <p className="text-xl font-bold text-green-600 dark:text-green-400">US${fmt(totalUSD)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total CUP</p>
-          <p className="text-xl font-bold text-amber-600 dark:text-amber-400">CUP${fmt(totalCUP)}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
           <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Inversiones</p>
@@ -214,7 +227,7 @@ export default function InversionesPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
                 <tr>
-                  {['Nombre', 'Tipo', 'Monto', 'Moneda', 'TNA%', 'Valor Actual', 'Vencimiento', 'Acciones'].map(h => (
+                  {['Nombre', 'Tipo', 'Monto', 'Moneda', 'TNA% / TEA%', 'Valor Actual', 'Vencimiento', 'Acciones'].map(h => (
                     <th
                       key={h}
                       className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap"
@@ -227,10 +240,11 @@ export default function InversionesPage() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {list.map((inv: any) => {
                   const tipo: InvestmentType = inv.tipo ?? inv.type ?? 'otros';
-                  const moneda: InvestmentCurrency = inv.moneda ?? inv.currency ?? 'ARS';
+                  const moneda: InvestmentCurrency = inv.moneda ?? inv.currency ?? 'CUP';
                   const symbol = CURRENCY_SYMBOLS[moneda] ?? '$';
                   const currentValue = calcCurrentValue(inv);
                   const fechaFin = inv.fechaFin ?? inv.endDate;
+                  const tna = Number(inv.tna ?? inv.rate ?? 0);
                   return (
                     <tr key={inv.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
@@ -243,16 +257,30 @@ export default function InversionesPage() {
                       </td>
                       <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">
                         {symbol}{fmt(Number(inv.monto ?? inv.amount ?? 0))}
+                        {inv.quantity && (
+                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                            {inv.quantity} {inv.ticker ? inv.ticker : 'unidades'}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{moneda}</td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                        {(inv.tna ?? inv.rate) ? `${inv.tna ?? inv.rate}%` : '—'}
+                        {tna > 0 ? (
+                          <div>
+                            <span>{tna}% TNA</span>
+                            {tipo === 'plazo_fijo' && (
+                              <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                                TEA: {calcTEA(tna).toFixed(2)}%
+                              </div>
+                            )}
+                          </div>
+                        ) : '—'}
                       </td>
                       <td className="px-4 py-3 font-semibold text-green-600 dark:text-green-400">
                         {symbol}{fmt(currentValue)}
                       </td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
-                        {fechaFin ? new Date(fechaFin).toLocaleDateString('es-AR') : '—'}
+                        {fechaFin ? new Date(fechaFin).toLocaleDateString('es-CU') : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <ActionButtons
@@ -283,7 +311,7 @@ export default function InversionesPage() {
               className="input"
               value={form.nombre}
               onChange={e => setForm({ ...form, nombre: e.target.value })}
-              placeholder="Ej: Plazo fijo Banco Nación"
+              placeholder="Ej: Plazo fijo Banco Metropolitano"
               required
             />
           </div>
@@ -307,9 +335,9 @@ export default function InversionesPage() {
                 value={form.moneda}
                 onChange={e => setForm({ ...form, moneda: e.target.value as InvestmentCurrency })}
               >
-                <option value="ARS">ARS</option>
-                <option value="USD">USD</option>
-                <option value="CUP">CUP</option>
+                <option value="CUP">CUP — Peso Cubano</option>
+                <option value="MLC">MLC — Moneda Libremente Convertible</option>
+                <option value="USD">USD — Dólar estadounidense</option>
               </select>
             </div>
           </div>
@@ -340,6 +368,31 @@ export default function InversionesPage() {
               />
             </div>
           </div>
+          {showQuantityFields && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label">Cantidad de unidades</label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  className="input"
+                  value={form.quantity}
+                  onChange={e => setForm({ ...form, quantity: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="label">Símbolo (BTC, USDT, etc.)</label>
+                <input
+                  className="input"
+                  value={form.ticker}
+                  onChange={e => setForm({ ...form, ticker: e.target.value })}
+                  placeholder="BTC, USDT..."
+                />
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label">Fecha inicio</label>

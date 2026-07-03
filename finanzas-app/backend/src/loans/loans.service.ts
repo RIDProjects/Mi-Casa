@@ -10,6 +10,7 @@ interface LoanFrontendDto {
   deudaActual?: number;
   cuotaMensual?: number;
   notas?: string;
+  diaPago?: number;
 }
 
 @Injectable()
@@ -37,6 +38,7 @@ export class LoansService {
       deudaActual:  loan.currentDebt,
       cuotaMensual: loan.monthlyPayment,
       notas:        loan.notes,
+      diaPago:      loan.paymentDay,
       createdAt:    loan.createdAt,
       updatedAt:    loan.updatedAt,
       progressPercent,
@@ -51,6 +53,7 @@ export class LoansService {
       currentDebt:   dto.deudaActual,
       monthlyPayment:dto.cuotaMensual,
       notes:         dto.notas,
+      paymentDay:    dto.diaPago,
     };
   }
 

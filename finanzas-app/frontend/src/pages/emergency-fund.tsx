@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { emergencyFundAPI, emergencyFundCoverageAPI } from '../services/api';
@@ -48,6 +48,8 @@ export default function EmergencyFundPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
 
+  const [currentBalance, setCurrentBalance] = useState<number>(0);
+
   const { data: funds = [] } = useQuery('emergencyFunds', () => emergencyFundAPI.getAll().then(r => r.data));
 
   const { data: coverage } = useQuery(
@@ -74,6 +76,20 @@ export default function EmergencyFundPage() {
     onError: (e: any) => { toast.error(getErrorMessage(e)); },
     onSettled: () => { qc.invalidateQueries('emergencyFunds'); },
   });
+
+  const updateBalanceMut = useMutation(
+    (balance: number) => emergencyFundAPI.update(fund!.id, { currentBalance: balance }),
+    {
+      onSuccess: () => { toast.success('Saldo actualizado'); qc.invalidateQueries('emergencyFunds'); },
+      onError: (e: any) => { toast.error(getErrorMessage(e)); },
+    }
+  );
+
+  // Sync local balance state when the selected fund changes
+  useEffect(() => {
+    setCurrentBalance(Number((selectedFund || (funds as any[])[0])?.currentBalance ?? 0));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(selectedFund || (funds as any[])[0])?.id]);
 
   const handleEdit = (fund: any) => {
     setForm({
@@ -227,6 +243,39 @@ export default function EmergencyFundPage() {
                       <p className="text-sm text-blue-700 dark:text-blue-400">📅 Ahorro mensual mínimo</p>
                       <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">${fmt(monthlySavingsRequired)}</p>
                     </div>
+                  </div>
+
+                  {/* Current balance input */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4 mb-6">
+                    <label className="block text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                      Lo que tenés ahorrado actualmente
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        className="input flex-1"
+                        value={currentBalance}
+                        onChange={e => setCurrentBalance(Number(e.target.value))}
+                        placeholder="0.00"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateBalanceMut.mutate(currentBalance)}
+                        disabled={updateBalanceMut.isLoading}
+                        className="btn-primary px-4 whitespace-nowrap"
+                      >
+                        {updateBalanceMut.isLoading ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                    {totalMonthlyExpenses > 0 && (
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+                        Cobertura actual:{' '}
+                        <strong>{(currentBalance / totalMonthlyExpenses).toFixed(1)} meses</strong>
+                        {' '}(meta: {fund.targetMonths} meses)
+                      </p>
+                    )}
                   </div>
 
                   {coverage && (

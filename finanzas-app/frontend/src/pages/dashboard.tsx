@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import { useQuery } from 'react-query';
-import { debtsAPI, budgetAPI, transactionsAPI, summaryAPI, insightsAPI } from '../services/api';
+import { debtsAPI, budgetAPI, transactionsAPI, summaryAPI, insightsAPI, investmentsAPI } from '../services/api';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import StatCard from '../components/ui/StatCard';
 import { useAuthStore } from '../store/auth.store';
@@ -111,6 +111,17 @@ export default function Dashboard() {
     { select: d => d.data as { totalIncome: number; totalExpenses: number; expectedExpenses: number } },
   );
 
+  const { data: allInvestments } = useQuery(
+    'investments',
+    () => investmentsAPI.getAll().then(r => r.data),
+    { retry: false, staleTime: 60 * 1000 }
+  );
+  const { data: allDebts } = useQuery(
+    'debts',
+    () => debtsAPI.getAll().then(r => r.data ?? []),
+    { retry: false, staleTime: 60 * 1000, enabled: hasPermission('debts', 'view') }
+  );
+
   const balance = debtsSummary?.balance ?? 0;
   const txPct   = txSummary && txSummary.expectedExpenses > 0
     ? (txSummary.totalExpenses / txSummary.expectedExpenses) * 100
@@ -124,6 +135,15 @@ export default function Dashboard() {
           ? 'warning'
           : 'ok'
       : 'ok');
+
+  const investList = Array.isArray(allInvestments) ? (allInvestments as any[]) : [];
+  const debtList = Array.isArray(allDebts) ? (allDebts as any[]) : [];
+  const avgDebtCost = debtList.length > 0
+    ? debtList.reduce((s: number, d: any) => s + (Number(d.interestRate) || 0), 0) / debtList.length
+    : 0;
+  const avgInvestReturn = investList.length > 0
+    ? investList.reduce((s: number, i: any) => s + (Number(i.tna ?? i.rate) || 0), 0) / investList.length
+    : 0;
 
   const PIE_COLORS = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#f97316'];
 
@@ -236,6 +256,18 @@ export default function Dashboard() {
       <div className="mb-6">
         <HealthScore />
       </div>
+
+      {/* ── Debt vs Investment alert ── */}
+      {avgDebtCost > 0 && avgInvestReturn > 0 && avgDebtCost > avgInvestReturn && (
+        <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl">
+          <p className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
+            Tu deuda te cuesta más que lo que rinden tus inversiones
+          </p>
+          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+            Costo promedio de deudas: {avgDebtCost.toFixed(1)}% TNA — Retorno inversiones: {avgInvestReturn.toFixed(1)}% TNA
+          </p>
+        </div>
+      )}
 
       {/* ── Cards grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

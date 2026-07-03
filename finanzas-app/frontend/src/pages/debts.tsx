@@ -12,7 +12,7 @@ import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
-const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me' };
+const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '', currency: 'CUP' };
 
 export default function DebtsPage() {
   const qc = useQueryClient();
@@ -94,7 +94,15 @@ export default function DebtsPage() {
   });
 
   const handleEdit = (d: any) => {
-    setForm({ personName: d.personName, amount: d.amount, note: d.note || '', type: d.type });
+    setForm({
+      personName: d.personName,
+      amount: d.amount,
+      note: d.note || '',
+      type: d.type,
+      interestRate: String(d.interestRate ?? ''),
+      minimumPayment: String(d.minimumPayment ?? ''),
+      currency: d.currency ?? 'CUP',
+    });
     setEditDebt(d);
     setShowModal(true);
   };
@@ -217,8 +225,18 @@ export default function DebtsPage() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {theyOweMe.map((d: any) => (
                 <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{d.personName}</td>
-                  <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">{fmt(d.amount)}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                    {d.personName}
+                    {Number(d.interestRate) > 0 && (
+                      <div className="mt-0.5"><Badge variant="red">{d.interestRate}% TNA</Badge></div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right font-medium text-green-600 dark:text-green-400">
+                    <div>{fmt(d.amount)}</div>
+                    {d.currency && d.currency !== 'CUP' && (
+                      <div className="flex justify-end mt-0.5"><Badge variant="blue">{d.currency}</Badge></div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <ActionButtons
@@ -264,8 +282,18 @@ export default function DebtsPage() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {iOwe.map((d: any) => (
                 <tr key={d.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{d.personName}</td>
-                  <td className="px-4 py-3 text-right font-medium text-red-600 dark:text-red-400">{fmt(d.amount)}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                    {d.personName}
+                    {Number(d.interestRate) > 0 && (
+                      <div className="mt-0.5"><Badge variant="red">{d.interestRate}% TNA</Badge></div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right font-medium text-red-600 dark:text-red-400">
+                    <div>{fmt(d.amount)}</div>
+                    {d.currency && d.currency !== 'CUP' && (
+                      <div className="flex justify-end mt-0.5"><Badge variant="blue">{d.currency}</Badge></div>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
                     <ActionButtons
@@ -352,6 +380,24 @@ export default function DebtsPage() {
           <div>
             <label className="label">Nota (opcional)</label>
             <input className="input" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} placeholder="Descripción adicional" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Tasa de interés anual (%)</label>
+              <input type="number" step="0.01" min="0" className="input" value={form.interestRate} onChange={e => setForm({ ...form, interestRate: e.target.value })} placeholder="0.00" />
+            </div>
+            <div>
+              <label className="label">Pago mínimo mensual</label>
+              <input type="number" step="0.01" min="0" className="input" value={form.minimumPayment} onChange={e => setForm({ ...form, minimumPayment: e.target.value })} placeholder="0.00" />
+            </div>
+          </div>
+          <div>
+            <label className="label">Moneda</label>
+            <select className="input" value={form.currency ?? 'CUP'} onChange={e => setForm({ ...form, currency: e.target.value })}>
+              <option value="CUP">CUP — Peso Cubano</option>
+              <option value="MLC">MLC — Moneda Libremente Convertible</option>
+              <option value="USD">USD — Dólar estadounidense</option>
+            </select>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => { setShowModal(false); setEditDebt(null); }} className="btn-secondary">Cancelar</button>

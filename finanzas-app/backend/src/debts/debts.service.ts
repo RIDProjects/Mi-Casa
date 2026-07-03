@@ -84,6 +84,8 @@ interface CreateDebtDto {
   note?: string;
   type: DebtType;
   isPaid?: boolean;
+  interestRate?: number;
+  minimumPayment?: number;
 }
 
 interface UpdateDebtDto {
@@ -93,6 +95,8 @@ interface UpdateDebtDto {
   type?: DebtType;
   isPaid?: boolean;
   paidAt?: Date;
+  interestRate?: number;
+  minimumPayment?: number;
 }
 
 @Injectable()
@@ -140,8 +144,8 @@ export class DebtsService {
         id: d.id,
         label: d.personName,
         balance: Number(d.amount),
-        interestRate: 0,
-        minimumPayment: Math.max(Number(d.amount) * 0.05, 1),
+        interestRate: Number(d.interestRate ?? 0),
+        minimumPayment: Number(d.minimumPayment ?? Math.max(Number(d.amount) * 0.05, 100)),
       }));
 
     if (snapshots.length === 0) {

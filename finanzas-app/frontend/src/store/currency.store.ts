@@ -1,20 +1,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Currency = 'ARS' | 'USD' | 'CUP';
+type Currency = 'CUP' | 'MLC' | 'USD';
 
 interface CurrencyState {
   activeCurrency: Currency;
-  rates: { USD: number; CUP: number }; // relative to ARS
+  rates: { MLC: number; USD: number }; // CUP per unit (CUP is base)
   setActiveCurrency: (c: Currency) => void;
-  setRates: (rates: { USD: number; CUP: number }) => void;
+  setRates: (rates: { MLC: number; USD: number }) => void;
 }
 
 export const useCurrencyStore = create<CurrencyState>()(
   persist(
     (set) => ({
-      activeCurrency: 'ARS',
-      rates: { USD: 1000, CUP: 0.04 },
+      activeCurrency: 'CUP',
+      rates: { MLC: 120, USD: 125 },
       setActiveCurrency: (activeCurrency) => set({ activeCurrency }),
       setRates: (rates) => set({ rates }),
     }),

@@ -64,10 +64,17 @@ export class EmergencyFundService {
     return { message: 'Fondo eliminado' };
   }
 
+  async getLatest(houseId: string) {
+    return this.fundRepo.findOne({
+      where: { house: { id: houseId } },
+      order: { updatedAt: 'DESC' },
+    });
+  }
+
   async getCoverage(houseId: string) {
     const funds = await this.findAll(houseId);
     const latestFund = funds[0] as any;
-    const balance = latestFund?.calculations?.optimalFund ?? 0;
+    const balance = latestFund?.currentBalance ?? 0;
 
     // Last 3 months of transactions to compute average monthly expenses
     const now = new Date();

@@ -10,6 +10,11 @@ export class Debt {
   @Column({ type: 'decimal', precision: 12, scale: 2 }) amount: number;
   @Column({ nullable: true }) note: string;
   @Column({ type: 'enum', enum: DebtType }) type: DebtType;
+  @Column('decimal', { precision: 8, scale: 4, default: 0 })
+  interestRate: number; // TNA %
+
+  @Column('decimal', { precision: 12, scale: 2, nullable: true })
+  minimumPayment: number;
   @Column({ default: false }) isPaid: boolean;
   @Column({ nullable: true }) paidAt: Date;
   @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;

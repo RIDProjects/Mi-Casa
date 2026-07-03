@@ -8,6 +8,7 @@ export class EmergencyFund {
   @Column({ type: 'int', default: 6 }) targetMonths: number;
   @Column({ type: 'int', default: 3 }) minimumMonths: number;
   @Column({ type: 'int', default: 24 }) savingPeriodMonths: number;
+  @Column('decimal', { precision: 12, scale: 2, default: 0 }) currentBalance: number;
   @OneToMany(() => ExpenseCategory, cat => cat.fund, { cascade: true, eager: true }) categories: ExpenseCategory[];
   @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;

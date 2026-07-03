@@ -13,7 +13,7 @@ import {
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Periodicity = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'fourmonthly' | 'semiannual' | 'annual';
 
-interface IncomeSource { id: string; name: string; type: 'fixed' | 'variable'; amount: number; }
+interface IncomeSource { id: string; name: string; type: string; amount: number; }
 interface Expense { id: string; name: string; amount: number; periodicity: Periodicity; isFixed: boolean; isCreditCard: boolean; isAntExpense: boolean; }
 interface Category { id: string; name: string; sortOrder: number; isDefault: boolean; expenses: Expense[]; }
 interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; }
@@ -51,7 +51,19 @@ function savingsRating(pct: number): { emoji: string; text: string; color: strin
   return              { emoji: '🏆', text: '¡Excelente! Estás en el top de ahorradores.', color: 'text-emerald-600 dark:text-emerald-400' };
 }
 
-const defaultIncomeForm  = { name: '', type: 'fixed' as 'fixed' | 'variable', amount: '' };
+const INCOME_TYPE_LABELS: Record<string, string> = {
+  salario_estatal: 'Salario estatal',
+  tcp: 'Trabajo por cuenta propia',
+  remesas: 'Remesas',
+  alquiler: 'Alquiler',
+  mipyme: 'Negocio MIPYME',
+  otro: 'Otro',
+  // backward compatibility
+  fixed: 'Fijo',
+  variable: 'Variable',
+};
+
+const defaultIncomeForm  = { name: '', type: 'salario_estatal', amount: '' };
 const defaultCategoryForm = { name: '' };
 const defaultExpenseForm = { name: '', amount: '', periodicity: 'monthly' as Periodicity, isFixed: false, isAntExpense: false, isCreditCard: false };
 
@@ -393,8 +405,8 @@ export default function PresupuestoPage() {
                   <tr key={inc.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{inc.name}</td>
                     <td className="px-4 py-2.5 text-center">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${inc.type === 'fixed' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'}`}>
-                        {inc.type === 'fixed' ? 'Fijo' : 'Variable'}
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {INCOME_TYPE_LABELS[inc.type] ?? inc.type}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right font-semibold text-green-600 dark:text-green-400">${fmt(inc.amount)}</td>
@@ -414,7 +426,7 @@ export default function PresupuestoPage() {
                 <td />
               </tr>
               <tr className="text-xs text-gray-500 dark:text-gray-400">
-                <td className="px-4 py-1.5" colSpan={2}>Fijo: ${fmt(ingresosFijos)} · Variable: ${fmt(ingresosVariables)}</td>
+                <td className="px-4 py-1.5" colSpan={2}>{incomeSources.length} fuente{incomeSources.length !== 1 ? 's' : ''} de ingreso</td>
                 <td colSpan={3} />
               </tr>
             </tfoot>
@@ -535,14 +547,19 @@ export default function PresupuestoPage() {
         <form onSubmit={e => { e.preventDefault(); addIncomeMut.mutate({ ...incomeForm, amount: parseFloat(incomeForm.amount as string) }); }} className="space-y-4">
           <div><label className="label">Nombre</label><input className="input" value={incomeForm.name} onChange={e => setIncomeForm({ ...incomeForm, name: e.target.value })} placeholder="Sueldo, Freelance..." required /></div>
           <div>
-            <label className="label">Tipo</label>
-            <div className="grid grid-cols-2 gap-3">
-              {([{ v: 'fixed', l: '🔵 Fijo' }, { v: 'variable', l: '🟠 Variable' }] as const).map(({ v, l }) => (
-                <button key={v} type="button" onClick={() => setIncomeForm({ ...incomeForm, type: v })}
-                  className={`py-3 rounded-xl text-sm font-medium border-2 transition-all ${incomeForm.type === v ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400'}`}
-                >{l}</button>
-              ))}
-            </div>
+            <label className="label">Tipo de ingreso</label>
+            <select
+              className="input"
+              value={incomeForm.type}
+              onChange={e => setIncomeForm({ ...incomeForm, type: e.target.value })}
+            >
+              <option value="salario_estatal">Salario estatal</option>
+              <option value="tcp">Trabajo por cuenta propia (TCP)</option>
+              <option value="remesas">Remesas</option>
+              <option value="alquiler">Alquiler</option>
+              <option value="mipyme">Negocio MIPYME</option>
+              <option value="otro">Otro</option>
+            </select>
           </div>
           <div><label className="label">Monto mensual</label><input type="number" step="0.01" min="0" className="input" value={incomeForm.amount} onChange={e => setIncomeForm({ ...incomeForm, amount: e.target.value })} placeholder="0.00" required /></div>
           <div className="flex justify-end gap-3 pt-2">

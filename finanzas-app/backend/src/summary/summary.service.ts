@@ -65,10 +65,12 @@ export class SummaryService {
     const loans: any[] = await this.loansService.findByHouse(houseId);
     for (const loan of loans) {
       if (!loan.cuotaMensual) continue;
-      const nextFirst = new Date(now.getFullYear(), now.getMonth() + (now.getDate() > 1 ? 1 : 0), 1);
-      if (nextFirst <= cutoff) {
-        const dueStr = nextFirst.toISOString().slice(0, 10);
-        const diff = Math.round((nextFirst.getTime() - now.getTime()) / 86400000);
+      const payDay = loan.diaPago ?? 1;
+      const candidate = new Date(now.getFullYear(), now.getMonth(), payDay);
+      if (candidate < now) candidate.setMonth(candidate.getMonth() + 1);
+      if (candidate <= cutoff) {
+        const dueStr = candidate.toISOString().slice(0, 10);
+        const diff = Math.round((candidate.getTime() - now.getTime()) / 86400000);
         bills.push({
           type: 'loan',
           name: `${loan.tipo} - ${loan.institucion}`,
@@ -136,6 +138,13 @@ export class SummaryService {
       totalMonthlyExpenses: 0,
     };
 
+    const latestEF = await this.emergencyFundService.getLatest(houseId);
+    const efCurrentBalance = Number(latestEF?.currentBalance ?? 0);
+    const efMonthlyExpenses = efCalc.totalMonthlyExpenses > 0 ? efCalc.totalMonthlyExpenses : 0;
+    const efMonthsCovered = efMonthlyExpenses > 0
+      ? Math.round((efCurrentBalance / efMonthlyExpenses) * 10) / 10
+      : 0;
+
     return {
       budget: {
         totalIncome: budgetSummary.totalMonthlyIncome,
@@ -169,8 +178,8 @@ export class SummaryService {
       },
       emergencyFund: {
         target: Math.round(efCalc.optimalFund * 100) / 100,
-        current: Math.round(efCalc.totalMonthlyExpenses * 100) / 100,
-        monthsCovered: latestFund?.targetMonths ?? 0,
+        current: Math.round(efCurrentBalance * 100) / 100,
+        monthsCovered: efMonthsCovered,
       },
       cuotas: await this.cuotasService.getMonthlyCommitment(houseId),
     };
@@ -257,15 +266,18 @@ export class SummaryService {
     }
 
     // 2. Emergency fund (25 pts)
-    const coverage = await this.emergencyFundService.getCoverage(houseId);
-    const monthsCovered = coverage?.monthsCovered ?? 0;
-    const efPts = monthsCovered >= 6 ? 25 : monthsCovered >= 3 ? 15 : monthsCovered >= 1 ? 5 : 0;
+    const latestEFRecord = await this.emergencyFundService.getLatest(houseId);
+    const efBalance = Number(latestEFRecord?.currentBalance ?? 0);
+    const budgetSummaryForEF = budgets.length > 0 ? (budgets[0] as any).summary : null;
+    const monthlyExpForEF = budgetSummaryForEF?.totalMonthlyExpenses ?? 0;
+    const efMonthsCoveredScore = monthlyExpForEF > 0 ? efBalance / monthlyExpForEF : 0;
+    const efPts = efMonthsCoveredScore >= 6 ? 25 : efMonthsCoveredScore >= 3 ? 15 : efMonthsCoveredScore >= 1 ? 5 : 0;
     score += efPts;
     breakdown.emergencyFund = {
       points: efPts,
       max: 25,
       label: 'Fondo de emergencia',
-      status: monthsCovered >= 6 ? 'excelente' : monthsCovered >= 3 ? 'bueno' : 'mejorar',
+      status: efMonthsCoveredScore >= 6 ? 'excelente' : efMonthsCoveredScore >= 3 ? 'bueno' : efMonthsCoveredScore >= 1 ? 'básico' : 'sin fondo',
     };
 
     // 3. Credit card utilization (20 pts)
@@ -284,8 +296,7 @@ export class SummaryService {
         status: utilization < 30 ? 'excelente' : utilization < 60 ? 'bueno' : 'mejorar',
       };
     } else {
-      breakdown.creditUtil = { points: 20, max: 20, label: 'Uso de tarjetas', status: 'sin tarjetas' };
-      score += 20;
+      breakdown.creditUtil = { points: 0, max: 20, label: 'Uso de tarjetas', status: 'sin datos' };
     }
 
     // 4. Debt-to-income ratio (20 pts)

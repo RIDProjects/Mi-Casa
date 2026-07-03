@@ -81,13 +81,15 @@ export default function PatrimonioPage() {
   const rawNetWorth: number = assetsData?.netWorth ?? 0;
   const totalDebts = totalCardBalances + totalLoanDebt;
 
+  // CUP is base currency. Divide by rate to convert to another currency.
   const divider =
-    activeCurrency === 'USD' ? (usdRate || 1) :
-    activeCurrency === 'CUP' ? (1 / (rates.CUP || 0.04)) : 1;
+    activeCurrency === 'USD' ? (usdRate || rates.USD || 125) :
+    activeCurrency === 'MLC' ? (rates.MLC || 120) :
+    1; // CUP: no conversion needed
   const netWorth = rawNetWorth / divider;
   const currencySymbol =
-    activeCurrency === 'USD' ? 'USD ' :
-    activeCurrency === 'CUP' ? 'CUP$' : '$';
+    activeCurrency === 'USD' ? 'US$' :
+    activeCurrency === 'MLC' ? 'MLC$' : '$';
 
   const physicalAssets = assets.filter((a: any) => a.assetType === 'physical');
   const cashAssets = assets.filter((a: any) => a.assetType === 'cash');
@@ -159,7 +161,7 @@ export default function PatrimonioPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <TrendingUp size={24} /> Patrimonio Neto {activeCurrency !== 'ARS' ? `(${activeCurrency})` : ''}
+            <TrendingUp size={24} /> Patrimonio Neto {activeCurrency !== 'CUP' ? `(${activeCurrency})` : ''}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Activos físicos, efectivo y deudas consolidadas</p>
         </div>
@@ -208,7 +210,7 @@ export default function PatrimonioPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6 text-center">
         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-          Patrimonio Neto {activeCurrency !== 'ARS' ? `(en ${activeCurrency})` : ''}
+          Patrimonio Neto {activeCurrency !== 'CUP' ? `(en ${activeCurrency})` : ''}
         </p>
         <p className={`text-5xl font-bold mb-4 ${netWorthPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
           {netWorthPositive ? '+' : '-'}{currencySymbol}{fmt(Math.abs(netWorth))}

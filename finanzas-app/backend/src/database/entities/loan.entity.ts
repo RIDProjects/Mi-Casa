@@ -10,6 +10,7 @@ export class Loan {
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) currentDebt: number;
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) monthlyPayment: number;
   @Column({ nullable: true }) notes: string;
+  @Column({ default: 1 }) paymentDay: number; // Day of month when payment is due (1–31)
   @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
