@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
 import { House } from '../database/entities/house.entity';
+import { HouseCurrency } from '../database/entities/house-currency.entity';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { House } from '../database/entities/house.entity';
         return { secret, signOptions: { expiresIn: '24h' } };
       },
     }),
-    TypeOrmModule.forFeature([User, Role, House]),
+    TypeOrmModule.forFeature([User, Role, House, HouseCurrency]),
   ],
   controllers: [AuthController],
   providers: [

@@ -234,6 +234,15 @@ export const exchangeRatesAPI = {
   create: (data: any) => api.post('/exchange-rates', data),
 };
 
+export const houseCurrenciesAPI = {
+  getAll: (houseId: string) => api.get(`/houses/${houseId}/currencies`),
+  add: (houseId: string, data: any) => api.post(`/houses/${houseId}/currencies`, data),
+  setBase: (houseId: string, currencyId: string) => api.put(`/houses/${houseId}/currencies/${currencyId}/set-base`, {}),
+  remove: (houseId: string, currencyId: string) => api.delete(`/houses/${houseId}/currencies/${currencyId}`),
+  getRates: (houseId: string) => api.get(`/houses/${houseId}/currencies/rates`),
+  upsertRate: (houseId: string, data: any) => api.post(`/houses/${houseId}/currencies/rates`, data),
+};
+
 export const pushAPI = {
   getPublicKey: () => api.get('/push/vapid-public-key'),
   subscribe: (subscription: any) => api.post('/push/subscribe', subscription),

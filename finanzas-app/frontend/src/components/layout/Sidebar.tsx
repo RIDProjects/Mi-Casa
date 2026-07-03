@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, ShieldCheck, CreditCard, ShoppingCart,
   PiggyBank, LogOut, Moon, Sun, Home, Building2, UserPlus,
   Calculator, Receipt, Target, Landmark, TrendingUp, TrendingDown, BookOpen,
-  BarChart2, Bell, RefreshCw, Calendar, X,
+  BarChart2, Bell, RefreshCw, Calendar, X, Coins,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
@@ -84,6 +84,12 @@ const houseNavGroups: NavGroup[] = [
     label: 'Notificaciones',
     items: [
       { href: '/notificaciones', label: 'Notificaciones', icon: Bell, module: null },
+    ],
+  },
+  {
+    label: 'Configuración',
+    items: [
+      { href: '/configuracion/monedas', label: 'Monedas', icon: Coins, module: null },
     ],
   },
 ];

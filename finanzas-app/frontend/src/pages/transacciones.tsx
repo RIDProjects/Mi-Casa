@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, ChevronLeft, ChevronRight, Receipt, AlertTriangle, RefreshCw, Download, Upload } from 'lucide-react';
+import { useCurrencyStore } from '../store/currency.store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const fmt = (n: number) =>
@@ -43,6 +44,7 @@ const defaultForm = {
   metodoPago: 'efectivo',
   nombreTarjeta: '',
   fecha: new Date().toISOString().split('T')[0],
+  currency: '',
 };
 
 function typeBadge(tipo: string) {
@@ -66,6 +68,8 @@ function typeBadge(tipo: string) {
 export default function TransaccionesPage() {
   const qc = useQueryClient();
   const now = new Date();
+  const { currencies } = useCurrencyStore();
+  const baseCurrency = currencies.find(c => c.isBase);
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [showModal, setShowModal] = useState(false);
@@ -491,6 +495,24 @@ export default function TransaccionesPage() {
               required
             />
           </div>
+
+          {currencies.length > 0 && (
+            <div>
+              <label className="label" htmlFor="tx-currency">Moneda</label>
+              <select
+                id="tx-currency"
+                className="input"
+                value={form.currency || baseCurrency?.currencyCode || ''}
+                onChange={e => setForm({ ...form, currency: e.target.value })}
+              >
+                {currencies.map(c => (
+                  <option key={c.currencyCode} value={c.currencyCode}>
+                    {c.symbol} {c.currencyCode} — {c.currencyName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="label">Método de pago</label>

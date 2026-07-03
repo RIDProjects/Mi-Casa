@@ -5,6 +5,9 @@ import { Toaster } from 'react-hot-toast';
 import '../styles/globals.css';
 import { useThemeStore } from '../store/theme.store';
 import { useEffect, useState } from 'react';
+import { useAuthStore } from '../store/auth.store';
+import { useCurrencyStore } from '../store/currency.store';
+import { houseCurrenciesAPI } from '../services/api';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,18 +19,38 @@ const queryClient = new QueryClient({
   },
 });
 
+function CurrencyLoader() {
+  const user = useAuthStore(s => s.user);
+  const { setCurrencies, setRates } = useCurrencyStore();
+  const houseId = user?.house?.id;
+
+  useEffect(() => {
+    if (!houseId) return;
+
+    houseCurrenciesAPI
+      .getAll(houseId)
+      .then(r => setCurrencies(r.data))
+      .catch(() => {});
+
+    houseCurrenciesAPI
+      .getRates(houseId)
+      .then(r => setRates(r.data))
+      .catch(() => {});
+  }, [houseId]);
+
+  return null;
+}
+
 function ThemeInitializer({ children }: { children: React.ReactNode }) {
   const theme = useThemeStore(s => s.theme);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Apply theme class to document
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
   }, [theme]);
 
-  // Prevent hydration mismatch by not rendering theme-dependent content until mounted
   if (!mounted) {
     return <div className="min-h-screen bg-white dark:bg-gray-900" />;
   }
@@ -60,6 +83,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="manifest" href="/manifest.json" />
       </Head>
       <ThemeInitializer>
+        <CurrencyLoader />
         <Component {...pageProps} />
         <Toaster
           position="bottom-right"

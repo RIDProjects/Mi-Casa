@@ -42,7 +42,9 @@ export default function PatrimonioPage() {
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
-  const { activeCurrency, rates } = useCurrencyStore();
+  const { activeCurrencyCode, rates, currencies } = useCurrencyStore();
+  const baseCurrency = currencies.find(c => c.isBase);
+  const activeCurrency = currencies.find(c => c.currencyCode === activeCurrencyCode) ?? baseCurrency;
   const [usdRate, setUsdRate] = useState<number>(1200);
   const [historyMonths, setHistoryMonths] = useState(12);
 
@@ -81,15 +83,17 @@ export default function PatrimonioPage() {
   const rawNetWorth: number = assetsData?.netWorth ?? 0;
   const totalDebts = totalCardBalances + totalLoanDebt;
 
-  // CUP is base currency. Divide by rate to convert to another currency.
+  // Base currency is always 1. For non-base, divide by the exchange rate.
+  const activeCode = activeCurrency?.currencyCode ?? baseCurrency?.currencyCode ?? '';
+  const baseCode = baseCurrency?.currencyCode ?? '';
   const divider =
-    activeCurrency === 'USD' ? (usdRate || rates.USD || 125) :
-    activeCurrency === 'MLC' ? (rates.MLC || 120) :
-    1; // CUP: no conversion needed
+    activeCode === baseCode || !activeCode
+      ? 1
+      : activeCode === 'USD'
+        ? (usdRate || rates['USD'] || 125)
+        : (rates[activeCode] || 1);
   const netWorth = rawNetWorth / divider;
-  const currencySymbol =
-    activeCurrency === 'USD' ? 'US$' :
-    activeCurrency === 'MLC' ? 'MLC$' : '$';
+  const currencySymbol = activeCurrency?.symbol ?? '$';
 
   const physicalAssets = assets.filter((a: any) => a.assetType === 'physical');
   const cashAssets = assets.filter((a: any) => a.assetType === 'cash');
@@ -161,13 +165,13 @@ export default function PatrimonioPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <TrendingUp size={24} /> Patrimonio Neto {activeCurrency !== 'CUP' ? `(${activeCurrency})` : ''}
+            <TrendingUp size={24} /> Patrimonio Neto {activeCode !== baseCode ? `(${activeCode})` : ''}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Activos físicos, efectivo y deudas consolidadas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencyToggle />
-          {activeCurrency === 'USD' && (
+          {activeCode === 'USD' && (
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-500 dark:text-gray-400">Cotización:</span>
               <input
@@ -210,7 +214,7 @@ export default function PatrimonioPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6 text-center">
         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-          Patrimonio Neto {activeCurrency !== 'CUP' ? `(en ${activeCurrency})` : ''}
+          Patrimonio Neto {activeCode !== baseCode ? `(en ${activeCode})` : ''}
         </p>
         <p className={`text-5xl font-bold mb-4 ${netWorthPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
           {netWorthPositive ? '+' : '-'}{currencySymbol}{fmt(Math.abs(netWorth))}

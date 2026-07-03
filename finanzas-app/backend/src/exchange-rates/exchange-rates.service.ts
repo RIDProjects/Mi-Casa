@@ -1,18 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ExchangeRate } from '../database/entities/exchange-rate.entity';
-
-// CUP is the base currency. These are CUP per unit of each foreign currency.
-const DEFAULT_RATES: Record<string, number> = {
-  MLC: 120,
-  USD: 125,
-};
+import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 
 @Injectable()
 export class ExchangeRatesService {
   constructor(
     @InjectRepository(ExchangeRate) private repo: Repository<ExchangeRate>,
+    @Optional() private readonly houseCurrenciesService?: HouseCurrenciesService,
   ) {}
 
   async findAll(): Promise<ExchangeRate[]> {
@@ -38,16 +34,19 @@ export class ExchangeRatesService {
     return this.repo.save(entry);
   }
 
-  async getLatest(): Promise<Record<string, number>> {
-    const pairs = ['MLC', 'USD'];
-    const rates: Record<string, number> = {};
-    for (const from of pairs) {
-      const latest = await this.repo.findOne({
-        where: { fromCurrency: from, toCurrency: 'CUP' },
-        order: { date: 'DESC', createdAt: 'DESC' },
-      });
-      rates[from] = latest ? Number(latest.rate) : DEFAULT_RATES[from];
+  /**
+   * Returns exchange rates as a map of currencyCode → rate.
+   *
+   * When `houseId` is provided, delegates to the per-house currency service,
+   * which returns rates scoped to that household's configured currencies.
+   *
+   * When `houseId` is omitted, returns an empty map — global hardcoded defaults
+   * have been removed in favour of per-house configuration.
+   */
+  async getLatest(houseId?: string): Promise<Record<string, number>> {
+    if (houseId && this.houseCurrenciesService) {
+      return this.houseCurrenciesService.getRates(houseId);
     }
-    return rates;
+    return {};
   }
 }

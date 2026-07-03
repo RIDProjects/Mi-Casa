@@ -1,22 +1,23 @@
 import { useCurrencyStore } from '../../store/currency.store';
 
-const CURRENCIES = ['CUP', 'MLC', 'USD'] as const;
-
 export function CurrencyToggle() {
-  const { activeCurrency, setActiveCurrency } = useCurrencyStore();
+  const { currencies, activeCurrencyCode, setActiveCurrency } = useCurrencyStore();
+
+  if (currencies.length <= 1) return null;
+
   return (
     <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-      {CURRENCIES.map(c => (
+      {currencies.map(c => (
         <button
-          key={c}
-          onClick={() => setActiveCurrency(c)}
+          key={c.currencyCode}
+          onClick={() => setActiveCurrency(c.currencyCode)}
           className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-            activeCurrency === c
+            activeCurrencyCode === c.currencyCode
               ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
-          {c}
+          {c.currencyCode}
         </button>
       ))}
     </div>

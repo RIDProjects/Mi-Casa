@@ -5,9 +5,10 @@ import { HousesService } from './houses.service';
 import { House } from '../database/entities/house.entity';
 import { User } from '../database/entities/user.entity';
 import { AuthModule } from '../auth/auth.module';
+import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([House, User]), AuthModule],
+  imports: [TypeOrmModule.forFeature([House, User]), AuthModule, HouseCurrenciesModule],
   controllers: [HousesController],
   providers: [HousesService],
   exports: [HousesService],

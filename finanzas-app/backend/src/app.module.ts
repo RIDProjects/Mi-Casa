@@ -26,6 +26,7 @@ import { CuotasModule } from './cuotas/cuotas.module';
 import { InvestmentsModule } from './investments/investments.module';
 import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { PushModule } from './push/push.module';
+import { HouseCurrenciesModule } from './house-currencies/house-currencies.module';
 
 @Module({
   imports: [
@@ -48,7 +49,7 @@ import { PushModule } from './push/push.module';
     BudgetModule, TransactionsModule, SavingsGoalsModule,
     CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
     RecurringTransactionsModule, SummaryModule, CuotasModule,
-    InvestmentsModule, ExchangeRatesModule, PushModule,
+    InvestmentsModule, ExchangeRatesModule, PushModule, HouseCurrenciesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

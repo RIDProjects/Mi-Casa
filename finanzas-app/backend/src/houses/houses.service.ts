@@ -3,13 +3,43 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { House } from '../database/entities/house.entity';
 import { User } from '../database/entities/user.entity';
+import { HouseCurrenciesService, CURRENCY_META } from '../house-currencies/house-currencies.service';
 
 @Injectable()
 export class HousesService {
   constructor(
     @InjectRepository(House) private houseRepo: Repository<House>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    private readonly houseCurrenciesService: HouseCurrenciesService,
   ) {}
+
+  /**
+   * Creates a house (with hashed password) and seeds the base currency.
+   * Used by programmatic house creation outside of the auth registration flow.
+   */
+  async create(dto: {
+    name: string;
+    hashedPassword: string;
+    baseCurrencyCode?: string;
+  }): Promise<House> {
+    const house = this.houseRepo.create({
+      name: dto.name,
+      password: dto.hashedPassword,
+    });
+    const saved = await this.houseRepo.save(house);
+
+    const code = dto.baseCurrencyCode ?? 'CUP';
+    const meta = CURRENCY_META[code] ?? CURRENCY_META['CUP'];
+    await this.houseCurrenciesService.add(saved.id, {
+      currencyCode: code,
+      currencyName: meta.name,
+      symbol: meta.symbol,
+      locale: meta.locale,
+      isBase: true,
+    });
+
+    return saved;
+  }
 
   async findAll() {
     return this.houseRepo.find({ order: { createdAt: 'DESC' }, relations: ['members'] });

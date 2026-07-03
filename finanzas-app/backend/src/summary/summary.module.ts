@@ -12,6 +12,7 @@ import { CuotasModule } from '../cuotas/cuotas.module';
 import { AuthModule } from '../auth/auth.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { InvestmentsModule } from '../investments/investments.module';
+import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { InvestmentsModule } from '../investments/investments.module';
     CuotasModule,
     TransactionsModule,
     InvestmentsModule,
+    HouseCurrenciesModule,
   ],
   controllers: [SummaryController],
   providers: [SummaryService],

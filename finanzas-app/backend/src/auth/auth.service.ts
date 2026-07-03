@@ -6,6 +6,8 @@ import * as bcrypt from 'bcryptjs';
 import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
 import { House } from '../database/entities/house.entity';
+import { HouseCurrency } from '../database/entities/house-currency.entity';
+import { CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
@@ -15,6 +17,8 @@ export class AuthService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Role) private roleRepo: Repository<Role>,
     @InjectRepository(House) private houseRepo: Repository<House>,
+    @InjectRepository(HouseCurrency)
+    private houseCurrencyRepo: Repository<HouseCurrency>,
     private jwtService: JwtService,
   ) {}
 
@@ -37,6 +41,20 @@ export class AuthService {
       house = this.houseRepo.create({ name: dto.houseName, password: hashedHousePassword });
       house = await this.houseRepo.save(house);
       house.members = [];
+
+      // Seed default base currency for the new house
+      const baseCurrencyCode = (dto as any).baseCurrencyCode ?? 'CUP';
+      const meta = CURRENCY_META[baseCurrencyCode] ?? CURRENCY_META['CUP'];
+      await this.houseCurrencyRepo.save(
+        this.houseCurrencyRepo.create({
+          currencyCode: baseCurrencyCode,
+          currencyName: meta.name,
+          symbol: meta.symbol,
+          locale: meta.locale,
+          isBase: true,
+          house: { id: house.id },
+        }),
+      );
     }
 
     // First member becomes house_admin; subsequent members get user role

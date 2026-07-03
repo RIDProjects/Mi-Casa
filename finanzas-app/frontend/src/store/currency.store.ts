@@ -1,23 +1,40 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Currency = 'CUP' | 'MLC' | 'USD';
+export interface HouseCurrency {
+  id: string;
+  currencyCode: string;
+  currencyName: string;
+  symbol: string;
+  locale: string;
+  isBase: boolean;
+}
 
 interface CurrencyState {
-  activeCurrency: Currency;
-  rates: { MLC: number; USD: number }; // CUP per unit (CUP is base)
-  setActiveCurrency: (c: Currency) => void;
-  setRates: (rates: { MLC: number; USD: number }) => void;
+  currencies: HouseCurrency[];
+  rates: Record<string, number>; // { USD: 125 } — units of base per 1 unit of foreign
+  activeCurrencyCode: string;
+  setCurrencies: (currencies: HouseCurrency[]) => void;
+  setRates: (rates: Record<string, number>) => void;
+  setActiveCurrency: (code: string) => void;
+  getBaseCurrency: () => HouseCurrency | undefined;
+  getActiveCurrency: () => HouseCurrency | undefined;
 }
 
 export const useCurrencyStore = create<CurrencyState>()(
   persist(
-    (set) => ({
-      activeCurrency: 'CUP',
-      rates: { MLC: 120, USD: 125 },
-      setActiveCurrency: (activeCurrency) => set({ activeCurrency }),
+    (set, get) => ({
+      currencies: [],
+      rates: {},
+      activeCurrencyCode: 'CUP',
+      setCurrencies: (currencies) => set({ currencies }),
       setRates: (rates) => set({ rates }),
+      setActiveCurrency: (code) => set({ activeCurrencyCode: code }),
+      getBaseCurrency: () => get().currencies.find(c => c.isBase),
+      getActiveCurrency: () =>
+        get().currencies.find(c => c.currencyCode === get().activeCurrencyCode) ??
+        get().currencies.find(c => c.isBase),
     }),
-    { name: 'mi-casa-currency' }
+    { name: 'mi-casa-currency-v2' }
   )
 );

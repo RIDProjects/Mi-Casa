@@ -9,6 +9,7 @@ import { EmergencyFundService } from '../emergency-fund/emergency-fund.service';
 import { CuotasService } from '../cuotas/cuotas.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { InvestmentsService } from '../investments/investments.service';
+import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 import { TransactionType } from '../database/entities/transaction.entity';
 
 export interface UpcomingBill {
@@ -32,6 +33,7 @@ export class SummaryService {
     private readonly cuotasService: CuotasService,
     private readonly transactionsService: TransactionsService,
     private readonly investmentsService: InvestmentsService,
+    private readonly houseCurrenciesService: HouseCurrenciesService,
   ) {}
 
   async getUpcomingBills(houseId: string, days = 30): Promise<UpcomingBill[]> {
@@ -145,6 +147,9 @@ export class SummaryService {
       ? Math.round((efCurrentBalance / efMonthlyExpenses) * 10) / 10
       : 0;
 
+    const baseCurrency = await this.houseCurrenciesService.getBaseCurrency(houseId);
+    const exchangeRates = await this.houseCurrenciesService.getRates(houseId);
+
     return {
       budget: {
         totalIncome: budgetSummary.totalMonthlyIncome,
@@ -182,6 +187,9 @@ export class SummaryService {
         monthsCovered: efMonthsCovered,
       },
       cuotas: await this.cuotasService.getMonthlyCommitment(houseId),
+      baseCurrency: baseCurrency?.currencyCode ?? 'CUP',
+      baseCurrencySymbol: baseCurrency?.symbol ?? '$',
+      exchangeRates,
     };
   }
 
