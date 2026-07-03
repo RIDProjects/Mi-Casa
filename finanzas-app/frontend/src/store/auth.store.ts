@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface House { id: string; name: string; }
 
@@ -22,47 +21,46 @@ interface AuthStore {
 
 const getInitialState = () => {
   if (typeof window === 'undefined') return { user: null, token: null, isAuthenticated: false };
-  const token = localStorage.getItem('token');
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-  return { user, token, isAuthenticated: !!token };
+  try {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    return { user, token, isAuthenticated: !!token };
+  } catch {
+    return { user: null, token: null, isAuthenticated: false };
+  }
 };
 
-export const useAuthStore = create<AuthStore>()(
-  persist(
-    (set, get) => ({
-      ...getInitialState(),
-      setAuth: (user, token) => {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        set({ user, token, isAuthenticated: true });
-      },
-      logout: () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('auth:logout'));
-        }
-        set({ user: null, token: null, isAuthenticated: false });
-      },
-      hasPermission: (module, action) => {
-        const { user } = get();
-        if (!user) return false;
-        const isAdmin = user.roles?.some(r => r.name === 'admin' || r.name === 'house_admin');
-        if (isAdmin) return true;
-        return user.roles?.some(role => role.permissions?.some(p => p.module === module && p.action === action)) ?? false;
-      },
-      isAdminGlobal: () => {
-        const { user } = get();
-        if (!user) return false;
-        return user.roles?.some(r => r.name === 'admin') ?? false;
-      },
-      isHouseAdmin: () => {
-        const { user } = get();
-        if (!user) return false;
-        return user.roles?.some(r => r.name === 'house_admin') ?? false;
-      },
-    }),
-    { name: 'auth-store' }
-  )
-);
+export const useAuthStore = create<AuthStore>()((set, get) => ({
+  ...getInitialState(),
+  setAuth: (user, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user, token, isAuthenticated: true });
+  },
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:logout'));
+    }
+    set({ user: null, token: null, isAuthenticated: false });
+  },
+  hasPermission: (module, action) => {
+    const { user } = get();
+    if (!user) return false;
+    const isAdmin = user.roles?.some(r => r.name === 'admin' || r.name === 'house_admin');
+    if (isAdmin) return true;
+    return user.roles?.some(role => role.permissions?.some(p => p.module === module && p.action === action)) ?? false;
+  },
+  isAdminGlobal: () => {
+    const { user } = get();
+    if (!user) return false;
+    return user.roles?.some(r => r.name === 'admin') ?? false;
+  },
+  isHouseAdmin: () => {
+    const { user } = get();
+    if (!user) return false;
+    return user.roles?.some(r => r.name === 'house_admin') ?? false;
+  },
+}));
