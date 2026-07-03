@@ -16,4 +16,5 @@ export class UpdateUserDto {
   @IsOptional() @IsString() whatsappNumber?: string;
   @IsOptional() @IsArray() roleIds?: string[];
   @IsOptional() isActive?: boolean;
+  @IsOptional() @IsString() plan?: string;
 }

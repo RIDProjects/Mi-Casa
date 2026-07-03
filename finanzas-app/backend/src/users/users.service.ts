@@ -17,6 +17,31 @@ export class UsersService {
     return this.userRepo.find({ relations: ['roles', 'roles.permissions'] });
   }
 
+  async getAdminStats() {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo  = new Date(now.getTime() -  7 * 24 * 60 * 60 * 1000);
+
+    const users = await this.userRepo.find({ relations: ['roles'] });
+    const total = users.length;
+
+    const activeUsers   = users.filter(u => u.isActive).length;
+    const inactiveUsers = users.filter(u => !u.isActive).length;
+    const newLast30     = users.filter(u => new Date(u.createdAt) >= thirtyDaysAgo).length;
+    const activeLast30  = users.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) >= thirtyDaysAgo).length;
+    const activeLast7   = users.filter(u => u.lastLoginAt && new Date(u.lastLoginAt) >= sevenDaysAgo).length;
+    const churnRisk     = users.filter(u => u.isActive && u.lastLoginAt && new Date(u.lastLoginAt) < thirtyDaysAgo).length;
+    const neverLogged   = users.filter(u => u.isActive && !u.lastLoginAt).length;
+
+    const planDist = {
+      free:   users.filter(u => !u.plan || u.plan === 'free').length,
+      pro:    users.filter(u => u.plan === 'pro').length,
+      family: users.filter(u => u.plan === 'family').length,
+    };
+
+    return { total, activeUsers, inactiveUsers, newLast30, activeLast30, activeLast7, churnRisk, neverLogged, planDist };
+  }
+
   async findOne(id: string) {
     const user = await this.userRepo.findOne({ where: { id }, relations: ['roles', 'roles.permissions'] });
     if (!user) throw new NotFoundException('Usuario no encontrado');

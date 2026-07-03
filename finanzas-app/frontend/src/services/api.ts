@@ -38,6 +38,7 @@ export const usersAPI = {
   create: (data: any) => api.post('/users', data),
   update: (id: string, data: any) => api.put(`/users/${id}`, data),
   delete: (id: string) => api.delete(`/users/${id}`),
+  getAdminStats: () => api.get('/users/admin/stats'),
 };
 
 export const rolesAPI = {

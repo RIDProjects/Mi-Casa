@@ -110,6 +110,8 @@ export class AuthService {
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Credenciales inválidas');
 
+    await this.userRepo.update(user.id, { lastLoginAt: new Date() });
+
     const isAdmin = user.roles?.some(r => r.name === 'admin');
     const { password, ...result } = user;
     const token = this.jwtService.sign(

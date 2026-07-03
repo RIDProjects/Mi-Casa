@@ -13,6 +13,9 @@ import { RequirePermission } from '../common/decorators/require-permission.decor
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @Get('admin/stats') @RequirePermission('users', 'view')
+  getAdminStats() { return this.usersService.getAdminStats(); }
+
   @Get() @RequirePermission('users', 'view') @ApiOperation({ summary: 'Listar usuarios' })
   findAll() { return this.usersService.findAll(); }
 

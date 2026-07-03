@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateCol
 import { Role } from './role.entity';
 import { House } from './house.entity';
 
+export type UserPlan = 'free' | 'pro' | 'family';
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid') id: string;
@@ -11,6 +13,8 @@ export class User {
   @Column({ default: true }) isActive: boolean;
   @Column({ nullable: true }) whatsappNumber: string;
   @Column({ nullable: true, name: 'active_house_id' }) activeHouseId: string;
+  @Column({ default: 'free' }) plan: UserPlan;
+  @Column({ nullable: true, type: 'timestamp', name: 'last_login_at' }) lastLoginAt: Date;
   @ManyToMany(() => Role, { eager: true }) @JoinTable({ name: 'user_roles' }) roles: Role[];
   @ManyToMany(() => House, house => house.members)
   @JoinTable({
