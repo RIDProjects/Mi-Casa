@@ -35,11 +35,18 @@ export default function LoginScreen() {
     try {
       await login({ email: email.trim(), password });
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Error al iniciar sesión. Verificá tus credenciales.';
-      setError(Array.isArray(msg) ? msg.join(', ') : msg);
+      const raw = err?.response?.data?.message ?? err?.response?.data ?? err?.message;
+      let msg: string;
+      if (!raw) {
+        msg = 'Error al iniciar sesión. Verificá tus credenciales.';
+      } else if (Array.isArray(raw)) {
+        msg = raw.join(', ');
+      } else if (typeof raw === 'string') {
+        msg = raw;
+      } else {
+        msg = 'Credenciales incorrectas.';
+      }
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

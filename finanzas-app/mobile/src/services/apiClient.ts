@@ -29,12 +29,16 @@ apiClient.interceptors.request.use(
 );
 
 // Interceptor de response: maneja 401 y limpia sesión
+// Solo dispara logout si HAY un token guardado (no durante el intento de login)
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await AsyncStorage.multiRemove(['token', 'user']);
-      _onUnauthorized?.();
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        await AsyncStorage.multiRemove(['token', 'user']);
+        _onUnauthorized?.();
+      }
     }
     return Promise.reject(error);
   },
