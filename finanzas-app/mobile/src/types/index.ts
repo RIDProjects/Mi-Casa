@@ -115,3 +115,60 @@ export interface CategoryTotal {
   total: number;
   percentage: number;
 }
+
+// ─── Dashboard Summary ───────────────────────────────────────────────────────
+
+export interface MonthlySummary {
+  month: number;
+  year: number;
+  totalIngresos: number;
+  totalGastos: number;
+  balance: number;
+  emergencyFund?: number;
+  savingsRate?: number;
+}
+
+// ─── Budget ──────────────────────────────────────────────────────────────────
+
+export interface BudgetCategory {
+  id: string;
+  name: string;
+  budgeted: number;
+  spent: number;
+  remaining: number;
+  percentage: number;
+}
+
+export interface Budget {
+  id: string;
+  name: string;
+  year: number;
+  month: number;
+  categories: BudgetCategory[];
+  summary: {
+    totalBudgeted: number;
+    totalSpent: number;
+    totalRemaining: number;
+    totalIngresos: number;
+    totalGastos: number;
+    alerts: {
+      overBudget: boolean;
+      categories: string[];
+    };
+  };
+}
+
+// ─── Savings Goals ───────────────────────────────────────────────────────────
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: string;
+  description?: string;
+  isCompleted: boolean;
+  progressPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+}

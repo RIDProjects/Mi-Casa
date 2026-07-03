@@ -1,4 +1,5 @@
-// Cambiar por la IP real de la máquina en la red local al probar en dispositivo físico.
-// Ejemplo: 'http://192.168.1.100:3001/api/v1'
-// En emulador Android, usar 10.0.2.2 en lugar de localhost.
-export const API_BASE_URL = 'http://localhost:3001/api/v1';
+// EXPO_PUBLIC_API_URL se lee en tiempo de compilación desde el archivo .env
+// En emulador Android usar http://10.0.2.2:3001/api/v1
+// En dispositivo físico usar la IP de la PC en la red local: http://192.168.x.x:3001/api/v1
+export const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:3001/api/v1';

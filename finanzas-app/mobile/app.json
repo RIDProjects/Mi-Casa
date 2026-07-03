@@ -21,7 +21,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#111827"
       },
-      "package": "com.micasapro.app"
+      "package": "com.micasapro.app",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"

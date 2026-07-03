@@ -1,15 +1,19 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
 
-// Stack raíz (sobre los tabs — para modales)
+// Stack raíz (sobre los tabs — para modales y pantallas secundarias)
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   AddDebt: { debtId?: string; debtType?: 'they_owe_me' | 'i_owe' } | undefined;
+  DebtsSummary: undefined;
 };
 
-// Bottom tabs
+// Bottom tabs (5 tabs según especificación)
 export type MainTabParamList = {
-  Debts: undefined;
+  Dashboard: undefined;
   Expenses: NavigatorScreenParams<GastosStackParamList>;
+  Presupuesto: undefined;
+  Metas: undefined;
+  Perfil: undefined;
 };
 
 // Stack anidado dentro del tab de Gastos

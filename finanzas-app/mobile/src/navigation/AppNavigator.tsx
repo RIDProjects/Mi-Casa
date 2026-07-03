@@ -8,6 +8,7 @@ import { RootStackParamList } from './types';
 import MainTabs from './MainTabs';
 import LoginScreen from '../screens/auth/LoginScreen';
 import AddDebtScreen from '../screens/debts/AddDebtScreen';
+import DebtsSummaryScreen from '../screens/debts/DebtsSummaryScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -53,6 +54,18 @@ export default function AppNavigator() {
           }}
         >
           <Stack.Screen name="MainTabs" component={MainTabs} />
+          <Stack.Screen
+            name="DebtsSummary"
+            component={DebtsSummaryScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Deudas',
+              headerStyle: { backgroundColor: Colors.card },
+              headerTintColor: Colors.textPrimary,
+              headerTitleStyle: { fontWeight: '700' },
+              contentStyle: { backgroundColor: Colors.background },
+            }}
+          />
           <Stack.Screen
             name="AddDebt"
             component={AddDebtScreen}
