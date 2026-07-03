@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
@@ -9,11 +9,16 @@ import { Moon, Sun, Eye, EyeOff } from 'lucide-react';
 export default function Login() {
   const router = useRouter();
   const setAuth = useAuthStore(s => s.setAuth);
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const { theme, toggleTheme } = useThemeStore();
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) router.replace('/dashboard');
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

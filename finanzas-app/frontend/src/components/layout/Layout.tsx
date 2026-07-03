@@ -8,21 +8,30 @@ import { Menu } from 'lucide-react';
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Esperar a que Zustand hidrate desde localStorage antes de evaluar auth
   useEffect(() => {
-    setMounted(true);
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (mounted && !isAuthenticated) router.push('/login');
-  }, [isAuthenticated, mounted, router]);
+    if (hydrated && !isAuthenticated) router.push('/login');
+  }, [isAuthenticated, hydrated, router]);
 
-  if (!mounted || !isAuthenticated) {
+  if (!hydrated) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-gray-500 dark:text-gray-400">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-500 dark:text-gray-400">Redirigiendo...</div>
       </div>
     );
   }
