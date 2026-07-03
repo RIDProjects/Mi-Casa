@@ -31,7 +31,11 @@ import { HouseCurrenciesModule } from './house-currencies/house-currencies.modul
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+    ThrottlerModule.forRoot([
+      { name: 'short',  ttl: 1000,   limit: 20  },  // 20 req/s por IP — protege bursts
+      { name: 'medium', ttl: 60000,  limit: 300 },  // 300 req/min — uso normal de la app
+      { name: 'long',   ttl: 900000, limit: 1500 }, // 1500 req/15min — evita scraping
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
@@ -43,6 +47,13 @@ import { HouseCurrenciesModule } from './house-currencies/house-currencies.modul
       synchronize: process.env.NODE_ENV !== 'production',
       logging: process.env.NODE_ENV === 'development',
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      // Connection pool: 25 conexiones activas + 5 overflow para picos
+      extra: {
+        max: 25,
+        min: 2,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      },
     }),
     AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
     PurchasesModule, InventoryModule, EmergencyFundModule, NotificationsModule,

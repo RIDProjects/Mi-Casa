@@ -10,9 +10,15 @@ import { seed } from './seed';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Tune HTTP server for concurrency
+  const httpServer = app.getHttpServer();
+  httpServer.keepAliveTimeout = 65000;  // mayor que el LB timeout de Railway (60s)
+  httpServer.headersTimeout  = 66000;
+  httpServer.maxHeadersCount = 100;
+
   // Security
   app.use(helmet());
-  app.use(compression());
+  app.use(compression({ threshold: 1024 })); // solo comprime responses > 1KB
 
   const origin = process.env.NODE_ENV === 'production'
     ? (process.env.FRONTEND_URL ?? (() => { throw new Error('FRONTEND_URL is required in production'); })())
