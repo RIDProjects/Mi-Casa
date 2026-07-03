@@ -13,16 +13,20 @@ interface Props {
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }: Props) {
   const titleId = 'modal-title';
   const panelRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   const widths: Record<'sm' | 'md' | 'lg' | 'xl', string> = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
 
   useEffect(() => {
     if (!isOpen) return;
 
-    panelRef.current?.focus();
+    // Forzar foco al panel solo cuando el modal abre, no en cada re-render
+    const t = setTimeout(() => panelRef.current?.focus(), 0);
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab') return;
@@ -51,10 +55,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     document.body.style.overflow = 'hidden';
 
     return () => {
+      clearTimeout(t);
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]); // onClose excluido intencionalmente — se accede via ref para evitar re-runs al escribir
 
   if (!isOpen) return null;
 
