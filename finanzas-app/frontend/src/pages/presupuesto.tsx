@@ -7,7 +7,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import {
   Plus, Trash2, ChevronDown, ChevronRight,
-  Calculator, TrendingUp, TrendingDown, Zap, CreditCard, Bug, Target,
+  Calculator, TrendingUp, TrendingDown, Zap, CreditCard, Bug, Target, Pencil,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -243,6 +243,8 @@ export default function PresupuestoPage() {
   const [budgetForm, setBudgetForm]             = useState({ name: '', year: new Date().getFullYear(), savingsTargetPercent: 20 });
   const [incomeForm, setIncomeForm]             = useState({ ...defaultIncomeForm });
   const [categoryForm, setCategoryForm]         = useState({ ...defaultCategoryForm });
+  const [showSavingsModal, setShowSavingsModal] = useState(false);
+  const [savingsTargetEdit, setSavingsTargetEdit] = useState(20);
 
   const { data: budgets = [], isLoading } = useQuery<Budget[]>('budgets', () => budgetAPI.getAll().then(r => r.data), { staleTime: 0 });
   const activeBudgetId = (budgets as Budget[])[0]?.id ?? null;
@@ -273,6 +275,10 @@ export default function PresupuestoPage() {
   });
   const delCategoryMut = useMutation((id: string) => budgetAPI.deleteCategory(id), {
     onSuccess: () => { toast.success('Categoría eliminada'); setDeleteCategoryId(null); refresh(); },
+    onError: (e: any) => { toast.error(getErr(e)); },
+  });
+  const updateSavingsMut = useMutation((pct: number) => budgetAPI.update(activeBudgetId!, { savingsTargetPercent: pct }), {
+    onSuccess: () => { toast.success('Meta de ahorro actualizada'); setShowSavingsModal(false); refresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
 
@@ -467,7 +473,15 @@ export default function PresupuestoPage() {
 
           {/* Meta de ahorro */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <h2 className="text-sm font-bold text-blue-900 dark:text-blue-300 mb-3">🎯 Meta de Ahorro</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-blue-900 dark:text-blue-300">🎯 Meta de Ahorro</h2>
+              <button
+                onClick={() => { setSavingsTargetEdit(budget.savingsTargetPercent); setShowSavingsModal(true); }}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <Pencil size={11} /> Editar
+              </button>
+            </div>
             <div className="flex items-center gap-3 mb-3">
               <span className="text-xs text-gray-600 dark:text-gray-400 shrink-0">¿Qué % querés ahorrar?</span>
               <span className="text-lg font-bold text-blue-700 dark:text-blue-300 w-12 text-right">{budget.savingsTargetPercent}%</span>
@@ -535,10 +549,6 @@ export default function PresupuestoPage() {
               onDeleteCategory={() => setDeleteCategoryId(cat.id)}
             />
           ))}
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl px-4 py-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-red-900 dark:text-red-300">Total gastos mensuales</span>
-            <span className="text-lg font-bold text-red-600 dark:text-red-400">${fmt(summary.totalMonthlyExpenses)}</span>
-          </div>
         </div>
       )}
 
@@ -577,6 +587,35 @@ export default function PresupuestoPage() {
             <button type="submit" disabled={addCategoryMut.isLoading} className="btn-primary">{addCategoryMut.isLoading ? 'Creando...' : 'Crear categoría'}</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={showSavingsModal} onClose={() => setShowSavingsModal(false)} title="Editar meta de ahorro">
+        <div className="space-y-5">
+          <div>
+            <label className="label">Meta de ahorro — <span className="font-bold text-blue-600 dark:text-blue-400">{savingsTargetEdit}%</span></label>
+            <input
+              type="range" min="0" max="50" step="1"
+              value={savingsTargetEdit}
+              onChange={e => setSavingsTargetEdit(parseInt(e.target.value))}
+              className="w-full accent-blue-600 mt-2"
+            />
+            <div className="flex justify-between text-xs text-gray-400 mt-1"><span>0%</span><span>25%</span><span>50%</span></div>
+          </div>
+          <div className={`text-xs font-medium px-3 py-2 rounded-lg ${savingsRating(savingsTargetEdit).color} bg-gray-50 dark:bg-gray-800`}>
+            {savingsRating(savingsTargetEdit).emoji} {savingsRating(savingsTargetEdit).text}
+          </div>
+          <div className="flex justify-end gap-3 pt-1">
+            <button type="button" onClick={() => setShowSavingsModal(false)} className="btn-secondary">Cancelar</button>
+            <button
+              type="button"
+              disabled={updateSavingsMut.isLoading}
+              onClick={() => updateSavingsMut.mutate(savingsTargetEdit)}
+              className="btn-primary"
+            >
+              {updateSavingsMut.isLoading ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <ConfirmDialog isOpen={!!deleteIncomeId} onClose={() => setDeleteIncomeId(null)} onConfirm={() => delIncomeMut.mutate(deleteIncomeId!)} loading={delIncomeMut.isLoading} title="¿Eliminar ingreso?" message={`Se eliminará "${incomeSources.find(i => i.id === deleteIncomeId)?.name ?? ''}". Esta acción no se puede deshacer.`} />
