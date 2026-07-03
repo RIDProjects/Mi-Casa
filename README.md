@@ -221,6 +221,88 @@ Neto = (activos físicos + efectivo) − (saldo tarjetas + deuda créditos)
 
 ---
 
+## Despliegue en producción
+
+El sistema usa **dos plataformas** porque el backend NestJS requiere un proceso persistente (incompatible con serverless):
+
+| Parte | Plataforma | Costo |
+|---|---|---|
+| Frontend (Next.js) | Vercel — Hobby | $0/mes |
+| Backend (NestJS) + PostgreSQL | Railway — Starter | ~$5/mes |
+
+### 1. Railway — Backend + Base de datos
+
+```bash
+# 1. Crear cuenta en railway.app con GitHub
+# 2. New Project → Deploy from GitHub repo
+# 3. + New → Database → PostgreSQL
+# 4. Configurar el servicio backend:
+#    Root Directory:   finanzas-app/backend
+#    Build Command:    npm run build
+#    Start Command:    node dist/main
+```
+
+Variables de entorno en Railway:
+
+```env
+NODE_ENV=production
+PORT=3001
+DB_HOST=${{Postgres.PGHOST}}
+DB_PORT=${{Postgres.PGPORT}}
+DB_USER=${{Postgres.PGUSER}}
+DB_PASS=${{Postgres.PGPASSWORD}}
+DB_NAME=${{Postgres.PGDATABASE}}
+JWT_SECRET=secret-largo-y-aleatorio
+FRONTEND_URL=https://tu-app.vercel.app
+```
+
+Railway genera automáticamente la URL pública del backend.
+
+### 2. Vercel — Frontend
+
+```bash
+# 1. Crear cuenta en vercel.com con GitHub
+# 2. New Project → Import Git Repository
+# 3. Framework Preset: Next.js (se detecta automáticamente)
+#    Root Directory: finanzas-app/frontend
+```
+
+Variable de entorno en Vercel:
+
+```env
+NEXT_PUBLIC_API_URL=https://tu-backend.up.railway.app/api/v1
+```
+
+Después del deploy, volvé a Railway y actualizá `FRONTEND_URL` con la URL de Vercel.
+
+### 3. Mobile — APK con backend en producción
+
+```bash
+cd finanzas-app/mobile
+# Actualizar .env con la URL de Railway
+echo "EXPO_PUBLIC_API_URL=https://tu-backend.up.railway.app/api/v1" > .env
+eas build --platform android --profile preview
+```
+
+---
+
+## Capacidad y performance
+
+Configuración actual con 1 instancia en Railway:
+
+| Métrica | Valor |
+|---|---|
+| Usuarios concurrentes cómodos | 100-150 |
+| Pool de conexiones PostgreSQL | 25 activas · 2 mínimo |
+| Rate limiter (burst) | 20 req/s por IP |
+| Rate limiter (normal) | 300 req/min por IP |
+| Rate limiter (anti-scraping) | 1.500 req/15min por IP |
+| HTTP keep-alive | 65s (compatible con Railway LB) |
+
+Para escalar: agregar instancias en Railway sin cambios de código.
+
+---
+
 ## Estructura de carpetas (mobile)
 
 ```
