@@ -28,7 +28,7 @@ export class EmergencyFundService {
   async create(dto: any, houseId: string) {
     const { categories, ...fundData } = dto;
     const fund = this.fundRepo.create({ ...fundData, house: { id: houseId } });
-    const savedFund = await this.fundRepo.save(fund as EmergencyFund);
+    const savedFund = await this.fundRepo.save(fund as unknown as EmergencyFund);
 
     if (categories?.length) {
       const cats = categories.map((c, i) =>
