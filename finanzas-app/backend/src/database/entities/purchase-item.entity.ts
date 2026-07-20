@@ -11,8 +11,6 @@ export class PurchaseItem {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) unitPrice: number;
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) realPriceCUP: number;
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) realPriceUSD: number;
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) plannedPriceCUP: number;
-  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) plannedPriceUSD: number;
   @Column({ nullable: true }) lugar: string | null;
   @Column({ type: 'enum', enum: PurchaseStatus, default: PurchaseStatus.PENDING }) status: PurchaseStatus;
   @ManyToOne(() => PurchaseList, list => list.items, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'list_id' }) list: PurchaseList;

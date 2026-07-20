@@ -15,7 +15,7 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-const defaultForm = { name: '', quantity: 1, unitPrice: 0, planCUP: 0, lugar: '' };
+const defaultForm = { name: '', quantity: 1, unitPrice: 0, lugar: '' };
 
 export default function PurchasesPage() {
   const qc = useQueryClient();
@@ -107,13 +107,12 @@ export default function PurchasesPage() {
 
     const realCUP = Number(itemForm.quantity) * Number(itemForm.unitPrice);
     const dto = {
-      name:           itemForm.name,
-      quantity:       itemForm.quantity,
-      unitPrice:      itemForm.unitPrice,
-      lugar:          itemForm.lugar || null,
-      realPriceCUP:   realCUP,
-      realPriceUSD:   Math.ceil(realCUP / exchangeRate),
-      plannedPriceCUP:itemForm.planCUP > 0 ? itemForm.planCUP : itemForm.unitPrice,
+      name:         itemForm.name,
+      quantity:     itemForm.quantity,
+      unitPrice:    itemForm.unitPrice,
+      lugar:        itemForm.lugar || null,
+      realPriceCUP: realCUP,
+      realPriceUSD: Math.ceil(realCUP / exchangeRate),
     };
 
     if (editItem) {
@@ -124,7 +123,7 @@ export default function PurchasesPage() {
   };
 
   const handleEditItem = (item: any) => {
-    setItemForm({ name: item.name, quantity: item.quantity, unitPrice: item.unitPrice || 0, planCUP: item.plannedPriceCUP || 0, lugar: item.lugar || '' });
+    setItemForm({ name: item.name, quantity: item.quantity, unitPrice: item.unitPrice || 0, lugar: item.lugar || '' });
     setEditItem(item);
     setShowItemModal(true);
   };
@@ -231,9 +230,7 @@ export default function PurchasesPage() {
                   <th className="px-3 py-2 text-left">Producto</th>
                   <th className="px-3 py-2 text-right">Cant.</th>
                   <th className="px-3 py-2 text-right">Precio Unit.</th>
-                  <th className="px-3 py-2 text-right">Real CUP</th>
-                  <th className="px-3 py-2 text-right">Plan CUP</th>
-                  <th className="px-3 py-2 text-right">Dif.</th>
+                  <th className="px-3 py-2 text-right">Total CUP</th>
                   <th className="px-3 py-2 text-left">Lugar</th>
                   <th className="px-3 py-2 text-center">Acc.</th>
                 </tr>
@@ -241,25 +238,19 @@ export default function PurchasesPage() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500 text-xs">
+                    <td colSpan={6} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500 text-xs">
                       Sin productos este mes — usá el botón "Agregar producto"
                     </td>
                   </tr>
                 ) : (
                   items.map((item: any) => {
                     const realCUP = Number(item.quantity || 0) * Number(item.unitPrice || 0);
-                    const planCUP = Number(item.plannedPriceCUP || 0);
-                    const dif     = planCUP > 0 ? planCUP - realCUP : null;
                     return (
                       <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td className="px-3 py-2 font-medium text-gray-900 dark:text-gray-100">{item.name}</td>
                         <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">{item.quantity}</td>
                         <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-400">{fmt(item.unitPrice)} CUP</td>
                         <td className="px-3 py-2 text-right font-semibold text-gray-900 dark:text-white">{fmt(realCUP)} CUP</td>
-                        <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400">{planCUP > 0 ? `${fmt(planCUP)} CUP` : '—'}</td>
-                        <td className={`px-3 py-2 text-right font-medium text-xs ${dif === null ? 'text-gray-400' : dif >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-                          {dif === null ? '—' : `${dif >= 0 ? '+' : ''}${fmt(dif)}`}
-                        </td>
                         <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{item.lugar || '—'}</td>
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
@@ -283,7 +274,7 @@ export default function PurchasesPage() {
                   <tr>
                     <td colSpan={3} className="px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-300">TOTAL</td>
                     <td className="px-3 py-2 text-right text-sm font-bold text-gray-900 dark:text-white">{fmt(totalCUP)} CUP</td>
-                    <td colSpan={4} />
+                    <td colSpan={2} />
                   </tr>
                 </tfoot>
               )}
@@ -404,24 +395,10 @@ export default function PurchasesPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Plan CUP <span className="text-gray-400 font-normal">(opcional)</span></label>
-                  <input
-                    className="input"
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={itemForm.planCUP}
-                    onChange={e => setItemForm({ ...itemForm, planCUP: Number(e.target.value) })}
-                    placeholder="Precio esperado"
-                  />
-                </div>
-                <div>
-                  <label className="label">Real CUP</label>
-                  <div className="input bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold">
-                    {fmt(Number(itemForm.quantity) * Number(itemForm.unitPrice))}
-                  </div>
+              <div>
+                <label className="label">Total CUP</label>
+                <div className="input bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-semibold">
+                  {fmt(Number(itemForm.quantity) * Number(itemForm.unitPrice))}
                 </div>
               </div>
               <div>

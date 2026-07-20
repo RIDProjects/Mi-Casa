@@ -11,31 +11,8 @@ export class PurchasesService {
     @InjectRepository(PurchaseItem) private itemRepo: Repository<PurchaseItem>,
   ) {}
 
-  private getPriceStatus(item: PurchaseItem): string {
-    const qty = Number(item.quantity || 0);
-    const unitPrice = Number(item.unitPrice || 0);
-    const planCUP = Number(item.plannedPriceCUP || 0);
-    const realCUP = Number(item.realPriceCUP || 0);
-
-    if (!qty || !unitPrice) return 'pendiente';
-    if (!planCUP) return 'pendiente';
-    if (realCUP < planCUP) return 'ahorro';
-    if (realCUP > planCUP) return 'mas_caro';
-    return 'exacto';
-  }
-
-  private getPriceDifferenceCUP(item: PurchaseItem): number {
-    const planCUP = Number(item.plannedPriceCUP || 0);
-    const realCUP = Number(item.realPriceCUP || 0);
-    return planCUP - realCUP;
-  }
-
   private formatItemResponse(item: PurchaseItem): any {
-    return {
-      ...item,
-      priceStatus: this.getPriceStatus(item),
-      priceDifferenceCUP: this.getPriceDifferenceCUP(item),
-    };
+    return { ...item };
   }
 
   async findAllLists(houseId?: string) {
@@ -119,10 +96,6 @@ export class PurchasesService {
     const items = list.items || [];
     const totalRealCUP = items.reduce((s, i) => s + Number(i.realPriceCUP || 0), 0);
     const totalRealUSD = items.reduce((s, i) => s + Number(i.realPriceUSD || 0), 0);
-    const totalPlanCUP = items.reduce((s, i) => s + Number(i.plannedPriceCUP || 0), 0);
-    const totalPlanUSD = items.reduce((s, i) => s + Number(i.plannedPriceUSD || 0), 0);
-    const differenceCUP = totalRealCUP - totalPlanCUP;
-    const differenceUSD = totalRealUSD - totalPlanUSD;
     const remainingCUP = Number(list.budgetCUP) - totalRealCUP;
     const remainingUSD = Number(list.budgetUSD) - totalRealUSD;
 
@@ -130,25 +103,13 @@ export class PurchasesService {
     if (remainingCUP < 0) statusCUP = '🔴 Excedido';
     else if (remainingCUP < Number(list.budgetCUP) * 0.1) statusCUP = '⚠️ Ajustado';
 
-    const priceStatusCounts = {
-      pendiente: 0,
-      ahorro: 0,
-      mas_caro: 0,
-      exacto: 0,
-    };
-    items.forEach(i => {
-      const ps = this.getPriceStatus(i);
-      if (ps in priceStatusCounts) priceStatusCounts[ps as keyof typeof priceStatusCounts]++;
-    });
-
     return {
-      totalRealCUP, totalRealUSD, totalPlanCUP, totalPlanUSD,
-      differenceCUP, differenceUSD, remainingCUP, remainingUSD,
+      totalRealCUP, totalRealUSD,
+      remainingCUP, remainingUSD,
       statusCUP,
       purchased: items.filter(i => i.status === PurchaseStatus.PURCHASED).length,
       pending: items.filter(i => i.status === PurchaseStatus.PENDING).length,
       total: items.length,
-      priceStatus: priceStatusCounts,
     };
   }
 }
