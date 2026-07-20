@@ -23,90 +23,6 @@ export enum Periodicity {
   ANNUAL       = 'annual',
 }
 
-@Entity('budget_expenses')
-export class BudgetExpense {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
-  name: string;
-
-  @Column('decimal', { precision: 12, scale: 2, default: 0 })
-  amount: number;
-
-  @Column({ type: 'enum', enum: Periodicity, default: Periodicity.MONTHLY })
-  periodicity: Periodicity;
-
-  @Column({ default: false })
-  isFixed: boolean;
-
-  @Column({ default: false })
-  isCreditCard: boolean;
-
-  @Column({ default: false })
-  isAntExpense: boolean;
-
-  @Index()
-  @ManyToOne(() => BudgetCategory, cat => cat.expenses, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'category_id' })
-  category: BudgetCategory;
-
-  @CreateDateColumn()
-  createdAt: Date;
-}
-
-@Entity('budget_categories')
-export class BudgetCategory {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
-  name: string;
-
-  @Column({ default: 0 })
-  sortOrder: number;
-
-  @Column({ default: false })
-  isDefault: boolean;
-
-  @Index()
-  @ManyToOne(() => Budget, b => b.categories, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'budget_id' })
-  budget: Budget;
-
-  @OneToMany(() => BudgetExpense, (exp) => exp.category, {
-    cascade: true,
-    eager: true,
-  })
-  expenses: BudgetExpense[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-}
-
-@Entity('income_sources')
-export class IncomeSource {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
-  @Column()
-  name: string;
-
-  @Column({ default: 'fixed' })
-  type: string; // 'fixed' | 'variable'
-
-  @Column('decimal', { precision: 12, scale: 2, default: 0 })
-  amount: number;
-
-  @Index()
-  @ManyToOne(() => Budget, b => b.incomeSources, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'budget_id' })
-  budget: Budget;
-
-  @CreateDateColumn()
-  createdAt: Date;
-}
-
 @Entity('budgets')
 export class Budget {
   @PrimaryGeneratedColumn('uuid')
@@ -140,4 +56,88 @@ export class Budget {
 
   @UpdateDateColumn()
   updatedAt: Date;
+}
+
+@Entity('budget_categories')
+export class BudgetCategory {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column({ default: 0 })
+  sortOrder: number;
+
+  @Column({ default: false })
+  isDefault: boolean;
+
+  @Index()
+  @ManyToOne(() => Budget, b => b.categories, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'budget_id' })
+  budget: Budget;
+
+  @OneToMany(() => BudgetExpense, (exp) => exp.category, {
+    cascade: true,
+    eager: true,
+  })
+  expenses: BudgetExpense[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+
+@Entity('budget_expenses')
+export class BudgetExpense {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
+  amount: number;
+
+  @Column({ type: 'enum', enum: Periodicity, default: Periodicity.MONTHLY })
+  periodicity: Periodicity;
+
+  @Column({ default: false })
+  isFixed: boolean;
+
+  @Column({ default: false })
+  isCreditCard: boolean;
+
+  @Column({ default: false })
+  isAntExpense: boolean;
+
+  @Index()
+  @ManyToOne(() => BudgetCategory, cat => cat.expenses, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'category_id' })
+  category: BudgetCategory;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+
+@Entity('income_sources')
+export class IncomeSource {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  name: string;
+
+  @Column({ default: 'fixed' })
+  type: string;
+
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
+  amount: number;
+
+  @Index()
+  @ManyToOne(() => Budget, b => b.incomeSources, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'budget_id' })
+  budget: Budget;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }
