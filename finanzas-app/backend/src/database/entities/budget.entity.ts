@@ -47,9 +47,9 @@ export class BudgetExpense {
   isAntExpense: boolean;
 
   @Index()
-  @ManyToOne('BudgetCategory', 'expenses', { onDelete: 'CASCADE' })
+  @ManyToOne(() => BudgetCategory, cat => cat.expenses, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'category_id' })
-  category: any;
+  category: BudgetCategory;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -70,9 +70,9 @@ export class BudgetCategory {
   isDefault: boolean;
 
   @Index()
-  @ManyToOne('Budget', 'categories', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Budget, b => b.categories, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'budget_id' })
-  budget: any;
+  budget: Budget;
 
   @OneToMany(() => BudgetExpense, (exp) => exp.category, {
     cascade: true,
@@ -99,9 +99,9 @@ export class IncomeSource {
   amount: number;
 
   @Index()
-  @ManyToOne('Budget', 'incomeSources', { onDelete: 'CASCADE' })
+  @ManyToOne(() => Budget, b => b.incomeSources, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'budget_id' })
-  budget: any;
+  budget: Budget;
 
   @CreateDateColumn()
   createdAt: Date;
@@ -116,7 +116,7 @@ export class Budget {
   name: string;
 
   @Column({ nullable: true })
-  year: number;
+  year: number | null;
 
   @Column('decimal', { precision: 5, scale: 2, default: 20 })
   savingsTargetPercent: number;
@@ -126,10 +126,10 @@ export class Budget {
   @JoinColumn({ name: 'house_id' })
   house: House;
 
-  @OneToMany('IncomeSource', 'budget', { cascade: true, eager: true })
+  @OneToMany(() => IncomeSource, src => src.budget, { cascade: true, eager: true })
   incomeSources: IncomeSource[];
 
-  @OneToMany('BudgetCategory', 'budget', { cascade: true, eager: true })
+  @OneToMany(() => BudgetCategory, cat => cat.budget, { cascade: true, eager: true })
   categories: BudgetCategory[];
 
   @CreateDateColumn()

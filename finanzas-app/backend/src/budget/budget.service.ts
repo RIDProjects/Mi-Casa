@@ -248,7 +248,7 @@ export class BudgetService {
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     const income = this.incomeRepo.create({
       ...dto,
-      budget: { id: budgetId },
+      budget: { id: budgetId } as any,
     });
     return this.incomeRepo.save(income);
   }
@@ -284,7 +284,7 @@ export class BudgetService {
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     const cat = this.categoryRepo.create({
       ...dto,
-      budget: { id: budgetId },
+      budget: { id: budgetId } as any,
       expenses: [],
     });
     return this.categoryRepo.save(cat);
@@ -327,7 +327,7 @@ export class BudgetService {
     if (!cat) throw new NotFoundException('Categoría no encontrada');
     const expense = this.expenseRepo.create({
       ...dto,
-      category: { id: categoryId },
+      category: { id: categoryId } as any,
     });
     return this.expenseRepo.save(expense);
   }

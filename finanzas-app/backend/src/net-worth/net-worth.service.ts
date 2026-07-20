@@ -49,7 +49,7 @@ export class NetWorthService {
     const netWorth = totalAssets - totalLiabilities;
 
     const existing = await this.snapshotRepo.findOne({
-      where: { house: { id: houseId }, snapshotDate: new Date(snapshotDate) },
+      where: { house: { id: houseId }, snapshotDate },
     });
 
     if (existing) {
@@ -60,7 +60,7 @@ export class NetWorthService {
     } else {
       await this.snapshotRepo.save(
         this.snapshotRepo.create({
-          snapshotDate: new Date(snapshotDate) as any,
+          snapshotDate,
           totalAssets,
           totalLiabilities,
           netWorth,

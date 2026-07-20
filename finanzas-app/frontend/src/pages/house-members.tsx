@@ -22,8 +22,8 @@ interface Member {
 export default function HouseMembersPage() {
   const qc = useQueryClient();
   const { user } = useAuthStore();
-  const houseId = (user as any)?.house?.id;
-  const houseName = (user as any)?.house?.name;
+  const houseId = user?.house?.id;
+  const houseName = user?.house?.name;
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

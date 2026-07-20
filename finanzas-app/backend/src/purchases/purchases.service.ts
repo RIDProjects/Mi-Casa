@@ -59,8 +59,8 @@ export class PurchasesService {
     const list = await this.listRepo.findOne({ where: { id } });
     if (!list) throw new NotFoundException('Lista no encontrada');
     Object.assign(list, dto);
-    const saved = await this.listRepo.save(list);
-    return { ...saved, summary: this.calcSummary(saved) };
+    await this.listRepo.save(list);
+    return this.findOneList(id);
   }
 
   async removeList(id: string) {
@@ -85,7 +85,7 @@ export class PurchasesService {
 
     const item = this.itemRepo.create({ ...dto, list });
     const saved = await this.itemRepo.save(item);
-    return this.formatItemResponse(saved as unknown as PurchaseItem);
+    return this.formatItemResponse(saved);
   }
 
   async updateItem(itemId: string, dto: any) {
@@ -105,7 +105,7 @@ export class PurchasesService {
     }
 
     const saved = await this.itemRepo.save(item);
-    return this.formatItemResponse(saved as unknown as PurchaseItem);
+    return this.formatItemResponse(saved);
   }
 
   async removeItem(itemId: string) {

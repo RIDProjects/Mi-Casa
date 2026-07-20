@@ -108,7 +108,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const userHasAdminRole = user?.roles?.some((r: any) => r.name === 'admin') ?? false;
   const userHasHouseAdminRole = user?.roles?.some((r: any) => r.name === 'house_admin') ?? false;
 
-  const houseName = (user as any)?.house?.name;
+  const houseName = user?.house?.name;
   const isAdminRoute = router.pathname.startsWith('/admin');
   const showAdminMenu = isAdminRoute;
 

@@ -34,9 +34,9 @@ export class Investment {
   @Column('decimal', { precision: 15, scale: 2 }) amount: number;
   @Column({ type: 'enum', enum: Currency, default: Currency.ARS }) currency: Currency;
   @Column('decimal', { precision: 8, scale: 4, default: 0 }) annualRate: number;
-  @Column({ type: 'date', nullable: true }) startDate: string;
-  @Column({ type: 'date', nullable: true }) endDate: string;
-  @Column({ nullable: true }) notes: string;
+  @Column({ type: 'date', nullable: true }) startDate: string | null;
+  @Column({ type: 'date', nullable: true }) endDate: string | null;
+  @Column({ nullable: true }) notes: string | null;
   @Column({ default: true }) isActive: boolean;
 
   @Index()

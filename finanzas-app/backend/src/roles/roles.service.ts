@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Role } from '../database/entities/role.entity';
 import { Permission } from '../database/entities/permission.entity';
 
@@ -20,14 +20,14 @@ export class RolesService {
   }
 
   async create(dto: { name: string; description?: string; permissionIds?: string[] }) {
-    const permissions = dto.permissionIds ? await this.permRepo.findByIds(dto.permissionIds) : [];
+    const permissions = dto.permissionIds ? await this.permRepo.findBy({ id: In(dto.permissionIds) }) : [];
     const role = this.roleRepo.create({ name: dto.name, description: dto.description, permissions });
     return this.roleRepo.save(role);
   }
 
   async update(id: string, dto: { name?: string; description?: string; permissionIds?: string[] }) {
     const role = await this.findOne(id);
-    if (dto.permissionIds) role.permissions = await this.permRepo.findByIds(dto.permissionIds);
+    if (dto.permissionIds) role.permissions = await this.permRepo.findBy({ id: In(dto.permissionIds) });
     if (dto.name) role.name = dto.name;
     if (dto.description) role.description = dto.description;
     return this.roleRepo.save(role);

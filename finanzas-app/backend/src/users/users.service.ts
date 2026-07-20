@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
@@ -53,7 +53,7 @@ export class UsersService {
     if (exists) throw new ConflictException('Email ya registrado');
 
     const hashed = await bcrypt.hash(dto.password, 12);
-    const roles = dto.roleIds ? await this.roleRepo.findByIds(dto.roleIds) : [];
+    const roles = dto.roleIds ? await this.roleRepo.findBy({ id: In(dto.roleIds) }) : [];
 
     const user = this.userRepo.create({ ...dto, password: hashed, roles });
     return this.userRepo.save(user);
@@ -63,7 +63,7 @@ export class UsersService {
     const user = await this.findOne(id);
     if (dto.password) dto.password = await bcrypt.hash(dto.password, 12);
     if (dto.roleIds) {
-      user.roles = await this.roleRepo.findByIds(dto.roleIds);
+      user.roles = await this.roleRepo.findBy({ id: In(dto.roleIds) });
       delete dto.roleIds;
     }
     Object.assign(user, dto);

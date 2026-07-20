@@ -20,7 +20,7 @@ export class HouseholdExpense {
   @Column() description: string;
   @Column({ type: 'enum', enum: HouseholdCategory, default: HouseholdCategory.OTROS }) category: HouseholdCategory;
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) amountCUP: number;
-  @Column({ nullable: true }) place: string;
+  @Column({ nullable: true }) place: string | null;
   @Index()
   @Column() month: string;
   @Index() @ManyToOne(() => House, { nullable: true, onDelete: 'SET NULL' }) @JoinColumn({ name: 'house_id' }) house: House;

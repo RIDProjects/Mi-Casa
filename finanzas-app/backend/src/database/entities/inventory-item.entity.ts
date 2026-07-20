@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { House } from './house.entity';
 
 export enum InventoryLocation { NEVERA = 'nevera', FRIO = 'frio', ALACENA = 'alacena', VIANDERO = 'viandero', OTRO = 'otro' }
@@ -10,9 +10,9 @@ export class InventoryItem {
   @Column() name: string;
   @Column({ type: 'int', default: 0 }) quantity: number;
   @Column({ type: 'enum', enum: InventoryLocation, default: InventoryLocation.ALACENA }) location: InventoryLocation;
-  @Column({ nullable: true }) notes: string;
+  @Column({ nullable: true }) notes: string | null;
   @Column({ default: false }) alertSent: boolean;
-  @ManyToOne(() => House, { nullable: true }) house: House;
+  @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 

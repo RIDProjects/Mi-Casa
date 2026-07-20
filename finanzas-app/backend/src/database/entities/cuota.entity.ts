@@ -24,11 +24,11 @@ export class Cuota {
 
   @Column('decimal', { precision: 12, scale: 2 }) installmentAmount: number;
 
-  @Column({ nullable: true }) store: string;
+  @Column({ nullable: true }) store: string | null;
 
-  @Column({ nullable: true }) cardLast4: string;
+  @Column({ nullable: true }) cardLast4: string | null;
 
-  @Column({ type: 'date' }) startDate: Date;
+  @Column({ type: 'date' }) startDate: string;
 
   @Column({ default: false }) withInterest: boolean;
 

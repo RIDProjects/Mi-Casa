@@ -10,8 +10,9 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PushService } from './push.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
+import { Request as ExpressRequest } from 'express';
 
-interface AuthRequest extends Request {
+interface AuthRequest extends ExpressRequest {
   user: User;
 }
 

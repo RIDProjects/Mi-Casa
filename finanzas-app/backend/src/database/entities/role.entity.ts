@@ -5,6 +5,6 @@ import { Permission } from './permission.entity';
 export class Role {
   @PrimaryGeneratedColumn('uuid') id: string;
   @Column({ unique: true }) name: string;
-  @Column({ nullable: true }) description: string;
+  @Column({ nullable: true }) description: string | null;
   @ManyToMany(() => Permission, { eager: true }) @JoinTable({ name: 'role_permissions' }) permissions: Permission[];
 }

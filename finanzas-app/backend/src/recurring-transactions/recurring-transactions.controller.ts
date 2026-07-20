@@ -14,8 +14,9 @@ import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RecurringTransactionsService } from './recurring-transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
+import { Request as ExpressRequest } from 'express';
 
-interface AuthRequest extends Request {
+interface AuthRequest extends ExpressRequest {
   user: User;
 }
 

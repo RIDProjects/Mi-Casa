@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { PurchaseList } from './purchase-list.entity';
 
 export enum PurchaseStatus { PENDING = 'pending', PURCHASED = 'purchased', CANCELLED = 'cancelled' }
@@ -13,9 +13,9 @@ export class PurchaseItem {
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) realPriceUSD: number;
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) plannedPriceCUP: number;
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) plannedPriceUSD: number;
-  @Column({ nullable: true }) lugar: string;
+  @Column({ nullable: true }) lugar: string | null;
   @Column({ type: 'enum', enum: PurchaseStatus, default: PurchaseStatus.PENDING }) status: PurchaseStatus;
-  @ManyToOne(() => PurchaseList, list => list.items, { onDelete: 'CASCADE' }) list: PurchaseList;
+  @ManyToOne(() => PurchaseList, list => list.items, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'list_id' }) list: PurchaseList;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;
 }

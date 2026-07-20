@@ -15,13 +15,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Transaction } from '../database/entities/transaction.entity';
 import { User } from '../database/entities/user.entity';
 
-interface AuthRequest extends Request {
+interface AuthRequest extends ExpressRequest {
   user: User;
 }
 

@@ -16,7 +16,7 @@ export class ExchangeRate {
   @Column() toCurrency: string;
   @Column('decimal', { precision: 15, scale: 4 }) rate: number;
   @Column({ type: 'date' }) date: string;
-  @Column({ nullable: true }) source: string;
+  @Column({ nullable: true }) source: string | null;
   @Column({ default: 'oficial' }) rateType: string; // 'oficial' | 'informal' | 'cadeca'
   @CreateDateColumn() createdAt: Date;
 

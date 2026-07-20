@@ -11,12 +11,12 @@ export class User {
   @Column() name: string;
   @Column({ select: false }) password: string;
   @Column({ default: true }) isActive: boolean;
-  @Column({ nullable: true }) whatsappNumber: string;
-  @Column({ nullable: true, name: 'active_house_id' }) activeHouseId: string;
+  @Column({ nullable: true }) whatsappNumber: string | null;
+  @Column({ nullable: true, name: 'active_house_id' }) activeHouseId: string | null;
   @Column({ default: 'free' }) plan: UserPlan;
-  @Column({ nullable: true, type: 'timestamp', name: 'last_login_at' }) lastLoginAt: Date;
-  @Column({ nullable: true, name: 'reset_token' }) resetToken: string;
-  @Column({ nullable: true, type: 'timestamp', name: 'reset_token_expiry' }) resetTokenExpiry: Date;
+  @Column({ nullable: true, type: 'timestamp', name: 'last_login_at' }) lastLoginAt: Date | null;
+  @Column({ nullable: true, name: 'reset_token' }) resetToken: string | null;
+  @Column({ nullable: true, type: 'timestamp', name: 'reset_token_expiry' }) resetTokenExpiry: Date | null;
   @ManyToMany(() => Role, { eager: true }) @JoinTable({ name: 'user_roles' }) roles: Role[];
   @ManyToMany(() => House, house => house.members)
   @JoinTable({

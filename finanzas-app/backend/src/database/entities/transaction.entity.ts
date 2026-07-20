@@ -49,7 +49,7 @@ export class Transaction {
 
   /** Only relevant when type === 'gasto' */
   @Column({ nullable: true })
-  category: string;
+  category: string | null;
 
   @Column('decimal', { precision: 12, scale: 2 })
   amount: number;
@@ -59,7 +59,7 @@ export class Transaction {
 
   /** Card name — only relevant when paymentMethod === 'tarjeta' */
   @Column({ nullable: true })
-  cardName: string;
+  cardName: string | null;
 
   /** ISO date string YYYY-MM-DD */
   @Index()
@@ -67,7 +67,7 @@ export class Transaction {
   date: string;
 
   @Column({ nullable: true })
-  notes: string;
+  notes: string | null;
 
   @Index()
   @ManyToOne(() => House, { nullable: true, onDelete: 'SET NULL' })

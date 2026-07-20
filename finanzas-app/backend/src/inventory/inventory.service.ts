@@ -4,14 +4,12 @@ import { Repository } from 'typeorm';
 import { InventoryItem, InventoryLocation, InventoryStatus } from '../database/entities/inventory-item.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '../database/entities/user.entity';
-import { House } from '../database/entities/house.entity';
 
 @Injectable()
 export class InventoryService {
   constructor(
     @InjectRepository(InventoryItem) private itemRepo: Repository<InventoryItem>,
     @InjectRepository(User) private userRepo: Repository<User>,
-    @InjectRepository(House) private houseRepo: Repository<House>,
     private notificationsService: NotificationsService,
   ) {}
 
@@ -30,13 +28,12 @@ export class InventoryService {
   async create(dto: any, houseId: string) {
     const item = this.itemRepo.create({ ...dto, house: { id: houseId } });
     const saved = await this.itemRepo.save(item);
-    const savedItem = Array.isArray(saved) ? saved[0] : saved;
-    await this.checkAndNotify(savedItem);
-    return { ...savedItem, status: savedItem.status };
+    await this.checkAndNotify(saved, houseId);
+    return { ...saved, status: saved.status };
   }
 
   async update(id: string, dto: any) {
-    const item = await this.itemRepo.findOne({ where: { id } });
+    const item = await this.itemRepo.findOne({ where: { id }, relations: ['house'] });
     if (!item) throw new NotFoundException('Producto no encontrado');
 
     const prevQty = item.quantity;
@@ -48,9 +45,9 @@ export class InventoryService {
     }
 
     const saved = await this.itemRepo.save(item);
-    const savedItem = Array.isArray(saved) ? saved[0] : saved;
-    await this.checkAndNotify(savedItem);
-    return { ...savedItem, status: savedItem.status };
+    const houseId = item.house?.id;
+    await this.checkAndNotify(saved, houseId);
+    return { ...saved, status: saved.status };
   }
 
   async remove(id: string) {
@@ -78,12 +75,12 @@ export class InventoryService {
     return { stats, grouped, items };
   }
 
-  private async checkAndNotify(item: InventoryItem) {
-    if (item.quantity === 1 && !item.alertSent && item.house) {
+  private async checkAndNotify(item: InventoryItem, houseId?: string) {
+    if (item.quantity === 1 && !item.alertSent && houseId) {
       // Get all active users in the same house
       const users = await this.userRepo
         .createQueryBuilder('user')
-        .innerJoin('user.houses', 'house', 'house.id = :houseId', { houseId: item.house.id })
+        .innerJoin('user.houses', 'house', 'house.id = :houseId', { houseId })
         .where('user.isActive = true')
         .getMany();
 

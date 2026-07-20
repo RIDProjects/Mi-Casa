@@ -171,6 +171,7 @@ export default function TransaccionesPage() {
       metodoPago: t.metodoPago,
       nombreTarjeta: t.nombreTarjeta || '',
       fecha: t.fecha?.split('T')[0] ?? defaultForm.fecha,
+      currency: t.currency || baseCurrency?.currencyCode || '',
     });
     setEditItem(t);
     setShowModal(true);

@@ -21,5 +21,5 @@ export class ExpenseCategory {
   @Column() name: string;
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) monthlyAmount: number;
   @Column({ default: 0 }) sortOrder: number;
-  @ManyToOne(() => EmergencyFund, fund => fund.categories, { onDelete: 'CASCADE' }) fund: EmergencyFund;
+  @ManyToOne(() => EmergencyFund, fund => fund.categories, { onDelete: 'CASCADE' }) @JoinColumn({ name: 'fund_id' }) fund: EmergencyFund;
 }

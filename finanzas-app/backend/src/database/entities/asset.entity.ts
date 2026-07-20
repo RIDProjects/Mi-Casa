@@ -12,7 +12,7 @@ export class Asset {
   @Column() name: string;
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) value: number;
   @Column({ type: 'enum', enum: AssetType, default: AssetType.PHYSICAL }) assetType: AssetType;
-  @Column({ nullable: true }) notes: string;
+  @Column({ nullable: true }) notes: string | null;
   @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;
   @UpdateDateColumn() updatedAt: Date;

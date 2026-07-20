@@ -19,6 +19,16 @@ import { HouseCurrenciesService } from './house-currencies.service';
 export class HouseCurrenciesController {
   constructor(private readonly svc: HouseCurrenciesService) {}
 
+  @Get('rates')
+  getRates(@Param('houseId') houseId: string) {
+    return this.svc.getRates(houseId);
+  }
+
+  @Post('rates')
+  upsertRate(@Param('houseId') houseId: string, @Body() dto: any) {
+    return this.svc.upsertRate(houseId, dto);
+  }
+
   @Get()
   getAll(@Param('houseId') houseId: string) {
     return this.svc.findByHouse(houseId);
@@ -37,15 +47,5 @@ export class HouseCurrenciesController {
   @Delete(':id')
   remove(@Param('houseId') houseId: string, @Param('id') id: string) {
     return this.svc.remove(houseId, id);
-  }
-
-  @Get('rates')
-  getRates(@Param('houseId') houseId: string) {
-    return this.svc.getRates(houseId);
-  }
-
-  @Post('rates')
-  upsertRate(@Param('houseId') houseId: string, @Body() dto: any) {
-    return this.svc.upsertRate(houseId, dto);
   }
 }

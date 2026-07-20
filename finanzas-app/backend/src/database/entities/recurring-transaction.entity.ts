@@ -22,7 +22,7 @@ export class RecurringTransaction {
   amount: number;
 
   @Column({ nullable: true })
-  category: string;
+  category: string | null;
 
   @Column({ type: 'int', default: 1 })
   dayOfMonth: number;
@@ -31,7 +31,7 @@ export class RecurringTransaction {
   isActive: boolean;
 
   @Column({ type: 'date', nullable: true })
-  lastGeneratedAt: string;
+  lastGeneratedAt: string | null;
 
   @Index()
   @ManyToOne(() => House, { nullable: true, onDelete: 'SET NULL' })

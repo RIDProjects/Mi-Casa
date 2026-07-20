@@ -13,7 +13,7 @@ import { House } from './house.entity';
 export class NetWorthSnapshot {
   @PrimaryGeneratedColumn('uuid') id: string;
 
-  @Column({ type: 'date' }) snapshotDate: Date;
+  @Column({ type: 'date' }) snapshotDate: string;
 
   @Column('decimal', { precision: 14, scale: 2 }) totalAssets: number;
 

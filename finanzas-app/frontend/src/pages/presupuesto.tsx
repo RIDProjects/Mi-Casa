@@ -329,8 +329,6 @@ export default function PresupuestoPage() {
   const antPerDay            = summary.antExpensesTotal > 0 ? summary.antExpensesTotal / 30 : 0;
   const rating               = savingsRating(budget.savingsTargetPercent);
 
-  const ingresosFijos     = incomeSources.filter(i => i.type === 'fixed').reduce((s, i) => s + Number(i.amount), 0);
-  const ingresosVariables = incomeSources.filter(i => i.type === 'variable').reduce((s, i) => s + Number(i.amount), 0);
   const gastosFijos       = categories.flatMap(c => c.expenses).filter(e => e.isFixed).reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
   const gastosVariables   = summary.totalMonthlyExpenses - gastosFijos;
 

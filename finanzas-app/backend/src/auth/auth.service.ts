@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -105,7 +105,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.userRepo.findOne({
       where: { email: dto.email, isActive: true },
-      select: ['id', 'email', 'name', 'password', 'isActive', 'whatsappNumber', 'activeHouseId'],
+      select: ['id', 'email', 'name', 'password', 'isActive', 'whatsappNumber', 'activeHouseId', 'plan'],
       relations: ['roles', 'roles.permissions', 'houses'],
     });
     if (!user) throw new UnauthorizedException('Credenciales inválidas');
@@ -142,7 +142,7 @@ export class AuthService {
       relations: ['roles', 'roles.permissions', 'houses'],
     });
 
-    if (!user) return user;
+    if (!user) throw new NotFoundException('Usuario no encontrado');
 
     const isAdmin = user.roles?.some(r => r.name === 'admin');
     if (isAdmin) return { ...user, house: null, houses: [] };

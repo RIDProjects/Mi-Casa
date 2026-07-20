@@ -120,7 +120,6 @@ export default function AnalyticsPage() {
 
   const antExpensesData = useMemo(() => {
     return last12Months.map((m, i) => {
-      const txs = (monthlyResults[i] as any)?.txData ?? [];
       const antTotal = currentTxData
         .filter((t: any) => t.tipo === 'gasto' && Number(t.monto) <= ANT_THRESHOLD)
         .reduce((s: number, t: any) => s + Number(t.monto), 0);

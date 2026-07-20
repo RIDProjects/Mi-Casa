@@ -78,7 +78,7 @@ export default function EmergencyFundPage() {
   });
 
   const updateBalanceMut = useMutation(
-    (balance: number) => emergencyFundAPI.update(fund!.id, { currentBalance: balance }),
+    ({ id, balance }: { id: string; balance: number }) => emergencyFundAPI.update(id, { currentBalance: balance }),
     {
       onSuccess: () => { toast.success('Saldo actualizado'); qc.invalidateQueries('emergencyFunds'); },
       onError: (e: any) => { toast.error(getErrorMessage(e)); },
@@ -262,7 +262,7 @@ export default function EmergencyFundPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => updateBalanceMut.mutate(currentBalance)}
+                        onClick={() => fund && updateBalanceMut.mutate({ id: fund.id, balance: currentBalance })}
                         disabled={updateBalanceMut.isLoading}
                         className="btn-primary px-4 whitespace-nowrap"
                       >

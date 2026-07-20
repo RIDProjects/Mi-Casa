@@ -110,5 +110,3 @@ export async function seed() {
   await app.close();
   console.log('🌱 Seed completed!');
 }
-
-seed().catch(console.error);
