@@ -61,7 +61,7 @@ export class PurchasesService {
     }
 
     const item = this.itemRepo.create({ ...dto, list });
-    const saved = await this.itemRepo.save(item);
+    const saved: PurchaseItem = await this.itemRepo.save(item);
     return this.formatItemResponse(saved);
   }
 

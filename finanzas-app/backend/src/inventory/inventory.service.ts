@@ -27,7 +27,7 @@ export class InventoryService {
 
   async create(dto: any, houseId: string) {
     const item = this.itemRepo.create({ ...dto, house: { id: houseId } });
-    const saved = await this.itemRepo.save(item);
+    const saved: InventoryItem = await this.itemRepo.save(item);
     await this.checkAndNotify(saved, houseId);
     return { ...saved, status: saved.status };
   }
