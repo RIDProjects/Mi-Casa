@@ -108,6 +108,8 @@ export const budgetAPI = {
   addExpense: (categoryId: string, data: any) => api.post(`/budget/categories/${categoryId}/expenses`, data),
   updateExpense: (id: string, data: any) => api.put(`/budget/expenses/${id}`, data),
   deleteExpense: (id: string) => api.delete(`/budget/expenses/${id}`),
+
+  syncFiGoal: (id: string) => api.post(`/budget/${id}/sync-fi-goal`),
 };
 
 export const transactionsAPI = {

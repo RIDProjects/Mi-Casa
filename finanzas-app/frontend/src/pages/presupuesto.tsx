@@ -12,12 +12,21 @@ import {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Periodicity = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'fourmonthly' | 'semiannual' | 'annual';
+type BudgetRule = '50-30-20' | '70-20-10';
+interface BudgetPlan {
+  rule: BudgetRule;
+  fiTarget: number;
+  minMonthlyInvestment: number;
+  emergencyFundTarget: number;
+  entertainmentBudget: number;
+  fixedExpensesCap: number;
+}
 
 interface IncomeSource { id: string; name: string; type: string; amount: number; }
 interface Expense { id: string; name: string; amount: number; periodicity: Periodicity; isFixed: boolean; isCreditCard: boolean; isAntExpense: boolean; }
 interface Category { id: string; name: string; sortOrder: number; isDefault: boolean; expenses: Expense[]; }
-interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; }
-interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; incomeSources: IncomeSource[]; categories: Category[]; summary: BudgetSummary; }
+interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; plan: BudgetPlan | null; }
+interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; incomeSources: IncomeSource[]; categories: Category[]; summary: BudgetSummary; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -281,6 +290,23 @@ export default function PresupuestoPage() {
     onSuccess: () => { toast.success('Meta de ahorro actualizada'); setShowSavingsModal(false); refresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
+  const updateRuleMut = useMutation(
+    (rule: BudgetRule) => budgetAPI.update(activeBudgetId!, { rule }),
+    {
+      onSuccess: () => { toast.success('Regla actualizada'); refresh(); },
+      onError: (e: any) => toast.error(getErr(e)),
+    },
+  );
+  const syncFiMut = useMutation(
+    () => budgetAPI.syncFiGoal(activeBudgetId!),
+    {
+      onSuccess: () => {
+        toast.success('Meta FI sincronizada');
+        qc.invalidateQueries('savings-goals');
+      },
+      onError: (e: any) => toast.error(getErr(e)),
+    },
+  );
 
   if (isLoading || (activeBudgetId && loadingBudget)) {
     return <Layout><div className="space-y-4"><div className="skeleton h-8 w-56" /><div className="skeleton h-40 w-full" /><div className="skeleton h-64 w-full" /></div></Layout>;
@@ -524,6 +550,68 @@ export default function PresupuestoPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Plan Financiero ── */}
+      {summary.totalMonthlyIncome > 0 && summary.plan && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">📊 Plan Financiero</h2>
+            <div className="flex gap-2">
+              {(['50-30-20', '70-20-10'] as BudgetRule[]).map(r => (
+                <button
+                  key={r}
+                  onClick={() => updateRuleMut.mutate(r)}
+                  disabled={updateRuleMut.isLoading}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                    budget.rule === r
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {r === '50-30-20' ? '50/30/20' : '70/20/10'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-3 text-center">
+              <p className="text-lg mb-1">🏠</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Meta FI</p>
+              <p className="text-sm font-bold text-purple-700 dark:text-purple-300">${fmt(summary.plan.fiTarget)}</p>
+              <button
+                onClick={() => syncFiMut.mutate()}
+                disabled={syncFiMut.isLoading}
+                className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline disabled:opacity-50"
+              >
+                {syncFiMut.isLoading ? 'Sincronizando...' : 'Sincronizar meta FI'}
+              </button>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-center">
+              <p className="text-lg mb-1">📈</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Inversión mínima</p>
+              <p className="text-sm font-bold text-green-700 dark:text-green-300">${fmt(summary.plan.minMonthlyInvestment)}/mes</p>
+            </div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-center">
+              <p className="text-lg mb-1">🛡️</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Fondo de emergencia</p>
+              <p className="text-sm font-bold text-blue-700 dark:text-blue-300">${fmt(summary.plan.emergencyFundTarget)}</p>
+              <a href="/fondo-emergencia" className="mt-2 block text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                Ver fondo de emergencia →
+              </a>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-center">
+              <p className="text-lg mb-1">🎉</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ocio/mes</p>
+              <p className="text-sm font-bold text-amber-700 dark:text-amber-300">${fmt(summary.plan.entertainmentBudget)}</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-center">
+              <p className="text-lg mb-1">🏠</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tope gastos fijos</p>
+              <p className="text-sm font-bold text-red-700 dark:text-red-300">${fmt(summary.plan.fixedExpensesCap)}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Expenses by category ── */}
       <div className="flex items-center justify-between mb-3">

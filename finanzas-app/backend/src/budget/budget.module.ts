@@ -8,12 +8,13 @@ import {
   BudgetExpense,
   IncomeSource,
 } from '../database/entities/budget.entity';
+import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Budget, BudgetCategory, BudgetExpense, IncomeSource]),
+    TypeOrmModule.forFeature([Budget, BudgetCategory, BudgetExpense, IncomeSource, SavingsGoal]),
     AuthModule,
     NotificationsModule,
   ],

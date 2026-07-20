@@ -121,6 +121,9 @@ export class Budget {
   @Column('decimal', { precision: 5, scale: 2, default: 20 })
   savingsTargetPercent: number;
 
+  @Column({ type: 'varchar', length: 16, default: '50-30-20' })
+  rule: string;
+
   @Index()
   @ManyToOne(() => House, { nullable: true })
   @JoinColumn({ name: 'house_id' })

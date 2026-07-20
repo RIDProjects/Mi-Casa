@@ -8,7 +8,10 @@ import {
   IncomeSource,
   Periodicity,
 } from '../database/entities/budget.entity';
+import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+
+const FI_GOAL_NAME = 'Independencia Financiera';
 
 const PERIODICITY_FACTOR: Record<Periodicity, number> = {
   [Periodicity.DAILY]:       1 / 30,
@@ -26,12 +29,14 @@ interface CreateBudgetDto {
   name?: string;
   year?: number;
   savingsTargetPercent?: number;
+  rule?: string;
 }
 
 interface UpdateBudgetDto {
   name?: string;
   year?: number;
   savingsTargetPercent?: number;
+  rule?: string;
 }
 
 interface AddIncomeDto {
@@ -96,6 +101,9 @@ export class BudgetService {
     @InjectRepository(IncomeSource)
     private incomeRepo: Repository<IncomeSource>,
 
+    @InjectRepository(SavingsGoal)
+    private savingsGoalRepo: Repository<SavingsGoal>,
+
     private readonly notificationsService: NotificationsService,
   ) {}
 
@@ -139,6 +147,18 @@ export class BudgetService {
 
     const savingsShortfall = Math.max(0, savingsTargetAmount - available);
 
+    const rule = budget.rule ?? '50-30-20';
+    const isFifty = rule === '50-30-20';
+    const round2 = (n: number) => Math.round(n * 100) / 100;
+    const plan = totalMonthlyIncome > 0 ? {
+      rule,
+      fiTarget:             round2(totalMonthlyIncome * 150),
+      minMonthlyInvestment: round2(totalMonthlyIncome * 0.20),
+      emergencyFundTarget:  round2(totalMonthlyIncome * 6),
+      entertainmentBudget:  round2(totalMonthlyIncome * (isFifty ? 0.30 : 0.10)),
+      fixedExpensesCap:     round2(totalMonthlyIncome * (isFifty ? 0.50 : 0.70)),
+    } : null;
+
     return {
       totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
@@ -152,6 +172,7 @@ export class BudgetService {
         savingsShortfall: Math.round(savingsShortfall * 100) / 100,
         antExpensesWarning: totalMonthlyIncome > 0 && antExpensesTotal > totalMonthlyIncome * 0.15,
       },
+      plan,
     };
   }
 
@@ -212,6 +233,7 @@ export class BudgetService {
       name: dto.name || 'Mi Presupuesto',
       year: dto.year || new Date().getFullYear(),
       savingsTargetPercent: dto.savingsTargetPercent || 20,
+      rule: dto.rule ?? '50-30-20',
       house: { id: houseId } as any,
       incomeSources: [],
       categories: defaultCategories as any,
@@ -229,6 +251,7 @@ export class BudgetService {
     if (dto.year !== undefined) budget.year = dto.year;
     if (dto.savingsTargetPercent !== undefined)
       budget.savingsTargetPercent = dto.savingsTargetPercent;
+    if (dto.rule !== undefined) budget.rule = dto.rule;
 
     await this.budgetRepo.save(budget);
     return this.findOne(id);
@@ -356,5 +379,37 @@ export class BudgetService {
     if (!expense) throw new NotFoundException('Gasto no encontrado');
     await this.expenseRepo.remove(expense);
     return { message: 'Gasto eliminado' };
+  }
+
+  private async syncFiGoal(houseId: string, fiTarget: number): Promise<SavingsGoal> {
+    let goal = await this.savingsGoalRepo.findOne({
+      where: { name: FI_GOAL_NAME, house: { id: houseId } },
+    });
+    if (goal) {
+      goal.goalAmount = fiTarget;
+      return this.savingsGoalRepo.save(goal);
+    }
+    const created = this.savingsGoalRepo.create({
+      name: FI_GOAL_NAME,
+      goalAmount: fiTarget,
+      currentSavings: 0,
+      months: 240,
+      annualInterestRate: 0.07,
+      emoji: '🏠',
+      house: { id: houseId } as any,
+    });
+    return this.savingsGoalRepo.save(created);
+  }
+
+  async syncFiGoalForBudget(id: string, houseId: string): Promise<SavingsGoal> {
+    const budget = await this.budgetRepo.findOne({
+      where: { id, house: { id: houseId } },
+      relations: ['incomeSources'],
+    });
+    if (!budget) throw new NotFoundException('Presupuesto no encontrado');
+    const totalMonthlyIncome = budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
+    if (totalMonthlyIncome === 0) throw new BadRequestException('El presupuesto no tiene ingresos registrados');
+    const fiTarget = Math.round(totalMonthlyIncome * 150 * 100) / 100;
+    return this.syncFiGoal(houseId, fiTarget);
   }
 }

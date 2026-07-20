@@ -44,6 +44,12 @@ export class BudgetController {
     return this.budgetService.create(dto, houseId);
   }
 
+  @Post(':id/sync-fi-goal')
+  syncFiGoal(@Param('id') id: string, @Request() req) {
+    const houseId = resolveHouseId(req.user);
+    return this.budgetService.syncFiGoalForBudget(id, houseId);
+  }
+
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: any, @Request() req) {
     const houseId = resolveHouseId(req.user);
