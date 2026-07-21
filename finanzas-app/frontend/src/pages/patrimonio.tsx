@@ -14,8 +14,12 @@ import {
 } from 'recharts';
 import { CardSkeleton } from '../components/ui/Skeleton';
 
+const safeNum = (n: unknown): number => {
+  const v = Number(n);
+  return Number.isFinite(v) ? v : 0;
+};
 const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeNum(n));
 
 const defaultForm = {
   assetType: 'physical' as 'physical' | 'cash',
@@ -86,12 +90,13 @@ export default function PatrimonioPage() {
   // Base currency is always 1. For non-base, divide by the exchange rate.
   const activeCode = activeCurrency?.currencyCode ?? baseCurrency?.currencyCode ?? '';
   const baseCode = baseCurrency?.currencyCode ?? '';
-  const divider =
+  const rawDivider =
     activeCode === baseCode || !activeCode
       ? 1
       : activeCode === 'USD'
         ? (usdRate || rates['USD'] || 125)
         : (rates[activeCode] || 1);
+  const divider = Number.isFinite(rawDivider) && rawDivider > 0 ? rawDivider : 1;
   const netWorth = rawNetWorth / divider;
   const currencySymbol = activeCurrency?.symbol ?? '$';
 
@@ -279,7 +284,7 @@ export default function PatrimonioPage() {
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis
                 tick={{ fontSize: 11 }}
-                tickFormatter={(v: number) => `${currencySymbol}${(v / 1000).toFixed(0)}k`}
+                tickFormatter={(v: number) => `${currencySymbol}${(safeNum(v) / 1000).toFixed(0)}k`}
                 width={60}
               />
               <Tooltip
@@ -427,8 +432,10 @@ function AssetSection({
   currencySymbol: string;
   divider: number;
 }) {
-  const fmtLocal = (n: number) =>
-    new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+  const fmtLocal = (n: number) => {
+    const v = Number(n);
+    return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number.isFinite(v) ? v : 0);
+  };
 
   const total = assets.reduce((s, a) => s + Number(a.valorEstimado || 0), 0) / divider;
 

@@ -93,8 +93,8 @@ export default function CreditosPage() {
 
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
-          <p className="text-gray-500 dark:text-gray-400">Error al cargar los créditos</p>
+          <AlertTriangle size={40} className="text-danger" />
+          <p className="text-on-surface-variant">Error al cargar los créditos</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
           </button>
@@ -103,14 +103,14 @@ export default function CreditosPage() {
 
       {/* Summary */}
       {!isLoading && !isError && loans.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm flex flex-wrap gap-8">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-6 shadow-sm flex flex-wrap gap-8">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-0.5">Deuda total</p>
-            <p className="text-2xl font-bold text-red-600 dark:text-red-400">${fmt(totalDeuda)}</p>
+            <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Deuda total</p>
+            <p className="text-2xl font-bold text-danger">${fmt(totalDeuda)}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-0.5">Cuota mensual total</p>
-            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">${fmt(totalCuota)}/mes</p>
+            <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Cuota mensual total</p>
+            <p className="text-2xl font-bold text-warning">${fmt(totalCuota)}/mes</p>
           </div>
         </div>
       )}
@@ -119,15 +119,15 @@ export default function CreditosPage() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+            <div key={i} className="h-24 bg-surface-container rounded-xl animate-pulse" />
           ))}
         </div>
       )}
       {!isLoading && !isError && loans.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">🏦</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No hay créditos registrados</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Registrá tu primer préstamo para llevar el control</p>
+          <h3 className="text-lg font-semibold text-on-surface">No hay créditos registrados</h3>
+          <p className="text-sm text-on-surface-variant mt-1">Registrá tu primer préstamo para llevar el control</p>
           <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
             Agregar crédito
           </button>
@@ -143,16 +143,16 @@ export default function CreditosPage() {
             return (
               <div
                 key={l.id}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5"
+                className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-5"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-900 dark:text-white">{l.tipo}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">— {l.institucion}</span>
+                      <span className="font-semibold text-on-surface">{l.tipo}</span>
+                      <span className="text-sm text-on-surface-variant">— {l.institucion}</span>
                     </div>
                     {l.notas && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{l.notas}</p>
+                      <p className="text-xs text-outline mt-0.5">{l.notas}</p>
                     )}
                   </div>
                   <ActionButtons
@@ -164,22 +164,22 @@ export default function CreditosPage() {
                 {/* Debt journey */}
                 <div className="flex flex-wrap gap-4 text-sm mb-3">
                   <div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Deuda inicial</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">${fmt(inicial)}</span>
+                    <span className="text-xs text-on-surface-variant block mb-0.5">Deuda inicial</span>
+                    <span className="font-medium text-on-surface-variant">${fmt(inicial)}</span>
                   </div>
-                  <div className="text-gray-400 dark:text-gray-500 self-center">→</div>
+                  <div className="text-outline self-center">→</div>
                   <div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Deuda actual</span>
-                    <span className="font-bold text-red-600 dark:text-red-400">${fmt(actual)}</span>
+                    <span className="text-xs text-on-surface-variant block mb-0.5">Deuda actual</span>
+                    <span className="font-bold text-danger">${fmt(actual)}</span>
                   </div>
                   <div className="ml-auto text-right">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Cuota mensual</span>
-                    <span className="font-semibold text-amber-600 dark:text-amber-400">${fmt(Number(l.cuotaMensual || 0))}/mes</span>
+                    <span className="text-xs text-on-surface-variant block mb-0.5">Cuota mensual</span>
+                    <span className="font-semibold text-warning">${fmt(Number(l.cuotaMensual || 0))}/mes</span>
                   </div>
                   {Number(l.cuotaMensual) > 0 && actual > 0 && (
                     <div className="text-right">
-                      <span className="text-xs text-gray-500 dark:text-gray-400 block mb-0.5">Finaliza en</span>
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1 justify-end">
+                      <span className="text-xs text-on-surface-variant block mb-0.5">Finaliza en</span>
+                      <span className="text-xs font-medium text-on-surface-variant flex items-center gap-1 justify-end">
                         <Clock size={11} />
                         {Math.ceil(actual / Number(l.cuotaMensual))} meses
                       </span>
@@ -189,11 +189,11 @@ export default function CreditosPage() {
 
                 {/* Progress */}
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  <div className="flex justify-between text-xs text-on-surface-variant mb-1">
                     <span>Pagado: ${fmt(pagado)}</span>
                     <span>{pct.toFixed(0)}%</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
                     <div
                       role="progressbar"
                       aria-valuenow={Math.round(pct)}

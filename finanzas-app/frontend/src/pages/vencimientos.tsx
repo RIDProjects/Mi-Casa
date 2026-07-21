@@ -31,7 +31,7 @@ function daysUntil(dateStr: string): number {
 function urgencyClasses(days: number) {
   if (days <= 3) return { badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', border: 'border-red-200 dark:border-red-800', dot: 'bg-red-500' };
   if (days <= 7) return { badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', dot: 'bg-amber-500' };
-  return { badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', border: 'border-gray-200 dark:border-gray-700', dot: 'bg-green-500' };
+  return { badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', border: 'border-outline-variant', dot: 'bg-green-500' };
 }
 
 export default function VencimientosPage() {
@@ -51,10 +51,10 @@ export default function VencimientosPage() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <Calendar size={24} /> Próximos Vencimientos
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Pagos pendientes ordenados por fecha</p>
+          <p className="text-on-surface-variant mt-1">Pagos pendientes ordenados por fecha</p>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function VencimientosPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               days === opt.value
                 ? 'bg-primary-600 text-white'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary-400'
+                : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary-400'
             }`}
           >
             {opt.label}
@@ -83,7 +83,7 @@ export default function VencimientosPage() {
       ) : isError ? (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
           <AlertTriangle size={40} className="text-red-400" />
-          <p className="text-gray-500 dark:text-gray-400">Error al cargar los vencimientos</p>
+          <p className="text-on-surface-variant">Error al cargar los vencimientos</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
           </button>
@@ -91,18 +91,18 @@ export default function VencimientosPage() {
       ) : sorted.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">✅</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin vencimientos próximos</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No hay pagos pendientes en los próximos {days} días</p>
+          <h3 className="text-lg font-semibold text-on-surface">Sin vencimientos próximos</h3>
+          <p className="font-body-default text-on-surface-variant mt-1">No hay pagos pendientes en los próximos {days} días</p>
         </div>
       ) : (
         <>
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-4 shadow-sm flex items-center justify-between">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-semibold text-gray-900 dark:text-white">{sorted.length}</span> vencimiento{sorted.length !== 1 ? 's' : ''} en los próximos <span className="font-semibold">{days} días</span>
+          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-4 shadow-sm flex items-center justify-between">
+            <p className="font-body-default text-on-surface-variant">
+              <span className="font-semibold text-on-surface">{sorted.length}</span> vencimiento{sorted.length !== 1 ? 's' : ''} en los próximos <span className="font-semibold">{days} días</span>
             </p>
             <div className="text-right">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total a pagar</p>
-              <p className="text-xl font-bold text-red-600 dark:text-red-400">${fmt(totalDue)}</p>
+              <p className="text-xs text-on-surface-variant uppercase tracking-wide">Total a pagar</p>
+              <p className="text-xl font-bold text-danger">${fmt(totalDue)}</p>
             </div>
           </div>
 
@@ -114,15 +114,15 @@ export default function VencimientosPage() {
               const dateLabel = new Date(bill.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
               return (
-                <div key={bill.id ?? idx} className={`bg-white dark:bg-gray-800 rounded-xl border ${border} shadow-sm p-4 flex items-center gap-4`}>
+                <div key={bill.id ?? idx} className={`bg-surface-container-lowest rounded-xl border ${border} shadow-sm p-4 flex items-center gap-4`}>
                   <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />
                   <span className="text-2xl">{icon}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">{bill.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{dateLabel}</p>
+                    <p className="font-medium text-on-surface truncate">{bill.name}</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">{dateLabel}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-semibold text-gray-900 dark:text-white">${fmt(Number(bill.amount || 0))}</p>
+                    <p className="font-semibold text-on-surface">${fmt(Number(bill.amount || 0))}</p>
                     <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${badge}`}>
                       {d === 0 ? 'Hoy' : d === 1 ? 'Mañana' : `en ${d} días`}
                     </span>

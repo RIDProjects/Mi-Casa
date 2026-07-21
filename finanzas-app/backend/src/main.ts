@@ -20,9 +20,15 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression({ threshold: 1024 })); // solo comprime responses > 1KB
 
+  const devOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://192.168.1.142:3000',
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+  ];
   const origin = process.env.NODE_ENV === 'production'
     ? (process.env.FRONTEND_URL ?? (() => { throw new Error('FRONTEND_URL is required in production'); })())
-    : process.env.FRONTEND_URL || '*';
+    : devOrigins;
   app.enableCors({ origin, credentials: true });
 
   // Global pipes & filters

@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import {
   Plus, Trash2, ChevronDown, ChevronRight,
   Calculator, TrendingUp, TrendingDown, Zap, CreditCard, Bug, Target, Pencil,
+  Lock, BrainCircuit,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -53,26 +54,31 @@ const PERIOD_DIVISOR: Record<Periodicity, number> = {
 const toMonthly = (amount: number, p: Periodicity) => Number(amount) / PERIOD_DIVISOR[p];
 
 function savingsRating(pct: number): { emoji: string; text: string; color: string } {
-  if (pct <= 5)  return { emoji: '⚠️', text: 'Muy bajo. Intentá ahorrar más.',           color: 'text-red-600 dark:text-red-400' };
-  if (pct <= 10) return { emoji: '😐', text: 'Aceptable, pero podés mejorar.',            color: 'text-amber-600 dark:text-amber-400' };
-  if (pct <= 15) return { emoji: '👍', text: 'Bueno. Seguí así.',                         color: 'text-blue-600 dark:text-blue-400' };
-  if (pct <= 25) return { emoji: '💪', text: '¡Ideal! Muy buen hábito de ahorro.',        color: 'text-green-600 dark:text-green-400' };
-  return              { emoji: '🏆', text: '¡Excelente! Estás en el top de ahorradores.', color: 'text-emerald-600 dark:text-emerald-400' };
+  if (pct <= 5)  return { emoji: '⚠️', text: 'Muy bajo. Intentá ahorrar más.',           color: 'text-danger' };
+  if (pct <= 10) return { emoji: '😐', text: 'Aceptable, pero podés mejorar.',            color: 'text-warning' };
+  if (pct <= 15) return { emoji: '👍', text: 'Bueno. Seguí así.',                         color: 'text-primary' };
+  if (pct <= 25) return { emoji: '💪', text: '¡Ideal! Muy buen hábito de ahorro.',        color: 'text-success' };
+  return              { emoji: '🏆', text: '¡Excelente! Estás en el top de ahorradores.', color: 'text-success' };
 }
 
 const INCOME_TYPE_LABELS: Record<string, string> = {
-  salario_estatal: 'Salario estatal',
-  tcp: 'Trabajo por cuenta propia',
-  remesas: 'Remesas',
-  alquiler: 'Alquiler',
-  mipyme: 'Negocio MIPYME',
-  otro: 'Otro',
+  salary:     'Salario',
+  investment: 'Inversiones',
+  business:   'Negocio / Emprendimiento',
+  rental:     'Alquiler',
+  freelance:  'Freelance / Independiente',
+  extras:     'Ingresos extras',
+  other:      'Otro',
   // backward compatibility
   fixed: 'Fijo',
   variable: 'Variable',
+  salario_estatal: 'Salario',
+  tcp: 'Freelance / Independiente',
+  remesas: 'Ingresos extras',
+  mipyme: 'Negocio / Emprendimiento',
 };
 
-const defaultIncomeForm  = { name: '', type: 'salario_estatal', amount: '' };
+const defaultIncomeForm  = { name: '', type: 'salary', amount: '' };
 const defaultCategoryForm = { name: '' };
 const defaultExpenseForm = { name: '', amount: '', periodicity: 'monthly' as Periodicity, isFixed: false, isAntExpense: false, isCreditCard: false };
 
@@ -99,95 +105,135 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
   const catTotal = category.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+      {/* Category header */}
       <div
-        className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="flex items-center justify-between px-4 py-3 bg-surface-gray border-b border-outline-variant cursor-pointer hover:bg-surface-container transition-colors"
         onClick={() => setOpen(o => !o)}
       >
         <div className="flex items-center gap-2">
-          {open ? <ChevronDown size={15} className="text-gray-400" /> : <ChevronRight size={15} className="text-gray-400" />}
-          <span className="font-semibold text-gray-900 dark:text-white text-sm">{category.name}</span>
-          <span className="text-xs text-gray-400">({category.expenses.length})</span>
+          {open
+            ? <ChevronDown size={15} className="text-on-surface-variant" />
+            : <ChevronRight size={15} className="text-on-surface-variant" />
+          }
+          <span className="font-section-title text-section-title text-on-surface">{category.name}</span>
+          <span className="font-body-small text-body-small text-outline">({category.expenses.length})</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-gray-700 dark:text-gray-300">${fmt(catTotal)}/mes</span>
+          <span className="font-card-title text-card-title text-on-surface-variant">${fmt(catTotal)}/mes</span>
           <button
             onClick={e => { e.stopPropagation(); setShowModal(true); }}
-            className="flex items-center gap-1 px-2 py-1 text-xs bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1 text-primary font-label-upper text-label-upper border border-primary/30 hover:bg-primary/5 rounded-lg transition-colors"
           >
             <Plus size={11} /> Gasto
           </button>
-          {!category.isDefault && <button
-            onClick={e => { e.stopPropagation(); onDeleteCategory(); }}
-            title="Eliminar categoría"
-            className="p-1 text-red-300 hover:text-red-600 dark:text-red-600 dark:hover:text-red-400 transition-colors rounded"
-            aria-label="Eliminar categoría"
-          >
-            <Trash2 size={13} />
-          </button>}
+          {!category.isDefault && (
+            <button
+              onClick={e => { e.stopPropagation(); onDeleteCategory(); }}
+              title="Eliminar categoría"
+              className="p-1 text-outline hover:text-danger transition-colors rounded"
+              aria-label="Eliminar categoría"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </div>
 
       {open && (
         <div className="overflow-x-auto">
           {category.expenses.length === 0 ? (
-            <p className="px-4 py-5 text-center text-sm text-gray-400 dark:text-gray-500">Sin gastos en esta categoría</p>
+            <p className="px-4 py-8 text-center font-body-small text-body-small text-outline">
+              Sin gastos en esta categoría
+            </p>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Gasto</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Monto</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Mensual</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Período</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Acc.</th>
+            <table className="w-full text-left font-body-default">
+              <thead>
+                <tr className="font-label-upper text-label-upper text-on-surface-variant bg-surface-container-low border-b border-outline-variant">
+                  <th className="px-6 py-3">Gasto</th>
+                  <th className="px-4 py-3 text-right">Monto</th>
+                  <th className="px-4 py-3 text-right">Mensual</th>
+                  <th className="px-4 py-3 text-center">Período</th>
+                  <th className="px-4 py-3 text-center">Tipo</th>
+                  <th className="px-4 py-3 text-center">Acc.</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-outline-variant">
                 {category.expenses.map(e => (
-                  <tr key={e.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{e.name}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-700 dark:text-gray-300">${fmt(e.amount)}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-500 dark:text-gray-400 text-xs">${fmt(toMonthly(e.amount, e.periodicity))}</td>
-                    <td className="px-4 py-2.5 text-center">
+                  <tr key={e.id} className="hover:bg-surface-gray transition-colors">
+                    <td className="px-6 py-3 font-body-default text-on-surface">{e.name}</td>
+                    <td className="px-4 py-3 text-right font-body-default text-on-surface">${fmt(e.amount)}</td>
+                    <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(toMonthly(e.amount, e.periodicity))}</td>
+                    <td className="px-4 py-3 text-center">
                       <select
                         value={e.periodicity}
                         onChange={ev => updMut.mutate({ id: e.id, data: { periodicity: ev.target.value } })}
-                        className="text-xs bg-gray-100 dark:bg-gray-700 border-0 rounded-lg px-2 py-1 text-gray-700 dark:text-gray-300 cursor-pointer focus:ring-2 focus:ring-primary-500"
+                        className="font-body-small text-body-small bg-surface-container border border-outline-variant rounded-lg px-2 py-1 text-on-surface cursor-pointer focus:ring-2 focus:ring-primary/30 focus:outline-none"
                       >
                         {Object.entries(PERIODICITY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                       </select>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1.5">
-                        {[
-                          { flag: 'isFixed',      icon: <Zap size={13} />,        active: e.isFixed,      color: 'blue',   title: 'Fijo' },
-                          { flag: 'isCreditCard', icon: <CreditCard size={13} />, active: e.isCreditCard, color: 'purple', title: 'Tarjeta' },
-                          { flag: 'isAntExpense', icon: <Bug size={13} />,        active: e.isAntExpense, color: 'amber',  title: 'Hormiga' },
-                        ].map(({ flag, icon, active, color, title }) => (
-                          <button
-                            key={flag}
-                            aria-pressed={active}
-                            title={title}
-                            onClick={() => updMut.mutate({ id: e.id, data: { [flag]: !active } })}
-                            className={`p-1 rounded transition-colors ${active ? `text-${color}-600 dark:text-${color}-400 bg-${color}-50 dark:bg-${color}-900/30` : 'text-gray-300 dark:text-gray-600 hover:text-gray-500'}`}
-                          >{icon}</button>
-                        ))}
+                        {/* Fijo badge */}
+                        <button
+                          aria-pressed={e.isFixed}
+                          title="Fijo"
+                          onClick={() => updMut.mutate({ id: e.id, data: { isFixed: !e.isFixed } })}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-label-upper text-label-upper transition-colors ${
+                            e.isFixed
+                              ? 'bg-primary-fixed text-on-primary-fixed-variant'
+                              : 'bg-surface-container text-outline hover:bg-surface-container-low'
+                          }`}
+                        >
+                          <Lock size={10} />
+                          {e.isFixed && <span>Fijo</span>}
+                        </button>
+                        {/* Tarjeta badge */}
+                        <button
+                          aria-pressed={e.isCreditCard}
+                          title="Tarjeta"
+                          onClick={() => updMut.mutate({ id: e.id, data: { isCreditCard: !e.isCreditCard } })}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-label-upper text-label-upper transition-colors ${
+                            e.isCreditCard
+                              ? 'bg-secondary-fixed text-on-secondary-fixed-variant'
+                              : 'bg-surface-container text-outline hover:bg-surface-container-low'
+                          }`}
+                        >
+                          <CreditCard size={10} />
+                          {e.isCreditCard && <span>Tarjeta</span>}
+                        </button>
+                        {/* Hormiga badge */}
+                        <button
+                          aria-pressed={e.isAntExpense}
+                          title="Hormiga"
+                          onClick={() => updMut.mutate({ id: e.id, data: { isAntExpense: !e.isAntExpense } })}
+                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-label-upper text-label-upper transition-colors ${
+                            e.isAntExpense
+                              ? 'bg-error-container text-on-error-container'
+                              : 'bg-surface-container text-outline hover:bg-surface-container-low'
+                          }`}
+                        >
+                          <Bug size={10} />
+                          {e.isAntExpense && <span>Hormiga</span>}
+                        </button>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 text-center">
-                      <button onClick={() => setDeleteExpense(e)} className="text-red-400 hover:text-red-600 p-1 transition-colors">
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        onClick={() => setDeleteExpense(e)}
+                        className="text-outline hover:text-danger p-1 transition-colors"
+                      >
                         <Trash2 size={14} />
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-600">
-                <tr>
-                  <td colSpan={2} className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Total mensual</td>
-                  <td className="px-4 py-2 text-right font-bold text-gray-800 dark:text-gray-200">${fmt(catTotal)}</td>
+              <tfoot>
+                <tr className="bg-surface-container-low font-bold border-t border-outline-variant">
+                  <td colSpan={2} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant uppercase">Total mensual</td>
+                  <td className="px-4 py-3 text-right font-card-title text-card-title text-on-surface">${fmt(catTotal)}</td>
                   <td colSpan={3} />
                 </tr>
               </tfoot>
@@ -196,6 +242,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
         </div>
       )}
 
+      {/* Add expense modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Agregar gasto — ${category.name}`}>
         <form onSubmit={ev => { ev.preventDefault(); addMut.mutate({ ...form, amount: parseFloat(form.amount as string) }); }} className="space-y-4">
           <div>
@@ -216,9 +263,9 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
           </div>
           <div className="grid grid-cols-3 gap-2">
             {([
-              { key: 'isFixed',      label: 'Fijo',    icon: <Zap size={13} />,        color: 'blue' },
-              { key: 'isCreditCard', label: 'Tarjeta', icon: <CreditCard size={13} />, color: 'purple' },
-              { key: 'isAntExpense', label: '🐜 Hormiga', icon: null,                  color: 'amber' },
+              { key: 'isFixed',      label: 'Fijo',       icon: <Lock size={13} />,        color: 'blue' },
+              { key: 'isCreditCard', label: 'Tarjeta',    icon: <CreditCard size={13} />,  color: 'purple' },
+              { key: 'isAntExpense', label: 'Hormiga',    icon: <Bug size={13} />,          color: 'amber' },
             ] as const).map(({ key, label, icon, color }) => (
               <button key={key} type="button" onClick={() => setForm({ ...form, [key]: !(form as any)[key] })}
                 className={`flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-medium border-2 transition-all ${
@@ -291,10 +338,13 @@ export default function PresupuestoPage() {
     onError: (e: any) => { toast.error(getErr(e)); },
   });
   const updateRuleMut = useMutation(
-    (rule: BudgetRule) => budgetAPI.update(activeBudgetId!, { rule }),
+    (rule: BudgetRule) => budgetAPI.update(activeBudgetId!, {
+      rule,
+      savingsTargetPercent: rule === '50-30-20' ? 20 : 10,
+    }),
     {
       onSuccess: () => { toast.success('Regla actualizada'); refresh(); },
-      onError: (e: any) => toast.error(getErr(e)),
+      onError: (e: any) => { toast.error(getErr(e)); },
     },
   );
   const syncFiMut = useMutation(
@@ -304,29 +354,39 @@ export default function PresupuestoPage() {
         toast.success('Meta FI sincronizada');
         qc.invalidateQueries('savings-goals');
       },
-      onError: (e: any) => toast.error(getErr(e)),
+      onError: (e: any) => { toast.error(getErr(e)); },
     },
   );
 
   if (isLoading || (activeBudgetId && loadingBudget)) {
-    return <Layout><div className="space-y-4"><div className="skeleton h-8 w-56" /><div className="skeleton h-40 w-full" /><div className="skeleton h-64 w-full" /></div></Layout>;
+    return (
+      <Layout>
+        <div className="space-y-4">
+          <div className="skeleton h-8 w-56" />
+          <div className="skeleton h-40 w-full" />
+          <div className="skeleton h-64 w-full" />
+        </div>
+      </Layout>
+    );
   }
 
   if (!activeBudgetId || !budget) {
     return (
       <Layout>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🧮 Presupuesto</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Planificá tus ingresos y gastos mensuales</p>
+            <h1 className="font-page-title text-page-title text-on-surface">Presupuesto</h1>
+            <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planificá tus ingresos y gastos mensuales</p>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-24">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-10 text-center max-w-md w-full">
-            <Calculator size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No tenés un presupuesto creado</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Creá tu presupuesto para empezar a planificar tus finanzas del hogar.</p>
-            <button onClick={() => setShowBudgetModal(true)} className="btn-primary flex items-center gap-2 mx-auto"><Plus size={18} /> Crear presupuesto</button>
+          <div className="bg-surface-container-lowest rounded-2xl border border-border-light p-10 text-center max-w-md w-full">
+            <Calculator size={48} className="mx-auto text-outline mb-4" />
+            <h2 className="font-section-title text-section-title text-on-surface mb-2">No tenés un presupuesto creado</h2>
+            <p className="font-body-default text-body-default text-on-surface-variant mb-6">Creá tu presupuesto para empezar a planificar tus finanzas del hogar.</p>
+            <button onClick={() => setShowBudgetModal(true)} className="btn-primary flex items-center gap-2 mx-auto">
+              <Plus size={18} /> Crear presupuesto
+            </button>
           </div>
         </div>
         <Modal isOpen={showBudgetModal} onClose={() => setShowBudgetModal(false)} title="Nuevo presupuesto">
@@ -335,7 +395,7 @@ export default function PresupuestoPage() {
             <div><label className="label">Año</label><input type="number" className="input" value={budgetForm.year} onChange={e => setBudgetForm({ ...budgetForm, year: parseInt(e.target.value) })} required /></div>
             <div>
               <label className="label">Meta de ahorro — {budgetForm.savingsTargetPercent}%</label>
-              <input type="range" min="0" max="50" step="1" value={budgetForm.savingsTargetPercent} onChange={e => setBudgetForm({ ...budgetForm, savingsTargetPercent: parseInt(e.target.value) })} className="w-full accent-primary-600" />
+              <input type="range" min="0" max="50" step="1" value={budgetForm.savingsTargetPercent} onChange={e => setBudgetForm({ ...budgetForm, savingsTargetPercent: parseInt(e.target.value) })} className="w-full accent-primary" />
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => setShowBudgetModal(false)} className="btn-secondary">Cancelar</button>
@@ -359,192 +419,295 @@ export default function PresupuestoPage() {
   const gastosVariables   = summary.totalMonthlyExpenses - gastosFijos;
 
   const advisoryBanner = {
-    ok:      { bg: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',  text: 'text-green-800 dark:text-green-300',  msg: '✅ ¡Felicidades! Podés alcanzar tus metas de ahorro.' },
-    warning: { bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',  text: 'text-amber-800 dark:text-amber-300',  msg: `⚠️ Cuidado — no alcanzás tu meta de ahorro del ${budget.savingsTargetPercent}%.` },
-    danger:  { bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',          text: 'text-red-800 dark:text-red-300',      msg: '❌ Tus gastos superan tus ingresos.' },
+    ok:      { cls: 'bg-surface-container border border-success/30 text-success',  msg: '¡Felicidades! Podés alcanzar tus metas de ahorro.' },
+    warning: { cls: 'bg-surface-container border border-warning/30 text-warning',  msg: `Cuidado — no alcanzás tu meta de ahorro del ${budget.savingsTargetPercent}%.` },
+    danger:  { cls: 'bg-surface-container border border-danger/30 text-danger',    msg: 'Tus gastos superan tus ingresos.' },
   }[summary.advisory];
+
+  // Budget health score (0-100) based on advisory + savings pct
+  const healthScore = summary.advisory === 'ok'
+    ? Math.min(100, 60 + budget.savingsTargetPercent * 2)
+    : summary.advisory === 'warning'
+    ? Math.min(59, 40 + budget.savingsTargetPercent)
+    : Math.min(39, budget.savingsTargetPercent * 2);
+
+  const advisoryLabel = summary.advisory === 'ok'
+    ? 'Realista & Saludable'
+    : summary.advisory === 'warning'
+    ? 'Necesita Atención'
+    : 'En Riesgo';
+
+  const advisoryLabelColor = summary.advisory === 'ok'
+    ? 'text-success'
+    : summary.advisory === 'warning'
+    ? 'text-warning'
+    : 'text-danger';
 
   return (
     <Layout>
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">🧮 {budget.name}</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Año {budget.year} · Meta de ahorro: {budget.savingsTargetPercent}%</p>
+          <h1 className="font-page-title text-page-title text-on-surface">{budget.name}</h1>
+          <p className="font-body-default text-body-default text-on-surface-variant mt-1">
+            Año {budget.year} · Meta de ahorro: {budget.savingsTargetPercent}%
+          </p>
         </div>
       </div>
 
       {/* ── KPI row ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        {[
-          { label: 'Ingresos/mes',     icon: <TrendingUp size={16} />,  value: `$${fmt(summary.totalMonthlyIncome)}`,   color: 'text-green-600 dark:text-green-400',   bg: 'bg-green-50 dark:bg-green-900/20' },
-          { label: 'Gastos/mes',       icon: <TrendingDown size={16} />, value: `$${fmt(summary.totalMonthlyExpenses)}`, color: 'text-red-600 dark:text-red-400',       bg: 'bg-red-50 dark:bg-red-900/20' },
-          { label: 'Disponible/mes',   icon: <Calculator size={16} />,  value: `$${fmt(Math.abs(summary.available))}`,  color: summary.available >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400', bg: 'bg-gray-50 dark:bg-gray-700' },
-          { label: 'Meta de ahorro',   icon: <Target size={16} />,       value: `$${fmt(savingsMonthly)}`,              color: 'text-blue-600 dark:text-blue-400',     bg: 'bg-blue-50 dark:bg-blue-900/20' },
-        ].map(k => (
-          <div key={k.label} className={`${k.bg} rounded-xl p-4 border border-gray-200 dark:border-gray-700`}>
-            <div className="flex items-center gap-2 mb-1 text-gray-500 dark:text-gray-400">{k.icon}<span className="text-xs font-medium">{k.label}</span></div>
-            <p className={`text-xl font-bold ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INGRESOS/MES</p>
+          <p className="font-section-title text-[22px] text-success">${fmt(summary.totalMonthlyIncome)}</p>
+        </div>
+        <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">GASTOS/MES</p>
+          <p className="font-section-title text-[22px] text-danger">${fmt(summary.totalMonthlyExpenses)}</p>
+        </div>
+        <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">DISPONIBLE/MES</p>
+          <p className={`font-section-title text-[22px] ${summary.available >= 0 ? 'text-success' : 'text-danger'}`}>
+            ${fmt(Math.abs(summary.available))}
+          </p>
+        </div>
+        <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">META DE AHORRO</p>
+          <p className="font-section-title text-[22px] text-primary">${fmt(savingsMonthly)}</p>
+        </div>
       </div>
 
-      {/* ── Advisory ── */}
-      <div className={`border rounded-xl px-4 py-3 mb-4 ${advisoryBanner.bg}`}>
-        <p className={`text-sm font-medium ${advisoryBanner.text}`}>{advisoryBanner.msg}</p>
+      {/* ── Advisory banner ── */}
+      <div className={`rounded-xl px-4 py-3 mb-4 font-body-default ${advisoryBanner.cls}`}>
+        <p className="font-body-default">{advisoryBanner.msg}</p>
       </div>
 
       {/* ── Budget alert banners ── */}
       {(summary.alerts?.overBudget || summary.available < 0) && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-2 mb-4">
-          <span className="text-red-600 font-medium text-sm">Tus gastos superan tus ingresos este mes</span>
+        <div className="bg-surface-container border border-danger/30 text-danger rounded-xl px-4 py-3 flex items-center gap-2 mb-4">
+          <span className="font-body-default">Tus gastos superan tus ingresos este mes</span>
         </div>
       )}
       {(summary.alerts?.antExpensesWarning || (summary.antExpensesTotal > 0 && summary.totalMonthlyIncome > 0 && summary.antExpensesTotal / summary.totalMonthlyIncome > 0.15)) && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-center gap-2 mb-6">
-          <span className="text-amber-700 text-sm">Los gastos hormiga superan el 15% de tus ingresos</span>
+        <div className="bg-surface-container border border-warning/30 text-warning rounded-xl px-4 py-3 flex items-center gap-2 mb-6">
+          <span className="font-body-default">Los gastos hormiga superan el 15% de tus ingresos</span>
         </div>
       )}
 
-      {/* ── TOP SECTION: Ingresos + Gastos Hormiga (lado a lado) ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+      {/* ── TOP SECTION: Ingresos + Right panel ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
 
-        {/* LEFT: Tabla de Ingresos */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-green-50 dark:bg-green-900/20 border-b border-green-100 dark:border-green-800">
-            <h2 className="text-sm font-semibold text-green-900 dark:text-green-300">💰 Ingresos Promedio Mensuales</h2>
-            <button onClick={() => setShowIncomeModal(true)} className="flex items-center gap-1 px-2.5 py-1 text-xs bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-              <Plus size={11} /> Agregar
+        {/* LEFT (2 cols): Tabla de Ingresos */}
+        <div className="xl:col-span-2 bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+          <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
+            <h3 className="font-section-title text-section-title text-on-surface">Ingresos Promedio Mensuales</h3>
+            <button
+              onClick={() => setShowIncomeModal(true)}
+              className="flex items-center gap-1 text-primary font-label-upper text-label-upper hover:underline"
+            >
+              <Plus size={12} /> Agregar
             </button>
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-              <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Fuente</th>
-                <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Tipo</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Monto/mes</th>
-                <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Anual</th>
+          <table className="w-full text-left font-body-default">
+            <thead>
+              <tr className="font-label-upper text-label-upper text-on-surface-variant bg-surface-container-low border-b border-outline-variant">
+                <th className="px-6 py-3">Fuente</th>
+                <th className="px-4 py-3 text-center">Tipo</th>
+                <th className="px-4 py-3 text-right">Monto/mes</th>
+                <th className="px-4 py-3 text-right">Anual</th>
                 <th className="w-8" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="divide-y divide-outline-variant">
               {incomeSources.length === 0 ? (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500 text-sm">Sin ingresos registrados</td></tr>
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center font-body-default text-outline">
+                    Sin ingresos registrados
+                  </td>
+                </tr>
               ) : (
                 incomeSources.map(inc => (
-                  <tr key={inc.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-4 py-2.5 font-medium text-gray-900 dark:text-gray-100">{inc.name}</td>
-                    <td className="px-4 py-2.5 text-center">
-                      <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                  <tr key={inc.id} className="hover:bg-surface-gray transition-colors">
+                    <td className="px-6 py-3 font-body-default text-on-surface">{inc.name}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full font-label-upper text-label-upper bg-primary-fixed text-on-primary-fixed-variant">
                         {INCOME_TYPE_LABELS[inc.type] ?? inc.type}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-right font-semibold text-green-600 dark:text-green-400">${fmt(inc.amount)}</td>
-                    <td className="px-4 py-2.5 text-right text-xs text-gray-400 dark:text-gray-500">${fmt(Number(inc.amount) * 12)}</td>
-                    <td className="px-2 py-2.5 text-center">
-                      <button onClick={() => setDeleteIncomeId(inc.id)} className="text-red-400 hover:text-red-600 p-1 transition-colors"><Trash2 size={13} /></button>
+                    <td className="px-4 py-3 text-right font-card-title text-card-title text-success">${fmt(inc.amount)}</td>
+                    <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">${fmt(Number(inc.amount) * 12)}</td>
+                    <td className="px-2 py-3 text-center">
+                      <button onClick={() => setDeleteIncomeId(inc.id)} className="text-outline hover:text-danger p-1 transition-colors">
+                        <Trash2 size={13} />
+                      </button>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
-            <tfoot className="bg-green-50 dark:bg-green-900/20 border-t-2 border-green-200 dark:border-green-800">
-              <tr>
-                <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-white text-sm" colSpan={2}>Total ingresos</td>
-                <td className="px-4 py-2.5 text-right font-bold text-green-600 dark:text-green-400">${fmt(summary.totalMonthlyIncome)}</td>
-                <td className="px-4 py-2.5 text-right font-bold text-green-600 dark:text-green-400 text-xs">${fmt(totalAnualIngresos)}</td>
+            <tfoot>
+              <tr className="bg-surface-container-low font-bold border-t-2 border-outline-variant">
+                <td className="px-6 py-3 font-card-title text-card-title text-on-surface" colSpan={2}>Total ingresos</td>
+                <td className="px-4 py-3 text-right font-card-title text-card-title text-success">${fmt(summary.totalMonthlyIncome)}</td>
+                <td className="px-4 py-3 text-right font-body-small text-body-small text-success">${fmt(totalAnualIngresos)}</td>
                 <td />
               </tr>
-              <tr className="text-xs text-gray-500 dark:text-gray-400">
-                <td className="px-4 py-1.5" colSpan={2}>{incomeSources.length} fuente{incomeSources.length !== 1 ? 's' : ''} de ingreso</td>
-                <td colSpan={3} />
+              <tr>
+                <td className="px-6 py-2 font-caption text-caption text-outline" colSpan={5}>
+                  {incomeSources.length} fuente{incomeSources.length !== 1 ? 's' : ''} de ingreso
+                </td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        {/* RIGHT: Gastos Hormiga + Meta ahorro */}
+        {/* RIGHT (1 col): Meta de Ahorro + Budget Advisory AI */}
         <div className="space-y-4">
-          {/* Gastos hormiga box */}
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
-            <h2 className="text-sm font-bold text-amber-900 dark:text-amber-300 mb-3 flex items-center gap-2">
-              🐜 Gastos Hormiga
-            </h2>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Presupuesto al mes</p>
-                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">${fmt(summary.antExpensesTotal)}</p>
+          {/* Meta de ahorro card */}
+          <div className="bg-surface-container-lowest p-4 rounded-xl border border-border-light">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-card-title text-card-title text-on-surface">Meta de Ahorro</h3>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-upper text-label-upper">CONFIGURABLE</span>
+                <button
+                  onClick={() => { setSavingsTargetEdit(budget.savingsTargetPercent); setShowSavingsModal(true); }}
+                  className="p-1 text-outline hover:text-primary transition-colors"
+                >
+                  <Pencil size={13} />
+                </button>
               </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Máximo por día</p>
-                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">${fmt(antPerDay)}</p>
+            </div>
+            <div className="flex items-end gap-2 mb-4">
+              <span className="font-hero-title text-[48px] leading-none text-primary">{budget.savingsTargetPercent}%</span>
+              <span className="font-body-default text-on-surface-variant mb-1">del ingreso total</span>
+            </div>
+            <input
+              type="range" min="0" max="50" step="1"
+              value={budget.savingsTargetPercent}
+              onChange={e => updateSavingsMut.mutate(parseInt(e.target.value))}
+              className="w-full accent-primary mb-4"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-container rounded-lg p-3 text-center">
+                <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">META MENSUAL</p>
+                <p className="font-card-title text-card-title text-primary">${fmt(savingsMonthly)}</p>
+              </div>
+              <div className="bg-surface-container rounded-lg p-3 text-center">
+                <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">META ANUAL</p>
+                <p className="font-card-title text-card-title text-primary">${fmt(savingsMonthly * 12)}</p>
+              </div>
+            </div>
+            <p className={`mt-3 font-body-small text-body-small ${rating.color}`}>
+              {rating.emoji} {rating.text}
+            </p>
+          </div>
+
+          {/* Budget Advisory AI dark card */}
+          <div className="bg-advisory-bg p-4 rounded-xl relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-3">
+              <BrainCircuit size={14} className="text-advisory-text-dim" />
+              <span className="font-label-upper text-label-upper text-advisory-text-dim">BUDGET ADVISORY AI</span>
+            </div>
+            <h4 className="font-section-title text-[18px] text-advisory-text mb-2 leading-snug">
+              Tu presupuesto es:{' '}
+              <span className={advisoryLabelColor}>{advisoryLabel}</span>
+            </h4>
+            <p className="font-body-small text-body-small text-advisory-text-dim mb-4">
+              {advisoryBanner.msg}
+            </p>
+            <div className="bg-black/30 rounded-lg p-4 border border-white/10">
+              <p className="font-label-upper text-label-upper text-advisory-text-dim/70 uppercase text-center mb-1">Score de Salud</p>
+              <p className="font-formula-code text-advisory-text text-[32px] text-center">{healthScore} / 100</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MIDDLE SECTION: Gastos Hormiga + Proyección Anual ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+        {/* Gastos Hormiga */}
+        <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+          <div className="p-4 border-b border-outline-variant bg-surface-gray flex justify-between items-center">
+            <h3 className="font-section-title text-section-title text-on-surface">Gastos Hormiga</h3>
+            <span className="px-2.5 py-1 bg-error-container text-on-error-container rounded-full font-label-upper text-label-upper">
+              <Bug size={10} className="inline mr-1" />HORMIGA
+            </span>
+          </div>
+          <div className="p-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-surface-container rounded-lg p-3 text-center">
+                <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">AL MES</p>
+                <p className="font-card-title text-[20px] text-warning">${fmt(summary.antExpensesTotal)}</p>
+              </div>
+              <div className="bg-surface-container rounded-lg p-3 text-center">
+                <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">MÁX. POR DÍA</p>
+                <p className="font-card-title text-[20px] text-warning">${fmt(antPerDay)}</p>
               </div>
             </div>
             {summary.antExpensesTotal > 0 ? (
-              <div className={`text-xs font-medium px-3 py-2 rounded-lg ${
+              <div className={`font-body-small text-body-small px-3 py-2 rounded-lg border ${
                 summary.available >= savingsMonthly
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                  ? 'bg-surface-container border-success/30 text-success'
+                  : 'bg-surface-container border-danger/30 text-danger'
               }`}>
                 {summary.available >= savingsMonthly
-                  ? '👏 Bien, podés lograr tus metas de ahorro.'
-                  : '⚠️ Considerá recortar estos gastos para alcanzar tu meta.'}
+                  ? 'Bien, podés lograr tus metas de ahorro.'
+                  : 'Considerá recortar estos gastos para alcanzar tu meta.'}
               </div>
             ) : (
-              <p className="text-xs text-amber-700 dark:text-amber-400 text-center py-2">Sin gastos hormiga marcados. Usá el ícono 🐜 en cada gasto.</p>
+              <p className="font-body-small text-body-small text-outline text-center py-3">
+                Sin gastos hormiga marcados. Usá el ícono de insecto en cada gasto.
+              </p>
             )}
           </div>
+        </div>
 
-          {/* Meta de ahorro */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-blue-900 dark:text-blue-300">🎯 Meta de Ahorro</h2>
-              <button
-                onClick={() => { setSavingsTargetEdit(budget.savingsTargetPercent); setShowSavingsModal(true); }}
-                className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <Pencil size={11} /> Editar
-              </button>
-            </div>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-xs text-gray-600 dark:text-gray-400 shrink-0">¿Qué % querés ahorrar?</span>
-              <span className="text-lg font-bold text-blue-700 dark:text-blue-300 w-12 text-right">{budget.savingsTargetPercent}%</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Meta mensual</p>
-                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">${fmt(savingsMonthly)}</p>
-              </div>
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center shadow-sm">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Meta anual</p>
-                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">${fmt(savingsMonthly * 12)}</p>
-              </div>
-            </div>
-            <div className={`text-xs font-medium px-3 py-2 rounded-lg ${rating.color} bg-white dark:bg-gray-800`}>
-              {rating.emoji} {rating.text}
-            </div>
+        {/* Proyección Anual */}
+        <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+          <div className="p-4 border-b border-outline-variant bg-surface-gray">
+            <h3 className="font-section-title text-section-title text-on-surface">Proyección Anual</h3>
           </div>
-
-          {/* Resumen anual */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">📅 Proyección Anual</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Ingresos anuales</span>
-                <span className="font-semibold text-green-600 dark:text-green-400">${fmt(totalAnualIngresos)}</span>
+          <div className="p-4 space-y-3">
+            <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={14} className="text-success" />
+                <span className="font-body-default text-on-surface-variant">Ingresos anuales</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">Gastos anuales</span>
-                <span className="font-semibold text-red-600 dark:text-red-400">${fmt(totalAnualGastos)}</span>
+              <span className="font-card-title text-card-title text-success">${fmt(totalAnualIngresos)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+              <div className="flex items-center gap-2">
+                <TrendingDown size={14} className="text-danger" />
+                <span className="font-body-default text-on-surface-variant">Gastos anuales</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700 font-bold">
-                <span className="text-gray-900 dark:text-white">Disponible anual</span>
-                <span className={disponibleAnual >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                  ${fmt(Math.abs(disponibleAnual))}
-                </span>
+              <span className="font-card-title text-card-title text-danger">${fmt(totalAnualGastos)}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+              <span className="font-body-default text-on-surface font-semibold">Disponible anual</span>
+              <span className={`font-card-title text-card-title ${disponibleAnual >= 0 ? 'text-success' : 'text-danger'}`}>
+                ${fmt(Math.abs(disponibleAnual))}
+              </span>
+            </div>
+            <div className="pt-2">
+              <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
+                <span>Gastos fijos</span>
+                <span>${fmt(gastosFijos)}</span>
               </div>
-              <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500">
-                <span>Gastos fijos: ${fmt(gastosFijos)} · Variables: ${fmt(gastosVariables)}</span>
+              <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden mb-2">
+                <div
+                  className="bg-primary h-full rounded-full"
+                  style={{ width: summary.totalMonthlyExpenses > 0 ? `${Math.min(100, (gastosFijos / summary.totalMonthlyExpenses) * 100)}%` : '0%' }}
+                />
+              </div>
+              <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
+                <span>Gastos variables</span>
+                <span>${fmt(gastosVariables)}</span>
+              </div>
+              <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-secondary h-full rounded-full"
+                  style={{ width: summary.totalMonthlyExpenses > 0 ? `${Math.min(100, (gastosVariables / summary.totalMonthlyExpenses) * 100)}%` : '0%' }}
+                />
               </div>
             </div>
           </div>
@@ -553,19 +716,19 @@ export default function PresupuestoPage() {
 
       {/* ── Plan Financiero ── */}
       {summary.totalMonthlyIncome > 0 && summary.plan && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">📊 Plan Financiero</h2>
+        <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden mb-6">
+          <div className="p-4 border-b border-outline-variant bg-surface-gray flex justify-between items-center">
+            <h3 className="font-section-title text-section-title text-on-surface">Plan Financiero</h3>
             <div className="flex gap-2">
               {(['50-30-20', '70-20-10'] as BudgetRule[]).map(r => (
                 <button
                   key={r}
                   onClick={() => updateRuleMut.mutate(r)}
                   disabled={updateRuleMut.isLoading}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  className={`px-3 py-1 rounded-full font-label-upper text-label-upper transition-colors ${
                     budget.rule === r
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      ? 'bg-primary text-on-primary'
+                      : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-low border border-outline-variant'
                   }`}
                 >
                   {r === '50-30-20' ? '50/30/20' : '70/20/10'}
@@ -573,57 +736,55 @@ export default function PresupuestoPage() {
               ))}
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-            <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-3 text-center">
-              <p className="text-lg mb-1">🏠</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Meta FI</p>
-              <p className="text-sm font-bold text-purple-700 dark:text-purple-300">${fmt(summary.plan.fiTarget)}</p>
+          <div className="p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+            <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
+              <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">META FI</p>
+              <p className="font-card-title text-card-title text-primary mb-2">${fmt(summary.plan.fiTarget)}</p>
               <button
                 onClick={() => syncFiMut.mutate()}
                 disabled={syncFiMut.isLoading}
-                className="mt-2 text-xs text-purple-600 dark:text-purple-400 hover:underline disabled:opacity-50"
+                className="font-caption text-caption text-primary hover:underline disabled:opacity-50"
               >
                 {syncFiMut.isLoading ? 'Sincronizando...' : 'Sincronizar meta FI'}
               </button>
             </div>
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-center">
-              <p className="text-lg mb-1">📈</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Inversión mínima</p>
-              <p className="text-sm font-bold text-green-700 dark:text-green-300">${fmt(summary.plan.minMonthlyInvestment)}/mes</p>
+            <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
+              <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INVERSIÓN MÍN.</p>
+              <p className="font-card-title text-card-title text-success">${fmt(summary.plan.minMonthlyInvestment)}/mes</p>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-center">
-              <p className="text-lg mb-1">🛡️</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Fondo de emergencia</p>
-              <p className="text-sm font-bold text-blue-700 dark:text-blue-300">${fmt(summary.plan.emergencyFundTarget)}</p>
-              <a href="/fondo-emergencia" className="mt-2 block text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                Ver fondo de emergencia →
+            <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
+              <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">FONDO EMERGENCIA</p>
+              <p className="font-card-title text-card-title text-primary mb-2">${fmt(summary.plan.emergencyFundTarget)}</p>
+              <a href="/emergency-fund" className="font-caption text-caption text-primary hover:underline">
+                Ver fondo →
               </a>
             </div>
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-3 text-center">
-              <p className="text-lg mb-1">🎉</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ocio/mes</p>
-              <p className="text-sm font-bold text-amber-700 dark:text-amber-300">${fmt(summary.plan.entertainmentBudget)}</p>
+            <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
+              <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">OCIO/MES</p>
+              <p className="font-card-title text-card-title text-warning">${fmt(summary.plan.entertainmentBudget)}</p>
             </div>
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-center">
-              <p className="text-lg mb-1">🏠</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tope gastos fijos</p>
-              <p className="text-sm font-bold text-red-700 dark:text-red-300">${fmt(summary.plan.fixedExpensesCap)}</p>
+            <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
+              <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">TOPE GASTOS FIJOS</p>
+              <p className="font-card-title text-card-title text-danger">${fmt(summary.plan.fixedExpensesCap)}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* ── Expenses by category ── */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-gray-900 dark:text-white">💸 Detalle de Gastos por Categoría</h2>
-        <button onClick={() => setShowCategoryModal(true)} className="flex items-center gap-1 px-3 py-1.5 text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-section-title text-section-title text-on-surface">Detalle de Gastos por Categoría</h2>
+        <button
+          onClick={() => setShowCategoryModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 font-label-upper text-label-upper text-primary border border-primary/30 hover:bg-primary/5 rounded-lg transition-colors"
+        >
           <Plus size={12} /> Nueva categoría
         </button>
       </div>
 
       {categories.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Sin categorías de gastos. Agregá una para empezar.</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-border-light p-10 text-center">
+          <p className="font-body-default text-outline">Sin categorías de gastos. Agregá una para empezar.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -644,17 +805,14 @@ export default function PresupuestoPage() {
           <div><label className="label">Nombre</label><input className="input" value={incomeForm.name} onChange={e => setIncomeForm({ ...incomeForm, name: e.target.value })} placeholder="Sueldo, Freelance..." required /></div>
           <div>
             <label className="label">Tipo de ingreso</label>
-            <select
-              className="input"
-              value={incomeForm.type}
-              onChange={e => setIncomeForm({ ...incomeForm, type: e.target.value })}
-            >
-              <option value="salario_estatal">Salario estatal</option>
-              <option value="tcp">Trabajo por cuenta propia (TCP)</option>
-              <option value="remesas">Remesas</option>
-              <option value="alquiler">Alquiler</option>
-              <option value="mipyme">Negocio MIPYME</option>
-              <option value="otro">Otro</option>
+            <select className="input" value={incomeForm.type} onChange={e => setIncomeForm({ ...incomeForm, type: e.target.value })}>
+              <option value="salary">Salario</option>
+              <option value="investment">Inversiones</option>
+              <option value="business">Negocio / Emprendimiento</option>
+              <option value="rental">Alquiler</option>
+              <option value="freelance">Freelance / Independiente</option>
+              <option value="extras">Ingresos extras</option>
+              <option value="other">Otro</option>
             </select>
           </div>
           <div><label className="label">Monto mensual</label><input type="number" step="0.01" min="0" className="input" value={incomeForm.amount} onChange={e => setIncomeForm({ ...incomeForm, amount: e.target.value })} placeholder="0.00" required /></div>
@@ -667,7 +825,7 @@ export default function PresupuestoPage() {
 
       <Modal isOpen={showCategoryModal} onClose={() => { setShowCategoryModal(false); setCategoryForm({ name: '' }); }} title="Nueva categoría de gastos">
         <form onSubmit={e => { e.preventDefault(); addCategoryMut.mutate(categoryForm); }} className="space-y-4">
-          <div><label className="label">Nombre</label><input className="input" value={categoryForm.name} onChange={e => setCategoryForm({ name: e.target.value })} placeholder="🏡 Casa, 🚗 Transporte..." required /></div>
+          <div><label className="label">Nombre</label><input className="input" value={categoryForm.name} onChange={e => setCategoryForm({ name: e.target.value })} placeholder="Casa, Transporte..." required /></div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => setShowCategoryModal(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" disabled={addCategoryMut.isLoading} className="btn-primary">{addCategoryMut.isLoading ? 'Creando...' : 'Crear categoría'}</button>
@@ -678,16 +836,16 @@ export default function PresupuestoPage() {
       <Modal isOpen={showSavingsModal} onClose={() => setShowSavingsModal(false)} title="Editar meta de ahorro">
         <div className="space-y-5">
           <div>
-            <label className="label">Meta de ahorro — <span className="font-bold text-blue-600 dark:text-blue-400">{savingsTargetEdit}%</span></label>
+            <label className="label">Meta de ahorro — <span className="font-bold text-primary">{savingsTargetEdit}%</span></label>
             <input
               type="range" min="0" max="50" step="1"
               value={savingsTargetEdit}
               onChange={e => setSavingsTargetEdit(parseInt(e.target.value))}
-              className="w-full accent-blue-600 mt-2"
+              className="w-full accent-primary mt-2"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1"><span>0%</span><span>25%</span><span>50%</span></div>
+            <div className="flex justify-between font-caption text-caption text-outline mt-1"><span>0%</span><span>25%</span><span>50%</span></div>
           </div>
-          <div className={`text-xs font-medium px-3 py-2 rounded-lg ${savingsRating(savingsTargetEdit).color} bg-gray-50 dark:bg-gray-800`}>
+          <div className={`font-body-small text-body-small px-3 py-2 rounded-lg bg-surface-container ${savingsRating(savingsTargetEdit).color}`}>
             {savingsRating(savingsTargetEdit).emoji} {savingsRating(savingsTargetEdit).text}
           </div>
           <div className="flex justify-end gap-3 pt-1">

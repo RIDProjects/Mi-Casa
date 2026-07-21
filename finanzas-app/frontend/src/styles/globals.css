@@ -2,98 +2,334 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* ═══════════════════════════════════════════════════════════
+     Pro-Ledger Design Tokens — switch per mode via CSS vars
+     ═══════════════════════════════════════════════════════════ */
+  :root {
+    /* Pro-Ledger Financial (Light) */
+    --ds-surface:          #f9f9ff;
+    --ds-surface-dim:      #cfdaf2;
+    --ds-surface-bright:   #f9f9ff;
+    --ds-surface-lowest:   #ffffff;
+    --ds-surface-low:      #f0f3ff;
+    --ds-surface-container:#e7eeff;
+    --ds-surface-high:     #dee8ff;
+    --ds-surface-highest:  #d8e3fb;
+    --ds-surface-variant:  #d8e3fb;
+    --ds-surface-gray:     #f8fafc;   /* table header rows */
+    --ds-border-light:     #e2e8f0;   /* card borders */
+    --ds-on-surface:       #111c2d;
+    --ds-on-surface-variant:#434655;
+    --ds-outline:          #737686;
+    --ds-outline-variant:  #c3c6d7;
+    --ds-primary:          #004ac6;
+    --ds-inverse-surface:  #263143;
+    --ds-inverse-on-surface:#ecf1ff;
+    --ds-inverse-primary:  #b4c5ff;
+    --ds-surface-tint:     #0053db;
+    /* Advisory panels — always dark regardless of theme */
+    --ds-advisory-bg:      #1e2c42;
+    --ds-advisory-text:    #ecf1ff;
+    --ds-advisory-text-dim:#b4c5ff;
+    --ease-premium:        cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-drawer:         cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .dark {
+    /* Pro-Ledger Night (Dark) */
+    --ds-surface:          #0b1326;
+    --ds-surface-dim:      #0b1326;
+    --ds-surface-bright:   #31394d;
+    --ds-surface-lowest:   #060e20;
+    --ds-surface-low:      #131b2e;
+    --ds-surface-container:#171f33;
+    --ds-surface-high:     #222a3d;
+    --ds-surface-highest:  #2d3449;
+    --ds-surface-variant:  #2d3449;
+    --ds-surface-gray:     #171f33;
+    --ds-border-light:     #2d3449;
+    --ds-on-surface:       #dae2fd;
+    --ds-on-surface-variant:#c3c6d7;
+    --ds-outline:          #8d90a0;
+    --ds-outline-variant:  #434655;
+    --ds-primary:          #b4c5ff;
+    --ds-inverse-surface:  #dae2fd;
+    --ds-inverse-on-surface:#283044;
+    --ds-inverse-primary:  #0053db;
+    --ds-surface-tint:     #b4c5ff;
+    /* Advisory panels stay dark in dark mode too — slightly lighter than bg */
+    --ds-advisory-bg:      #1e2c42;
+    --ds-advisory-text:    #dae2fd;
+    --ds-advisory-text-dim:#b4c5ff;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background-color: var(--ds-surface);
+    color: var(--ds-on-surface);
+  }
+}
+
 @layer components {
-  /* Cards - white in light mode, dark gray in dark mode */
-  .card { 
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6;
-    @apply transition-colors duration-200;
+  /* ── Cards ─────────────────────────────────────────────────
+     Light: white bg + outline-variant border
+     Dark:  surface-container-low bg, no visible border       */
+  .card {
+    background: var(--ds-surface-lowest);
+    border: 1px solid var(--ds-outline-variant);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
   }
-  
-  /* Primary button */
-  .btn-primary { 
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer;
-    @apply dark:bg-blue-600 dark:hover:bg-blue-700;
+  .card:hover { border-color: #2563eb; }
+  .dark .card {
+    background: var(--ds-surface-low);
+    border-color: transparent;
   }
-  
-  /* Secondary button */
-  .btn-secondary { 
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer;
-    @apply dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200;
+  .dark .card:hover {
+    box-shadow: inset 0 0 0 1px rgba(180,197,255,0.12);
   }
-  
-  /* Danger button */
-  .btn-danger { 
-    @apply bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 cursor-pointer;
+
+  /* ── Buttons ─────────────────────────────────────────────── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #2563eb;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    transition: transform 120ms var(--ease-premium), background 150ms ease, box-shadow 150ms ease;
+    box-shadow: 0 1px 2px rgba(37,99,235,0.3);
   }
-  
-  /* Input fields */
-  .input { 
-    @apply w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm;
-    @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100;
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
-    @apply placeholder-gray-400 dark:placeholder-gray-500;
+  .btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37,99,235,0.4);
   }
-  
-  /* Labels */
-  .label { 
-    @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1; 
+  .btn-primary:active:not(:disabled) { transform: scale(0.97); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--ds-primary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 9px 19px;
+    border-radius: 8px;
+    border: 1px solid var(--ds-primary);
+    cursor: pointer;
+    transition: transform 120ms var(--ease-premium), background 150ms ease;
   }
-  
-  /* Skeleton loader */
+  .btn-secondary:hover:not(:disabled) { background: rgba(37,99,235,0.06); }
+  .btn-secondary:active { transform: scale(0.97); }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: transform 120ms var(--ease-premium), background 150ms ease;
+  }
+  .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+  .btn-danger:active:not(:disabled) { transform: scale(0.97); }
+  .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── Inputs ────────────────────────────────────────────────
+     Light: white bg + 1px outline-variant
+     Dark: surface-container bg + outline-variant             */
+  .input {
+    width: 100%;
+    background: var(--ds-surface-lowest);
+    border: 1px solid var(--ds-outline-variant);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--ds-on-surface);
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+  .input::placeholder { color: var(--ds-outline); }
+  .dark .input {
+    background: var(--ds-surface-container);
+    border-color: var(--ds-outline-variant);
+  }
+  .input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+
+  /* ── Labels ─────────────────────────────────────────────── */
+  .label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ds-on-surface-variant);
+    margin-bottom: 6px;
+  }
+
+  /* ── Skeleton ───────────────────────────────────────────── */
   .skeleton {
-    @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
+    background: var(--ds-surface-high);
+    border-radius: 6px;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  /* Badges */
+  /* ── Status Chips ───────────────────────────────────────── */
   .badge-ok {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300;
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 9999px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(22,163,74,0.12); color: #16a34a;
   }
+  .dark .badge-ok  { background: rgba(22,163,74,0.18); color: #4ade80; }
+
   .badge-last {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300;
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 9999px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(217,119,6,0.12); color: #b45309;
   }
+  .dark .badge-last { background: rgba(217,119,6,0.18); color: #fbbf24; }
+
   .badge-out {
-    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300;
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 9999px;
+    font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    background: rgba(220,38,38,0.10); color: #dc2626;
   }
+  .dark .badge-out  { background: rgba(220,38,38,0.18); color: #f87171; }
+
+  /* ── Fin typography ─────────────────────────────────────── */
+  .fin-number {
+    font-family: 'Courier Prime', monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.01em;
+  }
+  .fin-hero {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    font-weight: 800;
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── Icon containers ────────────────────────────────────── */
+  .icon-emerald { padding:10px; border-radius:8px; background:rgba(22,163,74,0.10); color:#16a34a; }
+  .icon-blue    { padding:10px; border-radius:8px; background:rgba(37,99,235,0.10); color:#2563eb; }
+  .icon-red     { padding:10px; border-radius:8px; background:rgba(220,38,38,0.10); color:#dc2626; }
+  .icon-amber   { padding:10px; border-radius:8px; background:rgba(217,119,6,0.10); color:#d97706; }
+  .icon-purple  { padding:10px; border-radius:8px; background:rgba(124,58,237,0.10);color:#7c3aed; }
+
+  .dark .icon-emerald { background:rgba(74,222,128,0.10); color:#4ade80; }
+  .dark .icon-blue    { background:rgba(180,197,255,0.10); color:#b4c5ff; }
+  .dark .icon-red     { background:rgba(248,113,113,0.10); color:#f87171; }
+  .dark .icon-amber   { background:rgba(251,191,36,0.10); color:#fbbf24; }
+  .dark .icon-purple  { background:rgba(167,139,250,0.10); color:#a78bfa; }
+
+  /* ── Formula box ─────────────────────────────────────────── */
+  .formula-box {
+    background: #111827;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    color: #d1d5db;
+    line-height: 1.4;
+  }
+
+  /* ── Tables ──────────────────────────────────────────────── */
+  table thead th {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ds-outline);
+    background: var(--ds-surface-gray);
+    border-bottom: 1px solid var(--ds-outline-variant);
+    padding: 10px 14px;
+  }
+  table tbody td {
+    font-size: 14px;
+    color: var(--ds-on-surface);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    padding: 12px 14px;
+  }
+  table tbody tr:hover { background: var(--ds-surface-container-low, var(--ds-surface-low)); }
+  .dark table thead th {
+    background: var(--ds-surface-low);
+    border-bottom-color: var(--ds-outline-variant);
+    color: var(--ds-outline);
+  }
+  .dark table tbody td { border-bottom-color: var(--ds-surface-container); }
+  .dark table tbody tr:hover { background: var(--ds-surface-container); }
 }
 
-@media print {
-  nav, aside, button, .no-print, [role="navigation"] { display: none !important; }
-  main { margin: 0 !important; padding: 0 !important; width: 100% !important; }
-  body { background: white !important; color: black !important; }
-  .dark body { background: white !important; color: black !important; }
-  .page-break { page-break-before: always; }
-  table { border-collapse: collapse; width: 100%; }
-  th, td { border: 1px solid #ccc; padding: 4px 8px; }
-}
-
-/* Dark mode specific overrides for tables */
 @layer utilities {
-  .dark table thead {
-    @apply bg-gray-700;
-  }
+  .animate-fade-in   { animation: modalIn  220ms cubic-bezier(0.23,1,0.32,1) both; }
+  .animate-fade-up   { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) both; }
+  .animate-stagger-1 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 30ms  both; }
+  .animate-stagger-2 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 60ms  both; }
+  .animate-stagger-3 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 90ms  both; }
+  .animate-backdrop-in { animation: backdropIn 200ms ease-out both; }
+  .animate-slide-in    { animation: slideIn    280ms cubic-bezier(0.32,0.72,0,1) both; }
 
-  .dark table th {
-    @apply text-gray-300;
-  }
+  @keyframes modalIn    { from{opacity:0;transform:scale(0.96) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes fadeUp     { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes backdropIn { from{opacity:0} to{opacity:1} }
+  @keyframes slideIn    { from{transform:translateX(-100%)} to{transform:translateX(0)} }
+  @keyframes pulse      { 0%,100%{opacity:1} 50%{opacity:0.4} }
+}
 
-  .dark table td {
-    @apply text-gray-300;
-  }
+/* ── Print ────────────────────────────────────────────────── */
+@media print {
+  nav, aside, button, .no-print { display: none !important; }
+  main  { margin: 0 !important; padding: 0 !important; }
+  body  { background: #ffffff !important; color: #111c2d !important; }
+  .card { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #e2e8f0; padding: 6px 10px; }
+}
 
-  .dark table tbody tr {
-    @apply hover:bg-gray-700;
-  }
-
-  .dark .card th {
-    @apply text-gray-400 uppercase tracking-wider;
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.15s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

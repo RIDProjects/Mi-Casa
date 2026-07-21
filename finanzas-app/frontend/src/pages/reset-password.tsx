@@ -34,11 +34,11 @@ export default function ResetPassword() {
 
   if (!token && typeof window !== 'undefined') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
-          <XCircle size={48} className="text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Enlace inválido</h2>
-          <p className="text-gray-500 text-sm mb-6">Este enlace de recuperación no es válido o ya fue utilizado.</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+          <XCircle size={48} className="text-danger mx-auto mb-4" />
+          <h2 className="font-section-title text-[22px] text-on-surface mb-3">Enlace inválido</h2>
+          <p className="text-on-surface-variant text-sm mb-6">Este enlace de recuperación no es válido o ya fue utilizado.</p>
           <button onClick={() => router.push('/forgot-password')} className="btn-primary w-full">
             Solicitar nuevo enlace
           </button>
@@ -48,23 +48,24 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🏠</div>
-          <h1 className="text-3xl font-bold text-white">Mi Casa Pro</h1>
+          <h1 className="font-module-title text-[28px] text-primary">Mi Casa Pro</h1>
+          <p className="font-caption text-caption text-on-surface-variant mt-1">Gestión Financiera del Hogar</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
           {done ? (
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <CheckCircle size={32} className="text-green-600 dark:text-green-400" />
+                  <CheckCircle size={32} className="text-success" />
                 </div>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">¡Contraseña actualizada!</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+              <h2 className="font-section-title text-[22px] text-on-surface mb-3">¡Contraseña actualizada!</h2>
+              <p className="text-on-surface-variant text-sm mb-6">
                 Ya podés iniciar sesión con tu nueva contraseña.
               </p>
               <button onClick={() => router.push('/login')} className="btn-primary w-full">
@@ -73,8 +74,8 @@ export default function ResetPassword() {
             </div>
           ) : (
             <>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Nueva contraseña</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <h2 className="font-section-title text-[22px] text-on-surface mb-2">Nueva contraseña</h2>
+              <p className="font-body-default text-on-surface-variant mb-6">
                 Elegí una contraseña segura con al menos 6 caracteres.
               </p>
 
@@ -91,11 +92,11 @@ export default function ResetPassword() {
                       required
                     />
                     <button type="button" onClick={() => setShowPw(!showPw)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant">
                       {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  {weak && <p className="text-xs text-amber-600 mt-1">Demasiado corta</p>}
+                  {weak && <p className="text-xs text-warning mt-1">Demasiado corta</p>}
                 </div>
 
                 <div>
@@ -108,12 +109,12 @@ export default function ResetPassword() {
                     placeholder="Repetí la contraseña"
                     required
                   />
-                  {mismatch && <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden</p>}
+                  {mismatch && <p className="text-xs text-danger mt-1">Las contraseñas no coinciden</p>}
                 </div>
 
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
-                    <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                    <p className="text-danger text-sm">{error}</p>
                   </div>
                 )}
 

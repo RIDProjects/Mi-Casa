@@ -182,7 +182,7 @@ export default function MonedasPage() {
             return (
               <div
                 key={currency.id}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+                className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   {/* Currency info */}
@@ -192,21 +192,21 @@ export default function MonedasPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-semibold text-on-surface">
                           {currency.currencyCode}
                         </span>
                         {currency.isBase && (
                           <Badge variant="green">Base</Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{currency.currencyName}</p>
+                      <p className="text-xs text-on-surface-variant truncate">{currency.currencyName}</p>
                     </div>
                   </div>
 
                   {/* Rate field — only for non-base currencies */}
                   {!currency.isBase && baseCurrency && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      <span className="text-xs text-on-surface-variant whitespace-nowrap">
                         1 {currency.currencyCode} =
                       </span>
                       <input
@@ -220,7 +220,7 @@ export default function MonedasPage() {
                           setRateInputs(r => ({ ...r, [currency.currencyCode]: e.target.value }))
                         }
                       />
-                      <span className="text-xs text-gray-500 dark:text-gray-400">{baseCurrency.currencyCode}</span>
+                      <span className="text-xs text-on-surface-variant">{baseCurrency.currencyCode}</span>
                       <button
                         onClick={() => handleSaveRate(currency)}
                         disabled={loading[`rate-${currency.id}`] || !rateInput}
@@ -248,7 +248,7 @@ export default function MonedasPage() {
                       onClick={() => handleRemove(currency)}
                       disabled={currency.isBase || loading[`del-${currency.id}`]}
                       title={currency.isBase ? 'No se puede eliminar la moneda base' : 'Eliminar moneda'}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="p-1.5 rounded-lg text-outline hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -257,7 +257,7 @@ export default function MonedasPage() {
 
                 {/* Current rate display */}
                 {!currency.isBase && currentRate && !rateInput && (
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2 pl-13">
+                  <p className="text-xs text-outline mt-2 pl-13">
                     Tasa actual: 1 {currency.currencyCode} = {currentRate} {baseCurrency?.currencyCode}
                   </p>
                 )}
@@ -293,9 +293,9 @@ export default function MonedasPage() {
           </div>
 
           <div className="relative flex items-center gap-3">
-            <div className="flex-1 border-t border-gray-200 dark:border-gray-600" />
-            <span className="text-xs text-gray-400">o ingresá manualmente</span>
-            <div className="flex-1 border-t border-gray-200 dark:border-gray-600" />
+            <div className="flex-1 border-t border-outline-variant" />
+            <span className="text-xs text-outline">o ingresá manualmente</span>
+            <div className="flex-1 border-t border-outline-variant" />
           </div>
 
           <div>

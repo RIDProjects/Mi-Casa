@@ -41,7 +41,7 @@ export default function EmergencyFundPage() {
   const canCreate = hasPermission('emergency_fund', 'create');
   const canEdit = hasPermission('emergency_fund', 'edit');
   const canDelete = hasPermission('emergency_fund', 'delete');
-  
+
   const [showModal, setShowModal] = useState(false);
   const [editFund, setEditFund] = useState<any>(null);
   const [selectedFund, setSelectedFund] = useState<any>(null);
@@ -147,7 +147,7 @@ export default function EmergencyFundPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Fund selector */}
         <div className="space-y-3">
-          <h2 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wider">Mis Fondos</h2>
+          <h2 className="font-semibold text-on-surface text-sm uppercase tracking-wider">Mis Fondos</h2>
           {funds.map((f: any) => {
             const fCalc = {
               totalMonthlyExpenses: f.categories?.reduce((sum: number, c: any) => sum + Number(c.monthlyAmount || 0), 0) || 0,
@@ -158,14 +158,14 @@ export default function EmergencyFundPage() {
             fCalc.optimalFund = fCalc.totalMonthlyExpenses * f.targetMonths;
             fCalc.minimumFund = fCalc.totalMonthlyExpenses * f.minimumMonths;
             fCalc.monthlySavingsRequired = fCalc.optimalFund / f.savingPeriodMonths;
-            
+
             return (
               <div key={f.id} onClick={() => setSelectedFund(f)}
-                className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer p-4 transition-all hover:shadow-md ${selectedFund?.id === f.id || (!selectedFund && funds[0]?.id === f.id) ? 'ring-2 ring-blue-500' : ''}`}>
+                className={`bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant cursor-pointer p-4 transition-all hover:shadow-md ${selectedFund?.id === f.id || (!selectedFund && funds[0]?.id === f.id) ? 'ring-2 ring-blue-500' : ''}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <PiggyBank size={18} className="text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{f.name}</span>
+                    <PiggyBank size={18} className="text-primary" />
+                    <span className="text-sm font-semibold text-on-surface">{f.name}</span>
                   </div>
                   <div onClick={e => e.stopPropagation()}>
                     {(canEdit || canDelete) ? (
@@ -176,21 +176,21 @@ export default function EmergencyFundPage() {
                         canDelete={canDelete}
                       />
                     ) : (
-                      <span className="text-xs text-gray-400">Solo vista</span>
+                      <span className="text-xs text-outline">Solo vista</span>
                     )}
                   </div>
                 </div>
                 {fCalc && (
-                  <div className="mt-2 text-xs text-gray-400 dark:text-gray-500">
-                    <p>Óptimo: <strong className="text-gray-700 dark:text-gray-300">${fmt(fCalc.optimalFund)}</strong></p>
-                    <p>Ahorro: <strong className="text-gray-700 dark:text-gray-300">${fmt(fCalc.monthlySavingsRequired)}/mes</strong></p>
+                  <div className="mt-2 text-xs text-outline">
+                    <p>Óptimo: <strong className="text-on-surface">${fmt(fCalc.optimalFund)}</strong></p>
+                    <p>Ahorro: <strong className="text-on-surface">${fmt(fCalc.monthlySavingsRequired)}/mes</strong></p>
                   </div>
                 )}
               </div>
             );
           })}
           {funds.length === 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-center text-gray-400 dark:text-gray-500 py-8 text-sm">
+            <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant text-center text-outline py-8 text-sm">
               Sin calculadoras aún
             </div>
           )}
@@ -201,10 +201,10 @@ export default function EmergencyFundPage() {
           {fund && calc ? (
             <>
               {/* Results - Like Excel */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-6">
-                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">💰 Calcula tu Fondo de Emergencia</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">¡Empieza aquí!</p>
+              <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant mb-6">
+                <div className="px-4 py-3 border-b border-outline-variant">
+                  <h2 className="text-lg font-semibold text-on-surface">💰 Calcula tu Fondo de Emergencia</h2>
+                  <p className="font-body-default text-on-surface-variant">¡Empieza aquí!</p>
                 </div>
 
                 {/* Main Results */}
@@ -221,12 +221,12 @@ export default function EmergencyFundPage() {
 
                   {/* Months Display */}
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">¿En cuántos meses lo harás?</label>
-                    <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg">
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{fund.savingPeriodMonths}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">meses</span>
+                    <label className="block text-sm font-medium text-on-surface mb-2">¿En cuántos meses lo harás?</label>
+                    <div className="inline-flex items-center gap-2 px-3 py-2 bg-surface-container-low border border-outline-variant rounded-lg">
+                      <span className="text-lg font-bold text-primary">{fund.savingPeriodMonths}</span>
+                      <span className="text-sm text-on-surface-variant">meses</span>
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Editá el valor desde el panel lateral</p>
+                    <p className="text-xs text-outline mt-1">Editá el valor desde el panel lateral</p>
                   </div>
 
                   {/* Results Display */}
@@ -281,39 +281,39 @@ export default function EmergencyFundPage() {
                   {coverage && (
                     <div className={`rounded-xl p-4 border mb-6 ${coverage.status === 'safe' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' : coverage.status === 'low' ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700' : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'}`}>
                       <p className="font-semibold text-sm">Cobertura: {coverage.monthsCovered.toFixed(1)} meses</p>
-                      <p className="text-xs text-gray-500 mt-1">Meta: 6 meses | Gastos promedio: ${fmt(coverage.monthlyExpenses)}/mes</p>
-                      <div className="mt-2 h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                      <p className="text-xs text-on-surface-variant mt-1">Meta: 6 meses | Gastos promedio: ${fmt(coverage.monthlyExpenses)}/mes</p>
+                      <div className="mt-2 h-2 bg-surface-container rounded-full">
                         <div className="h-2 bg-green-500 rounded-full" style={{ width: `${Math.min(100, (coverage.monthsCovered / 6) * 100)}%` }} />
                       </div>
                     </div>
                   )}
 
                   {/* Categories Table - Like Excel */}
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">Tus gastos mensuales por categoría</h3>
+                  <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+                    <div className="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
+                      <h3 className="font-semibold text-on-surface">Tus gastos mensuales por categoría</h3>
                     </div>
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 dark:bg-gray-700 border-b">
+                      <thead className="bg-surface-container-low border-b">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Categoría</th>
-                          <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Monto mensual</th>
+                          <th className="px-4 py-2 text-left text-xs font-semibold text-on-surface-variant uppercase">Categoría</th>
+                          <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Monto mensual</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                      <tbody className="divide-y divide-outline-variant">
                         {fund.categories?.map((cat: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{cat.name}</td>
-                            <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">
-                              {Number(cat.monthlyAmount) > 0 ? `$${fmt(cat.monthlyAmount)}` : <span className="text-gray-400">-</span>}
+                          <tr key={idx} className="hover:bg-surface-gray">
+                            <td className="px-4 py-3 text-on-surface">{cat.name}</td>
+                            <td className="px-4 py-3 text-right font-medium text-on-surface">
+                              {Number(cat.monthlyAmount) > 0 ? `$${fmt(cat.monthlyAmount)}` : <span className="text-outline">-</span>}
                             </td>
                           </tr>
                         ))}
                       </tbody>
-                      <tfoot className="bg-gray-50 dark:bg-gray-700 border-t-2 font-semibold">
+                      <tfoot className="bg-surface-container-low border-t-2 font-semibold">
                         <tr>
-                          <td className="px-4 py-3 text-gray-900 dark:text-white">TOTAL GASTOS MENSUALES</td>
-                          <td className="px-4 py-3 text-right text-gray-900 dark:text-white text-base">${fmt(totalMonthlyExpenses)}</td>
+                          <td className="px-4 py-3 text-on-surface">TOTAL GASTOS MENSUALES</td>
+                          <td className="px-4 py-3 text-right text-on-surface text-base">${fmt(totalMonthlyExpenses)}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -322,10 +322,10 @@ export default function EmergencyFundPage() {
               </div>
             </>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-center h-64">
+            <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant flex items-center justify-center h-64">
               <div className="text-center">
-                <PiggyBank size={40} className="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                <p className="text-gray-400 dark:text-gray-500 mb-4">Crea tu primera calculadora de fondo de emergencia</p>
+                <PiggyBank size={40} className="mx-auto mb-3 text-outline" />
+                <p className="text-on-surface-variant mb-4">Crea tu primera calculadora de fondo de emergencia</p>
                 <button onClick={() => { setForm(defaultForm); setEditFund(null); setShowModal(true); }} className="btn-primary">
                   <Plus size={16} className="inline mr-2" />Crear ahora
                 </button>
@@ -370,10 +370,10 @@ export default function EmergencyFundPage() {
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Gastos mensuales por categoría</label>
-              <button type="button" onClick={addCategory} className="text-sm text-blue-600 hover:text-blue-700 font-medium">+ Agregar</button>
+              <label className="block text-sm font-medium text-on-surface">Gastos mensuales por categoría</label>
+              <button type="button" onClick={addCategory} className="text-sm text-primary hover:text-blue-700 font-medium">+ Agregar</button>
             </div>
-            <div className="space-y-2 max-h-72 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-xl p-3">
+            <div className="space-y-2 max-h-72 overflow-y-auto border border-outline-variant rounded-xl p-3">
               {form.categories.map((cat: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-2">
                   <input className="input flex-1 text-sm" placeholder="Categoría" value={cat.name} onChange={e => updateCategory(idx, 'name', e.target.value)} />
@@ -382,7 +382,7 @@ export default function EmergencyFundPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-2 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <div className="mt-2 text-right text-sm font-semibold text-on-surface">
               Total: ${fmt(form.categories.reduce((s: number, c: any) => s + (Number(c.monthlyAmount) || 0), 0))}
             </div>
           </div>

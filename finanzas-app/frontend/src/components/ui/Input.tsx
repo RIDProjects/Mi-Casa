@@ -10,27 +10,26 @@ export function Input({ label, error, hint, id, className, ...props }: InputProp
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={id} className="block font-label-upper text-label-upper text-on-surface-variant uppercase mb-1.5">
           {label}
         </label>
       )}
       <input
         id={id}
         className={[
-          'w-full px-3 py-2 border rounded-lg text-sm transition-colors',
-          'bg-white dark:bg-gray-700',
-          'text-gray-900 dark:text-white',
-          'placeholder-gray-400 dark:placeholder-gray-500',
-          'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+          'w-full px-4 py-3 bg-surface-container-lowest border rounded-xl',
+          'font-body-default text-body-default text-on-surface',
+          'focus:ring-1 outline-none transition-all',
+          'placeholder:text-outline',
           error
-            ? 'border-red-500 dark:border-red-400'
-            : 'border-gray-300 dark:border-gray-600',
+            ? 'border-danger focus:border-danger focus:ring-danger'
+            : 'border-outline-variant focus:border-primary focus:ring-primary',
           className ?? '',
         ].join(' ')}
         {...props}
       />
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-      {hint && !error && <p className="text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
+      {error && <p className="font-body-small text-body-small text-danger">{error}</p>}
+      {hint && !error && <p className="font-body-small text-body-small text-outline">{hint}</p>}
     </div>
   );
 }

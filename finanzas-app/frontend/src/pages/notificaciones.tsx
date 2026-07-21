@@ -63,16 +63,16 @@ export default function NotificacionesPage() {
         <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between">
           <div>
             <p className="font-semibold text-blue-800 dark:text-blue-200 text-sm">Activar notificaciones push</p>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">Recibí alertas de presupuesto y vencimientos en tu dispositivo</p>
+            <p className="text-xs text-primary mt-0.5">Recibí alertas de presupuesto y vencimientos en tu dispositivo</p>
           </div>
-          <button onClick={requestPermission} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+          <button onClick={requestPermission} className="px-3 py-1.5 bg-primary-container text-on-primary text-sm rounded-lg hover:opacity-90">
             Activar
           </button>
         </div>
       )}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <Bell size={24} /> Notificaciones
             {unreadCount > 0 && (
               <span className="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
@@ -80,13 +80,13 @@ export default function NotificacionesPage() {
               </span>
             )}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Alertas y avisos del sistema</p>
+          <p className="text-on-surface-variant mt-1">Alertas y avisos del sistema</p>
         </div>
         {unreadCount > 0 && (
           <button
             onClick={() => markAllReadMut.mutate()}
             disabled={markAllReadMut.isLoading}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-variant rounded-lg transition-colors"
           >
             <CheckCheck size={16} /> Marcar todas como leídas
           </button>
@@ -102,7 +102,7 @@ export default function NotificacionesPage() {
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filter === f.key
                 ? 'bg-primary-600 text-white'
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                : 'bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-variant'
             }`}
           >
             {f.label}
@@ -118,7 +118,7 @@ export default function NotificacionesPage() {
       {isLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+            <div key={i} className="h-20 bg-surface-container rounded-xl animate-pulse" />
           ))}
         </div>
       )}
@@ -126,7 +126,7 @@ export default function NotificacionesPage() {
       {isError && (
         <div className="flex flex-col items-center justify-center h-48 gap-4">
           <AlertTriangle size={40} className="text-red-400" />
-          <p className="text-gray-500 dark:text-gray-400">No se pudieron cargar las notificaciones</p>
+          <p className="text-on-surface-variant">No se pudieron cargar las notificaciones</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
           </button>
@@ -136,8 +136,8 @@ export default function NotificacionesPage() {
       {!isLoading && !isError && filtered.length === 0 && (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">🔔</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">No hay notificaciones</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <h3 className="text-lg font-semibold text-on-surface">No hay notificaciones</h3>
+          <p className="font-body-default text-on-surface-variant mt-1">
             {filter === 'no_leidas' ? 'No tenés notificaciones sin leer' : 'No hay notificaciones en esta categoría'}
           </p>
         </div>
@@ -149,9 +149,9 @@ export default function NotificacionesPage() {
             <div
               key={n.id}
               onClick={() => { if (!n.isRead) markReadMut.mutate(n.id); }}
-              className={`bg-white dark:bg-gray-800 rounded-xl border p-4 cursor-pointer transition-all hover:shadow-sm ${
+              className={`bg-surface-container-lowest rounded-xl border p-4 cursor-pointer transition-all hover:shadow-sm ${
                 n.isRead
-                  ? 'border-gray-200 dark:border-gray-700 opacity-70'
+                  ? 'border-outline-variant opacity-70'
                   : 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10'
               }`}
             >
@@ -161,21 +161,21 @@ export default function NotificacionesPage() {
                     <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                   )}
                   <div className="flex-1">
-                    <p className={`text-sm ${n.isRead ? 'text-gray-600 dark:text-gray-400' : 'font-medium text-gray-900 dark:text-gray-100'}`}>
+                    <p className={`text-sm ${n.isRead ? 'text-on-surface-variant' : 'font-medium text-on-surface'}`}>
                       {n.message ?? n.title ?? 'Notificación'}
                     </p>
                     {n.body && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.body}</p>
+                      <p className="text-xs text-on-surface-variant mt-0.5">{n.body}</p>
                     )}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   {n.type && (
-                    <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 mb-1 capitalize">
+                    <span className="inline-block px-2 py-0.5 text-xs rounded-full bg-surface-container text-on-surface-variant mb-1 capitalize">
                       {n.type}
                     </span>
                   )}
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-xs text-outline">
                     {n.createdAt ? timeAgo(n.createdAt) : ''}
                   </p>
                 </div>

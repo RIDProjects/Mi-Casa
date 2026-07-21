@@ -21,7 +21,7 @@ const STRATEGY_META: Record<string, { label: string; subtitle: string; color: st
   minimum: {
     label: 'Solo mínimos',
     subtitle: 'Sin pago extra',
-    color: 'border-gray-300 dark:border-gray-600',
+    color: 'border-outline-variant',
     icon: '📉',
   },
   avalanche: {
@@ -62,18 +62,18 @@ export default function PayoffPage() {
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
           <TrendingDown size={24} /> Calculadora de Liquidación de Deudas
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">Compará estrategias para salir de deudas más rápido</p>
+        <p className="text-on-surface-variant mt-1">Compará estrategias para salir de deudas más rápido</p>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 mb-6 shadow-sm">
-        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 mb-6 shadow-sm">
+        <label className="block text-sm font-semibold text-on-surface mb-2">
           Pago extra mensual disponible
         </label>
         <div className="flex items-center gap-3">
-          <span className="text-gray-500 dark:text-gray-400 text-lg font-medium">$</span>
+          <span className="text-on-surface-variant text-lg font-medium">$</span>
           <input
             type="number"
             min="0"
@@ -84,18 +84,18 @@ export default function PayoffPage() {
             placeholder="0"
           />
           {isLoading && (
-            <span className="text-xs text-gray-400 dark:text-gray-500 animate-pulse">Calculando...</span>
+            <span className="text-xs text-outline animate-pulse">Calculando...</span>
           )}
         </div>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        <p className="text-xs text-outline mt-1">
           Este monto se aplica adicionalmente a los pagos mínimos de cada deuda
         </p>
       </div>
 
       {isError ? (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
-          <p className="text-gray-500 dark:text-gray-400">Error al calcular estrategias</p>
+          <AlertTriangle size={40} className="text-danger" />
+          <p className="text-on-surface-variant">Error al calcular estrategias</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
           </button>
@@ -103,8 +103,8 @@ export default function PayoffPage() {
       ) : !data && !isLoading ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">💸</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin deudas registradas</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Registrá tarjetas y créditos para calcular estrategias de pago</p>
+          <h3 className="text-lg font-semibold text-on-surface">Sin deudas registradas</h3>
+          <p className="text-sm text-on-surface-variant mt-1">Registrá tarjetas y créditos para calcular estrategias de pago</p>
         </div>
       ) : (
         <>
@@ -121,7 +121,7 @@ export default function PayoffPage() {
               return (
                 <div
                   key={key}
-                  className={`bg-white dark:bg-gray-800 rounded-xl border-2 ${meta.color} shadow-sm p-5 relative`}
+                  className={`bg-surface-container-lowest rounded-xl border-2 ${meta.color} shadow-sm p-5 relative`}
                 >
                   {isRecommended && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -131,28 +131,28 @@ export default function PayoffPage() {
                     </div>
                   )}
                   <div className="text-3xl mb-2">{meta.icon}</div>
-                  <h3 className="font-bold text-gray-900 dark:text-white">{meta.label}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">{meta.subtitle}</p>
+                  <h3 className="font-bold text-on-surface">{meta.label}</h3>
+                  <p className="text-xs text-on-surface-variant mb-4">{meta.subtitle}</p>
 
                   <div className="space-y-2">
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Tiempo total</p>
-                      <p className="font-semibold text-gray-900 dark:text-white text-sm">{fmtMonth(s.totalMonths ?? 0)}</p>
+                      <p className="text-xs text-on-surface-variant">Tiempo total</p>
+                      <p className="font-semibold text-on-surface text-sm">{fmtMonth(s.totalMonths ?? 0)}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Total intereses</p>
-                      <p className="font-semibold text-red-600 dark:text-red-400 text-sm">${fmt(s.totalInterest ?? 0)}</p>
+                      <p className="text-xs text-on-surface-variant">Total intereses</p>
+                      <p className="font-semibold text-danger text-sm">${fmt(s.totalInterest ?? 0)}</p>
                     </div>
                     {key !== 'minimum' && monthsSaved > 0 && (
-                      <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                        <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                      <div className="pt-2 border-t border-outline-variant">
+                        <p className="text-xs text-success font-medium">
                           {fmtMonth(monthsSaved)} menos que solo mínimos
                         </p>
                       </div>
                     )}
                     {key !== 'minimum' && interestSaved > 0 && (
                       <div>
-                        <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+                        <p className="text-xs text-success font-medium">
                           Ahorrás ${fmt(interestSaved)} en intereses
                         </p>
                       </div>
@@ -169,33 +169,33 @@ export default function PayoffPage() {
             const meta = STRATEGY_META[key];
 
             return (
-              <div key={key} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden mb-4">
-                <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+              <div key={key} className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden mb-4">
+                <div className="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
+                  <h2 className="font-label-upper text-label-upper text-on-surface-variant">
                     {meta.icon} Orden de pago — {meta.label}
                   </h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-600">
+                    <thead className="bg-surface-container-low border-b border-outline-variant">
                       <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Deuda</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Saldo</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Tasa</th>
-                        <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Liquidación estimada</th>
+                        <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant">#</th>
+                        <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant">Deuda</th>
+                        <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant">Saldo</th>
+                        <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant">Tasa</th>
+                        <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant">Liquidación estimada</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <tbody className="divide-y divide-outline-variant">
                       {s.debtOrder.map((d: any, i: number) => (
-                        <tr key={d.id ?? i} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-bold">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{d.name}</td>
-                          <td className="px-4 py-3 text-right text-red-600 dark:text-red-400">${fmt(d.balance ?? d.saldo ?? 0)}</td>
-                          <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">
+                        <tr key={d.id ?? i} className="hover:bg-surface-gray">
+                          <td className="px-4 py-3 text-on-surface-variant font-bold">{i + 1}</td>
+                          <td className="px-4 py-3 font-medium text-on-surface">{d.name}</td>
+                          <td className="px-4 py-3 text-right text-danger">${fmt(d.balance ?? d.saldo ?? 0)}</td>
+                          <td className="px-4 py-3 text-right text-on-surface-variant">
                             {d.rate != null ? `${d.rate}%` : '—'}
                           </td>
-                          <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">
+                          <td className="px-4 py-3 text-right text-on-surface-variant">
                             {d.payoffDate
                               ? new Date(d.payoffDate).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
                               : d.payoffMonths != null ? fmtMonth(d.payoffMonths) : '—'}

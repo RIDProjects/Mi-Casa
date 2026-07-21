@@ -25,27 +25,28 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🏠</div>
-          <h1 className="text-3xl font-bold text-white">Mi Casa Pro</h1>
+          <h1 className="font-module-title text-[28px] text-primary">Mi Casa Pro</h1>
+          <p className="font-caption text-caption text-on-surface-variant mt-1">Gestión Financiera del Hogar</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
           {sent ? (
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <CheckCircle size={32} className="text-green-600 dark:text-green-400" />
+                  <CheckCircle size={32} className="text-success" />
                 </div>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Revisá tu email</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 leading-relaxed">
+              <h2 className="font-section-title text-[22px] text-on-surface mb-3">Revisá tu email</h2>
+              <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">
                 Si el email <strong>{email}</strong> está registrado, vas a recibir un enlace para
                 restablecer tu contraseña en los próximos minutos.
               </p>
-              <p className="text-xs text-gray-400 mb-6">El enlace expira en 1 hora.</p>
+              <p className="font-body-small text-outline mb-6">El enlace expira en 1 hora.</p>
               <button onClick={() => router.push('/login')} className="btn-primary w-full">
                 Volver al inicio de sesión
               </button>
@@ -54,13 +55,13 @@ export default function ForgotPassword() {
             <>
               <button
                 onClick={() => router.push('/login')}
-                className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-6 transition-colors"
+                className="flex items-center gap-2 text-sm text-on-surface-variant hover:text-on-surface mb-6 transition-colors"
               >
                 <ArrowLeft size={16} /> Volver al login
               </button>
 
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Recuperar contraseña</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              <h2 className="font-section-title text-[22px] text-on-surface mb-2">Recuperar contraseña</h2>
+              <p className="font-body-default text-on-surface-variant mb-6">
                 Ingresá tu email y te enviamos un enlace para crear una nueva contraseña.
               </p>
 
@@ -68,7 +69,7 @@ export default function ForgotPassword() {
                 <div>
                   <label className="label">Correo electrónico</label>
                   <div className="relative">
-                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
                     <input
                       type="email"
                       value={email}
@@ -82,7 +83,7 @@ export default function ForgotPassword() {
 
                 {error && (
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
-                    <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+                    <p className="text-danger text-sm">{error}</p>
                   </div>
                 )}
 

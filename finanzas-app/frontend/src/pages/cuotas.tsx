@@ -135,8 +135,8 @@ export default function CuotasPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
-          <p className="text-gray-500 dark:text-gray-400">Error al cargar las cuotas</p>
+          <AlertTriangle size={40} className="text-danger" />
+          <p className="text-on-surface-variant">Error al cargar las cuotas</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
           </button>
@@ -149,10 +149,10 @@ export default function CuotasPage() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <CreditCard size={24} /> Plan de Cuotas
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Seguimiento de compras en cuotas</p>
+          <p className="text-on-surface-variant mt-1">Seguimiento de compras en cuotas</p>
         </div>
         <button
           onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
@@ -163,25 +163,25 @@ export default function CuotasPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Compromiso mensual</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">${fmt(compromisoMensual)}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Compromiso mensual</p>
+          <p className="text-2xl font-bold text-danger">${fmt(compromisoMensual)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Cuotas activas</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{cuotasActivas}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Cuotas activas</p>
+          <p className="text-2xl font-bold text-primary">{cuotasActivas}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 shadow-sm">
-          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Deuda total restante</p>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">${fmt(deudaTotalRestante)}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Deuda total restante</p>
+          <p className="text-2xl font-bold text-warning">${fmt(deudaTotalRestante)}</p>
         </div>
       </div>
 
       {cuotas.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">💳</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin cuotas registradas</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Registrá tus compras en cuotas para hacer un seguimiento</p>
+          <h3 className="text-lg font-semibold text-on-surface">Sin cuotas registradas</h3>
+          <p className="text-sm text-on-surface-variant mt-1">Registrá tus compras en cuotas para hacer un seguimiento</p>
           <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
             Agregar cuota
           </button>
@@ -198,16 +198,16 @@ export default function CuotasPage() {
             return (
               <div
                 key={c.id}
-                className={`bg-white dark:bg-gray-800 rounded-xl border shadow-sm p-5 ${
+                className={`bg-surface-container-lowest rounded-xl border shadow-sm p-5 ${
                   isCompleted
                     ? 'border-green-200 dark:border-green-800 opacity-70'
-                    : 'border-gray-200 dark:border-gray-700'
+                    : 'border-outline-variant'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{c.description}</h3>
+                      <h3 className="font-semibold text-on-surface">{c.description}</h3>
                       {isCompleted && (
                         <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-0.5 rounded-full">
                           <CheckCircle size={11} /> Completada
@@ -220,15 +220,15 @@ export default function CuotasPage() {
                       )}
                     </div>
                     {c.store && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{c.store}</p>
+                      <p className="text-sm text-on-surface-variant mt-0.5">{c.store}</p>
                     )}
 
                     <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1">
                         <span>{paid} de {total} cuotas pagadas</span>
                         <span>{Math.round(pct)}%</span>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                      <div className="w-full bg-surface-container rounded-full h-2">
                         <div
                           className={`h-2 rounded-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-blue-500'}`}
                           style={{ width: `${pct}%` }}
@@ -238,28 +238,28 @@ export default function CuotasPage() {
 
                     <div className="mt-3 flex flex-wrap gap-4 text-sm">
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Cuota mensual</p>
-                        <p className="font-semibold text-gray-900 dark:text-white">${fmt(Number(c.installmentAmount || 0))}</p>
+                        <p className="text-xs text-on-surface-variant">Cuota mensual</p>
+                        <p className="font-semibold text-on-surface">${fmt(Number(c.installmentAmount || 0))}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Restante</p>
-                        <p className="font-semibold text-red-600 dark:text-red-400">
+                        <p className="text-xs text-on-surface-variant">Restante</p>
+                        <p className="font-semibold text-danger">
                           ${fmt(remaining * Number(c.installmentAmount || 0))}
                         </p>
                       </div>
                       {c.nextPaymentDate && (
                         <div className="flex items-center gap-1">
-                          <Calendar size={13} className="text-gray-400" />
+                          <Calendar size={13} className="text-outline" />
                           <div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Próximo vencimiento</p>
-                            <p className="font-medium text-gray-700 dark:text-gray-300">{fmtDate(c.nextPaymentDate)}</p>
+                            <p className="text-xs text-on-surface-variant">Próximo vencimiento</p>
+                            <p className="font-medium text-on-surface-variant">{fmtDate(c.nextPaymentDate)}</p>
                           </div>
                         </div>
                       )}
                       {c.cardLastFour && (
                         <div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">Tarjeta</p>
-                          <p className="font-medium text-gray-700 dark:text-gray-300">**** {c.cardLastFour}</p>
+                          <p className="text-xs text-on-surface-variant">Tarjeta</p>
+                          <p className="font-medium text-on-surface-variant">**** {c.cardLastFour}</p>
                         </div>
                       )}
                     </div>
@@ -355,7 +355,7 @@ export default function CuotasPage() {
             <label className="label">
               Monto por cuota{' '}
               {autoInstallment && (
-                <span className="text-gray-400 font-normal">(calculado: ${autoInstallment})</span>
+                <span className="text-outline font-normal">(calculado: ${autoInstallment})</span>
               )}
             </label>
             <input
@@ -386,7 +386,7 @@ export default function CuotasPage() {
               onChange={e => setForm({ ...form, withInterest: e.target.checked })}
               className="w-4 h-4 text-blue-600 rounded"
             />
-            <label htmlFor="withInterest" className="text-sm text-gray-700 dark:text-gray-300">Con interés</label>
+            <label htmlFor="withInterest" className="text-sm text-on-surface-variant">Con interés</label>
           </div>
           {form.withInterest && (
             <div>

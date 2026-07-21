@@ -15,7 +15,7 @@ interface Member {
 
 export default function AdminHouses() {
   const qc = useQueryClient();
-  
+
   // Modal states
   const [showMembersModal, setShowMembersModal] = useState(false);
   const [selectedHouse, setSelectedHouse] = useState<any>(null);
@@ -90,7 +90,7 @@ export default function AdminHouses() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Cargando...</div>
+          <div className="text-on-surface-variant">Cargando...</div>
         </div>
       </Layout>
     );
@@ -100,14 +100,14 @@ export default function AdminHouses() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestión de Casas</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Administra las casas del sistema</p>
+          <h1 className="font-page-title text-page-title text-on-surface">Gestión de Casas</h1>
+          <p className="text-on-surface-variant mt-1">Administra las casas del sistema</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {houses.map((house: any) => (
-          <div key={house.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div key={house.id} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -115,32 +115,32 @@ export default function AdminHouses() {
                     <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{house.name}</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <h3 className="font-semibold text-on-surface">{house.name}</h3>
+                    <p className="font-body-default text-on-surface-variant">
                       {house.members?.length || 0} miembros
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => handleViewMembers(house)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-primary rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm"
                 >
                   <Users size={16} />
                   Miembros
                 </button>
-                <button 
+                <button
                   onClick={() => handleEditName(house)}
-                  className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors"
                 >
                   <Edit2 size={16} />
                 </button>
               </div>
             </div>
-            <div className="px-6 py-3 bg-gray-50 dark:bg-gray-700/50 border-t">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="px-6 py-3 bg-surface-container-low border-t border-outline-variant">
+              <p className="text-xs text-on-surface-variant">
                 Creada: {new Date(house.createdAt).toLocaleDateString('es-ES')}
               </p>
             </div>
@@ -149,9 +149,9 @@ export default function AdminHouses() {
 
         {houses.length === 0 && (
           <div className="col-span-full">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-12 text-center">
-              <Building2 size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">No hay casas todavía</p>
+            <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-12 text-center">
+              <Building2 size={48} className="mx-auto text-outline mb-4" />
+              <p className="text-on-surface-variant">No hay casas todavía</p>
             </div>
           </div>
         )}
@@ -160,24 +160,24 @@ export default function AdminHouses() {
       {/* Members Modal */}
       {showMembersModal && selectedHouse && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-surface-container-lowest rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-outline-variant">
               <div className="flex items-center gap-3">
                 <Users className="w-5 h-5 text-purple-600" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-on-surface">
                   Miembros de {selectedHouse.name}
                 </h3>
               </div>
-              <button onClick={() => setShowMembersModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+              <button onClick={() => setShowMembersModal(false)} className="p-2 hover:bg-surface-variant rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto max-h-96">
               {selectedHouse.members?.length > 0 ? (
                 <div className="space-y-3">
                   {selectedHouse.members.map((member: Member) => (
-                    <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                    <div key={member.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
                           member.isActive ? 'bg-green-500' : 'bg-gray-400'
@@ -185,24 +185,24 @@ export default function AdminHouses() {
                           {member.name?.[0]?.toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{member.name}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{member.email}</p>
+                          <p className="font-medium text-on-surface">{member.name}</p>
+                          <p className="font-body-default text-on-surface-variant">{member.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           onClick={() => handleToggleUser(member.id)}
                           disabled={toggleUserMut.isLoading}
                           className={`p-2 rounded-lg transition-colors ${
-                            member.isActive 
-                              ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20' 
+                            member.isActive
+                              ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
                               : 'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
                           }`}
                           title={member.isActive ? 'Desactivar' : 'Activar'}
                         >
                           {member.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleRemoveUser(member.id, member.name)}
                           disabled={removeUserMut.isLoading}
                           className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
@@ -215,7 +215,7 @@ export default function AdminHouses() {
                   ))}
                 </div>
               ) : (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <p className="text-center text-on-surface-variant py-8">
                   Esta casa no tiene miembros
                 </p>
               )}
@@ -227,34 +227,34 @@ export default function AdminHouses() {
       {/* Edit Name Modal */}
       {editNameModal && selectedHouse && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <div className="bg-surface-container-lowest rounded-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-outline-variant">
+              <h3 className="text-lg font-semibold text-on-surface">
                 Editar Casa
               </h3>
-              <button onClick={() => setEditNameModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+              <button onClick={() => setEditNameModal(false)} className="p-2 hover:bg-surface-variant rounded-lg">
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className="p-6 space-y-4">
               <div>
                 <label className="label">Nombre de la casa</label>
-                <input 
-                  className="input" 
-                  value={houseName} 
+                <input
+                  className="input"
+                  value={houseName}
                   onChange={(e) => setHouseName(e.target.value)}
                 />
               </div>
-              
+
               <div className="pt-4 flex gap-3">
-                <button 
+                <button
                   onClick={() => setEditNameModal(false)}
                   className="flex-1 btn-secondary"
                 >
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={handleSaveName}
                   disabled={updateHouseMut.isLoading}
                   className="flex-1 btn-primary flex items-center justify-center gap-2"

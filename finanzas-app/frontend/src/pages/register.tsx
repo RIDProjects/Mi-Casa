@@ -58,23 +58,23 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-blue-700 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       {/* Theme Toggle */}
       <button
         onClick={toggleTheme}
-        className="fixed top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        className="fixed top-4 right-4 p-3 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant"
       >
         {theme === 'dark' ? (
-          <Sun size={24} className="text-yellow-400" />
+          <Sun size={24} className="text-warning" />
         ) : (
-          <Moon size={24} className="text-white" />
+          <Moon size={24} className="text-on-surface-variant" />
         )}
       </button>
 
       {/* Back to Login */}
       <button
         onClick={() => router.push('/login')}
-        className="fixed top-4 left-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+        className="fixed top-4 left-4 p-3 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant text-on-surface"
       >
         <ArrowLeft size={24} />
       </button>
@@ -82,17 +82,17 @@ export default function Register() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🏠</div>
-          <h1 className="text-3xl font-bold text-white">Mi Casa Pro</h1>
-          <p className="text-blue-200 mt-2">Crea tu cuenta y únete a tu casa</p>
+          <h1 className="font-module-title text-[28px] text-primary">Mi Casa Pro</h1>
+          <p className="font-caption text-caption text-on-surface-variant mt-1">Crea tu cuenta y únete a tu casa</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">Registrarse</h2>
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
+          <h2 className="font-section-title text-[22px] text-on-surface mb-6">Registrarse</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Casa Info */}
             <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
               <div className="flex items-center gap-2 mb-3">
-                <Home size={18} className="text-blue-600 dark:text-blue-400" />
+                <Home size={18} className="text-primary" />
                 <span className="font-medium text-blue-900 dark:text-blue-200">Información de la Casa</span>
               </div>
               <div className="space-y-3">
@@ -123,12 +123,12 @@ export default function Register() {
                     <button
                       type="button"
                       onClick={() => setShowHousePassword(!showHousePassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant"
                     >
                       {showHousePassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  <p className="text-xs text-primary mt-1">
                     Comparte esta contraseña con los miembros de tu casa
                   </p>
                 </div>
@@ -173,19 +173,19 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
+              <p className="font-body-small text-outline mt-1">Mínimo 6 caracteres</p>
             </div>
             {error && (
               <div
                 aria-live="polite"
                 className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center gap-2"
               >
-                <span className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</span>
+                <span className="text-danger text-sm font-medium">{error}</span>
               </div>
             )}
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
@@ -194,9 +194,9 @@ export default function Register() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-on-surface-variant">
               ¿Ya tienes una cuenta?{' '}
-              <button onClick={() => router.push('/login')} className="text-blue-600 hover:text-blue-700 font-medium">
+              <button onClick={() => router.push('/login')} className="text-primary hover:opacity-80 font-medium">
                 Iniciar sesión
               </button>
             </p>

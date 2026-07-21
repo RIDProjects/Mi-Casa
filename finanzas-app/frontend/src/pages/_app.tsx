@@ -52,7 +52,7 @@ function ThemeInitializer({ children }: { children: React.ReactNode }) {
   }, [theme]);
 
   if (!mounted) {
-    return <div className="min-h-screen bg-white dark:bg-gray-900" />;
+    return <div className="min-h-screen bg-surface" />;
   }
 
   return <>{children}</>;

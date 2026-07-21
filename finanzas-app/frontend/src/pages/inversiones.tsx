@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { investmentsAPI, exchangeRatesAPI } from '../services/api';
+import { useCurrencyStore } from '../store/currency.store';
 import PageHeader from '../components/ui/PageHeader';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
@@ -13,7 +14,6 @@ import { Plus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type InvestmentType = 'plazo_fijo' | 'fci' | 'acciones' | 'crypto' | 'dolar' | 'propiedades' | 'otros';
-type InvestmentCurrency = 'CUP' | 'MLC' | 'USD';
 
 const calcTEA = (tna: number): number => {
   return (Math.pow(1 + (tna / 100) / 365, 365) - 1) * 100;
@@ -39,14 +39,8 @@ const TYPE_BADGE: Record<InvestmentType, BadgeVariant> = {
   otros: 'gray',
 };
 
-const CURRENCY_SYMBOLS: Record<InvestmentCurrency, string> = {
-  CUP: '$',
-  MLC: 'MLC$',
-  USD: 'US$',
-};
-
 const fmt = (n: number) =>
-  new Intl.NumberFormat('es-CU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
 
 function calcCurrentValue(inv: any): number {
   const amount = Number(inv.monto ?? inv.amount ?? 0);
@@ -66,7 +60,7 @@ const defaultForm = {
   nombre: '',
   tipo: 'plazo_fijo' as InvestmentType,
   monto: '',
-  moneda: 'CUP' as InvestmentCurrency,
+  moneda: '',
   tna: '',
   fechaInicio: '',
   fechaFin: '',
@@ -77,6 +71,9 @@ const defaultForm = {
 
 export default function InversionesPage() {
   const qc = useQueryClient();
+  const { currencies } = useCurrencyStore();
+  const baseCurrency = currencies.find(c => c.isBase);
+  const getCurrencySymbol = (code: string) => currencies.find(c => c.currencyCode === code)?.symbol ?? code;
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -131,7 +128,7 @@ export default function InversionesPage() {
       nombre: inv.nombre ?? inv.name ?? '',
       tipo: inv.tipo ?? inv.type ?? 'plazo_fijo',
       monto: String(inv.monto ?? inv.amount ?? ''),
-      moneda: inv.moneda ?? inv.currency ?? 'CUP',
+      moneda: inv.moneda ?? inv.currency ?? baseCurrency?.currencyCode ?? '',
       tna: String(inv.tna ?? inv.rate ?? ''),
       fechaInicio: inv.fechaInicio ?? inv.startDate ?? '',
       fechaFin: inv.fechaFin ?? inv.endDate ?? '',
@@ -157,15 +154,11 @@ export default function InversionesPage() {
 
   const list = Array.isArray(investments) ? (investments as any[]) : [];
 
-  const totalCUP = list
-    .filter(i => (i.moneda ?? i.currency) === 'CUP')
-    .reduce((s, i) => s + calcCurrentValue(i), 0);
-  const totalMLC = list
-    .filter(i => (i.moneda ?? i.currency) === 'MLC')
-    .reduce((s, i) => s + calcCurrentValue(i), 0);
-  const totalUSD = list
-    .filter(i => (i.moneda ?? i.currency) === 'USD')
-    .reduce((s, i) => s + calcCurrentValue(i), 0);
+  const totalsByCurrency: Record<string, number> = {};
+  list.forEach(i => {
+    const code = i.moneda ?? i.currency ?? baseCurrency?.currencyCode ?? '';
+    totalsByCurrency[code] = (totalsByCurrency[code] ?? 0) + calcCurrentValue(i);
+  });
 
   const showQuantityFields = form.tipo === 'crypto' || form.tipo === 'dolar' || form.tipo === 'otros';
 
@@ -196,21 +189,15 @@ export default function InversionesPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total CUP</p>
-          <p className="text-xl font-bold text-blue-600 dark:text-blue-400">${fmt(totalCUP)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total MLC</p>
-          <p className="text-xl font-bold text-purple-600 dark:text-purple-400">MLC${fmt(totalMLC)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Total USD</p>
-          <p className="text-xl font-bold text-green-600 dark:text-green-400">US${fmt(totalUSD)}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Inversiones</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{list.length}</p>
+        {Object.entries(totalsByCurrency).map(([code, total]) => (
+          <div key={code} className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+            <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Total {code}</p>
+            <p className="text-xl font-bold text-primary">{getCurrencySymbol(code)}{fmt(total)}</p>
+          </div>
+        ))}
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Inversiones</p>
+          <p className="text-xl font-bold text-on-surface">{list.length}</p>
         </div>
       </div>
 
@@ -218,36 +205,36 @@ export default function InversionesPage() {
       {list.length === 0 ? (
         <div className="text-center py-16">
           <div className="text-5xl mb-4">📈</div>
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Sin inversiones registradas</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Agregá tu primera inversión para comenzar</p>
+          <h3 className="text-lg font-semibold text-on-surface">Sin inversiones registradas</h3>
+          <p className="text-sm text-on-surface-variant mt-1">Agregá tu primera inversión para comenzar</p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <thead className="bg-surface-container-low border-b border-outline-variant">
                 <tr>
                   {['Nombre', 'Tipo', 'Monto', 'Moneda', 'TNA% / TEA%', 'Valor Actual', 'Vencimiento', 'Acciones'].map(h => (
                     <th
                       key={h}
-                      className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase whitespace-nowrap"
+                      className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap"
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-outline-variant">
                 {list.map((inv: any) => {
                   const tipo: InvestmentType = inv.tipo ?? inv.type ?? 'otros';
-                  const moneda: InvestmentCurrency = inv.moneda ?? inv.currency ?? 'CUP';
-                  const symbol = CURRENCY_SYMBOLS[moneda] ?? '$';
+                  const moneda: string = inv.moneda ?? inv.currency ?? baseCurrency?.currencyCode ?? '';
+                  const symbol = getCurrencySymbol(moneda);
                   const currentValue = calcCurrentValue(inv);
                   const fechaFin = inv.fechaFin ?? inv.endDate;
                   const tna = Number(inv.tna ?? inv.rate ?? 0);
                   return (
-                    <tr key={inv.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
+                    <tr key={inv.id} className="hover:bg-surface-gray transition-colors">
+                      <td className="px-4 py-3 font-medium text-on-surface">
                         {inv.nombre ?? inv.name ?? '—'}
                       </td>
                       <td className="px-4 py-3">
@@ -255,32 +242,32 @@ export default function InversionesPage() {
                           {TYPE_LABELS[tipo] ?? tipo}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">
+                      <td className="px-4 py-3 font-semibold text-on-surface">
                         {symbol}{fmt(Number(inv.monto ?? inv.amount ?? 0))}
                         {inv.quantity && (
-                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                          <div className="text-xs text-outline mt-0.5">
                             {inv.quantity} {inv.ticker ? inv.ticker : 'unidades'}
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{moneda}</td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                      <td className="px-4 py-3 text-on-surface-variant">{moneda}</td>
+                      <td className="px-4 py-3 text-on-surface-variant">
                         {tna > 0 ? (
                           <div>
                             <span>{tna}% TNA</span>
                             {tipo === 'plazo_fijo' && (
-                              <div className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                              <div className="text-xs text-success mt-0.5">
                                 TEA: {calcTEA(tna).toFixed(2)}%
                               </div>
                             )}
                           </div>
                         ) : '—'}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-green-600 dark:text-green-400">
+                      <td className="px-4 py-3 font-semibold text-success">
                         {symbol}{fmt(currentValue)}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs">
-                        {fechaFin ? new Date(fechaFin).toLocaleDateString('es-CU') : '—'}
+                      <td className="px-4 py-3 text-on-surface-variant text-xs">
+                        {fechaFin ? new Date(fechaFin).toLocaleDateString('es-ES') : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <ActionButtons
@@ -332,12 +319,14 @@ export default function InversionesPage() {
               <label className="label">Moneda</label>
               <select
                 className="input"
-                value={form.moneda}
-                onChange={e => setForm({ ...form, moneda: e.target.value as InvestmentCurrency })}
+                value={form.moneda || baseCurrency?.currencyCode || ''}
+                onChange={e => setForm({ ...form, moneda: e.target.value })}
               >
-                <option value="CUP">CUP — Peso Cubano</option>
-                <option value="MLC">MLC — Moneda Libremente Convertible</option>
-                <option value="USD">USD — Dólar estadounidense</option>
+                {currencies.filter(c => c.isActive).map(c => (
+                  <option key={c.currencyCode} value={c.currencyCode}>
+                    {c.symbol} {c.currencyCode} — {c.currencyName}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

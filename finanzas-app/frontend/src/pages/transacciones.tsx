@@ -4,10 +4,14 @@ import { useQuery, useQueries, useMutation, useQueryClient } from 'react-query';
 import { transactionsAPI, exportTransactionsCSV, importTransactionsCSV } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
-import { Plus, ChevronLeft, ChevronRight, Receipt, AlertTriangle, RefreshCw, Download, Upload } from 'lucide-react';
+import {
+  Plus, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw,
+  Download, Upload, TrendingUp, TrendingDown, DollarSign, CreditCard,
+  ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight,
+  Laptop, Calendar,
+} from 'lucide-react';
 import { useCurrencyStore } from '../store/currency.store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
@@ -47,20 +51,48 @@ const defaultForm = {
   currency: '',
 };
 
-function typeBadge(tipo: string) {
-  const map: Record<string, string> = {
-    ingreso_fijo: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-    ingreso_variable: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-    gasto: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+const TABS = ['Historial', 'Programadas', 'Pendientes'] as const;
+type Tab = typeof TABS[number];
+
+/** Map category name to a lucide icon */
+function CategoryIcon({ categoria }: { categoria: string }) {
+  const map: Record<string, React.ReactNode> = {
+    Casa: <Home size={14} />,
+    Comida: <Coffee size={14} />,
+    Transporte: <Car size={14} />,
+    Suscripciones: <Laptop size={14} />,
+    Familia: <ShoppingCart size={14} />,
   };
-  const label: Record<string, string> = {
-    ingreso_fijo: 'Ing. Fijo',
-    ingreso_variable: 'Ing. Variable',
-    gasto: 'Gasto',
+  return <>{map[categoria] ?? <DollarSign size={14} />}</>;
+}
+
+/** Badge for tipo */
+function TypeBadge({ tipo }: { tipo: string }) {
+  if (tipo === 'gasto') {
+    return (
+      <span className="px-2 py-1 bg-danger/10 text-danger text-[10px] font-bold rounded-full uppercase">Gasto</span>
+    );
+  }
+  if (tipo === 'ingreso_fijo') {
+    return (
+      <span className="px-2 py-1 bg-success/10 text-success text-[10px] font-bold rounded-full uppercase">Ing. Fijo</span>
+    );
+  }
+  return (
+    <span className="px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded-full uppercase">Ing. Variable</span>
+  );
+}
+
+/** Método badge */
+function MetodoBadge({ metodo }: { metodo: string }) {
+  const map: Record<string, string> = {
+    efectivo: 'Efectivo',
+    transferencia: 'Transferencia',
+    tarjeta: 'Tarjeta',
   };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[tipo] ?? ''}`}>
-      {label[tipo] ?? tipo}
+    <span className="px-2 py-1 bg-surface-container text-on-surface-variant text-[10px] font-bold rounded-full uppercase">
+      {map[metodo] ?? metodo}
     </span>
   );
 }
@@ -76,6 +108,12 @@ export default function TransaccionesPage() {
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
+  const [activeTab, setActiveTab] = useState<Tab>('Historial');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterTipo, setFilterTipo] = useState('');
+  const [filterCategoria, setFilterCategoria] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qKey = ['transactions', year, month];
@@ -196,10 +234,10 @@ export default function TransaccionesPage() {
 
   // Thermometer label
   const thermoLabel = usoPct < 70
-    ? { text: 'Todo bajo control', color: 'text-green-600 dark:text-green-400', bar: 'bg-green-500' }
+    ? { text: 'Todo bajo control', color: 'text-success', bar: 'bg-success', status: 'EN_META' }
     : usoPct < 90
-    ? { text: 'Acercándose al límite', color: 'text-amber-600 dark:text-amber-400', bar: 'bg-amber-500' }
-    : { text: '¡Gastos superaron el presupuesto!', color: 'text-red-600 dark:text-red-400', bar: 'bg-red-500' };
+    ? { text: 'Acercándose al límite', color: 'text-warning', bar: 'bg-warning', status: 'ATENCIÓN' }
+    : { text: '¡Gastos superaron el presupuesto!', color: 'text-danger', bar: 'bg-danger', status: 'ALERTA' };
 
   // Category breakdown
   const categoryBreakdown = useMemo(() => {
@@ -211,13 +249,32 @@ export default function TransaccionesPage() {
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [transactions]);
 
+  // Filtered transactions
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t: any) => {
+      const matchSearch = !searchTerm || t.concepto?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchTipo = !filterTipo || t.tipo === filterTipo;
+      const matchCat = !filterCategoria || t.categoria === filterCategoria;
+      return matchSearch && matchTipo && matchCat;
+    });
+  }, [transactions, searchTerm, filterTipo, filterCategoria]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  // Reset page on filter change
+  const resetPage = () => setCurrentPage(1);
+
   if (isError) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
-          <p className="text-gray-500 dark:text-gray-400">Error al cargar las transacciones</p>
-          <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
+          <AlertTriangle size={40} className="text-danger" />
+          <p className="font-body-default text-body-default text-on-surface-variant">Error al cargar las transacciones</p>
+          <button onClick={() => refetch()} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors">
             <RefreshCw size={16} /> Reintentar
           </button>
         </div>
@@ -227,31 +284,13 @@ export default function TransaccionesPage() {
 
   return (
     <Layout>
-      <PageHeader
-        title={<><Receipt size={24} /> Transacciones</>}
-        subtitle="Registro mensual de ingresos y gastos"
-        action={
-          <button
-            onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
-            className="btn-primary flex items-center gap-2"
-          >
-            <Plus size={18} /> Nueva transacción
-          </button>
-        }
-      />
-
-      {/* Month navigator */}
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-2 flex-1">
-          <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
-          </button>
-          <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[160px] text-center">
-            {MONTH_NAMES[month - 1]} {year}
-          </span>
-          <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-            <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
-          </button>
+      {/* ── Page header ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="font-page-title text-page-title text-on-surface">Transacciones</h1>
+          <p className="font-body-default text-body-default text-on-surface-variant mt-1">
+            Registro mensual de ingresos y gastos
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -263,171 +302,354 @@ export default function TransaccionesPage() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-border-light text-on-surface-variant hover:bg-surface-gray rounded-xl transition-colors"
           >
-            <Upload size={16} /> Importar CSV
+            <Upload size={15} /> Importar
           </button>
           <button
             onClick={() => exportTransactionsCSV(year, month)}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-border-light text-on-surface-variant hover:bg-surface-gray rounded-xl transition-colors"
           >
-            <Download size={16} /> Exportar CSV
+            <Download size={15} /> Exportar
+          </button>
+          <button
+            onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
+            className="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-section-title text-section-title transition-opacity hover:opacity-90"
+          >
+            <Plus size={18} /> Nueva transacción
           </button>
         </div>
       </div>
 
-      {/* 6-month bar chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-          Gastos e ingresos — últimos 6 meses
-        </h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={50} />
-            <Tooltip formatter={(value: number) => `$${fmt(value)}`} />
-            <Bar dataKey="Ingresos" fill="#22c55e" radius={[3, 3, 0, 0]} />
-            <Bar dataKey="Gastos" fill="#ef4444" radius={[3, 3, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      {/* ── Tab nav ── */}
+      <div className="flex gap-1 mb-6 border-b border-outline-variant">
+        {TABS.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2.5 font-section-title text-section-title transition-colors border-b-2 -mb-px ${
+              activeTab === tab
+                ? 'border-primary text-primary'
+                : 'border-transparent text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Ingresos reales</p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">${fmt(ingresos)}</p>
+      {/* ── Month navigator ── */}
+      <div className="flex items-center justify-center gap-4 mb-6">
+        <button
+          onClick={prevMonth}
+          className="p-2 rounded-xl hover:bg-surface-variant transition-colors text-on-surface-variant"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <div className="flex items-center gap-2 text-on-surface">
+          <Calendar size={16} className="text-primary" />
+          <span className="font-section-title text-section-title min-w-[180px] text-center">
+            {MONTH_NAMES[month - 1]} {year}
+          </span>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Gastos reales</p>
-          <p className="text-2xl font-bold text-red-600 dark:text-red-400">${fmt(gastos)}</p>
+        <button
+          onClick={nextMonth}
+          className="p-2 rounded-xl hover:bg-surface-variant transition-colors text-on-surface-variant"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
+      {/* ── Summary cards grid: 2-col "Desempeño" + 1-col "Balance Operativo" ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        {/* Desempeño del Mes — 2-col span */}
+        <div className="lg:col-span-2 bg-surface-container-lowest border border-border-light rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-section-title text-section-title text-on-surface">Desempeño del Mes</h3>
+            <span className="font-caption text-caption text-on-surface-variant">{MONTH_NAMES[month - 1]} {year}</span>
+          </div>
+
+          {/* KPI stats */}
+          <div className="grid grid-cols-3 gap-4 mb-5">
+            <div>
+              <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">INGRESOS REALES</p>
+              <p className="text-[20px] font-bold text-success">${fmt(ingresos)}</p>
+            </div>
+            <div>
+              <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">GASTOS REALES</p>
+              <p className="text-[20px] font-bold text-danger">${fmt(gastos)}</p>
+            </div>
+            <div>
+              <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">% USO</p>
+              <p className={`text-[20px] font-bold ${thermoLabel.color}`}>{usoPct.toFixed(1)}%</p>
+            </div>
+          </div>
+
+          {/* Plan vs Real progress bars */}
+          <div className="space-y-3">
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="font-caption text-caption text-on-surface-variant flex items-center gap-1.5">
+                  <ArrowUpRight size={12} className="text-success" /> Ingresos
+                </span>
+                <span className="font-caption text-caption text-on-surface">${fmt(ingresos)}</span>
+              </div>
+              <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+                <div className="bg-success h-full rounded-full transition-all duration-1000" style={{ width: '100%' }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="font-caption text-caption text-on-surface-variant flex items-center gap-1.5">
+                  <ArrowDownRight size={12} className="text-danger" /> Gastos
+                </span>
+                <span className="font-caption text-caption text-on-surface">${fmt(gastos)}</span>
+              </div>
+              <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+                <div
+                  className={`${thermoLabel.bar} h-full rounded-full transition-all duration-1000`}
+                  style={{ width: `${usoPct}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Status text */}
+          <p className={`font-caption text-caption mt-3 ${thermoLabel.color}`}>{thermoLabel.text}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Disponible</p>
-          <p className={`text-2xl font-bold ${disponible >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
-            ${fmt(disponible)}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">% Uso presupuesto</p>
-          <p className={`text-2xl font-bold ${usoPct < 70 ? 'text-green-600 dark:text-green-400' : usoPct < 90 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
-            {usoPct.toFixed(1)}%
-          </p>
+
+        {/* Balance Operativo — dark panel */}
+        <div className="bg-advisory-bg rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 className="font-section-title text-section-title text-advisory-text mb-1">Balance Operativo</h3>
+            <p className="font-caption text-caption opacity-70 text-advisory-text-dim">Diferencia proyectada vs real</p>
+          </div>
+          <div className="py-4">
+            <span className={`font-hero-title text-[38px] leading-tight ${disponible >= 0 ? 'text-advisory-text' : 'text-danger'}`}>
+              {disponible >= 0 ? '+' : ''}{disponible < 0 ? '-$' : '$'}{fmt(Math.abs(disponible))}
+            </span>
+          </div>
+          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+            <p className="font-formula-code text-formula-code text-advisory-text-dim">
+              STATUS: {thermoLabel.status}
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Spending thermometer */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Termómetro de gasto</span>
-          <span className={`text-sm font-semibold ${thermoLabel.color}`}>{thermoLabel.text}</span>
+      {/* ── 6-month bar chart ── */}
+      <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden mb-6">
+        <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
+          <h3 className="font-section-title text-section-title text-on-surface">Gastos e Ingresos — Últimos 6 meses</h3>
         </div>
-        <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3" role="presentation">
-          <div
-            role="progressbar"
-            aria-valuenow={Math.round(usoPct)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Uso del presupuesto mensual: ${Math.round(usoPct)}%`}
-            className={`h-3 rounded-full transition-all duration-500 ${thermoLabel.bar}`}
-            style={{ width: `${usoPct}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
-          <span>$0</span>
-          <span>${fmt(ingresos)}</span>
+        <div className="p-4">
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant, #e5e7eb)" />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={50} />
+              <Tooltip formatter={(value: number) => `$${fmt(value)}`} />
+              <Bar dataKey="Ingresos" fill="#16a34a" radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Gastos" fill="#d97706" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden mb-6">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Tipo</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Concepto</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Categoría</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Monto</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Método</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Acc.</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {isLoading ? (
-                [1, 2, 3, 4, 5].map(i => (
-                  <tr key={i}>
-                    {[1, 2, 3, 4, 5, 6, 7].map(j => (
-                      <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : (
-                <>
-                  {transactions.map((t: any) => (
-                    <tr
-                      key={t.id}
-                      className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                        t.tipo !== 'gasto' ? 'bg-green-50/40 dark:bg-green-900/10' : ''
-                      }`}
-                    >
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                        {t.fecha ? new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) : '-'}
-                      </td>
-                      <td className="px-4 py-3">{typeBadge(t.tipo)}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{t.concepto}</td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400">{t.categoria || '-'}</td>
-                      <td className={`px-4 py-3 text-right font-semibold ${t.tipo !== 'gasto' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {t.tipo !== 'gasto' ? '+' : '-'}${fmt(t.monto)}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 capitalize">
-                        {t.metodoPago}
-                        {t.nombreTarjeta ? ` (${t.nombreTarjeta})` : ''}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <ActionButtons
-                          onEdit={() => handleEdit(t)}
-                          onDelete={() => setDeleteId(t.id)}
-                        />
-                      </td>
-                    </tr>
+      {/* ── Filter toolbar ── */}
+      <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between bg-surface-container-low p-4 rounded-xl border border-outline-variant mb-6">
+        <div className="flex items-center gap-2 flex-1">
+          <div className="relative flex-1 max-w-xs">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <input
+              type="text"
+              placeholder="Buscar concepto..."
+              value={searchTerm}
+              onChange={e => { setSearchTerm(e.target.value); resetPage(); }}
+              className="w-full pl-9 pr-3 py-2 bg-surface-container-lowest border border-border-light rounded-xl font-body-small text-body-small text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary transition-colors"
+            />
+          </div>
+          <Filter size={15} className="text-on-surface-variant flex-shrink-0" />
+        </div>
+        <div className="flex gap-2">
+          <select
+            value={filterTipo}
+            onChange={e => { setFilterTipo(e.target.value); resetPage(); }}
+            className="py-2 px-3 bg-surface-container-lowest border border-border-light rounded-xl font-body-small text-body-small text-on-surface focus:outline-none focus:border-primary transition-colors"
+          >
+            <option value="">Todos los tipos</option>
+            {TIPO_OPTIONS.map(({ v, l }) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <select
+            value={filterCategoria}
+            onChange={e => { setFilterCategoria(e.target.value); resetPage(); }}
+            className="py-2 px-3 bg-surface-container-lowest border border-border-light rounded-xl font-body-small text-body-small text-on-surface focus:outline-none focus:border-primary transition-colors"
+          >
+            <option value="">Todas las categorías</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* ── Transactions table ── */}
+      <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden mb-6">
+        <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
+          <h3 className="font-section-title text-section-title text-on-surface">
+            {MONTH_NAMES[month - 1]} {year}
+          </h3>
+          <span className="font-caption text-caption text-on-surface-variant">
+            {filteredTransactions.length} transacciones
+          </span>
+        </div>
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-surface-container-low border-b border-outline-variant">
+              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">FECHA</th>
+              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CONCEPTO</th>
+              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CATEGORÍA</th>
+              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CUENTA</th>
+              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-right">MONTO</th>
+              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">ACC.</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-light">
+            {isLoading ? (
+              [1, 2, 3, 4, 5].map(i => (
+                <tr key={i}>
+                  {[1, 2, 3, 4, 5, 6].map(j => (
+                    <td key={j} className="px-6 py-4">
+                      <div className="h-4 bg-surface-container-low rounded animate-pulse" />
+                    </td>
                   ))}
-                  {transactions.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-10 text-center text-gray-400 dark:text-gray-500">
-                        No hay transacciones en {MONTH_NAMES[month - 1]} {year}
-                      </td>
-                    </tr>
-                  )}
-                </>
-              )}
-            </tbody>
-          </table>
-        </div>
+                </tr>
+              ))
+            ) : paginatedTransactions.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-12 text-center">
+                  <p className="font-body-default text-body-default text-on-surface-variant">
+                    No hay transacciones en {MONTH_NAMES[month - 1]} {year}
+                  </p>
+                </td>
+              </tr>
+            ) : (
+              paginatedTransactions.map((t: any) => {
+                const isIncome = t.tipo !== 'gasto';
+                return (
+                  <tr key={t.id} className="hover:bg-surface-gray transition-colors group">
+                    <td className="px-6 py-4 font-body-default text-body-default text-on-surface whitespace-nowrap">
+                      {t.fecha
+                        ? new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                        : '—'}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant flex-shrink-0">
+                          {isIncome ? <TrendingUp size={14} /> : <CategoryIcon categoria={t.categoria} />}
+                        </div>
+                        <div>
+                          <p className="font-card-title text-card-title text-on-surface">{t.concepto}</p>
+                          <p className="font-caption text-caption text-outline">
+                            <TypeBadge tipo={t.tipo} />
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {t.categoria ? (
+                        <span className="font-body-small text-body-small text-on-surface-variant">{t.categoria}</span>
+                      ) : (
+                        <span className="font-caption text-caption text-outline">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <MetodoBadge metodo={t.metodoPago} />
+                      {t.nombreTarjeta && (
+                        <span className="ml-1 font-caption text-caption text-outline">({t.nombreTarjeta})</span>
+                      )}
+                    </td>
+                    <td className={`px-6 py-4 text-right font-card-title text-card-title ${isIncome ? 'text-primary' : 'text-warning'}`}>
+                      {isIncome ? '+' : '-'}${fmt(t.monto)}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <ActionButtons
+                        onEdit={() => handleEdit(t)}
+                        onDelete={() => setDeleteId(t.id)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Category breakdown */}
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mb-6">
+          <span className="font-caption text-caption text-on-surface-variant">
+            Página {currentPage} de {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+              className="p-2 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-variant disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+              .map((p, idx, arr) => (
+                <span key={p}>
+                  {idx > 0 && arr[idx - 1] !== p - 1 && (
+                    <span className="font-caption text-caption text-on-surface-variant px-1">…</span>
+                  )}
+                  <button
+                    onClick={() => setCurrentPage(p)}
+                    className={`w-8 h-8 rounded-xl font-body-small text-body-small transition-colors ${
+                      p === currentPage
+                        ? 'bg-primary-container text-on-primary-container'
+                        : 'border border-outline-variant text-on-surface-variant hover:bg-surface-variant'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                </span>
+              ))
+            }
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+              className="p-2 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-variant disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Category breakdown ── */}
       {categoryBreakdown.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-            Gastos por categoría
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden mb-6">
+          <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
+            <h3 className="font-section-title text-section-title text-on-surface">Gastos por Categoría</h3>
+          </div>
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {categoryBreakdown.map(([cat, total]) => (
-              <div key={cat} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">{cat}</p>
-                <p className="text-sm font-bold text-red-600 dark:text-red-400">${fmt(total)}</p>
+              <div key={cat} className="bg-surface-container-low border border-border-light rounded-xl p-3 text-center">
+                <div className="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center text-danger mx-auto mb-2">
+                  <CategoryIcon categoria={cat} />
+                </div>
+                <p className="font-caption text-caption text-on-surface-variant mb-1 truncate">{cat}</p>
+                <p className="font-card-title text-card-title text-danger">${fmt(total)}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Modal Create/Edit */}
+      {/* ── Modal Create/Edit ── */}
       <Modal
         isOpen={showModal}
         onClose={() => { setShowModal(false); setEditItem(null); }}
@@ -442,10 +664,10 @@ export default function TransaccionesPage() {
                 <button
                   key={v} type="button"
                   onClick={() => setForm({ ...form, tipo: v, categoria: '' })}
-                  className={`py-2 px-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                  className={`py-2 px-2 rounded-xl text-xs font-medium border-2 transition-all ${
                     form.tipo === v
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                      ? 'border-primary bg-surface-container-low text-primary'
+                      : 'border-outline-variant text-on-surface-variant hover:bg-surface-variant'
                   }`}
                 >
                   {l}
@@ -522,10 +744,10 @@ export default function TransaccionesPage() {
                 <button
                   key={v} type="button"
                   onClick={() => setForm({ ...form, metodoPago: v, nombreTarjeta: '' })}
-                  className={`py-2 rounded-lg text-xs font-medium border-2 transition-all ${
+                  className={`py-2 rounded-xl text-xs font-medium border-2 transition-all ${
                     form.metodoPago === v
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                      ? 'border-primary bg-surface-container-low text-primary'
+                      : 'border-outline-variant text-on-surface-variant hover:bg-surface-variant'
                   }`}
                 >
                   {l}
@@ -560,10 +782,18 @@ export default function TransaccionesPage() {
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => { setShowModal(false); setEditItem(null); }} className="btn-secondary">
+            <button
+              type="button"
+              onClick={() => { setShowModal(false); setEditItem(null); }}
+              className="btn-secondary"
+            >
               Cancelar
             </button>
-            <button type="submit" disabled={createMut.isLoading || updateMut.isLoading} className="btn-primary">
+            <button
+              type="submit"
+              disabled={createMut.isLoading || updateMut.isLoading}
+              className="btn-primary"
+            >
               {createMut.isLoading || updateMut.isLoading ? 'Guardando...' : editItem ? 'Actualizar' : 'Registrar'}
             </button>
           </div>

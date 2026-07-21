@@ -159,15 +159,15 @@ export default function AnalyticsPage() {
     <Layout>
       <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <BarChart2 size={24} /> Analíticas de Gastos
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Tendencias y comparativas mensuales</p>
+          <p className="text-on-surface-variant mt-1">Tendencias y comparativas mensuales</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-outline-variant rounded-lg hover:bg-surface-gray transition-colors text-on-surface-variant"
           >
             <Printer size={14} /> PDF
           </button>
@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
                 className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                   selectedYear === y
                     ? 'bg-primary-600 text-white'
-                    : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    : 'bg-surface-container-lowest border border-outline-variant text-on-surface-variant'
                 }`}
               >
                 {y}
@@ -190,54 +190,54 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Promedio gastos/mes</p>
-          <p className="text-xl font-bold text-red-600 dark:text-red-400">${fmt(avgExpenses)}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio gastos/mes</p>
+          <p className="text-xl font-bold text-danger">${fmt(avgExpenses)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Promedio ingresos/mes</p>
-          <p className="text-xl font-bold text-green-600 dark:text-green-400">${fmt(avgIncome)}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio ingresos/mes</p>
+          <p className="text-xl font-bold text-success">${fmt(avgIncome)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Gastos este mes</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">${fmt(currentMonthData?.Gastos ?? 0)}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Gastos este mes</p>
+          <p className="text-xl font-bold text-on-surface">${fmt(currentMonthData?.Gastos ?? 0)}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">vs mes anterior</p>
-          <p className={`text-xl font-bold ${expenseDiff <= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">vs mes anterior</p>
+          <p className={`text-xl font-bold ${expenseDiff <= 0 ? 'text-success' : 'text-danger'}`}>
             {expenseDiff <= 0 ? '' : '+'}{fmt(expenseDiff)}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Mes mas gastador</p>
-          <p className="font-bold text-gray-900 dark:text-white">{topSpenderMonth?.name ?? '—'}</p>
-          {topSpenderMonth && <p className="text-sm text-red-500 dark:text-red-400">${fmt(topSpenderMonth.Gastos)}</p>}
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Mes mas gastador</p>
+          <p className="font-bold text-on-surface">{topSpenderMonth?.name ?? '—'}</p>
+          {topSpenderMonth && <p className="text-sm text-danger">${fmt(topSpenderMonth.Gastos)}</p>}
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Mes mas ahorrador</p>
-          <p className="font-bold text-gray-900 dark:text-white">{topSaverMonth?.name ?? '—'}</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Mes mas ahorrador</p>
+          <p className="font-bold text-on-surface">{topSaverMonth?.name ?? '—'}</p>
           {topSaverMonth && (
-            <p className="text-sm text-green-600 dark:text-green-400">
+            <p className="text-sm text-success">
               Ahorro: ${fmt(topSaverMonth.Ingresos - topSaverMonth.Gastos)}
             </p>
           )}
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold mb-1">Promedio mensual</p>
-          <p className="font-bold text-gray-900 dark:text-white">${fmt(avgExpenses)}</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">sobre {validMonths.length} meses con datos</p>
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio mensual</p>
+          <p className="font-bold text-on-surface">${fmt(avgExpenses)}</p>
+          <p className="text-xs text-outline">sobre {validMonths.length} meses con datos</p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-6 shadow-sm">
+        <h2 className="font-label-upper text-label-upper text-on-surface-variant mb-4">
           Comparativa mes a mes — ultimos 12 meses
         </h2>
         {isLoading ? (
-          <div className="h-64 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
+          <div className="h-64 bg-surface-container rounded-xl animate-pulse" />
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
@@ -253,14 +253,14 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-6 shadow-sm">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <h2 className="font-label-upper text-label-upper text-on-surface-variant">
             Comparativa anual — {selectedYear - 1} vs {selectedYear}
           </h2>
         </div>
         {isLoadingYear ? (
-          <div className="h-52 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
+          <div className="h-52 bg-surface-container rounded-xl animate-pulse" />
         ) : (
           <ResponsiveContainer width="100%" height={210}>
             <BarChart data={yearComparisonData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
@@ -275,12 +275,12 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6 shadow-sm">
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-6 shadow-sm">
         <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <h2 className="font-label-upper text-label-upper text-on-surface-variant">
             Gastos hormiga — tendencia (ultimos 12 meses)
           </h2>
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs text-outline">
             Transacciones menores a ${ANT_THRESHOLD.toLocaleString()}
           </span>
         </div>
@@ -290,9 +290,9 @@ export default function AnalyticsPage() {
             <p className="text-lg font-bold text-amber-700 dark:text-amber-400">${fmt(antCurrentMonth)}</p>
             <p className="text-xs text-amber-600 dark:text-amber-500">{antCount} transacciones pequeñas</p>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex-1">
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">% del gasto total</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+          <div className="bg-surface-container-low rounded-lg p-3 flex-1">
+            <p className="font-label-upper text-label-upper text-on-surface-variant">% del gasto total</p>
+            <p className="text-lg font-bold text-on-surface">
               {currentMonthData?.Gastos > 0
                 ? `${Math.round((antCurrentMonth / currentMonthData.Gastos) * 100)}%`
                 : '—'}
@@ -300,7 +300,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
         {isLoading ? (
-          <div className="h-32 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
+          <div className="h-32 bg-surface-container rounded-xl animate-pulse" />
         ) : (
           <ResponsiveContainer width="100%" height={130}>
             <LineChart data={antExpensesData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -315,12 +315,12 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 uppercase tracking-wide">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
+          <h2 className="font-label-upper text-label-upper text-on-surface-variant mb-4">
             Top 5 categorias — {MONTH_NAMES[currentMonthIndex - 1]}
           </h2>
           {categoryBreakdown.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">Sin transacciones este mes</p>
+            <p className="text-sm text-outline text-center py-8">Sin transacciones este mes</p>
           ) : (
             <div className="space-y-3">
               {categoryBreakdown.map(([cat, total], i) => {
@@ -329,12 +329,12 @@ export default function AnalyticsPage() {
                 return (
                   <div key={cat}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-on-surface-variant">
                         {i + 1}. {cat}
                       </span>
-                      <span className="text-red-600 dark:text-red-400 font-semibold">${fmt(total)}</span>
+                      <span className="text-danger font-semibold">${fmt(total)}</span>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2">
+                    <div className="w-full bg-surface-container rounded-full h-2">
                       <div
                         className="h-2 rounded-full bg-red-500 transition-all duration-500"
                         style={{ width: `${pct}%` }}
@@ -347,31 +347,31 @@ export default function AnalyticsPage() {
           )}
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+          <div className="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
+            <h2 className="font-label-upper text-label-upper text-on-surface-variant">
               Resumen mensual
             </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+              <thead className="bg-surface-container-low border-b border-outline-variant">
                 <tr>
-                  <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Mes</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Ingresos</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Gastos</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Balance</th>
+                  <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant">Mes</th>
+                  <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant">Ingresos</th>
+                  <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant">Gastos</th>
+                  <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant">Balance</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-outline-variant">
                 {[...chartData].reverse().slice(0, 6).map((d, i) => {
                   const bal = d.Ingresos - d.Gastos;
                   return (
-                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300 font-medium">{d.name}</td>
-                      <td className="px-4 py-2 text-right text-green-600 dark:text-green-400">${fmt(d.Ingresos)}</td>
-                      <td className="px-4 py-2 text-right text-red-600 dark:text-red-400">${fmt(d.Gastos)}</td>
-                      <td className={`px-4 py-2 text-right font-semibold ${bal >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <tr key={i} className="hover:bg-surface-gray">
+                      <td className="px-4 py-2 text-on-surface-variant font-medium">{d.name}</td>
+                      <td className="px-4 py-2 text-right text-success">${fmt(d.Ingresos)}</td>
+                      <td className="px-4 py-2 text-right text-danger">${fmt(d.Gastos)}</td>
+                      <td className={`px-4 py-2 text-right font-semibold ${bal >= 0 ? 'text-success' : 'text-danger'}`}>
                         {bal >= 0 ? '+' : ''}{fmt(bal)}
                       </td>
                     </tr>

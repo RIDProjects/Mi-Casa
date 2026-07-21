@@ -83,8 +83,8 @@ export default function SimuladorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Inputs */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-4">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6">
+          <h2 className="font-label-upper text-label-upper text-on-surface-variant mb-4">
             Parámetros del préstamo
           </h2>
 
@@ -112,7 +112,7 @@ export default function SimuladorPage() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="label mb-0" htmlFor="sim-plazo">Plazo</label>
-                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                <span className="text-sm font-semibold text-primary">
                   {months} {months === 1 ? 'mes' : 'meses'}
                   {months >= 12 ? ` (${(months / 12).toFixed(1)} años)` : ''}
                 </span>
@@ -127,7 +127,7 @@ export default function SimuladorPage() {
                 value={months}
                 onChange={e => setMonths(Number(e.target.value))}
               />
-              <div className="flex justify-between text-xs text-gray-400 dark:text-gray-500 mt-1">
+              <div className="flex justify-between text-xs text-outline mt-1">
                 <span>1 mes</span>
                 <span>30 años</span>
               </div>
@@ -135,7 +135,7 @@ export default function SimuladorPage() {
 
             {/* Quick presets */}
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Plazos rápidos</p>
+              <p className="text-xs text-on-surface-variant mb-2">Plazos rápidos</p>
               <div className="flex flex-wrap gap-2">
                 {[6, 12, 24, 36, 48, 60, 120, 180, 240].map(m => (
                   <button
@@ -145,7 +145,7 @@ export default function SimuladorPage() {
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
                       months === m
                         ? 'bg-blue-500 border-blue-500 text-white'
-                        : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-blue-400'
+                        : 'border-outline-variant text-on-surface-variant hover:border-blue-400'
                     }`}
                   >
                     {m >= 12 ? `${m / 12}a` : `${m}m`}
@@ -157,46 +157,46 @@ export default function SimuladorPage() {
         </div>
 
         {/* Results */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-4">
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6">
+          <h2 className="font-label-upper text-label-upper text-on-surface-variant mb-4">
             Resultados
           </h2>
 
           {!hasResults ? (
-            <div className="flex flex-col items-center justify-center h-40 text-gray-400 dark:text-gray-500">
+            <div className="flex flex-col items-center justify-center h-40 text-outline">
               <Calculator size={40} className="mb-3 opacity-40" />
               <p className="text-sm">Ingresá un monto y plazo para ver los resultados</p>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-center">
-                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase mb-1">Cuota mensual</p>
+                <p className="text-xs font-semibold text-primary uppercase mb-1">Cuota mensual</p>
                 <p className="text-4xl font-bold text-blue-700 dark:text-blue-300">${fmt(payment)}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total a pagar</p>
-                  <p className="text-base font-bold text-gray-900 dark:text-white">${fmt(totalPago)}</p>
+                <div className="bg-surface-container-low rounded-lg p-3 text-center">
+                  <p className="text-xs text-on-surface-variant mb-1">Total a pagar</p>
+                  <p className="text-base font-bold text-on-surface">${fmt(totalPago)}</p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total intereses</p>
-                  <p className="text-base font-bold text-red-600 dark:text-red-400">${fmt(totalIntereses)}</p>
+                  <p className="text-xs text-on-surface-variant mb-1">Total intereses</p>
+                  <p className="text-base font-bold text-danger">${fmt(totalIntereses)}</p>
                 </div>
                 <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">% intereses</p>
-                  <p className="text-base font-bold text-amber-600 dark:text-amber-400">{pctIntereses.toFixed(1)}%</p>
+                  <p className="text-xs text-on-surface-variant mb-1">% intereses</p>
+                  <p className="text-base font-bold text-warning">{pctIntereses.toFixed(1)}%</p>
                 </div>
               </div>
 
               {/* Interest bar */}
               <div>
-                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+                <div className="flex justify-between text-xs text-on-surface-variant mb-1">
                   <span>Capital: ${fmt(numAmount)}</span>
                   <span>Intereses: ${fmt(totalIntereses)}</span>
                 </div>
                 <div
-                  className="w-full h-3 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden flex"
+                  className="w-full h-3 bg-surface-container rounded-full overflow-hidden flex"
                   role="img"
                   aria-label={`Distribución del préstamo: ${(totalPago > 0 ? (numAmount / totalPago) * 100 : 0).toFixed(1)}% capital, ${pctIntereses.toFixed(1)}% intereses`}
                 >
@@ -212,10 +212,10 @@ export default function SimuladorPage() {
                   />
                 </div>
                 <div className="flex gap-3 mt-1.5 text-xs">
-                  <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                  <span className="flex items-center gap-1 text-on-surface-variant">
                     <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> Capital
                   </span>
-                  <span className="flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                  <span className="flex items-center gap-1 text-on-surface-variant">
                     <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Intereses
                   </span>
                 </div>
@@ -237,41 +237,41 @@ export default function SimuladorPage() {
 
       {/* Amortization table */}
       {amortization.length > 0 && (
-        <div className="mt-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-            <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-sm uppercase tracking-wide">
+        <div className="mt-6 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+          <div className="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
+            <h2 className="font-semibold text-on-surface text-sm uppercase tracking-wide">
               Tabla de amortización — {amortization.length} cuotas
             </h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-600">
+              <thead className="bg-surface-container-low border-b border-outline-variant">
                 <tr>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Cuota</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Pago</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Capital</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Interés</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Saldo restante</th>
+                  <th className="px-4 py-2 text-center text-xs font-semibold text-on-surface-variant uppercase">Cuota</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Pago</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Capital</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Interés</th>
+                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Saldo restante</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-outline-variant">
                 {displayedRows.map(row => (
-                  <tr key={row.cuota} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-4 py-2 text-center text-gray-500 dark:text-gray-400 font-medium">{row.cuota}</td>
-                    <td className="px-4 py-2 text-right text-gray-900 dark:text-gray-100">${fmt(row.pago)}</td>
-                    <td className="px-4 py-2 text-right text-blue-600 dark:text-blue-400">${fmt(row.capital)}</td>
+                  <tr key={row.cuota} className="hover:bg-surface-gray transition-colors">
+                    <td className="px-4 py-2 text-center text-on-surface-variant font-medium">{row.cuota}</td>
+                    <td className="px-4 py-2 text-right text-on-surface">${fmt(row.pago)}</td>
+                    <td className="px-4 py-2 text-right text-primary">${fmt(row.capital)}</td>
                     <td className="px-4 py-2 text-right text-red-500 dark:text-red-400">${fmt(row.interes)}</td>
-                    <td className="px-4 py-2 text-right font-medium text-gray-700 dark:text-gray-300">${fmt(row.saldo)}</td>
+                    <td className="px-4 py-2 text-right font-medium text-on-surface">${fmt(row.saldo)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           {hasMore && (
-            <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700 text-center">
+            <div className="px-4 py-3 border-t border-outline-variant text-center">
               <button
                 onClick={() => setShowAll(v => !v)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                className="text-sm text-primary hover:underline font-medium"
               >
                 {showAll
                   ? 'Ver menos'

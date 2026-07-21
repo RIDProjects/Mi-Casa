@@ -16,26 +16,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-gray-500 dark:text-gray-400">Redirigiendo...</div>
+      <div className="flex items-center justify-center min-h-screen bg-surface">
+        <div className="text-on-surface-variant text-body-small font-body-small">Redirigiendo...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex min-h-screen bg-surface text-on-surface">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile top bar */}
-        <div className="md:hidden flex items-center gap-3 px-4 h-14 bg-gray-900 border-b border-gray-800 flex-shrink-0">
+        <div className="md:hidden flex items-center gap-3 px-4 h-14 bg-surface-container-low border-b border-outline-variant flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-1.5 text-gray-400 hover:text-white transition-colors"
+            className="p-1.5 text-on-surface-variant hover:text-on-surface transition-colors active:scale-95"
             aria-label="Abrir menú"
           >
-            <Menu size={22} />
+            <Menu size={20} />
           </button>
-          <span className="text-base font-bold text-primary-400">Mi Casa Pro</span>
+          <h1 className="text-[18px] font-black text-primary uppercase tracking-tight leading-none">
+            Mi Casa Pro
+          </h1>
         </div>
         <main className="flex-1 overflow-auto">
           <div className="p-4 md:p-8">{children}</div>

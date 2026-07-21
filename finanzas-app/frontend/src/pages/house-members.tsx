@@ -125,7 +125,7 @@ export default function HouseMembersPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="animate-spin text-gray-400" />
+          <Loader2 className="animate-spin text-outline" />
         </div>
       </Layout>
     );
@@ -170,15 +170,15 @@ export default function HouseMembersPage() {
             return (
               <div
                 key={member.id}
-                className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-4"
+                className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-4"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold text-sm shrink-0">
                     {initials}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">{member.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{member.email}</p>
+                    <p className="font-semibold text-on-surface truncate">{member.name}</p>
+                    <p className="text-xs text-on-surface-variant truncate">{member.email}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {member.roles?.map((r) => (
                         <Badge key={r.id} variant="blue">{r.name}</Badge>
@@ -192,7 +192,7 @@ export default function HouseMembersPage() {
                 </div>
 
                 {!isAdmin && (
-                  <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
                     <button
                       onClick={() => handleToggleActive(member)}
                       className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -279,13 +279,13 @@ export default function HouseMembersPage() {
       <Modal isOpen={showEditModal && !!selectedMember} onClose={() => { setShowEditModal(false); setSelectedMember(null); }} title="Agregar a la casa">
         {selectedMember && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+            <div className="flex items-center gap-3 p-4 bg-surface-container-low rounded-lg">
+              <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold">
                 {(selectedMember.name?.[0] || selectedMember.email?.[0] || '?').toUpperCase()}
               </div>
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">{selectedMember.name}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedMember.email}</p>
+                <p className="font-medium text-on-surface">{selectedMember.name}</p>
+                <p className="font-body-default text-on-surface-variant">{selectedMember.email}</p>
               </div>
             </div>
             <div className="flex gap-2">

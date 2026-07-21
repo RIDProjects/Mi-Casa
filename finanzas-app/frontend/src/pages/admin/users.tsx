@@ -90,11 +90,11 @@ export default function UsersPage() {
 
   const createMut = useMutation((data: any) => usersAPI.create(data), {
     onSuccess: () => { qc.invalidateQueries('users'); toast.success('Usuario creado'); setShowCreate(false); resetForm(); },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Error al crear'),
+    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error al crear'); },
   });
   const updateMut = useMutation((data: any) => usersAPI.update(editUser?.id, data), {
     onSuccess: () => { qc.invalidateQueries('users'); toast.success('Actualizado'); setEditUser(null); },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
   const deleteMut = useMutation((id: string) => usersAPI.delete(id), {
     onSuccess: () => { qc.invalidateQueries('users'); toast.success('Eliminado'); setDeleteId(null); },
@@ -104,7 +104,7 @@ export default function UsersPage() {
   });
   const planMut = useMutation(({ id, plan }: { id: string; plan: string }) => usersAPI.update(id, { plan }), {
     onSuccess: () => { qc.invalidateQueries('users'); qc.invalidateQueries('adminStats'); toast.success('Plan actualizado'); setPlanTarget(null); },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
+    onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
 
   const resetForm = () => setForm({ name: '', email: '', password: '', roleIds: [] });

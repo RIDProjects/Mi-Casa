@@ -134,14 +134,14 @@ export default function RegistroGastosPage() {
 
       {/* Month navigator */}
       <div className="flex items-center justify-center gap-4 mb-6">
-        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-          <ChevronLeft size={20} className="text-gray-600 dark:text-gray-400" />
+        <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-surface-variant transition-colors">
+          <ChevronLeft size={20} className="text-on-surface-variant" />
         </button>
-        <span className="text-lg font-semibold text-gray-900 dark:text-white min-w-[180px] text-center">
+        <span className="text-lg font-semibold text-on-surface min-w-[180px] text-center">
           {MONTH_NAMES[month - 1]} {year}
         </span>
-        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-          <ChevronRight size={20} className="text-gray-600 dark:text-gray-400" />
+        <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-surface-variant transition-colors">
+          <ChevronRight size={20} className="text-on-surface-variant" />
         </button>
       </div>
 
@@ -150,17 +150,17 @@ export default function RegistroGastosPage() {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Section 1: Compras de Mercado */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-emerald-50 dark:bg-emerald-900/20 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+            <div className="px-4 py-3 border-b border-outline-variant bg-emerald-50 dark:bg-emerald-900/20 flex items-center gap-2">
               <ShoppingCart size={16} className="text-emerald-600 dark:text-emerald-400" />
               <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
                 Compras de Mercado
               </h2>
-              <span className="ml-auto text-xs text-gray-500">Auto desde Lista de la Compra</span>
+              <span className="ml-auto text-xs text-on-surface-variant">Auto desde Lista de la Compra</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-700 text-xs text-gray-500 dark:text-gray-400 uppercase">
+                <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
                   <tr>
                     <th className="px-3 py-2 text-left">Fecha</th>
                     <th className="px-3 py-2 text-left">Descripción</th>
@@ -168,20 +168,20 @@ export default function RegistroGastosPage() {
                     <th className="px-3 py-2 text-right">Total CUP</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody className="divide-y divide-outline-variant">
                   {comprasMercado.length === 0 ? (
-                    <tr><td colSpan={4} className="px-3 py-8 text-center text-gray-400 text-xs">Sin compras este mes — agregá productos en Lista de la Compra</td></tr>
+                    <tr><td colSpan={4} className="px-3 py-8 text-center text-outline text-xs">Sin compras este mes — agregá productos en Lista de la Compra</td></tr>
                   ) : (
                     comprasMercado.map((c: any, i: number) => (
-                      <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{c.fecha}</td>
-                        <td className="px-3 py-2 text-gray-800 dark:text-gray-200 font-medium">{c.descripcion}</td>
+                      <tr key={i} className="hover:bg-surface-gray">
+                        <td className="px-3 py-2 text-on-surface-variant text-xs">{c.fecha}</td>
+                        <td className="px-3 py-2 text-on-surface font-medium">{c.descripcion}</td>
                         <td className="px-3 py-2">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CAT_COLORS['Comida']}`}>
                             {c.categoria}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-right font-semibold text-gray-900 dark:text-white">
+                        <td className="px-3 py-2 text-right font-semibold text-on-surface">
                           {fmt(c.totalCUP)} CUP
                         </td>
                       </tr>
@@ -201,8 +201,8 @@ export default function RegistroGastosPage() {
           </div>
 
           {/* Section 2: Salidas y Otros Gastos */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-orange-50 dark:bg-orange-900/20 flex items-center gap-2">
+          <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+            <div className="px-4 py-3 border-b border-outline-variant bg-orange-50 dark:bg-orange-900/20 flex items-center gap-2">
               <BookOpen size={16} className="text-orange-600 dark:text-orange-400" />
               <h2 className="text-sm font-semibold text-orange-800 dark:text-orange-300">
                 Salidas y Otros Gastos
@@ -216,7 +216,7 @@ export default function RegistroGastosPage() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-700 text-xs text-gray-500 dark:text-gray-400 uppercase">
+                <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
                   <tr>
                     <th className="px-3 py-2 text-left">Fecha</th>
                     <th className="px-3 py-2 text-left">Descripción</th>
@@ -226,21 +226,21 @@ export default function RegistroGastosPage() {
                     <th className="px-3 py-2 text-center">Acc.</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                <tbody className="divide-y divide-outline-variant">
                   {salidas.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-8 text-center text-gray-400 text-xs">Sin salidas registradas — usá el botón "Nueva salida"</td></tr>
+                    <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">Sin salidas registradas — usá el botón "Nueva salida"</td></tr>
                   ) : (
                     salidas.map((s: any) => (
-                      <tr key={s.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{s.fecha}</td>
-                        <td className="px-3 py-2 text-gray-800 dark:text-gray-200 font-medium">{s.descripcion}</td>
+                      <tr key={s.id} className="hover:bg-surface-gray">
+                        <td className="px-3 py-2 text-on-surface-variant text-xs">{s.fecha}</td>
+                        <td className="px-3 py-2 text-on-surface font-medium">{s.descripcion}</td>
                         <td className="px-3 py-2">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CAT_COLORS[s.categoria as Category] ?? CAT_COLORS['Otros']}`}>
                             {s.categoria}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{s.lugar || '—'}</td>
-                        <td className="px-3 py-2 text-right font-semibold text-gray-900 dark:text-white">{fmt(s.montoCUP)} CUP</td>
+                        <td className="px-3 py-2 text-on-surface-variant text-xs">{s.lugar || '—'}</td>
+                        <td className="px-3 py-2 text-right font-semibold text-on-surface">{fmt(s.montoCUP)} CUP</td>
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
@@ -271,9 +271,9 @@ export default function RegistroGastosPage() {
 
         {/* Right: Summary */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">📊 Resumen del Mes</h2>
+          <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+            <div className="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
+              <h2 className="text-sm font-semibold text-on-surface">📊 Resumen del Mes</h2>
             </div>
             <div className="p-4 space-y-2">
               {resumen.map((r: any) => (
@@ -281,23 +281,23 @@ export default function RegistroGastosPage() {
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CAT_COLORS[r.categoria as Category] ?? CAT_COLORS['Otros']}`}>
                     {r.categoria}
                   </span>
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{fmt(r.totalCUP)} CUP</span>
+                  <span className="text-sm font-semibold text-on-surface">{fmt(r.totalCUP)} CUP</span>
                 </div>
               ))}
               {resumen.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-4">Sin datos este mes</p>
+                <p className="text-xs text-outline text-center py-4">Sin datos este mes</p>
               )}
             </div>
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+            <div className="border-t border-outline-variant p-4 space-y-2">
+              <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Compras</span>
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">{fmt(totalCompras)} CUP</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+              <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Salidas</span>
                 <span className="font-medium text-orange-600 dark:text-orange-400">{fmt(totalSalidas)} CUP</span>
               </div>
-              <div className="flex justify-between text-base font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700 pt-2 mt-1">
+              <div className="flex justify-between text-base font-bold text-on-surface border-t border-outline-variant pt-2 mt-1">
                 <span>TOTAL</span>
                 <span>{fmt(total)} CUP</span>
               </div>
@@ -309,8 +309,8 @@ export default function RegistroGastosPage() {
       {/* Modal: nueva / editar salida */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4 text-on-surface">
               {editItem ? 'Editar gasto' : 'Nueva salida / gasto'}
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">

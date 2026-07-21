@@ -50,16 +50,6 @@ export class PurchasesService {
   async addItem(listId: string, dto: any) {
     const list = await this.listRepo.findOne({ where: { id: listId } });
     if (!list) throw new NotFoundException('Lista no encontrada');
-
-    // Auto-calculate realPriceCUP from quantity * unitPrice if not provided
-    if (!dto.realPriceCUP && dto.quantity && dto.unitPrice) {
-      dto.realPriceCUP = Number(dto.quantity) * Number(dto.unitPrice);
-    }
-    // Auto-calculate realPriceUSD from CUP / exchangeRate
-    if (!dto.realPriceUSD && dto.realPriceCUP && list.exchangeRate) {
-      dto.realPriceUSD = Number(dto.realPriceCUP) / Number(list.exchangeRate);
-    }
-
     const item = this.itemRepo.create({ ...dto, list });
     const saved = await this.itemRepo.save(item as unknown as PurchaseItem);
     return this.formatItemResponse(saved);
@@ -68,19 +58,7 @@ export class PurchasesService {
   async updateItem(itemId: string, dto: any) {
     const item = await this.itemRepo.findOne({ where: { id: itemId }, relations: ['list'] });
     if (!item) throw new NotFoundException('Producto no encontrado');
-
     Object.assign(item, dto);
-
-    // Recalculate if qty or price changed
-    if (dto.quantity || dto.unitPrice) {
-      const qty = Number(dto.quantity ?? item.quantity);
-      const price = Number(dto.unitPrice ?? item.unitPrice);
-      item.realPriceCUP = qty * price;
-      if (item.list?.exchangeRate) {
-        item.realPriceUSD = item.realPriceCUP / Number(item.list.exchangeRate);
-      }
-    }
-
     const saved = await this.itemRepo.save(item);
     return this.formatItemResponse(saved);
   }
@@ -94,22 +72,22 @@ export class PurchasesService {
 
   private calcSummary(list: PurchaseList) {
     const items = list.items || [];
-    const totalRealCUP = items.reduce((s, i) => s + Number(i.realPriceCUP || 0), 0);
-    const totalRealUSD = items.reduce((s, i) => s + Number(i.realPriceUSD || 0), 0);
-    const remainingCUP = Number(list.budgetCUP) - totalRealCUP;
-    const remainingUSD = Number(list.budgetUSD) - totalRealUSD;
+    const total = items.reduce((s, i) => s + Number(i.quantity || 0) * Number(i.unitPrice || 0), 0);
+    const budget = Number(list.budget || 0);
+    const remaining = budget > 0 ? budget - total : null;
 
-    let statusCUP = '✅ Justo';
-    if (remainingCUP < 0) statusCUP = '🔴 Excedido';
-    else if (remainingCUP < Number(list.budgetCUP) * 0.1) statusCUP = '⚠️ Ajustado';
+    let status = '✅ Justo';
+    if (remaining !== null && remaining < 0) status = '🔴 Excedido';
+    else if (remaining !== null && budget > 0 && remaining < budget * 0.1) status = '⚠️ Ajustado';
 
     return {
-      totalRealCUP, totalRealUSD,
-      remainingCUP, remainingUSD,
-      statusCUP,
+      total,
+      budget,
+      remaining,
+      status,
       purchased: items.filter(i => i.status === PurchaseStatus.PURCHASED).length,
       pending: items.filter(i => i.status === PurchaseStatus.PENDING).length,
-      total: items.length,
+      count: items.length,
     };
   }
 }
