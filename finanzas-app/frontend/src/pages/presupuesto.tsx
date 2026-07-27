@@ -567,26 +567,17 @@ export default function PresupuestoPage() {
           <div className="bg-surface-container-lowest p-4 rounded-xl border border-border-light">
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-card-title text-card-title text-on-surface">Meta de Ahorro</h3>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-1 bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-upper text-label-upper">CONFIGURABLE</span>
-                <button
-                  onClick={() => { setSavingsTargetEdit(budget.savingsTargetPercent); setShowSavingsModal(true); }}
-                  className="p-1 text-outline hover:text-primary transition-colors"
-                >
-                  <Pencil size={13} />
-                </button>
-              </div>
+              <button
+                onClick={() => { setSavingsTargetEdit(budget.savingsTargetPercent); setShowSavingsModal(true); }}
+                className="p-1.5 bg-primary-fixed text-on-primary-fixed-variant rounded-full hover:opacity-80 transition-opacity"
+              >
+                <Pencil size={13} />
+              </button>
             </div>
             <div className="flex items-end gap-2 mb-4">
               <span className="font-hero-title text-[48px] leading-none text-primary">{budget.savingsTargetPercent}%</span>
               <span className="font-body-default text-on-surface-variant mb-1">del ingreso total</span>
             </div>
-            <input
-              type="range" min="0" max="50" step="1"
-              value={budget.savingsTargetPercent}
-              onChange={e => updateSavingsMut.mutate(parseInt(e.target.value))}
-              className="w-full accent-primary mb-4"
-            />
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-surface-container rounded-lg p-3 text-center">
                 <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">META MENSUAL</p>
@@ -615,7 +606,7 @@ export default function PresupuestoPage() {
             <p className="font-body-small text-body-small text-advisory-text-dim mb-4">
               {advisoryBanner.msg}
             </p>
-            <div className="bg-black/30 rounded-lg p-4 border border-white/10">
+            <div className="bg-advisory-text/10 rounded-lg p-4 border border-advisory-text/15">
               <p className="font-label-upper text-label-upper text-advisory-text-dim/70 uppercase text-center mb-1">Score de Salud</p>
               <p className="font-formula-code text-advisory-text text-[32px] text-center">{healthScore} / 100</p>
             </div>

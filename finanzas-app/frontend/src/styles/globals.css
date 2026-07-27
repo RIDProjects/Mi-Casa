@@ -28,10 +28,10 @@
     --ds-inverse-on-surface:#ecf1ff;
     --ds-inverse-primary:  #b4c5ff;
     --ds-surface-tint:     #0053db;
-    /* Advisory panels — always dark regardless of theme */
-    --ds-advisory-bg:      #1e2c42;
-    --ds-advisory-text:    #ecf1ff;
-    --ds-advisory-text-dim:#b4c5ff;
+    /* Advisory panels — light mode */
+    --ds-advisory-bg:      #eef2fc;
+    --ds-advisory-text:    #1a2a4a;
+    --ds-advisory-text-dim:#4a6080;
     --ease-premium:        cubic-bezier(0.23, 1, 0.32, 1);
     --ease-drawer:         cubic-bezier(0.32, 0.72, 0, 1);
   }
