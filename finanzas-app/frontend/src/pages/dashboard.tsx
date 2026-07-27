@@ -16,10 +16,9 @@ import {
   TrendingUp, TrendingDown, Receipt,
   ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
 } from 'lucide-react';
-import { MONTHS } from '../lib/format';
+import { fmt, MONTHS } from '../lib/format';
 
 const safeNum = (n: unknown): number => { const v = Number(n); return Number.isFinite(v) ? v : 0; };
-const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(safeNum(n));
 
 const currentMonth     = new Date().getMonth() + 1;
 const currentYear      = new Date().getFullYear();

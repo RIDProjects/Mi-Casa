@@ -3,11 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-  Index,
 } from 'typeorm';
-import { House } from './house.entity';
 
 @Entity('exchange_rates')
 export class ExchangeRate {
@@ -19,9 +15,4 @@ export class ExchangeRate {
   @Column({ nullable: true }) source: string | null;
   @Column({ default: 'oficial' }) rateType: string; // 'oficial' | 'informal' | 'cadeca'
   @CreateDateColumn() createdAt: Date;
-
-  @Index()
-  @ManyToOne(() => House, { nullable: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'house_id' })
-  house: House;
 }

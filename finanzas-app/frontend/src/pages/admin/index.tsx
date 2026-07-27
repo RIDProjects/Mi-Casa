@@ -6,8 +6,7 @@ import {
   Users, Home, UserCheck, UserX, TrendingUp,
   AlertTriangle, Activity, Crown, Star, Gift,
 } from 'lucide-react';
-
-const fmt = (n: number) => new Intl.NumberFormat('es-ES').format(Number(n) || 0);
+import { fmtInt as fmt } from '../../lib/format';
 
 const PLAN_CONFIG = {
   free:   { label: 'Gratis',  color: 'text-on-surface-variant',   bg: 'bg-surface-container',       icon: <Gift size={14} /> },

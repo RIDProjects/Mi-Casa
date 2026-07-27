@@ -10,8 +10,7 @@ import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, PiggyBank, Target, Lock } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
-
-const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(Number(n) || 0);
+import { fmt } from '../lib/format';
 
 const DEFAULT_CATEGORIES = [
   { name: 'Renta o crédito de vivienda', monthlyAmount: 0 },
