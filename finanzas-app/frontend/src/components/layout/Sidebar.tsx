@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   LayoutDashboard, Wallet, Receipt, PiggyBank, TrendingUp,
-  CreditCard, Target, Calculator, ShoppingCart, BookOpen,
+  CreditCard, DollarSign, Target, Calculator, ShoppingCart, BookOpen,
   BarChart2, Settings, LogOut, Plus, Moon, Sun, Users,
   ShieldCheck, Building2, X, Menu,
+  Landmark, Layers, TrendingDown, Shield, CalendarClock,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
@@ -24,9 +25,15 @@ const houseNavItems: NavItem[] = [
   { href: '/dashboard',     label: 'Dashboard',      icon: LayoutDashboard },
   { href: '/presupuesto',   label: 'Presupuesto',    icon: Wallet },
   { href: '/transacciones', label: 'Transacciones',  icon: Receipt },
+  { href: '/vencimientos',  label: 'Vencimientos',   icon: CalendarClock },
   { href: '/metas',         label: 'Ahorros',        icon: PiggyBank },
+  { href: '/emergency-fund',label: 'Fondo Emergencia', icon: Shield },
   { href: '/inversiones',   label: 'Inversiones',    icon: TrendingUp },
-  { href: '/debts',         label: 'Deudas',         icon: CreditCard,  module: 'debts' },
+  { href: '/debts',         label: 'Deudas',         icon: DollarSign,  module: 'debts' },
+  { href: '/creditos',      label: 'Créditos',       icon: Landmark },
+  { href: '/cuotas',        label: 'Cuotas',         icon: Layers },
+  { href: '/payoff',        label: 'Liquidar Deudas', icon: TrendingDown },
+  { href: '/simulador',     label: 'Simulador',      icon: Calculator },
   { href: '/tarjetas',      label: 'Tarjetas',       icon: CreditCard },
   { href: '/patrimonio',    label: 'Patrimonio',     icon: Calculator },
   { href: '/purchases',     label: 'Lista Compra',   icon: ShoppingCart, module: 'purchases' },
@@ -100,16 +107,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Footer */}
       <div className="px-3 pb-4 border-t border-outline-variant pt-4 space-y-1">
-        {/* Añadir Registro */}
-        <Link
-          href="/transacciones"
-          onClick={handleLinkClick}
-          className="flex items-center justify-center gap-2 w-full bg-primary text-on-primary py-2.5 rounded-lg text-label-upper font-label-upper hover:opacity-90 active:scale-[0.98] transition-all duration-150 mb-3"
-        >
-          <Plus size={16} />
-          Añadir Registro
-        </Link>
-
         <button
           onClick={toggleTheme}
           className="flex items-center gap-3 w-full px-3 py-2 text-label-upper font-label-upper text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-150"
@@ -117,6 +114,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
         </button>
+
+        <Link
+          href="/house-members"
+          onClick={handleLinkClick}
+          className="flex items-center gap-3 px-3 py-2 text-label-upper font-label-upper text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all duration-150"
+        >
+          <Users size={16} />
+          Miembros del Hogar
+        </Link>
 
         <Link
           href="/configuracion/monedas"

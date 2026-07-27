@@ -1,4 +1,4 @@
-import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { ArrowRight, Wallet, TrendingUp, Target, CheckCircle } from 'lucide-react';
 
 const STEPS = [
@@ -26,8 +26,6 @@ interface Props {
 }
 
 export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props) {
-  const router = useRouter();
-
   const steps = [
     { ...STEPS[0], done: hasBudget },
     { ...STEPS[1], done: hasTransactions },
@@ -94,12 +92,12 @@ export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{step.title}</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3 leading-relaxed">{step.desc}</p>
             {!step.done && (
-              <button
-                onClick={() => router.push(step.href)}
+              <Link
+                href={step.href}
                 className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:gap-2 transition-all"
               >
                 {step.cta} <ArrowRight size={13} />
-              </button>
+              </Link>
             )}
           </div>
         ))}

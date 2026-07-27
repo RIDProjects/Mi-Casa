@@ -9,13 +9,7 @@ import { CardSkeleton } from '../components/ui/Skeleton';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+import { fmt, MONTH_NAMES } from '../lib/format';
 
 const CATEGORIES = [
   'Comida', 'Transporte', 'Hogar', 'Salud', 'Ocio', 'Salidas', 'Shopper', 'Otros',

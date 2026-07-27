@@ -18,7 +18,7 @@ import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Request as ExpressRequest, Response } from 'express';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Transaction } from '../database/entities/transaction.entity';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { User } from '../database/entities/user.entity';
 
 interface AuthRequest extends ExpressRequest {
@@ -129,13 +129,13 @@ export class TransactionsController {
   }
 
   @Post()
-  create(@Body() dto: Partial<Transaction>, @Request() req: AuthRequest) {
+  create(@Body() dto: CreateTransactionDto, @Request() req: AuthRequest) {
     const houseId = resolveHouseId(req.user);
     return this.txService.create(dto, houseId);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: Partial<Transaction>, @Request() req: AuthRequest) {
+  update(@Param('id') id: string, @Body() dto: CreateTransactionDto, @Request() req: AuthRequest) {
     const houseId = resolveHouseId(req.user);
     return this.txService.update(id, houseId, dto);
   }

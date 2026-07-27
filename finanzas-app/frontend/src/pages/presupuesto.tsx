@@ -10,6 +10,7 @@ import {
   Calculator, TrendingUp, TrendingDown, Zap, CreditCard, Bug, Target, Pencil,
   Lock, BrainCircuit,
 } from 'lucide-react';
+import { fmt } from '../lib/format';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Periodicity = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'fourmonthly' | 'semiannual' | 'annual';
@@ -30,7 +31,6 @@ interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: numb
 interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; incomeSources: IncomeSource[]; categories: Category[]; summary: BudgetSummary; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const getErr = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
 const PERIODICITY_LABELS: Record<Periodicity, string> = {

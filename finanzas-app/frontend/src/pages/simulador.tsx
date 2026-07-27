@@ -5,9 +5,7 @@ import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import StatCard from '../components/ui/StatCard';
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+import { fmt } from '../lib/format';
 
 function calcPayment(amount: number, annualRate: number, months: number): number {
   if (months <= 0) return 0;

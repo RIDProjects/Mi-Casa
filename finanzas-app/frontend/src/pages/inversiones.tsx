@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { investmentsAPI, exchangeRatesAPI } from '../services/api';
+import { investmentsAPI } from '../services/api';
 import { useCurrencyStore } from '../store/currency.store';
 import PageHeader from '../components/ui/PageHeader';
 import Modal from '../components/ui/Modal';
@@ -12,6 +12,7 @@ import type { BadgeVariant } from '../components/ui/Badge';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { Plus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { fmt } from '../lib/format';
 
 type InvestmentType = 'plazo_fijo' | 'fci' | 'acciones' | 'crypto' | 'dolar' | 'propiedades' | 'otros';
 
@@ -38,9 +39,6 @@ const TYPE_BADGE: Record<InvestmentType, BadgeVariant> = {
   propiedades: 'gray',
   otros: 'gray',
 };
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
 
 function calcCurrentValue(inv: any): number {
   const amount = Number(inv.monto ?? inv.amount ?? 0);
@@ -82,13 +80,6 @@ export default function InversionesPage() {
   const { data: investments = [], isLoading } = useQuery(
     'investments',
     () => investmentsAPI.getAll().then(r => r.data),
-    { retry: false }
-  );
-
-  // exchangeRates kept for potential future use
-  useQuery(
-    'exchangeRates',
-    () => exchangeRatesAPI.getLatest().then(r => r.data),
     { retry: false }
   );
 

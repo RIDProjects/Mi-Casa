@@ -10,8 +10,7 @@ import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+import { fmt } from '../lib/format';
 
 const TIPO_PAGO_OPTIONS = [
   { v: 'full', l: 'Pago todo el saldo' },

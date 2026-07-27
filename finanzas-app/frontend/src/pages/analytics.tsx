@@ -4,14 +4,7 @@ import { useQueries } from 'react-query';
 import { transactionsAPI } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, LineChart, Line } from 'recharts';
 import { BarChart2, Printer } from 'lucide-react';
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+import { fmt, MONTH_NAMES } from '../lib/format';
 
 const ANT_THRESHOLD = 500;
 

@@ -4,8 +4,7 @@ import { useQuery } from 'react-query';
 import { debtPayoffAPI } from '../services/api';
 import { TrendingDown, Award, AlertTriangle, RefreshCw } from 'lucide-react';
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+import { fmt } from '../lib/format';
 
 const fmtMonth = (months: number) => {
   if (months === 0) return '0 meses';

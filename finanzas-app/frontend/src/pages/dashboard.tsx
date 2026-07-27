@@ -13,21 +13,13 @@ import { HealthScore } from '../components/ui/HealthScore';
 import { useCurrencyFormatter } from '../lib/currency';
 import { useCountUp } from '../hooks/useCountUp';
 import {
-  TrendingUp, TrendingDown, Receipt, Target, CreditCard, Landmark,
-  Calculator, ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
+  TrendingUp, TrendingDown, Receipt,
+  ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
 } from 'lucide-react';
+import { MONTHS } from '../lib/format';
 
 const safeNum = (n: unknown): number => { const v = Number(n); return Number.isFinite(v) ? v : 0; };
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2 }).format(safeNum(n));
-
-const MONTHS = [
-  { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' },
-  { value: '03', label: 'Marzo' }, { value: '04', label: 'Abril' },
-  { value: '05', label: 'Mayo' },  { value: '06', label: 'Junio' },
-  { value: '07', label: 'Julio' }, { value: '08', label: 'Agosto' },
-  { value: '09', label: 'Septiembre' }, { value: '10', label: 'Octubre' },
-  { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
-];
 
 const currentMonth     = new Date().getMonth() + 1;
 const currentYear      = new Date().getFullYear();
@@ -37,18 +29,6 @@ const GREETING = (() => {
   const h = new Date().getHours();
   return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
 })();
-
-interface NavCard { label: string; href: string; icon: React.ReactNode; }
-const NAV_CARDS: NavCard[] = [
-  { label: 'Presupuesto',   href: '/presupuesto',     icon: <TrendingUp  className="w-5 h-5" /> },
-  { label: 'Transacciones', href: '/transacciones',   icon: <Receipt     className="w-5 h-5" /> },
-  { label: 'Metas',         href: '/metas',           icon: <Target      className="w-5 h-5" /> },
-  { label: 'Tarjetas',      href: '/tarjetas',        icon: <CreditCard  className="w-5 h-5" /> },
-  { label: 'Créditos',      href: '/creditos',        icon: <Landmark    className="w-5 h-5" /> },
-  { label: 'Patrimonio',    href: '/patrimonio',      icon: <Calculator  className="w-5 h-5" /> },
-  { label: 'Lista Compra',  href: '/purchases',       icon: <ShoppingCart className="w-5 h-5" /> },
-  { label: 'Reg. Gastos',   href: '/registro-gastos', icon: <BookOpen    className="w-5 h-5" /> },
-];
 
 type AdvisoryStatus = 'ok' | 'warning' | 'danger';
 const ADVISORY: Record<AdvisoryStatus, { label: string; sub: string; bg: string; text: string; dot: string }> = {
@@ -362,20 +342,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Quick nav ── */}
-      <div>
-        <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Accesos rápidos</p>
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
-          {NAV_CARDS.map(card => (
-            <Link key={card.href} href={card.href}
-              className="bg-white dark:bg-gray-900 rounded-xl border border-black/[0.06] dark:border-white/[0.08] p-3 flex flex-col items-center gap-2 group hover:border-primary-400/40 dark:hover:border-primary-500/30 transition-all duration-150 active:scale-95"
-              style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-              <span className="text-gray-400 group-hover:text-primary-500 dark:group-hover:text-primary-400 transition-colors duration-150">{card.icon}</span>
-              <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 text-center leading-tight transition-colors duration-150">{card.label}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
     </Layout>
   );
 }

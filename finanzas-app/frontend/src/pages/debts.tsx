@@ -178,7 +178,7 @@ export default function DebtsPage() {
           {canCreate && (
             <button
               onClick={() => { setForm(defaultForm); setEditDebt(null); setShowModal(true); }}
-              className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm"
+              className="mt-4 btn-primary text-sm"
             >
               Registrar deuda
             </button>

@@ -34,16 +34,4 @@ export class PushService {
     return this.repo.save(sub);
   }
 
-  async sendToHouse(houseId: string, payload: { title: string; body: string }) {
-    const subs = await this.repo.find({ where: { house: { id: houseId } } });
-    const results = await Promise.allSettled(
-      subs.map(s =>
-        webpush.sendNotification(
-          { endpoint: s.endpoint, keys: s.keys },
-          JSON.stringify(payload),
-        ),
-      ),
-    );
-    return { sent: results.filter(r => r.status === 'fulfilled').length };
-  }
 }

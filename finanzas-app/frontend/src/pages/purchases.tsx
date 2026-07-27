@@ -8,13 +8,7 @@ import toast from 'react-hot-toast';
 import { Plus, Trash2, Edit2, ShoppingCart, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw, Settings } from 'lucide-react';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+import { fmt, MONTH_NAMES } from '../lib/format';
 
 const defaultItemForm = { name: '', quantity: 1, unitPrice: 0, currency: '', lugar: '' };
 const defaultConfigForm = { budget: 0 };

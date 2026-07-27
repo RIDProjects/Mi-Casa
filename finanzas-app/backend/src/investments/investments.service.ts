@@ -57,12 +57,4 @@ export class InvestmentsService {
     return { investments: withValue, totalByCurrency, count: investments.length };
   }
 
-  async getTotalARS(houseId: string, exchangeRates: Record<string, number>): Promise<number> {
-    const investments = await this.findAll(houseId);
-    return investments.reduce((sum, inv) => {
-      const val = this.calculateCurrentValue(inv);
-      const rate = exchangeRates[inv.currency] ?? 1;
-      return sum + val * rate;
-    }, 0);
-  }
 }

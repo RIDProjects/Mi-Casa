@@ -11,11 +11,9 @@ import {
   Plus, Target, AlertTriangle, RefreshCw, PiggyBank,
   TrendingUp, CheckCircle, Calendar, DollarSign, ChevronRight,
 } from 'lucide-react';
+import { fmt } from '../lib/format';
 
 const EMOJI_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '🎓', '💍', '🏖️', '💰', '🏋️', '🎸'];
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 const defaultForm = {
   nombre: '',

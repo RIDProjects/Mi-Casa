@@ -13,13 +13,12 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { CardSkeleton } from '../components/ui/Skeleton';
+import { fmt } from '../lib/format';
 
 const safeNum = (n: unknown): number => {
   const v = Number(n);
   return Number.isFinite(v) ? v : 0;
 };
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeNum(n));
 
 const defaultForm = {
   assetType: 'physical' as 'physical' | 'cash',

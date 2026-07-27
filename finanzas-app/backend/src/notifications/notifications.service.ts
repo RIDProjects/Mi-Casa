@@ -166,7 +166,4 @@ Mi Casa Pro - Sistema de Notificaciones
     }
   }
 
-  async sendWhatsAppAlert(phoneNumber: string, productName: string): Promise<void> {
-    this.logger.warn('WhatsApp alerts are deprecated. Use email notifications instead.');
-  }
 }

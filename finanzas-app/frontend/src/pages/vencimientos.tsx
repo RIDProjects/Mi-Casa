@@ -4,8 +4,7 @@ import { useQuery } from 'react-query';
 import { upcomingBillsAPI } from '../services/api';
 import { Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
+import { fmt } from '../lib/format';
 
 const FILTER_OPTIONS = [
   { label: '7 días', value: 7 },

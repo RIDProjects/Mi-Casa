@@ -128,7 +128,7 @@ export default function CreditosPage() {
           <div className="text-5xl mb-4">🏦</div>
           <h3 className="text-lg font-semibold text-on-surface">No hay créditos registrados</h3>
           <p className="text-sm text-on-surface-variant mt-1">Registrá tu primer préstamo para llevar el control</p>
-          <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
+          <button onClick={() => setShowModal(true)} className="mt-4 btn-primary text-sm">
             Agregar crédito
           </button>
         </div>

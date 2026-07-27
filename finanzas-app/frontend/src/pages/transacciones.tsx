@@ -14,14 +14,7 @@ import {
 } from 'lucide-react';
 import { useCurrencyStore } from '../store/currency.store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
-
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
+import { fmt, MONTH_NAMES } from '../lib/format';
 
 const CATEGORIES = [
   'Casa', 'Comida', 'Familia', 'Transporte', 'Viajes',
@@ -53,6 +46,7 @@ const defaultForm = {
 
 const TABS = ['Historial', 'Programadas', 'Pendientes'] as const;
 type Tab = typeof TABS[number];
+const TABS_WIP: Tab[] = ['Programadas', 'Pendientes'];
 
 /** Map category name to a lucide icon */
 function CategoryIcon({ categoria }: { categoria: string }) {
@@ -337,6 +331,20 @@ export default function TransaccionesPage() {
           </button>
         ))}
       </div>
+
+      {/* ── WIP tab placeholder ── */}
+      {TABS_WIP.includes(activeTab) && (
+        <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant gap-3">
+          <span className="text-4xl">🚧</span>
+          <p className="font-section-title text-section-title">Próximamente</p>
+          <p className="font-body-default text-body-default opacity-60">
+            La sección <strong>{activeTab}</strong> estará disponible en una próxima versión.
+          </p>
+        </div>
+      )}
+
+      {/* ── Historial content ── */}
+      {activeTab === 'Historial' && <>
 
       {/* ── Month navigator ── */}
       <div className="flex items-center justify-center gap-4 mb-6">
@@ -648,6 +656,8 @@ export default function TransaccionesPage() {
           </div>
         </div>
       )}
+
+      </>} {/* end Historial content */}
 
       {/* ── Modal Create/Edit ── */}
       <Modal
