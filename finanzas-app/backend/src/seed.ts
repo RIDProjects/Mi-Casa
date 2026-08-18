@@ -60,10 +60,10 @@ export async function seed() {
     const userPerms = permissions.filter(
       p => userModules.includes(p.module as PermissionModule) && userActions.includes(p.action as PermissionAction)
     );
-    userRole = roleRepo.create({ 
-      name: 'user', 
-      description: 'Usuario regular: puede ver y crear en deudas, compras, inventario y fondo de emergencia', 
-      permissions: userPerms 
+    userRole = roleRepo.create({
+      name: 'user',
+      description: 'Usuario regular: puede ver y crear en deudas, compras, inventario y fondo de emergencia',
+      permissions: userPerms
     });
     userRole = await roleRepo.save(userRole);
     console.log('✅ User role created (limited permissions)');
@@ -104,7 +104,7 @@ export async function seed() {
       isActive: true,
     });
     await userRepo.save(admin);
-    console.log('✅ Admin user created: admin@finanzas.com / Admin123!');
+    console.log('✅ Admin user created');
   }
 
   await app.close();
