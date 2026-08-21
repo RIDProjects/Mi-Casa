@@ -17,9 +17,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { debtsService } from '../../services/debts.service';
 import { CreateDebtDto, DebtType } from '../../types';
-import { RootStackParamList } from '../../navigation/types';
+import { DebtsStackParamList } from '../../navigation/types';
 
-type RouteT = RouteProp<RootStackParamList, 'AddDebt'>;
+type RouteT = RouteProp<DebtsStackParamList, 'AddDebt'>;
 
 const TYPES: { value: DebtType; label: string; icon: string }[] = [
   { value: 'they_owe_me', label: 'ME DEBEN', icon: '💙' },

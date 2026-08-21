@@ -3,16 +3,17 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 // Stack raíz (sobre los tabs — para modales y pantallas secundarias)
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
-  AddDebt: { debtId?: string; debtType?: 'they_owe_me' | 'i_owe' } | undefined;
-  DebtsSummary: undefined;
+  Vencimientos: undefined;
+  Notificaciones: undefined;
 };
 
-// Bottom tabs (5 tabs según especificación)
+// Bottom tabs (6 tabs: Dashboard, Gastos, Presupuesto, Metas, Deudas, Perfil)
 export type MainTabParamList = {
   Dashboard: undefined;
   Expenses: NavigatorScreenParams<GastosStackParamList>;
   Presupuesto: undefined;
   Metas: undefined;
+  Deudas: NavigatorScreenParams<DebtsStackParamList>;
   Perfil: undefined;
 };
 
@@ -20,4 +21,10 @@ export type MainTabParamList = {
 export type GastosStackParamList = {
   ShoppingList: undefined;
   ExpenseRegistry: undefined;
+};
+
+// Stack anidado dentro del tab de Deudas
+export type DebtsStackParamList = {
+  DebtsSummary: undefined;
+  AddDebt: { debtId?: string; debtType?: 'they_owe_me' | 'i_owe' } | undefined;
 };

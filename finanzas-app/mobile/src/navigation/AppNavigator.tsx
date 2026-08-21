@@ -7,8 +7,8 @@ import { Colors } from '../theme/colors';
 import { RootStackParamList } from './types';
 import MainTabs from './MainTabs';
 import LoginScreen from '../screens/auth/LoginScreen';
-import AddDebtScreen from '../screens/debts/AddDebtScreen';
-import DebtsSummaryScreen from '../screens/debts/DebtsSummaryScreen';
+import VencimientosScreen from '../screens/VencimientosScreen';
+import NotificacionesScreen from '../screens/NotificacionesScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -55,11 +55,11 @@ export default function AppNavigator() {
         >
           <Stack.Screen name="MainTabs" component={MainTabs} />
           <Stack.Screen
-            name="DebtsSummary"
-            component={DebtsSummaryScreen}
+            name="Vencimientos"
+            component={VencimientosScreen}
             options={{
               headerShown: true,
-              headerTitle: 'Deudas',
+              headerTitle: 'Próximos vencimientos',
               headerStyle: { backgroundColor: Colors.card },
               headerTintColor: Colors.textPrimary,
               headerTitleStyle: { fontWeight: '700' },
@@ -67,12 +67,11 @@ export default function AppNavigator() {
             }}
           />
           <Stack.Screen
-            name="AddDebt"
-            component={AddDebtScreen}
+            name="Notificaciones"
+            component={NotificacionesScreen}
             options={{
-              presentation: 'modal',
               headerShown: true,
-              headerTitle: 'Registrar Deuda',
+              headerTitle: 'Notificaciones',
               headerStyle: { backgroundColor: Colors.card },
               headerTintColor: Colors.textPrimary,
               headerTitleStyle: { fontWeight: '700' },
