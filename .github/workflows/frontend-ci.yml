@@ -1,0 +1,42 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'finanzas-app/frontend/**'
+  pull_request:
+    paths:
+      - 'finanzas-app/frontend/**'
+
+defaults:
+  run:
+    working-directory: finanzas-app/frontend
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: finanzas-app/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      # NOTE: ESLint is not configured in this project yet (`next lint` prompts
+      # interactively for a config on first run). Re-enable this step once
+      # an .eslintrc is committed.
+      # - name: Lint
+      #   run: npm run lint
+
+      - name: Run tests
+        run: npm test
