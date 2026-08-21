@@ -5,7 +5,7 @@ import { housesAPI, houseInviteAPI } from '../services/api';
 import { usersAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import toast from 'react-hot-toast';
-import { Users, Trash2, Plus, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { Users, Plus, UserCheck, UserX, Loader2 } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
@@ -30,7 +30,6 @@ export default function HouseMembersPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [userEmail, setUserEmail] = useState('');
-  const [loadingEmail, setLoadingEmail] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'member' });
 
   const { data: allUsers = [] } = useQuery('allUsersForHouse', () =>
@@ -86,11 +85,11 @@ export default function HouseMembersPage() {
   const handleAddUserToHouse = async () => {
     if (!selectedMember || !houseId) return;
     try {
-      await (housesAPI as any).addUserToHouse(houseId, { userId: selectedMember.id });
+      await houseInviteAPI.invite(houseId, selectedMember.email, 'member');
       toast.success(`${selectedMember.name} agregado a la casa`);
       setShowEditModal(false);
       setSelectedMember(null);
-      refetch();
+      qc.invalidateQueries(['houseMembers', houseId]);
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Error al agregar usuario');
     }
@@ -269,9 +268,8 @@ export default function HouseMembersPage() {
           <button
             onClick={handleSearchUser}
             className="btn-primary w-full"
-            disabled={loadingEmail}
           >
-            {loadingEmail ? <Loader2 className="animate-spin mx-auto" /> : 'Buscar usuario'}
+            Buscar usuario
           </button>
         </div>
       </Modal>
