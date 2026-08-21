@@ -16,7 +16,6 @@ interface AuthStore {
   logout: () => void;
   hasPermission: (module: string, action: string) => boolean;
   isAdminGlobal: () => boolean;
-  isHouseAdmin: () => boolean;
 }
 
 const getInitialState = () => {
@@ -57,10 +56,5 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
     const { user } = get();
     if (!user) return false;
     return user.roles?.some(r => r.name === 'admin') ?? false;
-  },
-  isHouseAdmin: () => {
-    const { user } = get();
-    if (!user) return false;
-    return user.roles?.some(r => r.name === 'house_admin') ?? false;
   },
 }));

@@ -10,7 +10,6 @@ import { RolesModule } from './roles/roles.module';
 import { HousesModule } from './houses/houses.module';
 import { DebtsModule } from './debts/debts.module';
 import { PurchasesModule } from './purchases/purchases.module';
-import { InventoryModule } from './inventory/inventory.module';
 import { EmergencyFundModule } from './emergency-fund/emergency-fund.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { BudgetModule } from './budget/budget.module';
@@ -56,7 +55,7 @@ import { HouseCurrenciesModule } from './house-currencies/house-currencies.modul
       },
     }),
     AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
-    PurchasesModule, InventoryModule, EmergencyFundModule, NotificationsModule,
+    PurchasesModule, EmergencyFundModule, NotificationsModule,
     BudgetModule, TransactionsModule, SavingsGoalsModule,
     CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
     RecurringTransactionsModule, SummaryModule, CuotasModule,

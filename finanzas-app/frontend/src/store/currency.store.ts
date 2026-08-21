@@ -8,6 +8,7 @@ export interface HouseCurrency {
   symbol: string;
   locale: string;
   isBase: boolean;
+  isActive: boolean;
 }
 
 interface CurrencyState {
@@ -17,8 +18,6 @@ interface CurrencyState {
   setCurrencies: (currencies: HouseCurrency[]) => void;
   setRates: (rates: Record<string, number>) => void;
   setActiveCurrency: (code: string) => void;
-  getBaseCurrency: () => HouseCurrency | undefined;
-  getActiveCurrency: () => HouseCurrency | undefined;
 }
 
 export const useCurrencyStore = create<CurrencyState>()(
@@ -30,10 +29,6 @@ export const useCurrencyStore = create<CurrencyState>()(
       setCurrencies: (currencies) => set({ currencies }),
       setRates: (rates) => set({ rates }),
       setActiveCurrency: (code) => set({ activeCurrencyCode: code }),
-      getBaseCurrency: () => get().currencies.find(c => c.isBase),
-      getActiveCurrency: () =>
-        get().currencies.find(c => c.currencyCode === get().activeCurrencyCode) ??
-        get().currencies.find(c => c.isBase),
     }),
     { name: 'mi-casa-currency-v2' }
   )

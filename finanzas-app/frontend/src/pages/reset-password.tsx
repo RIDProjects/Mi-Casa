@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { authAPI } from '../services/api';
 import { Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';

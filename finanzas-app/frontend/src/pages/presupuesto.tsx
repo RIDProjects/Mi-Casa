@@ -7,7 +7,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import {
   Plus, Trash2, ChevronDown, ChevronRight,
-  Calculator, TrendingUp, TrendingDown, Zap, CreditCard, Bug, Target, Pencil,
+  Calculator, TrendingUp, TrendingDown, CreditCard, Bug, Pencil,
   Lock, BrainCircuit,
 } from 'lucide-react';
 import { fmt } from '../lib/format';
@@ -305,7 +305,7 @@ export default function PresupuestoPage() {
   const { data: budgets = [], isLoading } = useQuery<Budget[]>('budgets', () => budgetAPI.getAll().then(r => r.data), { staleTime: 0 });
   const activeBudgetId = (budgets as Budget[])[0]?.id ?? null;
 
-  const { data: budget, isLoading: loadingBudget, refetch: refetchBudget } = useQuery<Budget>(
+  const { data: budget, isLoading: loadingBudget } = useQuery<Budget>(
     ['budget', activeBudgetId],
     () => budgetAPI.getOne(activeBudgetId!).then(r => r.data),
     { enabled: !!activeBudgetId, staleTime: 0 },

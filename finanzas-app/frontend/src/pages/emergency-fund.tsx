@@ -7,7 +7,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
-import { Plus, PiggyBank, Target, Lock } from 'lucide-react';
+import { Plus, PiggyBank, Lock } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
 import { fmt } from '../lib/format';

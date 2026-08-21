@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { housesAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Building2, Users, Edit2, Trash2, Plus, X, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { Building2, Users, Edit2, Trash2, X, UserCheck, UserX, Loader2 } from 'lucide-react';
 
 interface Member {
   id: string;

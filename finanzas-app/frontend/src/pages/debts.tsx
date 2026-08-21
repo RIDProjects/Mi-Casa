@@ -23,7 +23,6 @@ export default function DebtsPage() {
   const canDelete = hasPermission('debts', 'delete');
   const { currencies } = useCurrencyStore();
   const baseCurrency = currencies.find(c => c.isBase);
-  const getCurrencySymbol = (code: string) => currencies.find(c => c.currencyCode === code)?.symbol ?? code;
 
   const [showModal, setShowModal] = useState(false);
   const [editDebt, setEditDebt] = useState<any>(null);
@@ -32,7 +31,7 @@ export default function DebtsPage() {
   const [paidDebtInfo, setPaidDebtInfo] = useState<any>(null);
 
   const { data: debts = [], isLoading: loadingDebts, isError: errorDebts, refetch: refetchDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
-  const { data: summary, isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
+  const { isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
 
   const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
@@ -57,7 +56,7 @@ export default function DebtsPage() {
   });
 
   const markPaidMut = useMutation((id: string) => debtsAPI.update(id, { isPaid: true }), {
-    onSuccess: (res, id) => {
+    onSuccess: (_res, id) => {
       const debt = debts.find((d: any) => d.id === id);
       const now = new Date();
       setPaidDebtInfo({

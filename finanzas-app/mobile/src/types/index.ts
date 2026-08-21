@@ -45,14 +45,6 @@ export interface CreateDebtDto {
   type: DebtType;
 }
 
-export interface UpdateDebtDto {
-  personName?: string;
-  amount?: number;
-  note?: string;
-  type?: DebtType;
-  isPaid?: boolean;
-}
-
 // ─── Transactions ────────────────────────────────────────────────────────────
 
 export type TransactionType = 'gasto' | 'ingreso_fijo' | 'ingreso_variable';

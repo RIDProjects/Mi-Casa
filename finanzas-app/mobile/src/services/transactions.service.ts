@@ -15,11 +15,6 @@ export const transactionsService = {
     return res.data;
   },
 
-  update: async (id: string, data: Partial<CreateTransactionDto>): Promise<Transaction> => {
-    const res = await apiClient.put<Transaction>(`/transactions/${id}`, data);
-    return res.data;
-  },
-
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/transactions/${id}`);
   },

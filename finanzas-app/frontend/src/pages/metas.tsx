@@ -8,7 +8,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import {
-  Plus, Target, AlertTriangle, RefreshCw, PiggyBank,
+  Plus, AlertTriangle, RefreshCw, PiggyBank,
   TrendingUp, CheckCircle, Calendar, DollarSign, ChevronRight,
 } from 'lucide-react';
 import { fmt } from '../lib/format';
@@ -114,11 +114,6 @@ export default function MetasPage() {
     const total = goals.reduce((s: number, g: any) => s + Number(g.mesesParaAhorrarla || 0) * 30, 0);
     return Math.round(total / goals.length);
   }, [goals]);
-
-  // Main goal: first active (largest target)
-  const mainGoal = activeGoals.length > 0
-    ? [...activeGoals].sort((a: any, b: any) => Number(b.montoMeta) - Number(a.montoMeta))[0]
-    : null;
 
   return (
     <Layout>

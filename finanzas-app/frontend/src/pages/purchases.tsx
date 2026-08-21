@@ -156,9 +156,6 @@ export default function PurchasesPage() {
     return currencies.find(c => c.currencyCode === code)?.symbol ?? code;
   };
 
-  const fmtWithSymbol = (amount: number, currencyCode?: string | null) =>
-    `${getCurrencySymbol(currencyCode)}${fmt(amount)}`;
-
   const baseSymbol = baseCurrency?.symbol ?? '$';
 
   if (isLoading) return (

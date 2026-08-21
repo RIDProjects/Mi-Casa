@@ -177,14 +177,6 @@ export const importTransactionsCSV = async (file: File, year: number, month: num
   });
 };
 
-export const recurringAPI = {
-  getAll: () => api.get('/recurring-transactions'),
-  create: (data: any) => api.post('/recurring-transactions', data),
-  update: (id: string, data: any) => api.put(`/recurring-transactions/${id}`, data),
-  remove: (id: string) => api.delete(`/recurring-transactions/${id}`),
-  generateForMonth: (year: number, month: number) => api.post('/recurring-transactions/generate', { year, month }),
-};
-
 export const summaryAPI = {
   getGlobal: () => api.get('/summary'),
 };
@@ -234,11 +226,6 @@ export const investmentsAPI = {
   create: (data: any) => api.post('/investments', data),
   update: (id: string, data: any) => api.put(`/investments/${id}`, data),
   remove: (id: string) => api.delete(`/investments/${id}`),
-};
-
-export const exchangeRatesAPI = {
-  getLatest: () => api.get('/exchange-rates/latest'),
-  create: (data: any) => api.post('/exchange-rates', data),
 };
 
 export const houseCurrenciesAPI = {

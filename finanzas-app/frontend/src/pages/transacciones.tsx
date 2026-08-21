@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import {
   Plus, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw,
-  Download, Upload, TrendingUp, TrendingDown, DollarSign, CreditCard,
+  Download, Upload, TrendingUp, DollarSign,
   ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight,
   Laptop, Calendar,
 } from 'lucide-react';
@@ -139,12 +139,6 @@ export default function TransaccionesPage() {
   const { data: transactions = [], isLoading, isError, refetch } = useQuery(
     qKey,
     () => transactionsAPI.getByMonth(year, month).then(r => r.data),
-    { staleTime: 0 }
-  );
-
-  const { data: summary } = useQuery(
-    summaryKey,
-    () => transactionsAPI.getSummary(year, month).then(r => r.data),
     { staleTime: 0 }
   );
 

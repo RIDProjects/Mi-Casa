@@ -19,14 +19,6 @@ export class ExchangeRatesController {
     return this.svc.getLatest();
   }
 
-  // TODO: unused — frontend only calls /exchange-rates/latest. Verify roadmap before removing.
-  // @ApiBearerAuth()
-  // @UseGuards(JwtAuthGuard)
-  // @Get()
-  // findAll() {
-  //   return this.svc.findAll();
-  // }
-
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()

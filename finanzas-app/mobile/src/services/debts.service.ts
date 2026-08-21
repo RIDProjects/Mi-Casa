@@ -1,5 +1,5 @@
 import apiClient from './apiClient';
-import { Debt, DebtsSummary, CreateDebtDto, UpdateDebtDto } from '../types';
+import { Debt, DebtsSummary, CreateDebtDto } from '../types';
 
 export const debtsService = {
   getAll: async (): Promise<Debt[]> => {
@@ -14,11 +14,6 @@ export const debtsService = {
 
   create: async (data: CreateDebtDto): Promise<Debt> => {
     const res = await apiClient.post<Debt>('/debts', data);
-    return res.data;
-  },
-
-  update: async (id: string, data: UpdateDebtDto): Promise<Debt> => {
-    const res = await apiClient.put<Debt>(`/debts/${id}`, data);
     return res.data;
   },
 

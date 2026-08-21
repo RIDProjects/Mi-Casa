@@ -21,7 +21,6 @@ const getInitialTheme = (): Theme => {
 interface ThemeStore {
   theme: Theme;
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
 }
 
 export const useThemeStore = create<ThemeStore>()(
@@ -35,13 +34,6 @@ export const useThemeStore = create<ThemeStore>()(
         if (typeof window !== 'undefined') {
           document.documentElement.classList.remove('light', 'dark');
           document.documentElement.classList.add(newTheme);
-        }
-      },
-      setTheme: (theme: Theme) => {
-        set({ theme });
-        if (typeof window !== 'undefined') {
-          document.documentElement.classList.remove('light', 'dark');
-          document.documentElement.classList.add(theme);
         }
       },
     }),

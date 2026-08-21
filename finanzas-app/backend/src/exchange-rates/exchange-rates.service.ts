@@ -11,20 +11,6 @@ export class ExchangeRatesService {
     @Optional() private readonly houseCurrenciesService?: HouseCurrenciesService,
   ) {}
 
-  async findAll(): Promise<ExchangeRate[]> {
-    // Return the latest entry per fromCurrency pair (base: CUP)
-    const pairs = ['MLC', 'USD'];
-    const results: ExchangeRate[] = [];
-    for (const from of pairs) {
-      const latest = await this.repo.findOne({
-        where: { fromCurrency: from, toCurrency: 'CUP' },
-        order: { date: 'DESC', createdAt: 'DESC' },
-      });
-      if (latest) results.push(latest);
-    }
-    return results;
-  }
-
   async create(dto: Partial<ExchangeRate>): Promise<ExchangeRate> {
     const entry = this.repo.create({
       ...dto,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { House } from '../database/entities/house.entity';
@@ -151,22 +151,5 @@ export class HousesService {
     if (!user.activeHouseId) user.activeHouseId = houseId;
     await this.userRepo.save(user);
     return { status: 'added', userId: user.id };
-  }
-
-  // Invite an existing user to a house by email
-  async addUserToHouse(houseId: string, email: string) {
-    const house = await this.houseRepo.findOne({ where: { id: houseId } });
-    if (!house) throw new NotFoundException('Casa no encontrada');
-
-    const user = await this.userRepo.findOne({ where: { email }, relations: ['houses'] });
-    if (!user) throw new NotFoundException('Usuario no encontrado');
-
-    const alreadyMember = user.houses?.some(h => h.id === houseId);
-    if (alreadyMember) throw new BadRequestException('El usuario ya pertenece a esta casa');
-
-    user.houses = [...(user.houses || []), house];
-    if (!user.activeHouseId) user.activeHouseId = houseId;
-    await this.userRepo.save(user);
-    return { message: 'Usuario agregado a la casa' };
   }
 }

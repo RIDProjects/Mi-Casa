@@ -12,7 +12,6 @@ export class HouseholdExpensesService {
   constructor(
     @InjectRepository(HouseholdExpense) private repo: Repository<HouseholdExpense>,
     @InjectRepository(PurchaseList) private listRepo: Repository<PurchaseList>,
-    @InjectRepository(PurchaseItem) private itemRepo: Repository<PurchaseItem>,
   ) {}
 
   async getMonthData(houseId: string, month: string) {

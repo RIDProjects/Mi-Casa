@@ -118,7 +118,7 @@ export default function DebtsSummaryScreen() {
       : []),
   ];
 
-  const renderItem = ({ item, section }: { item: Debt; section: Section }) => {
+  const renderItem = ({ item }: { item: Debt }) => {
     if (item.isPaid) {
       return (
         <View style={[styles.paidCard, { opacity: 0.6 }]}>

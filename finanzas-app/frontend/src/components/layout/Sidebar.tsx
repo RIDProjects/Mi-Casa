@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import {
   LayoutDashboard, Wallet, Receipt, PiggyBank, TrendingUp,
-  CreditCard, DollarSign, Target, Calculator, ShoppingCart, BookOpen,
-  BarChart2, Settings, LogOut, Plus, Moon, Sun, Users,
-  ShieldCheck, Building2, X, Menu,
+  CreditCard, DollarSign, Calculator, ShoppingCart, BookOpen,
+  BarChart2, Settings, LogOut, Moon, Sun, Users,
+  ShieldCheck, Building2, X,
   Landmark, Layers, TrendingDown, Shield, CalendarClock,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
@@ -52,7 +52,7 @@ interface SidebarProps { isOpen?: boolean; onClose?: () => void; }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
-  const { user, logout, hasPermission, isAdminGlobal } = useAuthStore();
+  const { logout, hasPermission } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
 
   const isAdminRoute = router.pathname.startsWith('/admin');
