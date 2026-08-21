@@ -15,7 +15,7 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": false,
+      "supportsTablet": true,
       "bundleIdentifier": "com.micasapro.app"
     },
     "android": {
