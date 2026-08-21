@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { budgetAPI } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
+import { ErrorState } from '../components/ui/ErrorState';
 import toast from 'react-hot-toast';
 import {
   Plus, Trash2, ChevronDown, ChevronRight,
@@ -302,10 +303,10 @@ export default function PresupuestoPage() {
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [savingsTargetEdit, setSavingsTargetEdit] = useState(20);
 
-  const { data: budgets = [], isLoading } = useQuery<Budget[]>('budgets', () => budgetAPI.getAll().then(r => r.data), { staleTime: 0 });
+  const { data: budgets = [], isLoading, isError: isBudgetsError, refetch: refetchBudgets } = useQuery<Budget[]>('budgets', () => budgetAPI.getAll().then(r => r.data), { staleTime: 0 });
   const activeBudgetId = (budgets as Budget[])[0]?.id ?? null;
 
-  const { data: budget, isLoading: loadingBudget } = useQuery<Budget>(
+  const { data: budget, isLoading: loadingBudget, isError: isBudgetError, refetch: refetchBudget } = useQuery<Budget>(
     ['budget', activeBudgetId],
     () => budgetAPI.getOne(activeBudgetId!).then(r => r.data),
     { enabled: !!activeBudgetId, staleTime: 0 },
@@ -366,6 +367,23 @@ export default function PresupuestoPage() {
           <div className="skeleton h-40 w-full" />
           <div className="skeleton h-64 w-full" />
         </div>
+      </Layout>
+    );
+  }
+
+  if (isBudgetsError || isBudgetError) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="font-page-title text-page-title text-on-surface">Presupuesto</h1>
+            <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planificá tus ingresos y gastos mensuales</p>
+          </div>
+        </div>
+        <ErrorState
+          message="No se pudo cargar tu presupuesto"
+          onRetry={() => { if (isBudgetsError) refetchBudgets(); if (isBudgetError) refetchBudget(); }}
+        />
       </Layout>
     );
   }

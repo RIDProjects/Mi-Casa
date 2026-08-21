@@ -10,6 +10,7 @@ import StatCard from '../components/ui/StatCard';
 import { useAuthStore } from '../store/auth.store';
 import { CurrencyToggle } from '../components/ui/CurrencyToggle';
 import { HealthScore } from '../components/ui/HealthScore';
+import { ErrorState } from '../components/ui/ErrorState';
 import { useCurrencyFormatter } from '../lib/currency';
 import { useCountUp } from '../hooks/useCountUp';
 import {
@@ -55,22 +56,22 @@ export default function Dashboard() {
     () => debtsAPI.getSummary(),
     { enabled: hasPermission('debts', 'view'), select: d => d.data },
   );
-  const { data: budgetData } = useQuery('budgetDashboard', () => budgetAPI.getAll(), { select: d => d.data });
+  const { data: budgetData, isError: isBudgetDataError, refetch: refetchBudgetData } = useQuery('budgetDashboard', () => budgetAPI.getAll(), { select: d => d.data });
   const firstBudget   = Array.isArray(budgetData) ? budgetData[0] : undefined;
   const budgetSummary = firstBudget?.summary as
     | { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: AdvisoryStatus }
     | undefined;
   const savingsPercent = (firstBudget as any)?.savingsTargetPercent ?? 0;
 
-  const { data: globalSummary } = useQuery('globalSummary', () => summaryAPI.getGlobal().then(r => r.data), { retry: false, staleTime: 60000 });
-  const { data: insights }      = useQuery('dashboardInsights', () => insightsAPI.get().then(r => r.data), { retry: false, staleTime: 60000 });
-  const { data: txSummary }     = useQuery(
+  const { data: globalSummary, isError: isGlobalSummaryError, refetch: refetchGlobalSummary } = useQuery('globalSummary', () => summaryAPI.getGlobal().then(r => r.data), { retry: false, staleTime: 60000 });
+  const { data: insights, isError: isInsightsError, refetch: refetchInsights }      = useQuery('dashboardInsights', () => insightsAPI.get().then(r => r.data), { retry: false, staleTime: 60000 });
+  const { data: txSummary, isError: isTxSummaryError, refetch: refetchTxSummary }     = useQuery(
     ['transactionsDashboard', budgetSummary?.totalMonthlyIncome, budgetSummary?.totalMonthlyExpenses],
     () => transactionsAPI.getSummary(currentYear, currentMonth, budgetSummary?.totalMonthlyIncome, budgetSummary?.totalMonthlyExpenses),
     { select: d => d.data as { totalIncome: number; totalExpenses: number; expectedExpenses: number } },
   );
-  const { data: allInvestments } = useQuery('investments', () => investmentsAPI.getAll().then(r => r.data), { retry: false, staleTime: 60000 });
-  const { data: allDebts }       = useQuery('debts', () => debtsAPI.getAll().then(r => r.data ?? []), { retry: false, staleTime: 60000, enabled: hasPermission('debts', 'view') });
+  const { data: allInvestments, isError: isInvestmentsError, refetch: refetchInvestments } = useQuery('investments', () => investmentsAPI.getAll().then(r => r.data), { retry: false, staleTime: 60000 });
+  const { data: allDebts, isError: isDebtsError, refetch: refetchDebts }       = useQuery('debts', () => debtsAPI.getAll().then(r => r.data ?? []), { retry: false, staleTime: 60000, enabled: hasPermission('debts', 'view') });
 
   const netWorth     = safeNum((globalSummary as any)?.netWorth?.total ?? 0);
   const netWorthAnim = useCountUp(netWorth, 1200, netWorth !== 0);
@@ -138,6 +139,9 @@ export default function Dashboard() {
       </div>
 
       {/* ── HERO: Patrimonio neto ── */}
+      {isGlobalSummaryError && (
+        <div className="mb-6"><ErrorState message="No se pudo cargar el patrimonio neto" onRetry={() => refetchGlobalSummary()} /></div>
+      )}
       {globalSummary && (
         <div className="mb-6 rounded-2xl p-6 border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-gray-900 animate-fade-up"
           style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
@@ -174,6 +178,9 @@ export default function Dashboard() {
       )}
 
       {/* ── Budget KPIs ── */}
+      {isBudgetDataError && (
+        <div className="mb-6"><ErrorState message="No se pudo cargar el presupuesto" onRetry={() => refetchBudgetData()} /></div>
+      )}
       {budgetSummary && (
         <div className="mb-6 animate-stagger-1">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
@@ -209,6 +216,14 @@ export default function Dashboard() {
       </div>
 
       {/* ── Debt vs Investment alert ── */}
+      {(isInvestmentsError || isDebtsError) && (
+        <div className="mb-5">
+          <ErrorState
+            message={isInvestmentsError && isDebtsError ? 'No se pudieron cargar inversiones ni deudas' : isInvestmentsError ? 'No se pudieron cargar las inversiones' : 'No se pudieron cargar las deudas'}
+            onRetry={() => { if (isInvestmentsError) refetchInvestments(); if (isDebtsError) refetchDebts(); }}
+          />
+        </div>
+      )}
       {avgDebtCost > 0 && avgInvestReturn > 0 && avgDebtCost > avgInvestReturn && (
         <div className="mb-5 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
           <p className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
@@ -223,6 +238,9 @@ export default function Dashboard() {
       {/* ── Cards grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* Transactions */}
+        {isTxSummaryError && (
+          <ErrorState message="No se pudo cargar el resumen de transacciones" onRetry={() => refetchTxSummary()} />
+        )}
         {txSummary && (
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
@@ -329,6 +347,9 @@ export default function Dashboard() {
       </div>
 
       {/* ── Insights ── */}
+      {isInsightsError && (
+        <div className="mb-6"><ErrorState message="No se pudo cargar el resumen inteligente" onRetry={() => refetchInsights()} /></div>
+      )}
       {insights && (
         <div className="mb-6">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Resumen inteligente</p>
