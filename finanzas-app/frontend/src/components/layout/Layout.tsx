@@ -4,17 +4,27 @@ import { useAuthStore } from '../../store/auth.store';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isAdminGlobal } = useAuthStore();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAdminRoute = router.pathname.startsWith('/admin');
+  const isAdmin = isAdminGlobal();
 
   useEffect(() => {
     if (!isAuthenticated) router.replace('/login');
   }, [isAuthenticated, router]);
 
-  if (!isAuthenticated) {
+  useEffect(() => {
+    if (isAuthenticated && isAdminRoute && !isAdmin) {
+      toast.error('No tenés permisos para acceder a esa sección');
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, isAdminRoute, isAdmin, router]);
+
+  if (!isAuthenticated || (isAdminRoute && !isAdmin)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-surface">
         <div className="text-on-surface-variant text-body-small font-body-small">Redirigiendo...</div>
