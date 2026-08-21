@@ -47,13 +47,12 @@ export async function seed() {
     console.log('✅ Viewer role created');
   }
 
-  // Create user role with limited permissions (view + create only for: debts, purchases, inventory, emergency_fund)
+  // Create user role with limited permissions (view + create only for: debts, purchases, emergency_fund)
   let userRole = await roleRepo.findOne({ where: { name: 'user' }, relations: ['permissions'] });
   if (!userRole) {
     const userModules = [
       PermissionModule.DEBTS,
       PermissionModule.PURCHASES,
-      PermissionModule.INVENTORY,
       PermissionModule.EMERGENCY_FUND,
     ];
     const userActions = [PermissionAction.VIEW, PermissionAction.CREATE];
@@ -62,7 +61,7 @@ export async function seed() {
     );
     userRole = roleRepo.create({
       name: 'user',
-      description: 'Usuario regular: puede ver y crear en deudas, compras, inventario y fondo de emergencia',
+      description: 'Usuario regular: puede ver y crear en deudas, compras y fondo de emergencia',
       permissions: userPerms
     });
     userRole = await roleRepo.save(userRole);
@@ -76,7 +75,6 @@ export async function seed() {
     const houseAdminModules = [
       PermissionModule.DEBTS,
       PermissionModule.PURCHASES,
-      PermissionModule.INVENTORY,
       PermissionModule.EMERGENCY_FUND,
     ];
     const houseAdminActions = [PermissionAction.VIEW, PermissionAction.CREATE, PermissionAction.EDIT, PermissionAction.DELETE];
@@ -85,7 +83,7 @@ export async function seed() {
     );
     houseAdminRole = roleRepo.create({
       name: 'house_admin',
-      description: 'Admin de casa: permisos completos en su casa (deudas, compras, inventario, fondo emergencia)',
+      description: 'Admin de casa: permisos completos en su casa (deudas, compras, fondo emergencia)',
       permissions: houseAdminPerms
     });
     houseAdminRole = await roleRepo.save(houseAdminRole);

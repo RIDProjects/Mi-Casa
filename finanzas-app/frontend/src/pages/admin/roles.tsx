@@ -7,11 +7,11 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, Shield } from 'lucide-react';
 
-const MODULES = ['users', 'roles', 'debts', 'purchases', 'inventory', 'emergency_fund'];
+const MODULES = ['users', 'roles', 'debts', 'purchases', 'emergency_fund'];
 const ACTIONS = ['view', 'create', 'edit', 'delete'];
 const moduleLabels: Record<string, string> = {
   users: 'Usuarios', roles: 'Roles', debts: 'Deudas',
-  purchases: 'Compras', inventory: 'Inventario', emergency_fund: 'Fondo Emergencia',
+  purchases: 'Compras', emergency_fund: 'Fondo Emergencia',
 };
 
 export default function RolesPage() {
