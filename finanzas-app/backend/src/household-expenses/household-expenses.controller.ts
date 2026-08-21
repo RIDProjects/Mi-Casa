@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGua
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { HouseholdExpensesService } from './household-expenses.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateHouseholdExpenseDto } from './dto/create-household-expense.dto';
+import { UpdateHouseholdExpenseDto } from './dto/update-household-expense.dto';
 
 @ApiTags('Registro de Gastos')
 @ApiBearerAuth()
@@ -19,13 +21,13 @@ export class HouseholdExpensesController {
   }
 
   @Post()
-  create(@Body() dto: any, @Request() req) {
+  create(@Body() dto: CreateHouseholdExpenseDto, @Request() req) {
     const houseId = req.user.house?.id ?? '';
     return this.service.create(dto, houseId);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() dto: UpdateHouseholdExpenseDto, @Request() req) {
     const houseId = req.user.house?.id ?? '';
     return this.service.update(id, houseId, dto);
   }

@@ -4,6 +4,8 @@ import { RolesService } from './roles.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../common/guards/permission.guard';
 import { RequirePermission } from '../common/decorators/require-permission.decorator';
+import { CreateRoleDto } from './dto/create-role.dto';
+import { UpdateRoleDto } from './dto/update-role.dto';
 
 @ApiTags('Roles')
 @ApiBearerAuth()
@@ -15,7 +17,7 @@ export class RolesController {
   @Get() @RequirePermission('roles', 'view') findAll() { return this.rolesService.findAll(); }
   @Get('permissions') @RequirePermission('roles', 'view') getPermissions() { return this.rolesService.findAllPermissions(); }
   @Get(':id') @RequirePermission('roles', 'view') findOne(@Param('id') id: string) { return this.rolesService.findOne(id); }
-  @Post() @RequirePermission('roles', 'create') create(@Body() dto: any) { return this.rolesService.create(dto); }
-  @Put(':id') @RequirePermission('roles', 'edit') update(@Param('id') id: string, @Body() dto: any) { return this.rolesService.update(id, dto); }
+  @Post() @RequirePermission('roles', 'create') create(@Body() dto: CreateRoleDto) { return this.rolesService.create(dto); }
+  @Put(':id') @RequirePermission('roles', 'edit') update(@Param('id') id: string, @Body() dto: UpdateRoleDto) { return this.rolesService.update(id, dto); }
   @Delete(':id') @RequirePermission('roles', 'delete') remove(@Param('id') id: string) { return this.rolesService.remove(id); }
 }

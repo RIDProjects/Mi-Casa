@@ -8,6 +8,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ExchangeRatesService } from './exchange-rates.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateExchangeRateDto } from './dto/create-exchange-rate.dto';
 
 @ApiTags('Tipos de Cambio')
 @Controller('exchange-rates')
@@ -22,7 +23,7 @@ export class ExchangeRatesController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() dto: any) {
+  create(@Body() dto: CreateExchangeRateDto) {
     return this.svc.create(dto);
   }
 }

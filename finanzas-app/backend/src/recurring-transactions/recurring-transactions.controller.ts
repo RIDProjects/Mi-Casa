@@ -13,6 +13,8 @@ import {
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RecurringTransactionsService } from './recurring-transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
+import { UpdateRecurringTransactionDto } from './dto/update-recurring-transaction.dto';
 import { User } from '../database/entities/user.entity';
 import { Request as ExpressRequest } from 'express';
 
@@ -42,12 +44,12 @@ export class RecurringTransactionsController {
   }
 
   @Post()
-  create(@Body() dto: any, @Request() req: AuthRequest) {
+  create(@Body() dto: CreateRecurringTransactionDto, @Request() req: AuthRequest) {
     return this.service.create(dto, resolveHouseId(req.user));
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: any, @Request() req: AuthRequest) {
+  update(@Param('id') id: string, @Body() dto: UpdateRecurringTransactionDto, @Request() req: AuthRequest) {
     return this.service.update(id, resolveHouseId(req.user), dto);
   }
 

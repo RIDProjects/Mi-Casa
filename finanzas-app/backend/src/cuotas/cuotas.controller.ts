@@ -13,6 +13,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CuotasService } from './cuotas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCuotaDto } from './dto/create-cuota.dto';
+import { UpdateCuotaDto } from './dto/update-cuota.dto';
 
 function resolveHouseId(user: any): string {
   return user?.house?.id ?? user?.activeHouseId ?? user?.houses?.[0]?.id ?? '';
@@ -41,7 +42,7 @@ export class CuotasController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() dto: UpdateCuotaDto, @Request() req) {
     return this.cuotasService.update(id, resolveHouseId(req.user), dto);
   }
 

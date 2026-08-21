@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards } f
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { LoansService } from './loans.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateLoanDto } from './dto/create-loan.dto';
+import { UpdateLoanDto } from './dto/update-loan.dto';
 
 @ApiTags('Créditos')
 @ApiBearerAuth()
@@ -19,14 +21,14 @@ export class LoansController {
 
   @Post()
   @ApiOperation({ summary: 'Registrar crédito' })
-  create(@Body() dto: any, @Request() req) {
+  create(@Body() dto: CreateLoanDto, @Request() req) {
     const houseId = req.user.house?.id;
     return this.service.create(dto, houseId);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar crédito' })
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() dto: UpdateLoanDto, @Request() req) {
     const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
     return this.service.update(id, houseId, dto);
   }

@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Request, UseGuards } f
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { SavingsGoalsService } from './savings-goals.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateSavingsGoalDto } from './dto/create-savings-goal.dto';
+import { UpdateSavingsGoalDto } from './dto/update-savings-goal.dto';
 
 @ApiTags('Metas de Ahorro')
 @ApiBearerAuth()
@@ -19,14 +21,14 @@ export class SavingsGoalsController {
 
   @Post()
   @ApiOperation({ summary: 'Crear meta de ahorro' })
-  create(@Body() dto: any, @Request() req) {
+  create(@Body() dto: CreateSavingsGoalDto, @Request() req) {
     const houseId = req.user.house?.id;
     return this.service.create(dto, houseId);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar meta de ahorro' })
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() dto: UpdateSavingsGoalDto, @Request() req) {
     const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
     return this.service.update(id, houseId, dto);
   }

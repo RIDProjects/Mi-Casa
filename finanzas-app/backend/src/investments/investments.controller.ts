@@ -12,6 +12,8 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { InvestmentsService } from './investments.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateInvestmentDto } from './dto/create-investment.dto';
+import { UpdateInvestmentDto } from './dto/update-investment.dto';
 import { User } from '../database/entities/user.entity';
 import { Request as ExpressRequest } from 'express';
 
@@ -41,12 +43,12 @@ export class InvestmentsController {
   }
 
   @Post()
-  create(@Body() dto: any, @Request() req: AuthRequest) {
+  create(@Body() dto: CreateInvestmentDto, @Request() req: AuthRequest) {
     return this.svc.create(dto, resolveHouseId(req.user));
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: any, @Request() req: AuthRequest) {
+  update(@Param('id') id: string, @Body() dto: UpdateInvestmentDto, @Request() req: AuthRequest) {
     return this.svc.update(id, resolveHouseId(req.user), dto);
   }
 

@@ -2,6 +2,8 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGua
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NetWorthService } from './net-worth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateAssetDto } from './dto/create-asset.dto';
+import { UpdateAssetDto } from './dto/update-asset.dto';
 
 @ApiTags('Patrimonio Neto')
 @ApiBearerAuth()
@@ -40,14 +42,14 @@ export class NetWorthController {
 
   @Post()
   @ApiOperation({ summary: 'Registrar activo' })
-  create(@Body() dto: any, @Request() req) {
+  create(@Body() dto: CreateAssetDto, @Request() req) {
     const houseId = req.user.house?.id;
     return this.service.create(dto, houseId);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar activo' })
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() dto: UpdateAssetDto, @Request() req) {
     const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
     return this.service.update(id, houseId, dto);
   }
