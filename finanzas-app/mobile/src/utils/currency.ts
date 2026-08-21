@@ -1,21 +1,23 @@
 // Helper único de formateo de moneda para toda la app.
-// El hogar es cubano: la moneda base es CUP. USD se soporta para cuando
-// haya features que lo necesiten (todavía ninguna lo usa).
+// La casa tiene USD configurado como moneda base (house_currencies.isBase) —
+// casi todos los montos reales son en USD, así que ningún call site de la
+// app pasa moneda explícita hoy. CUP queda disponible como parámetro para
+// el día que algún módulo puntual lo necesite.
 
 export type Currency = 'CUP' | 'USD';
 
-const cupFormatter = new Intl.NumberFormat('es-CU', {
+const formatter = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 
 /**
  * Formatea un monto numérico como moneda.
- * CUP (default): "1,234.56 CUP" — mismo patrón que ya usaban
+ * USD (default): "US$ 1,234.56" — moneda base de la casa.
+ * CUP: "1,234.56 CUP" — mismo patrón que ya usaban
  * ExpenseRegistryScreen/ShoppingListScreen.
- * USD: "US$ 1,234.56" — prefijo claramente distinguible de CUP.
  */
-export function formatMoney(amount: number, currency: Currency = 'CUP'): string {
-  const value = cupFormatter.format(Number(amount) || 0);
-  return currency === 'USD' ? `US$ ${value}` : `${value} CUP`;
+export function formatMoney(amount: number, currency: Currency = 'USD'): string {
+  const value = formatter.format(Number(amount) || 0);
+  return currency === 'CUP' ? `${value} CUP` : `US$ ${value}`;
 }
