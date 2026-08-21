@@ -1,5 +1,8 @@
 /finanzas-app/backend/dist/
 /finanzas-app/backend/node_modules/
+/finanzas-app/backend/.env
+/finanzas-app/backend/.env.*
+!/finanzas-app/backend/.env.example
 /finanzas-app/frontend/.next/
 /finanzas-app/frontend/node_modules/
 /finanzas-app/mobile/node_modules/
