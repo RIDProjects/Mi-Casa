@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { transactionsService } from '../../services/transactions.service';
 import { Transaction, TransactionCategory, CategoryTotal } from '../../types';
+import { formatMoney } from '../../utils/currency';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
 
@@ -22,11 +23,7 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-CU', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(n) || 0);
+const fmt = formatMoney;
 
 function CategoryBar({
   label,
@@ -44,7 +41,7 @@ function CategoryBar({
         <View style={[catStyles.dot, { backgroundColor: color }]} />
         <Text style={catStyles.label}>{label}</Text>
         <Text style={catStyles.percentage}>{percentage.toFixed(0)}%</Text>
-        <Text style={catStyles.amount}>{fmt(total)} CUP</Text>
+        <Text style={catStyles.amount}>{fmt(total)}</Text>
       </View>
       <View style={catStyles.barBg}>
         <View
@@ -99,7 +96,7 @@ function TransactionItem({
         <View style={txStyles.topRow}>
           <Text style={txStyles.concepto} numberOfLines={1}>{item.concepto}</Text>
           <Text style={[txStyles.monto, { color }]}>
-            {isGasto ? '-' : '+'}{fmt(item.monto)} CUP
+            {isGasto ? '-' : '+'}{fmt(item.monto)}
           </Text>
         </View>
         <View style={txStyles.bottomRow}>
@@ -243,14 +240,14 @@ export default function ExpenseRegistryScreen() {
         <View style={styles.summaryMain}>
           <Text style={styles.summaryLabel}>Total gastos del mes</Text>
           <Text style={[styles.summaryAmount, { color: Colors.red }]}>
-            -{fmt(totalGastos)} CUP
+            -{fmt(totalGastos)}
           </Text>
         </View>
         {totalIngresos > 0 && (
           <View style={styles.summaryRow}>
             <Text style={styles.summaryRowLabel}>Ingresos registrados</Text>
             <Text style={[styles.summaryRowValue, { color: Colors.green }]}>
-              +{fmt(totalIngresos)} CUP
+              +{fmt(totalIngresos)}
             </Text>
           </View>
         )}

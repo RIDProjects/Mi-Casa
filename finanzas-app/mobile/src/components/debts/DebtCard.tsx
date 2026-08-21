@@ -11,6 +11,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../theme/colors';
 import { Debt } from '../../types';
+import { formatMoney } from '../../utils/currency';
 
 interface Props {
   debt: Debt;
@@ -18,11 +19,7 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(n) || 0);
+const fmt = formatMoney;
 
 export default function DebtCard({ debt, onMarkPaid, onDelete }: Props) {
   const swipeableRef = useRef<Swipeable>(null);

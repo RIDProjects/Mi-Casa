@@ -24,6 +24,7 @@ import {
   PaymentMethod,
   TRANSACTION_CATEGORIES,
 } from '../../types';
+import { formatMoney } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
@@ -31,11 +32,7 @@ type Nav = NativeStackNavigationProp<GastosStackParamList>;
 let _nextId = 1;
 const genId = () => String(_nextId++);
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-CU', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(n) || 0);
+const fmt = formatMoney;
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string; icon: string }[] = [
   { value: 'efectivo', label: 'Efectivo', icon: 'cash-outline' },
@@ -65,7 +62,7 @@ export default function ShoppingListScreen() {
   const precioRef = useRef<TextInput>(null);
   const tiendaRef = useRef<TextInput>(null);
 
-  const total = items.reduce((s, i) => s + i.cantidad * i.precioCUP, 0);
+  const total = items.reduce((s, i) => s + i.cantidad * i.precio, 0);
 
   const handleAddItem = useCallback(() => {
     const producto = inputProducto.trim();
@@ -86,7 +83,7 @@ export default function ShoppingListScreen() {
         id: genId(),
         producto,
         cantidad,
-        precioCUP: precio,
+        precio,
         tienda: inputTienda.trim() || 'Sin tienda',
       },
     ]);
@@ -125,7 +122,7 @@ export default function ShoppingListScreen() {
       qc.invalidateQueries({ queryKey: ['transactions'] });
       Alert.alert(
         'Registrado',
-        `Gasto de ${fmt(total)} CUP registrado correctamente.`,
+        `Gasto de ${fmt(total)} registrado correctamente.`,
         [
           {
             text: 'Ver gastos',
@@ -161,7 +158,7 @@ export default function ShoppingListScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.totalLabel}>Total de la compra</Text>
-            <Text style={styles.totalAmount}>{fmt(total)} CUP</Text>
+            <Text style={styles.totalAmount}>{fmt(total)}</Text>
             <Text style={styles.itemCount}>{items.length} ítem{items.length !== 1 ? 's' : ''}</Text>
           </View>
           <View style={styles.headerActions}>
@@ -191,24 +188,24 @@ export default function ShoppingListScreen() {
             </View>
           ) : (
             Object.entries(grouped).map(([tienda, storeItems]) => {
-              const storeTot = storeItems.reduce((s, i) => s + i.cantidad * i.precioCUP, 0);
+              const storeTot = storeItems.reduce((s, i) => s + i.cantidad * i.precio, 0);
               return (
                 <View key={tienda} style={styles.storeGroup}>
                   <View style={styles.storeHeader}>
                     <Ionicons name="storefront-outline" size={15} color={Colors.textSecondary} />
                     <Text style={styles.storeTitle}>{tienda}</Text>
-                    <Text style={styles.storeTotal}>{fmt(storeTot)} CUP</Text>
+                    <Text style={styles.storeTotal}>{fmt(storeTot)}</Text>
                   </View>
                   {storeItems.map((item) => (
                     <View key={item.id} style={styles.itemRow}>
                       <View style={styles.itemInfo}>
                         <Text style={styles.itemName}>{item.producto}</Text>
                         <Text style={styles.itemDetail}>
-                          {item.cantidad} × {fmt(item.precioCUP)} CUP
+                          {item.cantidad} × {fmt(item.precio)}
                         </Text>
                       </View>
                       <Text style={styles.itemSubtotal}>
-                        {fmt(item.cantidad * item.precioCUP)} CUP
+                        {fmt(item.cantidad * item.precio)}
                       </Text>
                       <TouchableOpacity
                         style={styles.removeBtn}
@@ -233,7 +230,7 @@ export default function ShoppingListScreen() {
                   onPress={() => setShowRegisterForm(true)}
                 >
                   <Ionicons name="checkmark-circle-outline" size={20} color={Colors.green} />
-                  <Text style={styles.registerTriggerText}>Registrar como gasto ({fmt(total)} CUP)</Text>
+                  <Text style={styles.registerTriggerText}>Registrar como gasto ({fmt(total)})</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.registerForm}>
@@ -326,7 +323,7 @@ export default function ShoppingListScreen() {
                       {registerMut.isPending ? (
                         <ActivityIndicator size="small" color={Colors.white} />
                       ) : (
-                        <Text style={styles.regSaveText}>Registrar {fmt(total)} CUP</Text>
+                        <Text style={styles.regSaveText}>Registrar {fmt(total)}</Text>
                       )}
                     </TouchableOpacity>
                   </View>

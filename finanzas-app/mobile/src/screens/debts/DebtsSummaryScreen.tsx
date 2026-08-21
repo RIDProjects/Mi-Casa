@@ -17,18 +17,15 @@ import { StatusBar } from 'expo-status-bar';
 import { Colors } from '../../theme/colors';
 import { debtsService } from '../../services/debts.service';
 import { Debt } from '../../types';
+import { formatMoney } from '../../utils/currency';
 import DebtCard from '../../components/debts/DebtCard';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
-import { RootStackParamList } from '../../navigation/types';
+import { DebtsStackParamList } from '../../navigation/types';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NativeStackNavigationProp<DebtsStackParamList>;
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat('es-ES', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Number(n) || 0);
+const fmt = formatMoney;
 
 interface Section {
   title: string;

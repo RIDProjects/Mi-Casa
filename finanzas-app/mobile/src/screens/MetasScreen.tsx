@@ -13,15 +13,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Colors } from '../theme/colors';
 import { savingsService } from '../services/savings.service';
 import { SavingsGoal } from '../types';
+import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 
-function fmt(n: number): string {
-  return new Intl.NumberFormat('es-AR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Number(n) || 0);
-}
+const fmt = formatMoney;
 
 function GoalCard({ goal }: { goal: SavingsGoal }) {
   const pct = goal.progressPercentage ?? (
@@ -47,7 +43,7 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
           <Text style={styles.goalName} numberOfLines={1}>{goal.name}</Text>
           {goal.deadline && (
             <Text style={styles.goalDeadline}>
-              Plazo: {new Date(goal.deadline).toLocaleDateString('es-AR', {
+              Plazo: {new Date(goal.deadline).toLocaleDateString('es-CU', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -80,13 +76,13 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
         <View>
           <Text style={styles.amountLabel}>Ahorrado</Text>
           <Text style={[styles.amountValue, { color: Colors.green }]}>
-            $ {fmt(goal.currentAmount)}
+            {fmt(goal.currentAmount)}
           </Text>
         </View>
         <View style={styles.amountDivider} />
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={styles.amountLabel}>Objetivo</Text>
-          <Text style={styles.amountValue}>$ {fmt(goal.targetAmount)}</Text>
+          <Text style={styles.amountValue}>{fmt(goal.targetAmount)}</Text>
         </View>
       </View>
 
@@ -156,7 +152,7 @@ export default function MetasScreen() {
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Total ahorrado</Text>
                     <Text style={[styles.summaryValue, { color: Colors.blue }]}>
-                      $ {fmt(totalSaved)}
+                      {fmt(totalSaved)}
                     </Text>
                   </View>
                 </View>
@@ -171,7 +167,7 @@ export default function MetasScreen() {
                       />
                     </View>
                     <Text style={styles.globalPct}>
-                      {Math.min(100, ((totalSaved / totalTarget) * 100)).toFixed(1)}% del objetivo total: $ {fmt(totalTarget)}
+                      {Math.min(100, ((totalSaved / totalTarget) * 100)).toFixed(1)}% del objetivo total: {fmt(totalTarget)}
                     </Text>
                   </>
                 )}

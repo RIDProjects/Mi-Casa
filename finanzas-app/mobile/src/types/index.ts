@@ -96,7 +96,7 @@ export interface ShoppingItem {
   id: string;
   producto: string;
   cantidad: number;
-  precioCUP: number;
+  precio: number;
   tienda: string;
 }
 
@@ -161,6 +161,64 @@ export interface SavingsGoal {
   description?: string;
   isCompleted: boolean;
   progressPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Upcoming Bills ──────────────────────────────────────────────────────────
+
+export interface UpcomingBill {
+  type: string;
+  name: string;
+  amount: number;
+  dueDate: string;
+  daysUntilDue: number;
+}
+
+// ─── Notifications (in-app) ─────────────────────────────────────────────────
+
+export interface AppNotification {
+  id: string;
+  message: string;
+  title: string | null;
+  body: string | null;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+// ─── Credit Cards ────────────────────────────────────────────────────────────
+
+export type CardPaymentType = 'full' | 'minimum' | 'stopped' | 'partial';
+
+export interface CreditCard {
+  id: string;
+  bankName: string;
+  cardName: string;
+  annualRate: number;
+  currentBalance: number;
+  creditLimit: number;
+  cutDate: string | null;
+  paymentDate: string | null;
+  paymentType: CardPaymentType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Cuotas ──────────────────────────────────────────────────────────────────
+
+export interface Cuota {
+  id: string;
+  description: string;
+  totalAmount: number;
+  totalInstallments: number;
+  paidInstallments: number;
+  installmentAmount: number;
+  store: string | null;
+  cardLast4: string | null;
+  startDate: string;
+  withInterest: boolean;
+  interestRate: number;
   createdAt: string;
   updatedAt: string;
 }

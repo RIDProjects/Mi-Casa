@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Colors } from '../theme/colors';
 import { budgetService } from '../services/budget.service';
 import { BudgetCategory } from '../types';
+import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 
@@ -21,12 +22,7 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-function fmt(n: number): string {
-  return new Intl.NumberFormat('es-AR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Number(n) || 0);
-}
+const fmt = formatMoney;
 
 function CategoryRow({ cat }: { cat: BudgetCategory }) {
   const overBudget = cat.spent > cat.budgeted;
@@ -41,10 +37,10 @@ function CategoryRow({ cat }: { cat: BudgetCategory }) {
         <Text style={catStyles.name}>{cat.name}</Text>
         <View style={catStyles.amounts}>
           <Text style={[catStyles.spent, { color: overBudget ? Colors.red : Colors.textPrimary }]}>
-            $ {fmt(cat.spent)}
+            {fmt(cat.spent)}
           </Text>
           <Text style={catStyles.slash}> / </Text>
-          <Text style={catStyles.budgeted}>$ {fmt(cat.budgeted)}</Text>
+          <Text style={catStyles.budgeted}>{fmt(cat.budgeted)}</Text>
         </View>
       </View>
       <View style={catStyles.barBg}>
@@ -60,7 +56,7 @@ function CategoryRow({ cat }: { cat: BudgetCategory }) {
           {pct.toFixed(0)}% usado
         </Text>
         <Text style={[catStyles.remaining, { color: overBudget ? Colors.red : Colors.textSecondary }]}>
-          {overBudget ? `+$ ${fmt(cat.spent - cat.budgeted)} excedido` : `$ ${fmt(cat.remaining)} restante`}
+          {overBudget ? `+${fmt(cat.spent - cat.budgeted)} excedido` : `${fmt(cat.remaining)} restante`}
         </Text>
       </View>
     </View>
@@ -207,7 +203,7 @@ export default function BudgetScreen() {
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total presupuestado</Text>
-            <Text style={styles.summaryValue}>$ {fmt(summary?.totalBudgeted ?? 0)}</Text>
+            <Text style={styles.summaryValue}>{fmt(summary?.totalBudgeted ?? 0)}</Text>
           </View>
           <View style={styles.progressBar}>
             <View
@@ -223,11 +219,11 @@ export default function BudgetScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.legendItem}>
               <View style={[styles.dot, { backgroundColor: Colors.green }]} />
-              <Text style={styles.legendText}>Ingresos: $ {fmt(summary?.totalIngresos ?? 0)}</Text>
+              <Text style={styles.legendText}>Ingresos: {fmt(summary?.totalIngresos ?? 0)}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.dot, { backgroundColor: Colors.red }]} />
-              <Text style={styles.legendText}>Gastos: $ {fmt(summary?.totalGastos ?? 0)}</Text>
+              <Text style={styles.legendText}>Gastos: {fmt(summary?.totalGastos ?? 0)}</Text>
             </View>
           </View>
           <View style={[styles.summaryRow, styles.borderTop]}>
@@ -240,7 +236,7 @@ export default function BudgetScreen() {
                   : Colors.red,
               },
             ]}>
-              $ {fmt((summary?.totalIngresos ?? 0) - (summary?.totalGastos ?? 0))}
+              {fmt((summary?.totalIngresos ?? 0) - (summary?.totalGastos ?? 0))}
             </Text>
           </View>
         </View>

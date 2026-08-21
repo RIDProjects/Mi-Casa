@@ -15,9 +15,13 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../theme/colors';
 import { summaryService } from '../services/summary.service';
+import { notificationsService } from '../services/notifications.service';
+import { creditCardsService } from '../services/creditCards.service';
+import { cuotasService } from '../services/cuotas.service';
 import { useAuth } from '../context/AuthContext';
 import { StatCard } from '../components/common/StatCard';
 import { RootStackParamList } from '../navigation/types';
+import { formatMoney } from '../utils/currency';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,12 +30,7 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-function fmt(n: number): string {
-  return new Intl.NumberFormat('es-AR', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(Number(n) || 0);
-}
+const fmt = formatMoney;
 
 function SkeletonCard() {
   return (
@@ -92,6 +91,27 @@ export default function DashboardScreen() {
     retry: 1,
   });
 
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: notificationsService.getAll,
+    staleTime: 0,
+    retry: 1,
+  });
+
+  const { data: creditCards = [] } = useQuery({
+    queryKey: ['credit-cards'],
+    queryFn: creditCardsService.getAll,
+    staleTime: 0,
+    retry: 1,
+  });
+
+  const { data: cuotas = [] } = useQuery({
+    queryKey: ['cuotas'],
+    queryFn: cuotasService.getAll,
+    staleTime: 0,
+    retry: 1,
+  });
+
   const onRefresh = useCallback(() => { refetch(); }, [refetch]);
 
   const totalIngresos = summary?.totalIngresos ?? 0;
@@ -100,6 +120,8 @@ export default function DashboardScreen() {
   const emergencyFund = summary?.emergencyFund ?? 0;
 
   const isBalancePositive = balance >= 0;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const activeCuotas = cuotas.filter((c) => c.paidInstallments < c.totalInstallments);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -123,13 +145,25 @@ export default function DashboardScreen() {
             </Text>
             <Text style={styles.subheading}>{monthName} {now.getFullYear()}</Text>
           </View>
+          <TouchableOpacity
+            style={styles.bellBtn}
+            onPress={() => navigation.navigate('Notificaciones')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="notifications-outline" size={24} color={Colors.textPrimary} />
+            {unreadCount > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Balance principal */}
         <View style={[styles.balanceCard, { borderColor: isBalancePositive ? Colors.green + '60' : Colors.red + '60' }]}>
           <Text style={styles.balanceLabel}>Disponible del mes</Text>
           <Text style={[styles.balanceAmount, { color: isBalancePositive ? Colors.green : Colors.red }]}>
-            {isBalancePositive ? '+' : ''}$ {fmt(balance)}
+            {isBalancePositive ? '+' : ''}{fmt(balance)}
           </Text>
           {summary?.savingsRate != null && (
             <View style={styles.savingsRateRow}>
@@ -158,13 +192,13 @@ export default function DashboardScreen() {
             <View style={styles.row}>
               <StatCard
                 title="Ingresos"
-                value={`$ ${fmt(totalIngresos)}`}
+                value={fmt(totalIngresos)}
                 icon="trending-up-outline"
                 color={Colors.green}
               />
               <StatCard
                 title="Gastos"
-                value={`$ ${fmt(totalGastos)}`}
+                value={fmt(totalGastos)}
                 icon="trending-down-outline"
                 color={Colors.red}
               />
@@ -172,13 +206,13 @@ export default function DashboardScreen() {
             <View style={styles.row}>
               <StatCard
                 title="Disponible"
-                value={`$ ${fmt(balance)}`}
+                value={fmt(balance)}
                 icon="wallet-outline"
                 color={isBalancePositive ? Colors.blue : Colors.red}
               />
               <StatCard
                 title="Fondo Emergencia"
-                value={emergencyFund > 0 ? `$ ${fmt(emergencyFund)}` : '—'}
+                value={emergencyFund > 0 ? fmt(emergencyFund) : '—'}
                 icon="shield-checkmark-outline"
                 color="#f59e0b"
               />
@@ -186,23 +220,103 @@ export default function DashboardScreen() {
           </>
         )}
 
-        {/* Acceso rápido a Deudas */}
+        {/* Acceso rápido a Vencimientos */}
         <TouchableOpacity
-          style={styles.debtQuickAccess}
-          onPress={() => navigation.navigate('DebtsSummary')}
+          style={styles.quickAccess}
+          onPress={() => navigation.navigate('Vencimientos')}
           activeOpacity={0.8}
         >
-          <View style={styles.debtQuickLeft}>
-            <View style={[styles.debtIcon, { backgroundColor: Colors.blueBg }]}>
-              <Ionicons name="wallet-outline" size={18} color={Colors.blue} />
+          <View style={styles.quickAccessLeft}>
+            <View style={[styles.quickAccessIcon, { backgroundColor: Colors.blueBg }]}>
+              <Ionicons name="calendar-outline" size={18} color={Colors.blue} />
             </View>
             <View>
-              <Text style={styles.debtTitle}>Deudas</Text>
-              <Text style={styles.debtSubtitle}>Control de deudas bidireccional</Text>
+              <Text style={styles.quickAccessTitle}>Vencimientos</Text>
+              <Text style={styles.quickAccessSubtitle}>Próximos pagos del hogar</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
         </TouchableOpacity>
+
+        {/* Tarjetas de crédito */}
+        {creditCards.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tarjetas de crédito</Text>
+            <View style={styles.sectionList}>
+              {creditCards.map((card) => {
+                const available = card.creditLimit - card.currentBalance;
+                const utilization = card.creditLimit > 0
+                  ? Math.min(100, (card.currentBalance / card.creditLimit) * 100)
+                  : 0;
+                const utilColor = utilization > 80 ? Colors.red : utilization > 50 ? '#f59e0b' : Colors.green;
+                return (
+                  <View key={card.id} style={styles.miniCard}>
+                    <View style={styles.miniCardHeader}>
+                      <View>
+                        <Text style={styles.miniCardTitle}>{card.cardName}</Text>
+                        <Text style={styles.miniCardSubtitle}>{card.bankName}</Text>
+                      </View>
+                      <Text style={[styles.miniCardPct, { color: utilColor }]}>
+                        {utilization.toFixed(0)}%
+                      </Text>
+                    </View>
+                    <View style={styles.miniBarBg}>
+                      <View
+                        style={[
+                          styles.miniBarFill,
+                          { width: `${utilization}%` as any, backgroundColor: utilColor },
+                        ]}
+                      />
+                    </View>
+                    <View style={styles.miniCardFooter}>
+                      <Text style={styles.miniCardFooterText}>
+                        Disponible: {fmt(available)}
+                      </Text>
+                      <Text style={styles.miniCardFooterText}>
+                        Límite: {fmt(card.creditLimit)}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Cuotas activas */}
+        {activeCuotas.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Cuotas activas</Text>
+            <View style={styles.sectionList}>
+              {activeCuotas.map((cuota) => {
+                const pct = cuota.totalInstallments > 0
+                  ? Math.min(100, (cuota.paidInstallments / cuota.totalInstallments) * 100)
+                  : 0;
+                return (
+                  <View key={cuota.id} style={styles.miniCard}>
+                    <View style={styles.miniCardHeader}>
+                      <Text style={styles.miniCardTitle} numberOfLines={1}>{cuota.description}</Text>
+                      <Text style={styles.miniCardPct}>
+                        {cuota.paidInstallments}/{cuota.totalInstallments}
+                      </Text>
+                    </View>
+                    <View style={styles.miniBarBg}>
+                      <View
+                        style={[
+                          styles.miniBarFill,
+                          { width: `${pct}%` as any, backgroundColor: Colors.blue },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.miniCardFooterText}>
+                      Cuota mensual: {fmt(cuota.installmentAmount)}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         {/* Barra de progreso ingresos vs gastos */}
         {!isLoading && totalIngresos > 0 && (
@@ -227,11 +341,11 @@ export default function DashboardScreen() {
             <View style={styles.progressLegend}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: Colors.green }]} />
-                <Text style={styles.legendText}>Ingresos: $ {fmt(totalIngresos)}</Text>
+                <Text style={styles.legendText}>Ingresos: {fmt(totalIngresos)}</Text>
               </View>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: Colors.red }]} />
-                <Text style={styles.legendText}>Gastos: $ {fmt(totalGastos)}</Text>
+                <Text style={styles.legendText}>Gastos: {fmt(totalGastos)}</Text>
               </View>
             </View>
           </View>
@@ -268,6 +382,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
+  bellBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    paddingHorizontal: 4,
+    backgroundColor: Colors.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.background,
+  },
+  bellBadgeText: {
+    color: Colors.white,
+    fontSize: 10,
+    fontWeight: '800',
+  },
   balanceCard: {
     backgroundColor: Colors.card,
     borderRadius: 18,
@@ -284,7 +427,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   balanceAmount: {
-    fontSize: 38,
+    fontSize: 32,
     fontWeight: '800',
     letterSpacing: -1,
   },
@@ -309,7 +452,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 4,
   },
-  debtQuickAccess: {
+  quickAccess: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -320,34 +463,95 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     marginTop: 10,
   },
-  debtQuickLeft: {
+  quickAccessLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     flex: 1,
   },
-  debtIcon: {
+  quickAccessIcon: {
     width: 36,
     height: 36,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  debtTitle: {
+  quickAccessTitle: {
     color: Colors.textPrimary,
     fontSize: 15,
     fontWeight: '600',
   },
-  debtSubtitle: {
+  quickAccessSubtitle: {
     color: Colors.textSecondary,
     fontSize: 12,
     marginTop: 1,
+  },
+  section: {
+    marginTop: 16,
+    gap: 10,
+  },
+  sectionTitle: {
+    color: Colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  sectionList: {
+    gap: 8,
+  },
+  miniCard: {
+    backgroundColor: Colors.card,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: 8,
+  },
+  miniCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  miniCardTitle: {
+    color: Colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  miniCardSubtitle: {
+    color: Colors.textSecondary,
+    fontSize: 12,
+    marginTop: 1,
+  },
+  miniCardPct: {
+    color: Colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  miniBarBg: {
+    height: 6,
+    backgroundColor: Colors.cardAlt,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  miniBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  miniCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  miniCardFooterText: {
+    color: Colors.textSecondary,
+    fontSize: 12,
   },
   progressCard: {
     backgroundColor: Colors.card,
     borderRadius: 14,
     padding: 16,
-    marginTop: 10,
+    marginTop: 16,
     borderWidth: 1,
     borderColor: Colors.border,
     gap: 10,
