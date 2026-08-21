@@ -99,7 +99,6 @@ export class HouseCurrenciesService {
         where: {
           fromCurrency: c.currencyCode,
           toCurrency: base.currencyCode,
-          house: { id: houseId },
         },
         order: { date: 'DESC' },
       });
@@ -124,7 +123,6 @@ export class HouseCurrenciesService {
         fromCurrency: dto.fromCurrency,
         toCurrency: dto.toCurrency,
         date: today,
-        house: { id: houseId },
       },
     });
 
@@ -137,7 +135,6 @@ export class HouseCurrenciesService {
     const newRate = this.ratesRepo.create({
       ...dto,
       date: today,
-      house: { id: houseId },
     });
     return this.ratesRepo.save(newRate);
   }
