@@ -3,6 +3,7 @@
 /finanzas-app/frontend/.next/
 /finanzas-app/frontend/node_modules/
 /finanzas-app/mobile/node_modules/
+*.tsbuildinfo
 /AGENTS.md
 /node_modules/
 
