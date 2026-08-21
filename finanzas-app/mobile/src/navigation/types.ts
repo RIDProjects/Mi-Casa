@@ -5,6 +5,7 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Vencimientos: undefined;
   Notificaciones: undefined;
+  PrivacyPolicy: undefined;
 };
 
 // Bottom tabs (6 tabs: Dashboard, Gastos, Presupuesto, Metas, Deudas, Perfil)

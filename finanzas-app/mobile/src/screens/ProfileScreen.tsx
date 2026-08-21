@@ -11,8 +11,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
+import { RootStackParamList } from '../navigation/types';
+
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const APP_VERSION = '1.0.0';
 
@@ -82,6 +87,7 @@ const rowStyles = StyleSheet.create({
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const navigation = useNavigation<Nav>();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
@@ -180,6 +186,21 @@ export default function ProfileScreen() {
           />
         </View>
 
+        {/* Legal */}
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('PrivacyPolicy')}
+          activeOpacity={0.85}
+        >
+          <View style={styles.linkRow}>
+            <View style={[rowStyles.iconWrap, { backgroundColor: Colors.blue + '20' }]}>
+              <Ionicons name="shield-checkmark-outline" size={18} color={Colors.blue} />
+            </View>
+            <Text style={styles.linkLabel}>Política de Privacidad</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+          </View>
+        </TouchableOpacity>
+
         {/* Logout */}
         <TouchableOpacity
           style={[styles.logoutBtn, isLoggingOut && styles.logoutBtnDisabled]}
@@ -277,6 +298,17 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: 4,
+  },
+  linkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  linkLabel: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: 15,
+    fontWeight: '600',
   },
   logoutBtn: {
     flexDirection: 'row',

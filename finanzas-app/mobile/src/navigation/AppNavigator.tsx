@@ -9,6 +9,7 @@ import MainTabs from './MainTabs';
 import LoginScreen from '../screens/auth/LoginScreen';
 import VencimientosScreen from '../screens/VencimientosScreen';
 import NotificacionesScreen from '../screens/NotificacionesScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -72,6 +73,18 @@ export default function AppNavigator() {
             options={{
               headerShown: true,
               headerTitle: 'Notificaciones',
+              headerStyle: { backgroundColor: Colors.card },
+              headerTintColor: Colors.textPrimary,
+              headerTitleStyle: { fontWeight: '700' },
+              contentStyle: { backgroundColor: Colors.background },
+            }}
+          />
+          <Stack.Screen
+            name="PrivacyPolicy"
+            component={PrivacyPolicyScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Política de Privacidad',
               headerStyle: { backgroundColor: Colors.card },
               headerTintColor: Colors.textPrimary,
               headerTitleStyle: { fontWeight: '700' },
