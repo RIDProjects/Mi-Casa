@@ -15,6 +15,7 @@ import {
 import { useCurrencyStore } from '../store/currency.store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { fmt, MONTH_NAMES } from '../lib/format';
+import { getErrorMessage } from '../utils/errors';
 
 const CATEGORIES = [
   'Casa', 'Comida', 'Familia', 'Transporte', 'Viajes',
@@ -142,7 +143,6 @@ export default function TransaccionesPage() {
     { staleTime: 0 }
   );
 
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const refreshCache = () => {
     transactionsAPI.getByMonth(year, month).then(r => qc.setQueryData(qKey, r.data));

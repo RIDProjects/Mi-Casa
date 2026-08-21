@@ -12,6 +12,7 @@ import {
   TrendingUp, CheckCircle, Calendar, DollarSign, ChevronRight,
 } from 'lucide-react';
 import { fmt } from '../lib/format';
+import { getErrorMessage } from '../utils/errors';
 
 const EMOJI_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '🎓', '💍', '🏖️', '💰', '🏋️', '🎸'];
 
@@ -41,7 +42,6 @@ export default function MetasPage() {
     { staleTime: 0 }
   );
 
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const refreshCache = () => {
     savingsGoalsAPI.getAll().then(r => qc.setQueryData('savings-goals', r.data));

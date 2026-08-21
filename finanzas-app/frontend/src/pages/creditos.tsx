@@ -8,6 +8,7 @@ import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, Landmark, AlertTriangle, RefreshCw, Clock } from 'lucide-react';
+import { getErrorMessage } from '../utils/errors';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -34,7 +35,6 @@ export default function CreditosPage() {
     { staleTime: 0 }
   );
 
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const refreshCache = () => {
     loansAPI.getAll().then(r => qc.setQueryData('loans', r.data));

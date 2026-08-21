@@ -11,6 +11,7 @@ import { Plus, PiggyBank, Lock } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
 import { fmt } from '../lib/format';
+import { getErrorMessage } from '../utils/errors';
 
 const DEFAULT_CATEGORIES = [
   { name: 'Renta o crédito de vivienda', monthlyAmount: 0 },
@@ -58,7 +59,6 @@ export default function EmergencyFundPage() {
   );
 
   // Helper to extract error message safely
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const createMut = useMutation((d: any) => emergencyFundAPI.create(d), {
     onSuccess: (res) => { toast.success('Fondo creado'); setShowModal(false); setSelectedFund(res.data); },

@@ -11,6 +11,7 @@ import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 
 import { fmt } from '../lib/format';
+import { getErrorMessage } from '../utils/errors';
 
 const TIPO_PAGO_OPTIONS = [
   { v: 'full', l: 'Pago todo el saldo' },
@@ -62,7 +63,6 @@ export default function TarjetasPage() {
     { staleTime: 0 }
   );
 
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const refreshCache = () => {
     creditCardsAPI.getAll().then(r => qc.setQueryData('credit-cards', r.data));

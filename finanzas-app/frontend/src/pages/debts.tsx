@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
+import { getErrorMessage } from '../utils/errors';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '', currency: '' };
@@ -33,7 +34,6 @@ export default function DebtsPage() {
   const { data: debts = [], isLoading: loadingDebts, isError: errorDebts, refetch: refetchDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
   const { isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
 
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const updateDebtsCache = () => {
     debtsAPI.getAll().then(r => { qc.setQueryData('debts', r.data); });

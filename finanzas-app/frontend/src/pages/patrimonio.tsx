@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { fmt } from '../lib/format';
+import { getErrorMessage } from '../utils/errors';
 
 const safeNum = (n: unknown): number => {
   const v = Number(n);
@@ -113,7 +114,6 @@ export default function PatrimonioPage() {
     liabilities: Number(h.liabilities ?? h.pasivos ?? 0) / divider,
   }));
 
-  const getErrorMessage = (e: any) => e?.response?.data?.message || e?.message || 'Error';
 
   const invalidateAll = () => {
     qc.invalidateQueries(['net-worth', totalCardBalances, totalLoanDebt]);
