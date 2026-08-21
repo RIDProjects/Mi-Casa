@@ -13,6 +13,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Registrarse como nuevo usuario' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);

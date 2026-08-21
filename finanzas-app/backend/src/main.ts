@@ -35,8 +35,9 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  // API prefix
-  app.setGlobalPrefix('api/v1');
+  // API prefix — /health queda excluido para que el load balancer de Railway
+  // pueda pegarle sin conocer el prefijo versionado de la API.
+  app.setGlobalPrefix('api/v1', { exclude: ['health'] });
 
   // Swagger docs
   if (process.env.NODE_ENV !== 'production') {

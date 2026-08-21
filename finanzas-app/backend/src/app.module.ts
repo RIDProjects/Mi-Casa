@@ -26,6 +26,19 @@ import { InvestmentsModule } from './investments/investments.module';
 import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { PushModule } from './push/push.module';
 import { HouseCurrenciesModule } from './house-currencies/house-currencies.module';
+import { HealthModule } from './health/health.module';
+
+// Fail-fast en producción: nunca arrancar con credenciales de DB por defecto.
+// En desarrollo se mantienen los defaults para no romper el flujo local.
+if (process.env.NODE_ENV === 'production') {
+  const requiredDbVars = ['DB_USER', 'DB_PASS', 'DB_NAME'];
+  const missing = requiredDbVars.filter((key) => !process.env[key]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variable(s) in production: ${missing.join(', ')}`,
+    );
+  }
+}
 
 @Module({
   imports: [
@@ -60,6 +73,7 @@ import { HouseCurrenciesModule } from './house-currencies/house-currencies.modul
     CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
     RecurringTransactionsModule, SummaryModule, CuotasModule,
     InvestmentsModule, ExchangeRatesModule, PushModule, HouseCurrenciesModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
