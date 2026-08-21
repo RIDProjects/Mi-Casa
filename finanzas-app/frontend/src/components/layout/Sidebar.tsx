@@ -133,6 +133,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           Configuración
         </Link>
 
+        <Link
+          href="/guia"
+          onClick={handleLinkClick}
+          className={clsx(
+            'flex items-center gap-3 px-3 py-2 text-label-upper font-label-upper rounded-lg transition-all duration-150',
+            router.pathname === '/guia'
+              ? 'bg-primary-container text-on-primary-container font-semibold'
+              : 'text-on-surface-variant hover:bg-surface-variant',
+          )}
+        >
+          <BookOpen size={16} />
+          Guía de uso
+        </Link>
+
         <button
           onClick={logout}
           className="flex items-center gap-3 w-full px-3 py-2 text-label-upper font-label-upper text-on-surface-variant hover:text-danger hover:bg-surface-variant rounded-lg transition-all duration-150"

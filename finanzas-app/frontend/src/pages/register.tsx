@@ -43,7 +43,7 @@ export default function Register() {
       toast.success('¡Registro exitoso! Bienvenido a tu casa.');
 
       const isAdminGlobal = data.user.roles?.some((r: any) => r.name === 'admin');
-      router.push(isAdminGlobal ? '/admin' : '/dashboard');
+      router.push(isAdminGlobal ? '/admin' : '/guia?welcome=1');
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 401) {

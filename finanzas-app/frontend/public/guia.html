@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mi Casa Pro — Guía de Módulos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --blue:    #2563eb;
+    --blue-l:  #eff6ff;
+    --blue-d:  #1d4ed8;
+    --green:   #16a34a;
+    --green-l: #f0fdf4;
+    --amber:   #d97706;
+    --amber-l: #fffbeb;
+    --red:     #dc2626;
+    --red-l:   #fef2f2;
+    --purple:  #7c3aed;
+    --purple-l:#f5f3ff;
+    --teal:    #0d9488;
+    --teal-l:  #f0fdfa;
+    --rose:    #e11d48;
+    --rose-l:  #fff1f2;
+    --slate:   #64748b;
+    --gray-50: #f8fafc;
+    --gray-100:#f1f5f9;
+    --gray-200:#e2e8f0;
+    --gray-300:#cbd5e1;
+    --gray-600:#475569;
+    --gray-700:#334155;
+    --gray-800:#1e293b;
+    --gray-900:#0f172a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #fff;
+    color: var(--gray-800);
+    line-height: 1.6;
+    font-size: 10.5pt;
+  }
+
+  /* ── PAGE SETTINGS ── */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    width: 100%;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #1d4ed8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .cover-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-size: 9pt;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .cover-emoji {
+    font-size: 72pt;
+    margin-bottom: 24px;
+    display: block;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
+  }
+
+  .cover h1 {
+    font-size: 44pt;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+
+  .cover-sub {
+    font-size: 13pt;
+    color: rgba(255,255,255,0.65);
+    font-weight: 400;
+    margin-bottom: 48px;
+  }
+
+  .cover-divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #6366f1);
+    border-radius: 2px;
+    margin: 0 auto 40px;
+  }
+
+  .cover-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    max-width: 520px;
+    margin: 0 auto 48px;
+  }
+
+  .cover-chip {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 10px 8px;
+    font-size: 8pt;
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+  }
+
+  .cover-chip span {
+    display: block;
+    font-size: 16pt;
+    margin-bottom: 4px;
+  }
+
+  .cover-footer {
+    position: absolute;
+    bottom: 32px;
+    left: 0; right: 0;
+    font-size: 8pt;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── INDEX PAGE ── */
+  .index-page {
+    padding: 56px 48px;
+    min-height: 100vh;
+    page-break-after: always;
+  }
+
+  .section-label {
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 8px;
+  }
+
+  .page-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: var(--gray-900);
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .page-subtitle {
+    font-size: 10.5pt;
+    color: var(--slate);
+    margin-bottom: 36px;
+  }
+
+  .index-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .index-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    background: var(--gray-50);
+  }
+
+  .index-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17pt;
+    flex-shrink: 0;
+  }
+
+  .index-item-text { flex: 1; }
+  .index-item-name { font-size: 10pt; font-weight: 700; color: var(--gray-800); }
+  .index-item-desc { font-size: 8.5pt; color: var(--slate); margin-top: 1px; }
+  .index-page-num { font-size: 9pt; font-weight: 700; color: var(--gray-300); }
+
+  /* ── MODULE PAGE ── */
+  .module-page {
+    padding: 0;
+    min-height: 100vh;
+    page-break-after: always;
+  }
+
+  .module-header {
+    padding: 36px 48px 28px;
+    border-bottom: 1.5px solid var(--gray-100);
+  }
+
+  .module-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+
+  .module-h1 {
+    font-size: 26pt;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1.05;
+    margin-bottom: 8px;
+  }
+
+  .module-tagline {
+    font-size: 11pt;
+    color: var(--slate);
+    font-weight: 400;
+  }
+
+  .module-body {
+    padding: 28px 48px 40px;
+  }
+
+  /* ── CARDS ── */
+  .cards-row {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .cards-2 { grid-template-columns: 1fr 1fr; }
+  .cards-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .cards-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    border-radius: 14px;
+    padding: 18px;
+    border: 1.5px solid var(--gray-200);
+  }
+
+  .card-icon { font-size: 18pt; margin-bottom: 10px; display: block; }
+  .card-title { font-size: 10pt; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+  .card-text { font-size: 8.5pt; color: var(--gray-600); line-height: 1.55; }
+
+  /* ── SECTIONS ── */
+  .section-title {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── STEPS ── */
+  .steps { display: flex; flex-direction: column; gap: 10px; }
+
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9pt;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-content { flex: 1; }
+  .step-title { font-size: 9.5pt; font-weight: 700; color: var(--gray-800); }
+  .step-desc { font-size: 8.5pt; color: var(--gray-600); margin-top: 2px; line-height: 1.5; }
+
+  /* ── TIPS ── */
+  .tip-box {
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-top: 20px;
+  }
+
+  .tip-icon { font-size: 14pt; flex-shrink: 0; margin-top: 1px; }
+  .tip-title { font-size: 9pt; font-weight: 700; margin-bottom: 3px; }
+  .tip-text { font-size: 8.5pt; line-height: 1.55; }
+
+  /* ── TABLE ── */
+  .feature-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  .feature-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--slate);
+    background: var(--gray-50);
+    border-bottom: 1.5px solid var(--gray-200);
+  }
+
+  .feature-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--gray-100);
+    color: var(--gray-700);
+    vertical-align: top;
+  }
+
+  .feature-table tr:last-child td { border-bottom: none; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 7.5pt;
+    font-weight: 600;
+  }
+
+  /* ── PILL ROW ── */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 8.5pt;
+    font-weight: 600;
+    border: 1.5px solid;
+  }
+
+  /* ── 2-COL LAYOUT ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* ── FORMULA BOX ── */
+  .formula-box {
+    background: var(--gray-900);
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    letter-spacing: 0.3px;
+    margin: 12px 0;
+  }
+
+  .formula-comment { color: #64748b; }
+  .formula-keyword { color: #93c5fd; }
+  .formula-value { color: #86efac; }
+
+  /* ── PAGE FOOTER ── */
+  .page-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+    background: #fff;
+    border-top: 1px solid var(--gray-100);
+    font-size: 7.5pt;
+    color: var(--gray-300);
+  }
+
+  /* ── COLORS PER MODULE ── */
+  .c-blue   { background: var(--blue-l);   border-color: #bfdbfe; }
+  .c-green  { background: var(--green-l);  border-color: #bbf7d0; }
+  .c-amber  { background: var(--amber-l);  border-color: #fde68a; }
+  .c-red    { background: var(--red-l);    border-color: #fecaca; }
+  .c-purple { background: var(--purple-l); border-color: #ddd6fe; }
+  .c-teal   { background: var(--teal-l);   border-color: #99f6e4; }
+  .c-rose   { background: var(--rose-l);   border-color: #fecdd3; }
+  .c-slate  { background: var(--gray-50);  border-color: var(--gray-200); }
+
+  .badge-blue   { background:#eff6ff; color:#1d4ed8; }
+  .badge-green  { background:#f0fdf4; color:#15803d; }
+  .badge-amber  { background:#fffbeb; color:#b45309; }
+  .badge-red    { background:#fef2f2; color:#b91c1c; }
+  .badge-purple { background:#f5f3ff; color:#6d28d9; }
+  .badge-teal   { background:#f0fdfa; color:#0f766e; }
+  .badge-rose   { background:#fff1f2; color:#be123c; }
+  .badge-slate  { background:#f1f5f9; color:#475569; }
+
+  .num-blue   { background: var(--blue); }
+  .num-green  { background: var(--green); }
+  .num-amber  { background: var(--amber); }
+  .num-red    { background: var(--red); }
+  .num-purple { background: var(--purple); }
+  .num-teal   { background: var(--teal); }
+  .num-rose   { background: var(--rose); }
+  .num-slate  { background: var(--slate); }
+
+  .text-blue   { color: var(--blue); }
+  .text-green  { color: var(--green); }
+  .text-amber  { color: var(--amber); }
+  .text-red    { color: var(--red); }
+  .text-purple { color: var(--purple); }
+  .text-teal   { color: var(--teal); }
+  .text-rose   { color: var(--rose); }
+
+  .tip-blue   { background:#eff6ff; border: 1.5px solid #bfdbfe; }
+  .tip-green  { background:#f0fdf4; border: 1.5px solid #bbf7d0; }
+  .tip-amber  { background:#fffbeb; border: 1.5px solid #fde68a; }
+  .tip-purple { background:#f5f3ff; border: 1.5px solid #ddd6fe; }
+  .tip-teal   { background:#f0fdfa; border: 1.5px solid #99f6e4; }
+
+  /* ── PRINT ── */
+  @media print {
+    .module-page { page-break-after: always; }
+    .cover { page-break-after: always; min-height: 297mm; }
+    .index-page { min-height: 297mm; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-badge">Guía de usuario completa</div>
+  <span class="cover-emoji">🏠</span>
+  <h1>Mi Casa Pro</h1>
+  <p class="cover-sub">Sistema de gestión financiera del hogar</p>
+  <div class="cover-divider"></div>
+
+  <div class="cover-grid">
+    <div class="cover-chip"><span>🧮</span>Presupuesto</div>
+    <div class="cover-chip"><span>💳</span>Tarjetas</div>
+    <div class="cover-chip"><span>🎯</span>Metas</div>
+    <div class="cover-chip"><span>📊</span>Patrimonio</div>
+    <div class="cover-chip"><span>💸</span>Deudas</div>
+    <div class="cover-chip"><span>🏦</span>Créditos</div>
+    <div class="cover-chip"><span>🛡️</span>Emergencia</div>
+    <div class="cover-chip"><span>📈</span>Inversiones</div>
+    <div class="cover-chip"><span>🔔</span>Notificaciones</div>
+    <div class="cover-chip"><span>👨‍👩‍👧</span>Miembros del Hogar</div>
+  </div>
+
+  <div class="cover-footer">Mi Casa Pro · Guía de Módulos · 2026</div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ INDEX -->
+<div class="index-page">
+  <div class="section-label">Contenido</div>
+  <h1 class="page-title">Índice de Módulos</h1>
+  <p class="page-subtitle">19 módulos integrados para el control total de las finanzas del hogar</p>
+
+  <div class="index-grid">
+    <div class="index-item">
+      <div class="index-icon c-blue" style="color:#2563eb">📊</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Dashboard</div>
+        <div class="index-item-desc">Vista general y KPIs del mes</div>
+      </div>
+      <div class="index-page-num">03</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-green" style="color:#16a34a">🧮</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Presupuesto</div>
+        <div class="index-item-desc">Ingresos, gastos y metas de ahorro</div>
+      </div>
+      <div class="index-page-num">04</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-amber">💸</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Transacciones</div>
+        <div class="index-item-desc">Registro mensual de movimientos</div>
+      </div>
+      <div class="index-page-num">05</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-blue">🎯</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Metas de Ahorro</div>
+        <div class="index-item-desc">Objetivos con cuota PMT calculada</div>
+      </div>
+      <div class="index-page-num">06</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-red">🤝</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Deudas</div>
+        <div class="index-item-desc">Me deben / Les debo bidireccional</div>
+      </div>
+      <div class="index-page-num">07</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-purple">💳</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Tarjetas de Crédito</div>
+        <div class="index-item-desc">Utilización, límites y estado de pago</div>
+      </div>
+      <div class="index-page-num">08</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-teal">🏦</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Créditos / Préstamos</div>
+        <div class="index-item-desc">Progreso y meses restantes</div>
+      </div>
+      <div class="index-page-num">09</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-green">💰</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Patrimonio Neto</div>
+        <div class="index-item-desc">Activos menos pasivos totales</div>
+      </div>
+      <div class="index-page-num">10</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-amber">🛡️</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Fondo de Emergencia</div>
+        <div class="index-item-desc">Calculadora del colchón financiero</div>
+      </div>
+      <div class="index-page-num">11</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-slate">📐</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Simulador de Créditos</div>
+        <div class="index-item-desc">Tabla de amortización sin datos reales</div>
+      </div>
+      <div class="index-page-num">12</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-rose">🛒</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Lista de Compras</div>
+        <div class="index-item-desc">Plan de compra con precios en CUP</div>
+      </div>
+      <div class="index-page-num">13</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-purple">📊</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Reportes / Analíticas</div>
+        <div class="index-item-desc">Tendencias y patrones de gasto mes a mes</div>
+      </div>
+      <div class="index-page-num">14</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-teal">📈</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Inversiones</div>
+        <div class="index-item-desc">Portafolio y rendimiento en tiempo real</div>
+      </div>
+      <div class="index-page-num">15</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-blue">📒</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Registro de Gastos</div>
+        <div class="index-item-desc">Compras del mercado y gastos diarios</div>
+      </div>
+      <div class="index-page-num">16</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-amber">📦</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Cuotas</div>
+        <div class="index-item-desc">Compras en cuotas con seguimiento de pagos</div>
+      </div>
+      <div class="index-page-num">17</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-purple">⛄</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Estrategia de Pago</div>
+        <div class="index-item-desc">Avalancha, bola de nieve y simulador de payoff</div>
+      </div>
+      <div class="index-page-num">18</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-red">📅</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Próximos Vencimientos</div>
+        <div class="index-item-desc">Pagos pendientes ordenados por urgencia</div>
+      </div>
+      <div class="index-page-num">19</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-rose">🔔</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Notificaciones</div>
+        <div class="index-item-desc">Alertas del sistema con filtros y lectura</div>
+      </div>
+      <div class="index-page-num">20</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-green">👨‍👩‍👧</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Miembros del Hogar</div>
+        <div class="index-item-desc">Gestión de usuarios, roles e invitaciones</div>
+      </div>
+      <div class="index-page-num">21</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 01 DASHBOARD -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-blue">
+      <span>📊</span> Módulo 01
+    </div>
+    <h1 class="module-h1 text-blue">Dashboard</h1>
+    <p class="module-tagline">Vista ejecutiva de las finanzas del hogar en tiempo real</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-green">
+        <span class="card-icon">💰</span>
+        <div class="card-title">Ingresos del mes</div>
+        <div class="card-text">Total de ingresos registrados en el período seleccionado</div>
+      </div>
+      <div class="card c-red">
+        <span class="card-icon">💸</span>
+        <div class="card-title">Gastos del mes</div>
+        <div class="card-text">Suma de todas las transacciones de egreso del mes</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Balance</div>
+        <div class="card-text">Diferencia entre ingresos y gastos. Verde = superávit</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">🏦</span>
+        <div class="card-title">Patrimonio neto</div>
+        <div class="card-text">Activos totales menos todas las deudas y créditos</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title">
+          <span style="color:#2563eb">▶</span> ¿Qué muestra el Dashboard?
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-blue">1</div>
+            <div class="step-content">
+              <div class="step-title">Selector de mes</div>
+              <div class="step-desc">Filtrá cualquier mes del año para ver su snapshot financiero completo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">2</div>
+            <div class="step-content">
+              <div class="step-title">KPIs principales</div>
+              <div class="step-desc">Ingresos, gastos, balance y patrimonio neto de un vistazo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">3</div>
+            <div class="step-content">
+              <div class="step-title">Termómetro de gastos</div>
+              <div class="step-desc">Barra visual que indica qué % del ingreso ya fue gastado. Rojo = peligro.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">4</div>
+            <div class="step-content">
+              <div class="step-title">Alertas activas</div>
+              <div class="step-desc">Notificaciones automáticas si superás el presupuesto o tenés deudas vencidas.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">5</div>
+            <div class="step-content">
+              <div class="step-title">Notificaciones in-app</div>
+              <div class="step-desc">Campana en el header con alertas del sistema: presupuesto superado, deudas vencidas, vencimientos próximos. Marcalas como leídas individualmente o todas a la vez.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">
+          <span style="color:#2563eb">▶</span> Indicadores de estado
+        </div>
+        <table class="feature-table">
+          <thead>
+            <tr><th>Indicador</th><th>Significado</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag badge-green">Verde</span></td>
+              <td>Balance positivo, estás ahorrando</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-amber">Amarillo</span></td>
+              <td>Cerca del límite del presupuesto</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-red">Rojo</span></td>
+              <td>Gastos superan los ingresos</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-blue">Azul</span></td>
+              <td>Meta de ahorro alcanzada</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-blue" style="margin-top:16px">
+          <div class="tip-icon">💡</div>
+          <div>
+            <div class="tip-title text-blue">Revisión semanal</div>
+            <div class="tip-text" style="color:#1e40af">Revisá el Dashboard los lunes. Si el termómetro ya superó el 70% del ingreso en la primera semana, es señal de ajustar gastos antes de que termine el mes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 02 PRESUPUESTO -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-green">
+      <span>🧮</span> Módulo 02
+    </div>
+    <h1 class="module-h1 text-green">Presupuesto</h1>
+    <p class="module-tagline">Planificá ingresos y gastos mensuales con categorías y análisis de gastos hormiga</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-green">
+        <span class="card-icon">💵</span>
+        <div class="card-title">Fuentes de ingreso</div>
+        <div class="card-text">Salario, TCP, remesas, alquiler, MIPYME. Cada fuente con monto mensual y proyección anual.</div>
+      </div>
+      <div class="card c-red">
+        <span class="card-icon">🗂️</span>
+        <div class="card-title">Categorías de gasto</div>
+        <div class="card-text">Organizá gastos en categorías propias. Cada gasto tiene periodicidad (diario → anual) y se normaliza a mensual automáticamente.</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">🎯</span>
+        <div class="card-title">Meta de ahorro</div>
+        <div class="card-text">Definí qué % de tus ingresos querés ahorrar. El sistema calcula la cuota mensual y anual.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#16a34a">▶</span> Cómo usarlo paso a paso</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-green">1</div>
+            <div class="step-content">
+              <div class="step-title">Crear el presupuesto</div>
+              <div class="step-desc">Dale un nombre y año. Definí la meta de ahorro inicial (recomendado: 20%).</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">2</div>
+            <div class="step-content">
+              <div class="step-title">Agregar ingresos</div>
+              <div class="step-desc">Registrá todas las fuentes de ingreso con su tipo y monto promedio mensual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">3</div>
+            <div class="step-content">
+              <div class="step-title">Cargar gastos por categoría</div>
+              <div class="step-desc">Agregá cada gasto con su periodicidad real. El sistema lo convierte a mensual automáticamente.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">4</div>
+            <div class="step-content">
+              <div class="step-title">Marcar tipos de gasto</div>
+              <div class="step-desc"><strong>⚡ Fijo</strong> — no varía. <strong>💳 Tarjeta</strong> — se paga con crédito. <strong>🐜 Hormiga</strong> — pequeños gastos diarios.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">5</div>
+            <div class="step-content">
+              <div class="step-title">Revisar el advisory</div>
+              <div class="step-desc">El sistema emite alertas automáticas si los gastos superan los ingresos o si los gastos hormiga superan el 15%.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#16a34a">▶</span> Periodicidades disponibles</div>
+        <table class="feature-table">
+          <thead><tr><th>Periodicidad</th><th>Factor mensual</th></tr></thead>
+          <tbody>
+            <tr><td>Diario</td><td>× 30</td></tr>
+            <tr><td>Semanal</td><td>× 4</td></tr>
+            <tr><td>Quincenal</td><td>× 2</td></tr>
+            <tr><td>Mensual</td><td>× 1</td></tr>
+            <tr><td>Bimestral</td><td>÷ 2</td></tr>
+            <tr><td>Trimestral</td><td>÷ 3</td></tr>
+            <tr><td>Semestral</td><td>÷ 6</td></tr>
+            <tr><td>Anual</td><td>÷ 12</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-green" style="margin-top:14px">
+          <div class="tip-icon">🐜</div>
+          <div>
+            <div class="tip-title text-green">Gastos hormiga</div>
+            <div class="tip-text" style="color:#15803d">Marcá como "hormiga" los gastos pequeños y frecuentes (café, delivery, propinas). El sistema calcula cuánto gastás por día y te avisa si superan el 15% de tus ingresos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan Financiero -->
+    <div style="margin-top:24px;border-top:2px solid var(--gray-100);padding-top:20px">
+      <div class="section-title"><span style="color:#16a34a">▶</span> Plan Financiero automático</div>
+      <p style="font-size:8.5pt;color:#475569;margin-bottom:14px;line-height:1.6">Seleccioná una regla de distribución y el sistema calcula 5 metas derivadas de tus ingresos reales. Cambiás la regla con un clic en cualquier momento.</p>
+      <div class="cards-row cards-2" style="margin-bottom:14px">
+        <div class="card c-green" style="padding:14px">
+          <div class="card-title">🟢 Regla 50/30/20 <span class="tag badge-green" style="margin-left:6px">Recomendada</span></div>
+          <div class="card-text" style="margin-top:6px">
+            <strong>50%</strong> necesidades (vivienda, comida, servicios) ·
+            <strong>30%</strong> deseos y ocio ·
+            <strong>20%</strong> ahorro e inversión. Ideal para ingresos estables.
+          </div>
+        </div>
+        <div class="card c-blue" style="padding:14px">
+          <div class="card-title">🔵 Regla 70/20/10</div>
+          <div class="card-text" style="margin-top:6px">
+            <strong>70%</strong> gastos totales (fijos + variables) ·
+            <strong>20%</strong> ahorro e inversión ·
+            <strong>10%</strong> deudas o donaciones. Mejor para quienes tienen compromisos financieros altos.
+          </div>
+        </div>
+      </div>
+      <table class="feature-table">
+        <thead><tr><th>Métrica derivada</th><th>Qué significa</th><th>Acción</th></tr></thead>
+        <tbody>
+          <tr><td>🎯 Meta FI (Independencia Financiera)</td><td>Capital necesario para vivir de rendimientos (25× gastos anuales)</td><td>Se sincroniza automáticamente al módulo Metas</td></tr>
+          <tr><td>📈 Inversión mínima mensual</td><td>% del ingreso que deberías invertir según la regla</td><td>Referencia para el módulo Inversiones</td></tr>
+          <tr><td>🛡️ Fondo de emergencia objetivo</td><td>Meses de gastos esenciales que deberías tener guardados</td><td>Referencia para el módulo Fondo de Emergencia</td></tr>
+          <tr><td>🎉 Presupuesto de ocio</td><td>Máximo mensual para gastos discrecionales</td><td>Guía para categorías de ocio en el presupuesto</td></tr>
+          <tr><td>🏠 Tope de gastos fijos</td><td>Límite recomendado para gastos fijos mensuales</td><td>Alerta si tus gastos fijos lo superan</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 03 TRANSACCIONES -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-amber">
+      <span>💸</span> Módulo 03
+    </div>
+    <h1 class="module-h1 text-amber">Transacciones</h1>
+    <p class="module-tagline">Registro mensual de ingresos y egresos reales con categorización automática</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-green">
+        <span class="card-icon">⬆️</span>
+        <div class="card-title">Ingresos</div>
+        <div class="card-text">Registrá cada ingreso real recibido en el mes</div>
+      </div>
+      <div class="card c-red">
+        <span class="card-icon">⬇️</span>
+        <div class="card-title">Egresos</div>
+        <div class="card-text">Cada gasto real con categoría, fecha y descripción</div>
+      </div>
+      <div class="card c-amber">
+        <span class="card-icon">🗓️</span>
+        <div class="card-title">Navegación mensual</div>
+        <div class="card-text">Navegá mes a mes para ver el historial completo</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Balance real</div>
+        <div class="card-text">Diferencia real entre lo que entrió y lo que salió</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#d97706">▶</span> Diferencia con el Presupuesto</div>
+        <table class="feature-table">
+          <thead><tr><th>Presupuesto</th><th>Transacciones</th></tr></thead>
+          <tbody>
+            <tr><td>Lo que <strong>planificás</strong> gastar</td><td>Lo que <strong>realmente</strong> gastaste</td></tr>
+            <tr><td>Anual / mensual estimado</td><td>Día a día, real</td></tr>
+            <tr><td>Categorías de planificación</td><td>Movimientos individuales</td></tr>
+            <tr><td>Se configura una vez</td><td>Se actualiza todo el mes</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-amber" style="margin-top:16px">
+          <div class="tip-icon">📝</div>
+          <div>
+            <div class="tip-title text-amber">Registro diario</div>
+            <div class="tip-text" style="color:#92400e">Registrá cada transacción el mismo día que ocurre. Al final del mes, comparar el presupuesto vs las transacciones reales es la forma más poderosa de mejorar tus finanzas.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#d97706">▶</span> Cómo registrar una transacción</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-amber">1</div>
+            <div class="step-content">
+              <div class="step-title">Tipo: Ingreso o Egreso</div>
+              <div class="step-desc">Seleccioná si el movimiento es dinero que entra o sale.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">2</div>
+            <div class="step-content">
+              <div class="step-title">Monto y fecha</div>
+              <div class="step-desc">Ingresá el monto exacto y la fecha del movimiento.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">3</div>
+            <div class="step-content">
+              <div class="step-title">Categoría</div>
+              <div class="step-desc">Asignala a una categoría del presupuesto para comparar plan vs real.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">4</div>
+            <div class="step-content">
+              <div class="step-title">Descripción opcional</div>
+              <div class="step-desc">Agregá una nota para recordar el detalle del movimiento.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 04 METAS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-blue">
+      <span>🎯</span> Módulo 04
+    </div>
+    <h1 class="module-h1 text-blue">Metas de Ahorro</h1>
+    <p class="module-tagline">Objetivos financieros con cuota mensual calculada por la fórmula PMT</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-blue">
+        <span class="card-icon">🏖️</span>
+        <div class="card-title">Vacaciones</div>
+        <div class="card-text">¿Cuánto necesito ahorrar por mes para ir de vacaciones en diciembre?</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">🚗</span>
+        <div class="card-title">Vehículo o electrodoméstico</div>
+        <div class="card-text">Meta con fecha objetivo y cuota mensual automática</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">🎓</span>
+        <div class="card-title">Educación</div>
+        <div class="card-text">Fondo para estudios con progreso visual en tiempo real</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#2563eb">▶</span> Campos de cada meta</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-blue">1</div>
+            <div class="step-content">
+              <div class="step-title">Nombre de la meta</div>
+              <div class="step-desc">Ej: "Laptop nueva", "Fondo vacaciones", "Colchón".</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">2</div>
+            <div class="step-content">
+              <div class="step-title">Monto objetivo</div>
+              <div class="step-desc">¿Cuánto dinero necesitás alcanzar?</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">3</div>
+            <div class="step-content">
+              <div class="step-title">Monto actual ahorrado</div>
+              <div class="step-desc">Lo que ya tenés acumulado hacia esa meta.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">4</div>
+            <div class="step-content">
+              <div class="step-title">Fecha objetivo</div>
+              <div class="step-desc">¿Para cuándo necesitás el dinero? El sistema calcula cuántos meses quedan.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">5</div>
+            <div class="step-content">
+              <div class="step-title">Tasa de interés (opcional)</div>
+              <div class="step-desc">Si usás una cuenta de ahorro con rendimiento, el PMT lo considera.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#2563eb">▶</span> Fórmula PMT</div>
+        <p style="font-size:8.5pt;color:#475569;margin-bottom:10px">El sistema calcula automáticamente la cuota mensual necesaria para alcanzar tu meta:</p>
+        <div class="formula-box">
+          <span class="formula-comment">// PMT — cuota mensual de ahorro</span><br>
+          PMT = (<span class="formula-keyword">meta</span> − <span class="formula-keyword">presente</span> × (1 + r/12)^n)<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;× (r/12) / ((1 + r/12)^n − 1)<br><br>
+          <span class="formula-comment">// Donde:</span><br>
+          <span class="formula-value">meta</span>     = monto objetivo<br>
+          <span class="formula-value">presente</span> = ahorro actual<br>
+          <span class="formula-value">r</span>        = tasa anual (ej: 0.05)<br>
+          <span class="formula-value">n</span>        = meses restantes
+        </div>
+
+        <div class="tip-box tip-blue" style="margin-top:12px">
+          <div class="tip-icon">📊</div>
+          <div>
+            <div class="tip-title text-blue">Barra de progreso</div>
+            <div class="tip-text" style="color:#1e40af">Cada meta muestra una barra de progreso visual. Actualizá el "monto actual" cada mes cuando deposites en tu cuenta de ahorro.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 05 DEUDAS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-red">
+      <span>🤝</span> Módulo 05
+    </div>
+    <h1 class="module-h1 text-red">Deudas</h1>
+    <p class="module-tagline">Gestión bidireccional de préstamos personales entre personas</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-2" style="margin-bottom:20px">
+      <div class="card c-red">
+        <span class="card-icon">🙋 → 👤</span>
+        <div class="card-title">ME DEBEN</div>
+        <div class="card-text">Registrá el dinero que otras personas te deben a vos. Seguí si pagaron, parcialmente o nada.</div>
+      </div>
+      <div class="card c-amber">
+        <span class="card-icon">👤 → 🙋</span>
+        <div class="card-title">LES DEBO</div>
+        <div class="card-text">Registrá el dinero que vos debés a otras personas. Marcalas como pagadas cuando saldés.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#dc2626">▶</span> Campos de cada deuda</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-red">1</div>
+            <div class="step-content">
+              <div class="step-title">Persona</div>
+              <div class="step-desc">Nombre del deudor o acreedor.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-red">2</div>
+            <div class="step-content">
+              <div class="step-title">Monto y moneda</div>
+              <div class="step-desc">Monto original de la deuda.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-red">3</div>
+            <div class="step-content">
+              <div class="step-title">Fecha</div>
+              <div class="step-desc">Cuándo se originó el préstamo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-red">4</div>
+            <div class="step-content">
+              <div class="step-title">Estado</div>
+              <div class="step-desc"><span class="tag badge-green">Pagado</span> <span class="tag badge-amber">Parcial</span> <span class="tag badge-red">Pendiente</span></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-red">5</div>
+            <div class="step-content">
+              <div class="step-title">Descripción</div>
+              <div class="step-desc">Motivo del préstamo para recordarlo después.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#dc2626">▶</span> Resumen de deudas</div>
+        <table class="feature-table">
+          <thead><tr><th>Vista</th><th>Qué muestra</th></tr></thead>
+          <tbody>
+            <tr><td>Total me deben</td><td>Suma de lo pendiente de cobrar</td></tr>
+            <tr><td>Total les debo</td><td>Suma de lo pendiente de pagar</td></tr>
+            <tr><td>Balance neto</td><td>Diferencia: ¿quedás deudor o acreedor?</td></tr>
+            <tr><td>Deudas vencidas</td><td>Alertas de deudas sin pagar hace mucho</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-amber" style="margin-top:16px">
+          <div class="tip-icon">⚠️</div>
+          <div>
+            <div class="tip-title text-amber">Impacto en el Patrimonio</div>
+            <div class="tip-text" style="color:#92400e">Las deudas que <strong>les debés</strong> se descuentan automáticamente del cálculo de Patrimonio Neto. Saldá deudas para mejorar tu patrimonio.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 06 TARJETAS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-purple">
+      <span>💳</span> Módulo 06
+    </div>
+    <h1 class="module-h1 text-purple">Tarjetas de Crédito</h1>
+    <p class="module-tagline">Control de utilización, límites y estado de pago por tarjeta</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-purple">
+        <span class="card-icon">📏</span>
+        <div class="card-title">Límite de crédito</div>
+        <div class="card-text">Límite total autorizado por el banco para la tarjeta</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Utilización %</div>
+        <div class="card-text">Qué % del límite está consumido. Recomendado: bajo 30%</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">💵</span>
+        <div class="card-title">Saldo actual</div>
+        <div class="card-text">Deuda pendiente que se debe abonar este mes</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">📅</span>
+        <div class="card-title">Fecha de corte</div>
+        <div class="card-text">Día del mes en que cierra el período de facturación</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#7c3aed">▶</span> Estados de pago</div>
+        <table class="feature-table">
+          <thead><tr><th>Estado</th><th>Significado</th><th>Impacto</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="tag badge-green">✅ Completo</span></td>
+              <td>Pagás el saldo total</td>
+              <td>Sin intereses</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-blue">💡 Parcial</span></td>
+              <td>Pagás más del mínimo</td>
+              <td>Intereses parciales</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-amber">⚠️ Mínimo</span></td>
+              <td>Solo el pago mínimo</td>
+              <td>Intereses altos</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-red">❌ Detenido</span></td>
+              <td>No estás pagando</td>
+              <td>Mora + intereses</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#7c3aed">▶</span> Cómo usarlo</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-purple">1</div>
+            <div class="step-content">
+              <div class="step-title">Registrá cada tarjeta</div>
+              <div class="step-desc">Nombre del banco, límite total y fecha de corte.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">2</div>
+            <div class="step-content">
+              <div class="step-title">Actualizá el saldo mensual</div>
+              <div class="step-desc">Al cerrar el mes, ingresá el saldo real de cada tarjeta.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">3</div>
+            <div class="step-content">
+              <div class="step-title">Marcá el estado de pago</div>
+              <div class="step-desc">¿Pagaste todo? ¿Solo el mínimo? El sistema te advierte el impacto.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">4</div>
+            <div class="step-content">
+              <div class="step-title">Monitoreá la utilización</div>
+              <div class="step-desc">Mantené la utilización por debajo del 30% para cuidar tu score crediticio.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-purple" style="margin-top:12px">
+          <div class="tip-icon">💳</div>
+          <div>
+            <div class="tip-title text-purple">Impacto en Patrimonio</div>
+            <div class="tip-text" style="color:#5b21b6">Los saldos de tarjetas se suman a los pasivos del módulo Patrimonio Neto automáticamente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 07 CRÉDITOS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-teal">
+      <span>🏦</span> Módulo 07
+    </div>
+    <h1 class="module-h1 text-teal">Créditos y Préstamos</h1>
+    <p class="module-tagline">Seguimiento de préstamos bancarios con progreso, cuotas y meses restantes</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-teal">
+        <span class="card-icon">🏠</span>
+        <div class="card-title">Hipoteca</div>
+        <div class="card-text">Préstamo de vivienda con amortización mensual y saldo pendiente</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">🚗</span>
+        <div class="card-title">Préstamo de auto</div>
+        <div class="card-text">Crédito vehicular con meses restantes y cuota fija</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">📱</span>
+        <div class="card-title">Crédito personal</div>
+        <div class="card-text">Cualquier préstamo bancario o financiero</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#0d9488">▶</span> Datos de cada crédito</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-teal">1</div>
+            <div class="step-content">
+              <div class="step-title">Nombre y entidad</div>
+              <div class="step-desc">Identificador del préstamo y banco o persona que lo otorgó.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">2</div>
+            <div class="step-content">
+              <div class="step-title">Monto original</div>
+              <div class="step-desc">Capital inicial prestado.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">3</div>
+            <div class="step-content">
+              <div class="step-title">Saldo pendiente</div>
+              <div class="step-desc">Cuánto queda por pagar hoy. Se actualiza cada mes.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">4</div>
+            <div class="step-content">
+              <div class="step-title">Cuota mensual y tasa</div>
+              <div class="step-desc">Pago mensual fijo y tasa de interés anual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">5</div>
+            <div class="step-content">
+              <div class="step-title">Meses restantes estimados</div>
+              <div class="step-desc">El sistema calcula automáticamente cuándo termina el préstamo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#0d9488">▶</span> Lo que muestra el módulo</div>
+        <table class="feature-table">
+          <thead><tr><th>Métrica</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td>Progreso %</td><td>Barra de cuánto del préstamo ya pagaste</td></tr>
+            <tr><td>Saldo pendiente</td><td>Lo que aún debés al acreedor</td></tr>
+            <tr><td>Meses restantes</td><td>Estimación basada en cuota y saldo actual</td></tr>
+            <tr><td>Total de deuda</td><td>Suma de todos los préstamos activos</td></tr>
+            <tr><td>Cuota mensual total</td><td>Carga mensual de todos los créditos juntos</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-teal" style="margin-top:14px">
+          <div class="tip-icon">📉</div>
+          <div>
+            <div class="tip-title text-teal">Estrategia avalancha</div>
+            <div class="tip-text" style="color:#0f766e">Pagá primero los préstamos con mayor tasa de interés. Usá el Simulador para comparar escenarios antes de hacer pagos extra.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 08 PATRIMONIO -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-green">
+      <span>💰</span> Módulo 08
+    </div>
+    <h1 class="module-h1 text-green">Patrimonio Neto</h1>
+    <p class="module-tagline">Fotografía financiera completa: activos menos todos los pasivos</p>
+  </div>
+
+  <div class="module-body">
+
+    <div class="cards-row cards-2" style="margin-bottom:20px">
+      <div class="card c-green">
+        <span class="card-icon">⬆️ ACTIVOS</span>
+        <div class="card-title">Lo que tenés</div>
+        <div class="card-text">Inmuebles, vehículos, efectivo, cuentas bancarias, inversiones y otros bienes con valor económico.</div>
+      </div>
+      <div class="card c-red">
+        <span class="card-icon">⬇️ PASIVOS</span>
+        <div class="card-title">Lo que debés</div>
+        <div class="card-text">Saldo de tarjetas + préstamos activos + deudas personales. Se suman automáticamente desde otros módulos.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#16a34a">▶</span> Fórmula del Patrimonio</div>
+        <div class="formula-box">
+          <span class="formula-comment">// Patrimonio Neto</span><br>
+          Neto = <span class="formula-keyword">Activos</span> − <span class="formula-keyword">Pasivos</span><br><br>
+          <span class="formula-comment">// Activos</span><br>
+          Activos = <span class="formula-value">inmuebles</span> + <span class="formula-value">vehículos</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="formula-value">efectivo</span> + <span class="formula-value">inversiones</span> + <span class="formula-value">otros</span><br><br>
+          <span class="formula-comment">// Pasivos (automáticos)</span><br>
+          Pasivos = <span class="formula-value">tarjetas</span> + <span class="formula-value">préstamos</span> + <span class="formula-value">deudas</span>
+        </div>
+
+        <div class="tip-box tip-green" style="margin-top:14px">
+          <div class="tip-icon">📅</div>
+          <div>
+            <div class="tip-title text-green">Revisión trimestral</div>
+            <div class="tip-text" style="color:#15803d">Actualizá los valores de tus activos cada 3 meses. El patrimonio neto es el indicador más importante de salud financiera a largo plazo.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#16a34a">▶</span> Tipos de activos</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-green">🏠</div>
+            <div class="step-content">
+              <div class="step-title">Inmuebles</div>
+              <div class="step-desc">Casa, apartamento, local. Ingresá el valor de mercado actual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">🚗</div>
+            <div class="step-content">
+              <div class="step-title">Vehículos</div>
+              <div class="step-desc">Auto, moto. Actualizá el valor según depreciación anual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">💵</div>
+            <div class="step-content">
+              <div class="step-title">Efectivo y cuentas</div>
+              <div class="step-desc">Dinero en efectivo, saldo en cuentas bancarias y cajas de ahorro.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">📈</div>
+            <div class="step-content">
+              <div class="step-title">Inversiones</div>
+              <div class="step-desc">Portafolio de inversiones. Se sincroniza con el módulo Inversiones.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">📦</div>
+            <div class="step-content">
+              <div class="step-title">Otros activos</div>
+              <div class="step-desc">Joyas, arte, equipos de alto valor, cualquier bien patrimonial.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 09 EMERGENCIA -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-amber">
+      <span>🛡️</span> Módulo 09
+    </div>
+    <h1 class="module-h1 text-amber">Fondo de Emergencia</h1>
+    <p class="module-tagline">Calculadora del colchón financiero necesario para tu hogar</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-amber">
+        <span class="card-icon">🏠</span>
+        <div class="card-title">Gastos del hogar</div>
+        <div class="card-text">Alquiler, servicios, alimentación y gastos esenciales mensuales</div>
+      </div>
+      <div class="card c-amber">
+        <span class="card-icon">🗓️</span>
+        <div class="card-title">Meses de cobertura</div>
+        <div class="card-text">¿Cuántos meses querés poder sostenerte sin ingresos? (recomendado: 3 a 6)</div>
+      </div>
+      <div class="card c-green">
+        <span class="card-icon">🎯</span>
+        <div class="card-title">Meta del fondo</div>
+        <div class="card-text">Monto exacto que necesitás tener guardado como reserva de emergencia</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#d97706">▶</span> ¿Para qué sirve?</div>
+        <p style="font-size:9pt;color:#475569;margin-bottom:14px;line-height:1.6">Un fondo de emergencia es la base de cualquier estrategia financiera. Te protege ante:</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-amber">⚕️</div>
+            <div class="step-content">
+              <div class="step-title">Gastos médicos imprevistos</div>
+              <div class="step-desc">Cirugías, hospitalizaciones, medicación urgente.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">💼</div>
+            <div class="step-content">
+              <div class="step-title">Pérdida de empleo</div>
+              <div class="step-desc">Tiempo de transición hasta conseguir nuevo trabajo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">🔧</div>
+            <div class="step-content">
+              <div class="step-title">Reparaciones urgentes</div>
+              <div class="step-desc">Auto, hogar, electrodomésticos esenciales.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">🌪️</div>
+            <div class="step-content">
+              <div class="step-title">Crisis imprevistas</div>
+              <div class="step-desc">Cualquier gasto urgente e inesperado.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#d97706">▶</span> Cómo se calcula</div>
+        <div class="formula-box">
+          <span class="formula-comment">// Meta del fondo</span><br>
+          Meta = <span class="formula-value">gastos_esenciales</span> × <span class="formula-keyword">meses</span><br><br>
+          <span class="formula-comment">// Ejemplo</span><br>
+          Alquiler + servicios + comida<br>
+          = <span class="formula-value">$800/mes</span><br>
+          × <span class="formula-keyword">4 meses</span><br>
+          = <span class="formula-value">$3.200 de reserva</span>
+        </div>
+
+        <table class="feature-table" style="margin-top:14px">
+          <thead><tr><th>Cobertura</th><th>Perfil</th></tr></thead>
+          <tbody>
+            <tr><td>1 – 2 meses</td><td>Empleo muy estable, sin dependientes</td></tr>
+            <tr><td>3 – 4 meses</td><td>Situación estándar recomendada</td></tr>
+            <tr><td>5 – 6 meses</td><td>Trabajo independiente o familia a cargo</td></tr>
+            <tr><td>6+ meses</td><td>Alta incertidumbre o múltiples dependientes</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 10 SIMULADOR -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-slate">
+      <span>📐</span> Módulo 10
+    </div>
+    <h1 class="module-h1" style="color:#334155">Simulador de Créditos</h1>
+    <p class="module-tagline">Calculadora de amortización sin necesidad de tener un crédito activo</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-slate">
+        <span class="card-icon">💵</span>
+        <div class="card-title">Monto</div>
+        <div class="card-text">Capital a solicitar o comparar</div>
+      </div>
+      <div class="card c-slate">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Tasa de interés</div>
+        <div class="card-text">TNA anual del crédito</div>
+      </div>
+      <div class="card c-slate">
+        <span class="card-icon">🗓️</span>
+        <div class="card-title">Plazo</div>
+        <div class="card-text">Cantidad de cuotas / meses</div>
+      </div>
+      <div class="card c-slate">
+        <span class="card-icon">📋</span>
+        <div class="card-title">Tabla de amortización</div>
+        <div class="card-text">Cuota por cuota: capital, interés y saldo</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#475569">▶</span> ¿Para qué usarlo?</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-slate">1</div>
+            <div class="step-content">
+              <div class="step-title">Antes de pedir un préstamo</div>
+              <div class="step-desc">Calculá cuánto pagarías por mes y si podés afrontarlo con tu presupuesto actual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-slate">2</div>
+            <div class="step-content">
+              <div class="step-title">Comparar ofertas</div>
+              <div class="step-desc">Ingresá las condiciones de cada banco y compará el costo total real.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-slate">3</div>
+            <div class="step-content">
+              <div class="step-title">Evaluar refinanciación</div>
+              <div class="step-desc">¿Conviene refinanciar un crédito actual a mejor tasa? Simulalo primero.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-slate">4</div>
+            <div class="step-content">
+              <div class="step-title">Calcular pago anticipado</div>
+              <div class="step-desc">¿Cuánto interés ahorrás si pagás el préstamo antes de tiempo?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#475569">▶</span> Tabla de amortización</div>
+        <p style="font-size:8.5pt;color:#475569;margin-bottom:10px">Muestra el detalle de cada cuota:</p>
+        <table class="feature-table">
+          <thead><tr><th>Cuota</th><th>Capital</th><th>Interés</th><th>Saldo</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>$150</td><td>$42</td><td>$850</td></tr>
+            <tr><td>2</td><td>$152</td><td>$40</td><td>$698</td></tr>
+            <tr><td>3</td><td>$154</td><td>$38</td><td>$544</td></tr>
+            <tr><td style="color:#94a3b8" colspan="4">… y así hasta el último mes</td></tr>
+          </tbody>
+        </table>
+        <p style="font-size:8pt;color:#64748b;margin-top:8px">Al inicio pagás más interés; al final pagás más capital. Esto se llama sistema francés de amortización.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 11 COMPRAS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-rose">
+      <span>🛒</span> Módulo 11
+    </div>
+    <h1 class="module-h1 text-rose">Lista de Compras</h1>
+    <p class="module-tagline">Planificación de compras del hogar con precios en CUP antes de ir al mercado</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-rose">
+        <span class="card-icon">📋</span>
+        <div class="card-title">Listas por fecha</div>
+        <div class="card-text">Creá una lista por cada visita al mercado con fecha y descripción</div>
+      </div>
+      <div class="card c-rose">
+        <span class="card-icon">💰</span>
+        <div class="card-title">Precios en CUP</div>
+        <div class="card-text">Registrá el precio de cada producto para saber cuánto llevar antes de salir</div>
+      </div>
+      <div class="card c-rose">
+        <span class="card-icon">✅</span>
+        <div class="card-title">Marcar comprado</div>
+        <div class="card-text">Tachá cada ítem mientras comprás. El total se actualiza en tiempo real</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#e11d48">▶</span> Flujo de uso</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-rose">1</div>
+            <div class="step-content">
+              <div class="step-title">Crear lista</div>
+              <div class="step-desc">Antes de ir al mercado, creá una lista nueva con la fecha de la compra.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">2</div>
+            <div class="step-content">
+              <div class="step-title">Agregar productos</div>
+              <div class="step-desc">Nombre, cantidad, precio estimado en CUP. El total se calcula solo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">3</div>
+            <div class="step-content">
+              <div class="step-title">Ir al mercado con el celular</div>
+              <div class="step-desc">Usá la app móvil para marcar cada ítem comprado mientras comprás.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">4</div>
+            <div class="step-content">
+              <div class="step-title">Actualizar precios reales</div>
+              <div class="step-desc">Modificá el precio si difiere del estimado. El historial queda guardado.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">5</div>
+            <div class="step-content">
+              <div class="step-title">Historial de compras</div>
+              <div class="step-desc">Navegá mes a mes para ver en qué gastaste en el mercado.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#e11d48">▶</span> Función especial: Plan CUP</div>
+        <div class="cards-row cards-3" style="margin-top:0">
+          <div class="card c-rose" style="padding:14px">
+            <div class="card-title">Auto-precio</div>
+            <div class="card-text" style="font-size:8pt">El precio de un producto se actualiza automáticamente con el último precio registrado</div>
+          </div>
+          <div class="card c-rose" style="padding:14px">
+            <div class="card-title">Total en tiempo real</div>
+            <div class="card-text" style="font-size:8pt">Ves cuánto llevás gastado vs el presupuesto de la lista</div>
+          </div>
+          <div class="card c-rose" style="padding:14px">
+            <div class="card-title">Pendientes</div>
+            <div class="card-text" style="font-size:8pt">Ítem sin comprar se destacan para no olvidarlos</div>
+          </div>
+        </div>
+
+        <div class="tip-box" style="background:#fff1f2;border:1.5px solid #fecdd3;margin-top:14px">
+          <div class="tip-icon">📱</div>
+          <div>
+            <div class="tip-title text-rose">Disponible en la app móvil</div>
+            <div class="tip-text" style="color:#9f1239">Este módulo también está disponible en la app Android/iOS para usarlo en el supermercado sin necesidad de una computadora.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 12 INVENTARIO -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-purple">
+      <span>📊</span> Módulo 12
+    </div>
+    <h1 class="module-h1 text-purple">Reportes / Analíticas</h1>
+    <p class="module-tagline">Tendencias, comparativas y patrones de gasto mes a mes</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-purple">
+        <span class="card-icon">💸</span>
+        <div class="card-title">Promedio gastos/mes</div>
+        <div class="card-text">Promedio de gastos de los últimos 12 meses con datos</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">💰</span>
+        <div class="card-title">Promedio ingresos/mes</div>
+        <div class="card-text">Promedio de ingresos de los últimos 12 meses con datos</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">📅</span>
+        <div class="card-title">Mes más gastador</div>
+        <div class="card-text">El mes con mayor gasto total registrado</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">🏆</span>
+        <div class="card-title">Mes más ahorrador</div>
+        <div class="card-text">El mes con mayor diferencia positiva entre ingresos y gastos</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#7c3aed">▶</span> ¿Qué muestra Reportes/Analíticas?</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-purple">1</div>
+            <div class="step-content">
+              <div class="step-title">Comparativa mes a mes</div>
+              <div class="step-desc">Gráfico de barras con ingresos y gastos de los últimos 12 meses, más una línea de referencia con el promedio de gastos.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">2</div>
+            <div class="step-content">
+              <div class="step-title">Comparativa anual</div>
+              <div class="step-desc">Elegí año actual o anterior y compará los gastos mes a mes de ambos años lado a lado.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">3</div>
+            <div class="step-content">
+              <div class="step-title">Gastos hormiga</div>
+              <div class="step-desc">Tendencia de las transacciones menores a $500: cuánto representan del gasto total del mes y cuántas hubo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">4</div>
+            <div class="step-content">
+              <div class="step-title">Top 5 categorías</div>
+              <div class="step-desc">Ranking de las categorías con mayor gasto del mes actual, con barra de proporción visual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">5</div>
+            <div class="step-content">
+              <div class="step-title">Resumen mensual</div>
+              <div class="step-desc">Tabla con ingresos, gastos y balance de los últimos 6 meses, y botón para exportar la vista a PDF.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#7c3aed">▶</span> Indicadores clave</div>
+        <table class="feature-table">
+          <thead><tr><th>Indicador</th><th>Qué mide</th></tr></thead>
+          <tbody>
+            <tr><td>Gastos este mes</td><td>Total de gastos del mes en curso</td></tr>
+            <tr><td>vs mes anterior</td><td>Variación en pesos respecto al mes previo</td></tr>
+            <tr><td>Gastos hormiga</td><td>% del gasto total en transacciones ≤ $500</td></tr>
+            <tr><td>Balance por mes</td><td>Ingresos menos gastos, positivo o negativo</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-purple" style="margin-top:16px">
+          <div class="tip-icon">🖨️</div>
+          <div>
+            <div class="tip-title text-purple">Exportar a PDF</div>
+            <div class="tip-text" style="color:#5b21b6">Usá el botón "PDF" del encabezado para imprimir o guardar la vista de analíticas y compartirla o archivarla fuera de la app.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 13 INVERSIONES -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-teal">
+      <span>📈</span> Módulo 13
+    </div>
+    <h1 class="module-h1 text-teal">Inversiones</h1>
+    <p class="module-tagline">Portafolio de inversiones con rendimiento acumulado y distribución por tipo</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-teal">
+        <span class="card-icon">🏦</span>
+        <div class="card-title">Plazo fijo</div>
+        <div class="card-text">Depósitos bancarios con fecha de vencimiento y tasa</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Acciones / ETFs</div>
+        <div class="card-text">Renta variable con precio de compra y valor actual</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">🪙</span>
+        <div class="card-title">Cripto / Divisas</div>
+        <div class="card-text">Activos digitales o divisas extranjeras</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">💰</span>
+        <div class="card-title">Otros</div>
+        <div class="card-text">Fondos comunes, bonos, cualquier instrumento</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#0d9488">▶</span> Datos por inversión</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-teal">1</div>
+            <div class="step-content">
+              <div class="step-title">Nombre e instrumento</div>
+              <div class="step-desc">Ej: "Plazo fijo Banco X", "ETF S&amp;P500", "BTC".</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">2</div>
+            <div class="step-content">
+              <div class="step-title">Monto invertido</div>
+              <div class="step-desc">Capital inicial que pusiste en esa inversión.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">3</div>
+            <div class="step-content">
+              <div class="step-title">Valor actual</div>
+              <div class="step-desc">Lo que vale hoy. Actualizalo periódicamente para ver el rendimiento real.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">4</div>
+            <div class="step-content">
+              <div class="step-title">Fecha de inicio y vencimiento</div>
+              <div class="step-desc">Para plazos fijos o bonos con vencimiento definido.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#0d9488">▶</span> Métricas del portafolio</div>
+        <table class="feature-table">
+          <thead><tr><th>Métrica</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td>Total invertido</td><td>Suma de todo el capital puesto</td></tr>
+            <tr><td>Valor actual total</td><td>Lo que vale el portafolio hoy</td></tr>
+            <tr><td>Ganancia / Pérdida</td><td>Diferencia en $ y en %</td></tr>
+            <tr><td>Distribución</td><td>% por tipo de instrumento</td></tr>
+            <tr><td>Próximos vencimientos</td><td>Alertas de plazos fijos que vencen</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-teal" style="margin-top:14px">
+          <div class="tip-icon">🔗</div>
+          <div>
+            <div class="tip-title text-teal">Integrado con Patrimonio</div>
+            <div class="tip-text" style="color:#0f766e">El valor actual del portafolio se incluye automáticamente en el cálculo de Patrimonio Neto como activo financiero.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 14 RECURRENTES -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-blue">
+      <span>📒</span> Módulo 14
+    </div>
+    <h1 class="module-h1 text-blue">Registro de Gastos</h1>
+    <p class="module-tagline">Compras del mercado y gastos diarios organizados por mes</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-blue">
+        <span class="card-icon">🛒</span>
+        <div class="card-title">Compras de mercado</div>
+        <div class="card-text">Se cargan automáticamente desde Lista de Compras, solo lectura</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">🍽️</span>
+        <div class="card-title">Salidas y otros gastos</div>
+        <div class="card-text">Cargá manualmente cenas, transporte, salud y demás gastos diarios</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">📅</span>
+        <div class="card-title">Navegador mensual</div>
+        <div class="card-text">Recorré cualquier mes con las flechas anterior/siguiente</div>
+      </div>
+      <div class="card c-blue">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Resumen por categoría</div>
+        <div class="card-text">Total gastado en cada categoría, más subtotales y total del mes</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#2563eb">▶</span> ¿Para qué sirve?</div>
+        <p style="font-size:9pt;color:#475569;margin-bottom:12px;line-height:1.6">Es el registro simple de todo lo que se gasta día a día en el hogar, separado en dos secciones:</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-blue">1</div>
+            <div class="step-content">
+              <div class="step-title">Compras de Mercado</div>
+              <div class="step-desc">Tabla de solo lectura que se completa sola con lo que marcaste como comprado en Lista de Compras.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">2</div>
+            <div class="step-content">
+              <div class="step-title">Salidas y Otros Gastos</div>
+              <div class="step-desc">Con "Nueva salida" cargás cualquier otro gasto del día: fecha, descripción, categoría, monto en CUP y lugar (opcional).</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">3</div>
+            <div class="step-content">
+              <div class="step-title">Editá o eliminá</div>
+              <div class="step-desc">Cada salida cargada manualmente se puede editar o borrar desde la misma tabla.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-blue">4</div>
+            <div class="step-content">
+              <div class="step-title">Navegá por mes</div>
+              <div class="step-desc">Usá las flechas para moverte entre meses y ver el historial completo del hogar.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#2563eb">▶</span> Campos del formulario</div>
+        <table class="feature-table">
+          <thead><tr><th>Campo</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td>Fecha</td><td>Día en que ocurrió el gasto</td></tr>
+            <tr><td>Descripción</td><td>Qué fue el gasto (obligatorio)</td></tr>
+            <tr><td>Categoría</td><td>Comida, Transporte, Hogar, Salud, Ocio, Salidas, Shopper u Otros</td></tr>
+            <tr><td>Monto CUP</td><td>Valor del gasto en pesos cubanos (obligatorio)</td></tr>
+            <tr><td>Lugar</td><td>Dónde fue, opcional</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-blue" style="margin-top:14px">
+          <div class="tip-icon">💡</div>
+          <div>
+            <div class="tip-title text-blue">Compras vs. salidas</div>
+            <div class="tip-text" style="color:#1e40af">Las Compras de Mercado no se editan acá: si algo está mal, corregilo desde Lista de Compras. Este módulo solo permite cargar/editar las Salidas y Otros Gastos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 15 CUOTAS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-amber">
+      <span>📦</span> Módulo 15
+    </div>
+    <h1 class="module-h1 text-amber">Cuotas</h1>
+    <p class="module-tagline">Seguimiento de compras en cuotas con progreso de pago y compromiso mensual consolidado</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-amber">
+        <span class="card-icon">📊</span>
+        <div class="card-title">Compromiso mensual</div>
+        <div class="card-text">Suma de todas las cuotas activas que se debitan este mes de tus tarjetas</div>
+      </div>
+      <div class="card c-amber">
+        <span class="card-icon">📋</span>
+        <div class="card-title">Deuda total restante</div>
+        <div class="card-text">Capital pendiente de todas las compras en cuotas activas</div>
+      </div>
+      <div class="card c-amber">
+        <span class="card-icon">✅</span>
+        <div class="card-title">Cuotas completadas</div>
+        <div class="card-text">Historial de compras en cuotas ya saldadas</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#d97706">▶</span> Datos de cada compra en cuotas</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-amber">1</div>
+            <div class="step-content">
+              <div class="step-title">Descripción y comercio</div>
+              <div class="step-desc">Nombre del artículo y tienda donde compraste.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">2</div>
+            <div class="step-content">
+              <div class="step-title">Monto total y valor de cuota</div>
+              <div class="step-desc">El precio total de la compra y cuánto pagás por mes.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">3</div>
+            <div class="step-content">
+              <div class="step-title">Cantidad de cuotas</div>
+              <div class="step-desc">Total de cuotas pactadas. El sistema trackea cuántas ya pagaste.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">4</div>
+            <div class="step-content">
+              <div class="step-title">Fecha de inicio</div>
+              <div class="step-desc">Cuando empezó el plan de cuotas para calcular el mes de finalización.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-amber">5</div>
+            <div class="step-content">
+              <div class="step-title">Interés y últimos 4 dígitos</div>
+              <div class="step-desc">Marcá si la compra tiene interés y a qué tarjeta pertenece.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#d97706">▶</span> Lo que muestra el módulo</div>
+        <table class="feature-table">
+          <thead><tr><th>Métrica</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td>Cuotas activas</td><td>Planes de cuotas con pagos pendientes</td></tr>
+            <tr><td>Cuotas pagadas</td><td>Progreso: X de N cuotas abonadas</td></tr>
+            <tr><td>Compromiso mensual</td><td>Total que se débita de tarjetas este mes</td></tr>
+            <tr><td>Deuda restante</td><td>Capital total aún pendiente de todas las cuotas</td></tr>
+            <tr><td>Estado</td><td>Activa / Completada / Pagada anticipado</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-amber" style="margin-top:14px">
+          <div class="tip-icon">💡</div>
+          <div>
+            <div class="tip-title text-amber">Complementa Tarjetas</div>
+            <div class="tip-text" style="color:#92400e">Usá este módulo junto con Tarjetas de Crédito. Las cuotas son la causa del saldo de tu tarjeta; tenerlas separadas te ayuda a saber cuándo termina cada compromiso.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 16 PAYOFF -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-purple">
+      <span>⛄</span> Módulo 16
+    </div>
+    <h1 class="module-h1 text-purple">Estrategia de Pago de Deudas</h1>
+    <p class="module-tagline">Compará tres estrategias de payoff y simulá el ahorro de intereses con pagos extra</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-purple">
+        <span class="card-icon">📉</span>
+        <div class="card-title">Solo mínimos</div>
+        <div class="card-text">Línea base: cuánto tiempo tardás y cuánto pagás de interés si solo abonás el mínimo</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">🧊</span>
+        <div class="card-title">Avalancha</div>
+        <div class="card-text">Pagás primero la deuda con mayor tasa de interés. Minimiza el costo total de intereses</div>
+      </div>
+      <div class="card c-purple">
+        <span class="card-icon">⛄</span>
+        <div class="card-title">Bola de nieve</div>
+        <div class="card-text">Pagás primero la deuda con menor saldo. Genera momentum psicológico rápido</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#7c3aed">▶</span> Cómo usarlo</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-purple">1</div>
+            <div class="step-content">
+              <div class="step-title">El sistema lee tus deudas activas</div>
+              <div class="step-desc">Consolida tarjetas, créditos y cuotas para armar el plan de payoff.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">2</div>
+            <div class="step-content">
+              <div class="step-title">Ingresá un pago extra mensual</div>
+              <div class="step-desc">Definí cuánto más podés pagar por mes sobre los mínimos obligatorios.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">3</div>
+            <div class="step-content">
+              <div class="step-title">Comparás las 3 estrategias</div>
+              <div class="step-desc">Meses totales, interés pagado y ahorro vs solo mínimos para cada enfoque.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-purple">4</div>
+            <div class="step-content">
+              <div class="step-title">Elegís la que mejor se adapta</div>
+              <div class="step-desc">Avalancha = mínimo interés. Bola de nieve = motivación rápida. Elegí según tu perfil.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#7c3aed">▶</span> Métricas de comparación</div>
+        <table class="feature-table">
+          <thead><tr><th>Estrategia</th><th>Ventaja principal</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="tag badge-slate">📉 Solo mínimos</span></td>
+              <td>Línea base; sin esfuerzo extra</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-blue">🧊 Avalancha</span></td>
+              <td>Menor interés total pagado</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-purple">⛄ Bola de nieve</span></td>
+              <td>Menor saldo saldado primero; momentum</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-purple" style="margin-top:14px">
+          <div class="tip-icon">🎯</div>
+          <div>
+            <div class="tip-title text-purple">Recomendación</div>
+            <div class="tip-text" style="color:#5b21b6">Si tenés deudas con tasas muy distintas (ej. tarjeta al 80% y préstamo al 15%), la estrategia Avalancha te ahorra significativamente más interés. La Bola de nieve es mejor si necesitás victorias rápidas para mantener la motivación.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 17 VENCIMIENTOS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-red">
+      <span>📅</span> Módulo 17
+    </div>
+    <h1 class="module-h1 text-red">Próximos Vencimientos</h1>
+    <p class="module-tagline">Vista consolidada de todos los pagos pendientes ordenados por fecha de vencimiento</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-red">
+        <span class="card-icon">💳</span>
+        <div class="card-title">Tarjetas de crédito</div>
+        <div class="card-text">Fechas de cierre y vencimiento de cada tarjeta registrada</div>
+      </div>
+      <div class="card c-red">
+        <span class="card-icon">🏦</span>
+        <div class="card-title">Cuotas de créditos</div>
+        <div class="card-text">Próximo débito de cada préstamo bancario activo</div>
+      </div>
+      <div class="card c-red">
+        <span class="card-icon">📦</span>
+        <div class="card-title">Cuotas de compras</div>
+        <div class="card-text">Próxima cuota de cada compra financiada en cuotas</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#dc2626">▶</span> Filtros de tiempo</div>
+        <table class="feature-table">
+          <thead><tr><th>Período</th><th>Cuándo usarlo</th></tr></thead>
+          <tbody>
+            <tr><td>7 días</td><td>Revisión de urgencia inmediata</td></tr>
+            <tr><td>15 días</td><td>Planificación quincenal de pagos</td></tr>
+            <tr><td>30 días</td><td>Vista mensual estándar <span class="tag badge-blue">por defecto</span></td></tr>
+            <tr><td>60 días</td><td>Planificación financiera de dos meses</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box" style="background:#fef2f2;border:1.5px solid #fecaca;margin-top:14px">
+          <div class="tip-icon">🗓️</div>
+          <div>
+            <div class="tip-title text-red">Hábito semanal</div>
+            <div class="tip-text" style="color:#991b1b">Revisá los "próximos 7 días" cada lunes. Eso te da tiempo suficiente para mover fondos si lo necesitás antes de que venza un pago.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#dc2626">▶</span> Indicadores de urgencia</div>
+        <table class="feature-table">
+          <thead><tr><th>Color</th><th>Días restantes</th><th>Acción</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="tag badge-red">🔴 Urgente</span></td>
+              <td>0 – 3 días</td>
+              <td>Pagar hoy o mañana</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-amber">🟡 Próximo</span></td>
+              <td>4 – 7 días</td>
+              <td>Programar el pago esta semana</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-green">🟢 Con tiempo</span></td>
+              <td>8+ días</td>
+              <td>En radar, sin acción inmediata</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-blue" style="margin-top:14px">
+          <div class="tip-icon">🔗</div>
+          <div>
+            <div class="tip-title text-blue">Vista consolidada</div>
+            <div class="tip-text" style="color:#1e40af">A diferencia de ver cada módulo por separado (Tarjetas, Créditos, Cuotas), Próximos Vencimientos los une en un solo lugar ordenados por fecha. Es la mejor pantalla para la gestión diaria de pagos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 18 NOTIFICACIONES -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-rose">
+      <span>🔔</span> Módulo 18
+    </div>
+    <h1 class="module-h1 text-rose">Notificaciones</h1>
+    <p class="module-tagline">Central de alertas del sistema, filtrable y con marcado de lectura</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-rose">
+        <span class="card-icon">🔔</span>
+        <div class="card-title">Todas</div>
+        <div class="card-text">Todas las notificaciones generadas por el sistema</div>
+      </div>
+      <div class="card c-rose">
+        <span class="card-icon">🔵</span>
+        <div class="card-title">No leídas</div>
+        <div class="card-text">Contador de pendientes, visible también en el filtro</div>
+      </div>
+      <div class="card c-rose">
+        <span class="card-icon">🧮</span>
+        <div class="card-title">Presupuesto</div>
+        <div class="card-text">Avisos relacionados al presupuesto del mes</div>
+      </div>
+      <div class="card c-rose">
+        <span class="card-icon">🎯</span>
+        <div class="card-title">Metas / Tarjetas</div>
+        <div class="card-text">Alertas de metas de ahorro y de tarjetas de crédito</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#be123c">▶</span> ¿Cómo funciona?</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-rose">1</div>
+            <div class="step-content">
+              <div class="step-title">Lista de notificaciones</div>
+              <div class="step-desc">Cada notificación muestra mensaje, tipo, y hace cuánto se generó (ahora, hace X min, hace Xh, hace Xd).</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">2</div>
+            <div class="step-content">
+              <div class="step-title">Marcar como leída</div>
+              <div class="step-desc">Al hacer clic en una notificación no leída, se marca como leída automáticamente.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">3</div>
+            <div class="step-content">
+              <div class="step-title">Marcar todas como leídas</div>
+              <div class="step-desc">Botón para limpiar de una vez todas las notificaciones pendientes.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">4</div>
+            <div class="step-content">
+              <div class="step-title">Filtros por tipo</div>
+              <div class="step-desc">Todas, No leídas, Presupuesto, Metas o Tarjetas — con contador de no leídas en la pestaña.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-rose">5</div>
+            <div class="step-content">
+              <div class="step-title">Notificaciones push</div>
+              <div class="step-desc">Si todavía no las activaste, un banner te ofrece activarlas para recibir alertas en el dispositivo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#be123c">▶</span> Estado de cada notificación</div>
+        <table class="feature-table">
+          <thead><tr><th>Estado</th><th>Cómo se ve</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><span class="tag badge-blue">No leída</span></td>
+              <td>Fondo celeste, punto azul y texto en negrita</td>
+            </tr>
+            <tr>
+              <td><span class="tag badge-rose">Leída</span></td>
+              <td>Fondo neutro, texto atenuado</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box" style="background:#fff1f2;border:1.5px solid #fecdd3;margin-top:16px">
+          <div class="tip-icon">🔔</div>
+          <div>
+            <div class="tip-title text-rose">Activá el permiso del navegador</div>
+            <div class="tip-text" style="color:#9f1239">Las notificaciones push necesitan que aceptes el permiso del navegador una sola vez. Después vas a recibir avisos de presupuesto y vencimientos aunque no tengas la app abierta.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ 19 MIEMBROS DEL HOGAR -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-green">
+      <span>👨‍👩‍👧</span> Módulo 19
+    </div>
+    <h1 class="module-h1 text-green">Miembros del Hogar</h1>
+    <p class="module-tagline">Gestión de los usuarios que tienen acceso a las finanzas de la casa</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-4" style="margin-bottom:20px">
+      <div class="card c-green">
+        <span class="card-icon">✉️</span>
+        <div class="card-title">Invitar por email</div>
+        <div class="card-text">Sumá un miembro nuevo indicando email y rol</div>
+      </div>
+      <div class="card c-green">
+        <span class="card-icon">➕</span>
+        <div class="card-title">Agregar usuario existente</div>
+        <div class="card-text">Buscá por email entre usuarios ya registrados en el sistema</div>
+      </div>
+      <div class="card c-green">
+        <span class="card-icon">🟢</span>
+        <div class="card-title">Activar / Desactivar</div>
+        <div class="card-text">Suspendé el acceso de un miembro sin borrarlo del hogar</div>
+      </div>
+      <div class="card c-green">
+        <span class="card-icon">🗑️</span>
+        <div class="card-title">Eliminar del hogar</div>
+        <div class="card-text">Sacá definitivamente a un usuario del hogar</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#16a34a">▶</span> ¿Cómo se administra?</div>
+        <p style="font-size:9pt;color:#475569;margin-bottom:12px;line-height:1.6">Se accede desde el pie del menú lateral, junto a Configuración y Guía de uso:</p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-green">1</div>
+            <div class="step-content">
+              <div class="step-title">Invitar por email</div>
+              <div class="step-desc">Ingresá el email y elegí un rol (Miembro, Administrador o Solo lectura) para invitar a alguien nuevo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">2</div>
+            <div class="step-content">
+              <div class="step-title">Agregar usuario</div>
+              <div class="step-desc">Buscá por email a un usuario que ya existe en el sistema y sumalo directamente al hogar.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">3</div>
+            <div class="step-content">
+              <div class="step-title">Tarjetas de miembros</div>
+              <div class="step-desc">Cada miembro se muestra con inicial, nombre, email, sus roles y si está activo o inactivo.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-green">4</div>
+            <div class="step-content">
+              <div class="step-title">Activar, desactivar o eliminar</div>
+              <div class="step-desc">Disponible para todos los miembros excepto administradores/dueños del hogar, que quedan protegidos.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#16a34a">▶</span> Roles disponibles</div>
+        <table class="feature-table">
+          <thead><tr><th>Rol</th><th>Alcance</th></tr></thead>
+          <tbody>
+            <tr><td>Miembro</td><td>Uso normal de los módulos del hogar</td></tr>
+            <tr><td>Administrador</td><td>Gestión completa, no puede ser desactivado por otros</td></tr>
+            <tr><td>Solo lectura</td><td>Consulta la información sin poder modificarla</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-green" style="margin-top:16px">
+          <div class="tip-icon">🛡️</div>
+          <div>
+            <div class="tip-title text-green">Los admins están protegidos</div>
+            <div class="tip-text" style="color:#166534">Los miembros con rol admin, owner o superadmin no muestran los botones de activar/desactivar ni eliminar, para evitar que el hogar se quede sin nadie a cargo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ CLOSING -->
+<div class="module-page" style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1d4ed8 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 48px;page-break-after:never">
+  <div style="font-size:48pt;margin-bottom:24px">🏠</div>
+  <h2 style="font-size:28pt;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:12px">Mi Casa Pro</h2>
+  <p style="font-size:12pt;color:rgba(255,255,255,0.6);margin-bottom:40px">Control total de las finanzas de tu hogar</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:500px;margin:0 auto 40px">
+    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px">
+      <div style="font-size:20pt;margin-bottom:8px">19</div>
+      <div style="font-size:8.5pt;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Módulos</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px">
+      <div style="font-size:20pt;margin-bottom:8px">100%</div>
+      <div style="font-size:8.5pt;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Tuyo</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px">
+      <div style="font-size:20pt;margin-bottom:8px">∞</div>
+      <div style="font-size:8.5pt;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Control</div>
+    </div>
+  </div>
+
+  <p style="font-size:8.5pt;color:rgba(255,255,255,0.3)">Mi Casa Pro · Guía de Módulos · 2026</p>
+</div>
+
+<script>
+// Auto-print hint
+window.addEventListener('load', () => {
+  const hint = document.createElement('div');
+  hint.innerHTML = '📄 Presioná <strong>Ctrl+P</strong> (o Cmd+P en Mac) → Guardar como PDF para exportar esta guía';
+  hint.style.cssText = `
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:#1e293b;color:#f1f5f9;padding:12px 24px;border-radius:10px;
+    font-family:Inter,sans-serif;font-size:13px;z-index:9999;
+    box-shadow:0 4px 20px rgba(0,0,0,0.3);white-space:nowrap;
+    border:1px solid rgba(255,255,255,0.1);
+  `;
+  document.body.appendChild(hint);
+  window.addEventListener('beforeprint', () => hint.remove());
+  setTimeout(() => hint.remove(), 6000);
+});
+</script>
+</body>
+</html>
