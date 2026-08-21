@@ -212,9 +212,9 @@ export class BudgetService {
     return result;
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, houseId: string) {
     const budget = await this.budgetRepo.findOne({
-      where: { id },
+      where: { id, house: { id: houseId } },
       relations: ['incomeSources', 'categories', 'categories.expenses'],
     });
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
@@ -240,7 +240,7 @@ export class BudgetService {
     });
 
     const saved = await this.budgetRepo.save(budget);
-    return this.findOne(saved.id);
+    return this.findOne(saved.id, houseId);
   }
 
   async update(id: string, houseId: string, dto: UpdateBudgetDto) {
@@ -254,7 +254,7 @@ export class BudgetService {
     if (dto.rule !== undefined) budget.rule = dto.rule;
 
     await this.budgetRepo.save(budget);
-    return this.findOne(id);
+    return this.findOne(id, houseId);
   }
 
   async remove(id: string, houseId: string) {

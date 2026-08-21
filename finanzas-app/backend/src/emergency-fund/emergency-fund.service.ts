@@ -19,8 +19,11 @@ export class EmergencyFundService {
     return funds.map(f => ({ ...f, calculations: this.calculate(f) }));
   }
 
-  async findOne(id: string) {
-    const fund = await this.fundRepo.findOne({ where: { id }, relations: ['categories'] });
+  async findOne(id: string, houseId: string) {
+    const fund = await this.fundRepo.findOne({
+      where: { id, house: { id: houseId } },
+      relations: ['categories'],
+    });
     if (!fund) throw new NotFoundException('Fondo no encontrado');
     return { ...fund, calculations: this.calculate(fund) };
   }
@@ -36,11 +39,11 @@ export class EmergencyFundService {
       );
       await this.catRepo.save(cats);
     }
-    return this.findOne(savedFund.id);
+    return this.findOne(savedFund.id, houseId);
   }
 
-  async update(id: string, dto: any) {
-    const fund = await this.fundRepo.findOne({ where: { id } });
+  async update(id: string, houseId: string, dto: any) {
+    const fund = await this.fundRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!fund) throw new NotFoundException('Fondo no encontrado');
     const { categories, ...fundData } = dto;
     Object.assign(fund, fundData);
@@ -53,11 +56,11 @@ export class EmergencyFundService {
       );
       await this.catRepo.save(cats);
     }
-    return this.findOne(id);
+    return this.findOne(id, houseId);
   }
 
-  async remove(id: string) {
-    const fund = await this.fundRepo.findOne({ where: { id } });
+  async remove(id: string, houseId: string) {
+    const fund = await this.fundRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!fund) throw new NotFoundException('Fondo no encontrado');
     await this.fundRepo.remove(fund);
     return { message: 'Fondo eliminado' };

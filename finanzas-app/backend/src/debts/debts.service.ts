@@ -107,8 +107,8 @@ export class DebtsService {
     return this.debtRepo.find({ where: houseId ? { house: { id: houseId } } : {}, order: { createdAt: 'DESC' } });
   }
 
-  async findOne(id: string) {
-    const debt = await this.debtRepo.findOne({ where: { id } });
+  async findOne(id: string, houseId: string) {
+    const debt = await this.debtRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!debt) throw new NotFoundException('Deuda no encontrada');
     return debt;
   }

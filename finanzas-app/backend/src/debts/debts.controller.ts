@@ -4,6 +4,8 @@ import { DebtsService } from './debts.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../common/guards/permission.guard';
 import { RequirePermission } from '../common/decorators/require-permission.decorator';
+import { CreateDebtDto } from './dto/create-debt.dto';
+import { UpdateDebtDto } from './dto/update-debt.dto';
 
 @ApiTags('Deudas')
 @ApiBearerAuth()
@@ -34,17 +36,20 @@ export class DebtsController {
   }
 
   @Get(':id') @RequirePermission('debts', 'view')
-  findOne(@Param('id') id: string) { return this.debtsService.findOne(id); }
+  findOne(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.debtsService.findOne(id, houseId);
+  }
 
   @Post() @RequirePermission('debts', 'create') @ApiOperation({ summary: 'Registrar deuda' })
-  create(@Body() dto: any, @Request() req) {
+  create(@Body() dto: CreateDebtDto, @Request() req) {
     const houseId = req.user.house?.id;
     if (!houseId) throw new Error('Usuario no pertenece a una casa');
     return this.debtsService.create(dto, houseId);
   }
 
   @Put(':id') @RequirePermission('debts', 'edit')
-  update(@Param('id') id: string, @Body() dto: any, @Request() req) {
+  update(@Param('id') id: string, @Body() dto: UpdateDebtDto, @Request() req) {
     const houseId = req.user.house?.id ?? '';
     return this.debtsService.update(id, houseId, dto);
   }
