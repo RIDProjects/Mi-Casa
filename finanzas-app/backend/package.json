@@ -7,7 +7,13 @@
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "lint": "eslint \"{src,test}/**/*.ts\"",
-    "test": "jest"
+    "test": "jest",
+    "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
+    "migration:generate": "npm run typeorm -- migration:generate",
+    "migration:create": "npm run typeorm -- migration:create",
+    "migration:run": "npm run typeorm -- migration:run",
+    "migration:revert": "npm run typeorm -- migration:revert",
+    "migration:show": "npm run typeorm -- migration:show"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -45,6 +51,8 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^20.0.0",
     "@types/passport-jwt": "^3.0.9",
+    "dotenv": "^17.4.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   }
 }
