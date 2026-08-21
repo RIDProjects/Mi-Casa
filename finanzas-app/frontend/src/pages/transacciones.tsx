@@ -12,7 +12,6 @@ import {
   ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight,
   Laptop, Calendar,
 } from 'lucide-react';
-import { useCurrencyStore } from '../store/currency.store';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { fmt, MONTH_NAMES } from '../lib/format';
 import { getErrorMessage } from '../utils/errors';
@@ -42,7 +41,6 @@ const defaultForm = {
   metodoPago: 'efectivo',
   nombreTarjeta: '',
   fecha: new Date().toISOString().split('T')[0],
-  currency: '',
 };
 
 const TABS = ['Historial', 'Programadas', 'Pendientes'] as const;
@@ -95,8 +93,6 @@ function MetodoBadge({ metodo }: { metodo: string }) {
 export default function TransaccionesPage() {
   const qc = useQueryClient();
   const now = new Date();
-  const { currencies } = useCurrencyStore();
-  const baseCurrency = currencies.find(c => c.isBase);
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [showModal, setShowModal] = useState(false);
@@ -197,7 +193,6 @@ export default function TransaccionesPage() {
       metodoPago: t.metodoPago,
       nombreTarjeta: t.nombreTarjeta || '',
       fecha: t.fecha?.split('T')[0] ?? defaultForm.fecha,
-      currency: t.currency || baseCurrency?.currencyCode || '',
     });
     setEditItem(t);
     setShowModal(true);
@@ -722,24 +717,6 @@ export default function TransaccionesPage() {
               required
             />
           </div>
-
-          {currencies.length > 0 && (
-            <div>
-              <label className="label" htmlFor="tx-currency">Moneda</label>
-              <select
-                id="tx-currency"
-                className="input"
-                value={form.currency || baseCurrency?.currencyCode || ''}
-                onChange={e => setForm({ ...form, currency: e.target.value })}
-              >
-                {currencies.map(c => (
-                  <option key={c.currencyCode} value={c.currencyCode}>
-                    {c.symbol} {c.currencyCode} — {c.currencyName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           <div>
             <label className="label">Método de pago</label>

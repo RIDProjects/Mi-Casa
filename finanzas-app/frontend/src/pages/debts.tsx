@@ -3,7 +3,6 @@ import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { debtsAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
-import { useCurrencyStore } from '../store/currency.store';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ActionButtons from '../components/ui/ActionButtons';
@@ -14,7 +13,7 @@ import { Badge } from '../components/ui/Badge';
 import { getErrorMessage } from '../utils/errors';
 
 const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
-const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '', currency: '' };
+const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '' };
 
 export default function DebtsPage() {
   const qc = useQueryClient();
@@ -22,8 +21,6 @@ export default function DebtsPage() {
   const canCreate = hasPermission('debts', 'create');
   const canEdit = hasPermission('debts', 'edit');
   const canDelete = hasPermission('debts', 'delete');
-  const { currencies } = useCurrencyStore();
-  const baseCurrency = currencies.find(c => c.isBase);
 
   const [showModal, setShowModal] = useState(false);
   const [editDebt, setEditDebt] = useState<any>(null);
@@ -80,7 +77,6 @@ export default function DebtsPage() {
       type: d.type,
       interestRate: String(d.interestRate ?? ''),
       minimumPayment: String(d.minimumPayment ?? ''),
-      currency: d.currency ?? baseCurrency?.currencyCode ?? '',
     });
     setEditDebt(d);
     setShowModal(true);
@@ -212,9 +208,6 @@ export default function DebtsPage() {
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-success">
                     <div>{fmt(d.amount)}</div>
-                    {d.currency && d.currency !== baseCurrency?.currencyCode && (
-                      <div className="flex justify-end mt-0.5"><Badge variant="blue">{d.currency}</Badge></div>
-                    )}
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
@@ -269,9 +262,6 @@ export default function DebtsPage() {
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-danger">
                     <div>{fmt(d.amount)}</div>
-                    {d.currency && d.currency !== baseCurrency?.currencyCode && (
-                      <div className="flex justify-end mt-0.5"><Badge variant="blue">{d.currency}</Badge></div>
-                    )}
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
@@ -369,16 +359,6 @@ export default function DebtsPage() {
               <label className="label">Pago mínimo mensual</label>
               <input type="number" step="0.01" min="0" className="input" value={form.minimumPayment} onChange={e => setForm({ ...form, minimumPayment: e.target.value })} placeholder="0.00" />
             </div>
-          </div>
-          <div>
-            <label className="label">Moneda</label>
-            <select className="input" value={form.currency || baseCurrency?.currencyCode || ''} onChange={e => setForm({ ...form, currency: e.target.value })}>
-              {currencies.filter(c => c.isActive).map(c => (
-                <option key={c.currencyCode} value={c.currencyCode}>
-                  {c.symbol} {c.currencyCode} — {c.currencyName}
-                </option>
-              ))}
-            </select>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => { setShowModal(false); setEditDebt(null); }} className="btn-secondary">Cancelar</button>
