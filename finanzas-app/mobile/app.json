@@ -52,6 +52,12 @@
         "projectId": "657cd676-e8a5-496e-b191-9ac1629c14f2"
       }
     },
-    "owner": "ridgomez99"
+    "owner": "ridgomez99",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/657cd676-e8a5-496e-b191-9ac1629c14f2"
+    }
   }
 }
