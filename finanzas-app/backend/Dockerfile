@@ -11,4 +11,4 @@ COPY package*.json ./
 RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 EXPOSE 3001
-CMD ["node", "dist/main"]
+CMD ["sh", "-c", "npx typeorm migration:run -d dist/database/data-source.js && node dist/main"]
