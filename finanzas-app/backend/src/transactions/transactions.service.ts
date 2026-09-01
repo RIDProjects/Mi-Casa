@@ -5,6 +5,14 @@ import { Transaction, TransactionType, PaymentMethod } from '../database/entitie
 
 export type Thermometer = 'on_track' | 'near_limit' | 'over_budget';
 
+// Día 0 del mes siguiente = último día real del mes pedido (28-31 según
+// corresponda). Antes se hardcodeaba "-31" para el fin de rango, que
+// Postgres rechaza con "date/time field value out of range" en meses de
+// 28/29/30 días (ej. toda consulta de septiembre rompía, mes actual).
+function lastDayOfMonth(year: number, month: number): string {
+  return String(new Date(year, month, 0).getDate()).padStart(2, '0');
+}
+
 @Injectable()
 export class TransactionsService {
   constructor(
@@ -44,7 +52,7 @@ export class TransactionsService {
     if (!houseId) return [];
     const mm = String(month).padStart(2, '0');
     const start = `${year}-${mm}-01`;
-    const end = `${year}-${mm}-31`;
+    const end = `${year}-${mm}-${lastDayOfMonth(year, month)}`;
     return this.txRepo.find({
       where: { house: { id: houseId }, date: Between(start, end) as any },
       order: { date: 'DESC', createdAt: 'DESC' },
@@ -66,7 +74,7 @@ export class TransactionsService {
     if (!houseId) return { data: [], total: 0, page, pages: 0 };
     const mm = String(month).padStart(2, '0');
     const start = `${year}-${mm}-01`;
-    const end = `${year}-${mm}-31`;
+    const end = `${year}-${mm}-${lastDayOfMonth(year, month)}`;
     const [rows, total] = await this.txRepo.findAndCount({
       where: { house: { id: houseId }, date: Between(start, end) as any },
       take: limit,
