@@ -38,7 +38,12 @@ export class AuthService {
     let house = await this.houseRepo.findOne({ where: { name: dto.houseName }, relations: ['members'] });
 
     if (house) {
-      const validHousePassword = await bcrypt.compare(dto.housePassword, house.password);
+      // password column has `select: false`, must be re-selected explicitly
+      const houseWithPassword = await this.houseRepo.findOne({
+        where: { id: house.id },
+        select: ['id', 'password'],
+      });
+      const validHousePassword = await bcrypt.compare(dto.housePassword, houseWithPassword.password);
       if (!validHousePassword) throw new UnauthorizedException('Contraseña de casa incorrecta');
     } else {
       house = this.houseRepo.create({ name: dto.houseName, password: hashedHousePassword });
