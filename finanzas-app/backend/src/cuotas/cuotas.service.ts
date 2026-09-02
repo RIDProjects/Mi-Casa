@@ -33,8 +33,23 @@ export class CuotasService {
     return cuotas.map(c => this.computeFields(c));
   }
 
+  // El DTO usa cardLastFour (nombre real que manda el frontend); la entidad
+  // sigue usando la columna cardLast4. Se mapea explícitamente acá en vez de
+  // spread directo para no perder el dato silenciosamente (TypeORM ignora
+  // propiedades que no existen como columna).
+  private toEntityFields(dto: Partial<CreateCuotaDto>): Partial<Cuota> {
+    const { cardLastFour, ...rest } = dto;
+    const fields: Partial<Cuota> = { ...rest };
+    if (cardLastFour !== undefined) fields.cardLast4 = cardLastFour;
+    return fields;
+  }
+
   async create(dto: CreateCuotaDto, houseId: string) {
-    const cuota = this.repo.create({ ...dto, house: { id: houseId } as any });
+    const cuota = this.repo.create({
+      ...this.toEntityFields(dto),
+      paidInstallments: dto.paidInstallments ?? 0,
+      house: { id: houseId } as any,
+    });
     const saved = await this.repo.save(cuota);
     return this.computeFields(saved);
   }
@@ -42,7 +57,7 @@ export class CuotasService {
   async update(id: string, houseId: string, dto: Partial<CreateCuotaDto>) {
     const cuota = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!cuota) throw new NotFoundException('Cuota no encontrada');
-    Object.assign(cuota, dto);
+    Object.assign(cuota, this.toEntityFields(dto));
     const saved = await this.repo.save(cuota);
     return this.computeFields(saved);
   }
