@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { budgetAPI } from '../services/api';
@@ -764,9 +765,9 @@ export default function PresupuestoPage() {
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">FONDO EMERGENCIA</p>
               <p className="font-card-title text-card-title text-primary mb-2">${fmt(summary.plan.emergencyFundTarget)}</p>
-              <a href="/emergency-fund" className="font-caption text-caption text-primary hover:underline">
+              <Link href="/emergency-fund" className="font-caption text-caption text-primary hover:underline">
                 Ver fondo →
-              </a>
+              </Link>
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">OCIO/MES</p>
