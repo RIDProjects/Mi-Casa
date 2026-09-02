@@ -200,11 +200,22 @@ export class TransactionsService {
         return acc;
       }, {} as Record<string, number>);
 
+    // totalIncome/totalExpenses son alias de realIncome/realExpenses: el
+    // frontend (dashboard.tsx, analytics.tsx, transacciones.tsx) siempre
+    // leyó totalIncome/totalExpenses de este endpoint, pero acá nunca se
+    // devolvieron esos nombres -- daban undefined en las 3 pantallas
+    // (tarjetas de ingresos/gastos del dashboard, hasTransactions, y los 3
+    // gráficos de barras de los últimos meses), sin tirar error, así que
+    // nunca se notó hasta ahora. Se agregan los alias en vez de renombrar
+    // realIncome/realExpenses por si algo mas (swagger, otro consumidor)
+    // depende del nombre original.
     return {
       year,
       month,
       realIncome:      Math.round(realIncome * 100) / 100,
       realExpenses:    Math.round(realExpenses * 100) / 100,
+      totalIncome:     Math.round(realIncome * 100) / 100,
+      totalExpenses:   Math.round(realExpenses * 100) / 100,
       expectedIncome,
       expectedExpenses,
       available:       Math.round(available * 100) / 100,

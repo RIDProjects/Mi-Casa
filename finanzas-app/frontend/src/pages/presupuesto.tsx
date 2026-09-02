@@ -297,6 +297,7 @@ export default function PresupuestoPage() {
   const [showIncomeModal, setShowIncomeModal]   = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [deleteIncomeId, setDeleteIncomeId]     = useState<string | null>(null);
+  const [editIncomeId, setEditIncomeId]         = useState<string | null>(null);
   const [deleteCategoryId, setDeleteCategoryId] = useState<string | null>(null);
   const [budgetForm, setBudgetForm]             = useState({ name: '', year: new Date().getFullYear(), savingsTargetPercent: 20 });
   const [incomeForm, setIncomeForm]             = useState({ ...defaultIncomeForm });
@@ -321,6 +322,10 @@ export default function PresupuestoPage() {
   });
   const addIncomeMut = useMutation((d: any) => budgetAPI.addIncome(activeBudgetId!, d), {
     onSuccess: () => { toast.success('Ingreso agregado'); setShowIncomeModal(false); setIncomeForm({ ...defaultIncomeForm }); refresh(); },
+    onError: (e: any) => { toast.error(getErr(e)); },
+  });
+  const updateIncomeMut = useMutation((d: any) => budgetAPI.updateIncome(editIncomeId!, d), {
+    onSuccess: () => { toast.success('Ingreso actualizado'); setShowIncomeModal(false); setEditIncomeId(null); setIncomeForm({ ...defaultIncomeForm }); refresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
   const delIncomeMut = useMutation((id: string) => budgetAPI.deleteIncome(id), {
@@ -555,7 +560,17 @@ export default function PresupuestoPage() {
                     </td>
                     <td className="px-4 py-3 text-right font-card-title text-card-title text-success">${fmt(inc.amount)}</td>
                     <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">${fmt(Number(inc.amount) * 12)}</td>
-                    <td className="px-2 py-3 text-center">
+                    <td className="px-2 py-3 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => {
+                          setIncomeForm({ name: inc.name, type: inc.type, amount: String(inc.amount) });
+                          setEditIncomeId(inc.id);
+                          setShowIncomeModal(true);
+                        }}
+                        className="text-outline hover:text-primary p-1 transition-colors"
+                      >
+                        <Pencil size={13} />
+                      </button>
                       <button onClick={() => setDeleteIncomeId(inc.id)} className="text-outline hover:text-danger p-1 transition-colors">
                         <Trash2 size={13} />
                       </button>
@@ -810,8 +825,19 @@ export default function PresupuestoPage() {
       )}
 
       {/* ── Modals ── */}
-      <Modal isOpen={showIncomeModal} onClose={() => { setShowIncomeModal(false); setIncomeForm({ ...defaultIncomeForm }); }} title="Agregar fuente de ingreso">
-        <form onSubmit={e => { e.preventDefault(); addIncomeMut.mutate({ ...incomeForm, amount: parseFloat(incomeForm.amount as string) }); }} className="space-y-4">
+      <Modal
+        isOpen={showIncomeModal}
+        onClose={() => { setShowIncomeModal(false); setEditIncomeId(null); setIncomeForm({ ...defaultIncomeForm }); }}
+        title={editIncomeId ? 'Editar fuente de ingreso' : 'Agregar fuente de ingreso'}
+      >
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            const data = { ...incomeForm, amount: parseFloat(incomeForm.amount as string) };
+            editIncomeId ? updateIncomeMut.mutate(data) : addIncomeMut.mutate(data);
+          }}
+          className="space-y-4"
+        >
           <div><label className="label">Nombre</label><input className="input" value={incomeForm.name} onChange={e => setIncomeForm({ ...incomeForm, name: e.target.value })} placeholder="Sueldo, Freelance..." required /></div>
           <div>
             <label className="label">Tipo de ingreso</label>
@@ -827,8 +853,10 @@ export default function PresupuestoPage() {
           </div>
           <div><label className="label">Monto mensual</label><input type="number" step="0.01" min="0" className="input" value={incomeForm.amount} onChange={e => setIncomeForm({ ...incomeForm, amount: e.target.value })} placeholder="0.00" required /></div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setShowIncomeModal(false)} className="btn-secondary">Cancelar</button>
-            <button type="submit" disabled={addIncomeMut.isLoading} className="btn-primary">{addIncomeMut.isLoading ? 'Guardando...' : 'Agregar ingreso'}</button>
+            <button type="button" onClick={() => { setShowIncomeModal(false); setEditIncomeId(null); setIncomeForm({ ...defaultIncomeForm }); }} className="btn-secondary">Cancelar</button>
+            <button type="submit" disabled={addIncomeMut.isLoading || updateIncomeMut.isLoading} className="btn-primary">
+              {addIncomeMut.isLoading || updateIncomeMut.isLoading ? 'Guardando...' : editIncomeId ? 'Actualizar ingreso' : 'Agregar ingreso'}
+            </button>
           </div>
         </form>
       </Modal>

@@ -39,7 +39,13 @@ export class InvestmentsController {
 
   @Get()
   getAll(@Request() req: AuthRequest) {
-    return this.svc.getSummary(resolveHouseId(req.user));
+    // El frontend (inversiones.tsx) espera un array plano y ya calcula sus
+    // propios totales por moneda / valor actual del lado del cliente — el
+    // objeto envolvente {investments, totalByCurrency, count} que devolvía
+    // getSummary() nunca lo consume nadie, y hacía que Array.isArray(data)
+    // diera false, dejando la lista vacía siempre (aunque hubiera
+    // inversiones creadas).
+    return this.svc.findAll(resolveHouseId(req.user));
   }
 
   @Post()

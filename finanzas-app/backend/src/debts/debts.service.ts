@@ -18,6 +18,11 @@ export interface PayoffResult {
   totalInterestPaid: number;
   order: string[];
   payoffTimeline: { month: number; totalBalance: number }[];
+  // Detalle por deuda (saldo/tasa originales + mes en que se liquida esa
+  // deuda puntual) -- el frontend (payoff.tsx) lo necesita para la tabla de
+  // "Orden de pago", `order`/`payoffTimeline` de arriba son agregados, no
+  // sirven para eso.
+  debtDetails: { id: string; label: string; balance: number; interestRate: number; payoffMonth: number }[];
 }
 
 function computeStrategy(
@@ -30,6 +35,7 @@ function computeStrategy(
   let totalInterestPaid = 0;
   const timeline: { month: number; totalBalance: number }[] = [];
   const order: string[] = [];
+  const payoffMonthById = new Map<string, number>();
 
   while (working.some(d => d.balance > 0) && month < 600) {
     month++;
@@ -62,6 +68,9 @@ function computeStrategy(
       if (d.balance <= 0 && !order.includes(d.label)) {
         order.push(d.label);
       }
+      if (d.balance <= 0 && !payoffMonthById.has(d.id)) {
+        payoffMonthById.set(d.id, month);
+      }
     }
 
     const totalBalance = working.reduce((s, d) => s + d.balance, 0);
@@ -70,11 +79,20 @@ function computeStrategy(
     if (totalBalance <= 0) break;
   }
 
+  const debtDetails = debts.map(d => ({
+    id: d.id,
+    label: d.label,
+    balance: d.balance,
+    interestRate: d.interestRate,
+    payoffMonth: payoffMonthById.get(d.id) ?? month,
+  }));
+
   return {
     monthsToPayoff: month,
     totalInterestPaid: Math.round(totalInterestPaid * 100) / 100,
     order,
     payoffTimeline: timeline,
+    debtDetails,
   };
 }
 
@@ -149,15 +167,38 @@ export class DebtsService {
         minimumPayment: Number(d.minimumPayment ?? Math.max(Number(d.amount) * 0.05, 100)),
       }));
 
-    if (snapshots.length === 0) {
-      const empty: PayoffResult = { monthsToPayoff: 0, totalInterestPaid: 0, order: [], payoffTimeline: [] };
-      return { avalanche: empty, snowball: empty, currentMinimums: empty };
-    }
+    // null (no un objeto con estrategias vacías) para que el frontend
+    // (payoff.tsx: `!data && !isLoading`) muestre el estado "Sin deudas
+    // registradas" en vez de intentar renderizar tarjetas sin datos.
+    if (snapshots.length === 0) return null;
+
+    const minimum = computeStrategy(snapshots, 'minimum', 0);
+    const avalanche = computeStrategy(snapshots, 'avalanche', extraMonthlyPayment);
+    const snowball = computeStrategy(snapshots, 'snowball', extraMonthlyPayment);
+
+    // El frontend (payoff.tsx) espera { strategies: { minimum, avalanche,
+    // snowball } } con totalMonths/totalInterest/interestSaved/debtOrder —
+    // computeStrategy() da la simulación cruda (monthsToPayoff/
+    // totalInterestPaid/debtDetails), acá se traduce a esa forma.
+    const toFrontend = (result: PayoffResult, baseline: PayoffResult) => ({
+      totalMonths: result.monthsToPayoff,
+      totalInterest: result.totalInterestPaid,
+      interestSaved: Math.max(0, Math.round((baseline.totalInterestPaid - result.totalInterestPaid) * 100) / 100),
+      debtOrder: result.debtDetails.map(d => ({
+        id: d.id,
+        name: d.label,
+        balance: d.balance,
+        rate: d.interestRate,
+        payoffMonths: d.payoffMonth,
+      })),
+    });
 
     return {
-      avalanche: computeStrategy(snapshots, 'avalanche', extraMonthlyPayment),
-      snowball: computeStrategy(snapshots, 'snowball', extraMonthlyPayment),
-      currentMinimums: computeStrategy(snapshots, 'minimum', 0),
+      strategies: {
+        minimum: toFrontend(minimum, minimum),
+        avalanche: toFrontend(avalanche, minimum),
+        snowball: toFrontend(snowball, minimum),
+      },
     };
   }
 
