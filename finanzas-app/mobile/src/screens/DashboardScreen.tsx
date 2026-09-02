@@ -244,17 +244,19 @@ export default function DashboardScreen() {
             <Text style={styles.sectionTitle}>Tarjetas de crédito</Text>
             <View style={styles.sectionList}>
               {creditCards.map((card) => {
-                const available = card.creditLimit - card.currentBalance;
-                const utilization = card.creditLimit > 0
-                  ? Math.min(100, (card.currentBalance / card.creditLimit) * 100)
-                  : 0;
+                const available = card.lineaCredito - card.saldoActual;
+                const utilization = card.utilizationPercent ?? (
+                  card.lineaCredito > 0
+                    ? Math.min(100, (card.saldoActual / card.lineaCredito) * 100)
+                    : 0
+                );
                 const utilColor = utilization > 80 ? Colors.red : utilization > 50 ? '#f59e0b' : Colors.green;
                 return (
                   <View key={card.id} style={styles.miniCard}>
                     <View style={styles.miniCardHeader}>
                       <View>
-                        <Text style={styles.miniCardTitle}>{card.cardName}</Text>
-                        <Text style={styles.miniCardSubtitle}>{card.bankName}</Text>
+                        <Text style={styles.miniCardTitle}>{card.nombreTarjeta}</Text>
+                        <Text style={styles.miniCardSubtitle}>{card.banco}</Text>
                       </View>
                       <Text style={[styles.miniCardPct, { color: utilColor }]}>
                         {utilization.toFixed(0)}%
@@ -273,7 +275,7 @@ export default function DashboardScreen() {
                         Disponible: {fmt(available)}
                       </Text>
                       <Text style={styles.miniCardFooterText}>
-                        Límite: {fmt(card.creditLimit)}
+                        Límite: {fmt(card.lineaCredito)}
                       </Text>
                     </View>
                   </View>
