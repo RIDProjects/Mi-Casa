@@ -382,7 +382,7 @@ export class BudgetService {
   }
 
   private async syncFiGoal(houseId: string, fiTarget: number): Promise<SavingsGoal> {
-    let goal = await this.savingsGoalRepo.findOne({
+    const goal = await this.savingsGoalRepo.findOne({
       where: { name: FI_GOAL_NAME, house: { id: houseId } },
     });
     if (goal) {
