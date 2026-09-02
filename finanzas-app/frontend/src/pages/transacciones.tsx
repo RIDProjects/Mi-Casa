@@ -177,11 +177,13 @@ export default function TransaccionesPage() {
   const prevMonth = () => {
     if (month === 1) { setMonth(12); setYear(y => y - 1); }
     else setMonth(m => m - 1);
+    setCurrentPage(1);
   };
 
   const nextMonth = () => {
     if (month === 12) { setMonth(1); setYear(y => y + 1); }
     else setMonth(m => m + 1);
+    setCurrentPage(1);
   };
 
   const handleEdit = (t: any) => {
