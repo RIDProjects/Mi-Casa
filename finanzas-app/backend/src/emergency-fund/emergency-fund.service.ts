@@ -14,8 +14,12 @@ export class EmergencyFundService {
   ) {}
 
   async findAll(houseId?: string) {
-    const where = houseId ? { house: { id: houseId } } : {};
-    const funds = await this.fundRepo.find({ where, relations: ['categories'], order: { createdAt: 'DESC' } });
+    if (!houseId) return [];
+    const funds = await this.fundRepo.find({
+      where: { house: { id: houseId } },
+      relations: ['categories'],
+      order: { createdAt: 'DESC' },
+    });
     return funds.map(f => ({ ...f, calculations: this.calculate(f) }));
   }
 

@@ -16,13 +16,20 @@ export class PurchasesService {
   }
 
   async findAllLists(houseId?: string) {
-    const where = houseId ? { house: { id: houseId } } : {};
-    const lists = await this.listRepo.find({ where, relations: ['items'], order: { createdAt: 'DESC' } });
+    if (!houseId) return [];
+    const lists = await this.listRepo.find({
+      where: { house: { id: houseId } },
+      relations: ['items'],
+      order: { createdAt: 'DESC' },
+    });
     return lists.map(list => ({ ...list, summary: this.calcSummary(list) }));
   }
 
-  async findOneList(id: string) {
-    const list = await this.listRepo.findOne({ where: { id }, relations: ['items'] });
+  async findOneList(id: string, houseId: string) {
+    const list = await this.listRepo.findOne({
+      where: { id, house: { id: houseId } },
+      relations: ['items'],
+    });
     if (!list) throw new NotFoundException('Lista no encontrada');
     return { ...list, summary: this.calcSummary(list) };
   }
@@ -32,39 +39,49 @@ export class PurchasesService {
     return this.listRepo.save(list);
   }
 
-  async updateList(id: string, dto: any) {
-    const list = await this.listRepo.findOne({ where: { id } });
+  async updateList(id: string, houseId: string, dto: any) {
+    const list = await this.listRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!list) throw new NotFoundException('Lista no encontrada');
     Object.assign(list, dto);
     await this.listRepo.save(list);
-    return this.findOneList(id);
+    return this.findOneList(id, houseId);
   }
 
-  async removeList(id: string) {
-    const list = await this.listRepo.findOne({ where: { id } });
+  async removeList(id: string, houseId: string) {
+    const list = await this.listRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!list) throw new NotFoundException('Lista no encontrada');
     await this.listRepo.remove(list);
     return { message: 'Lista eliminada' };
   }
 
-  async addItem(listId: string, dto: any) {
-    const list = await this.listRepo.findOne({ where: { id: listId } });
+  async addItem(listId: string, houseId: string, dto: any) {
+    const list = await this.listRepo.findOne({ where: { id: listId, house: { id: houseId } } });
     if (!list) throw new NotFoundException('Lista no encontrada');
     const item = this.itemRepo.create({ ...dto, list });
     const saved = await this.itemRepo.save(item as unknown as PurchaseItem);
     return this.formatItemResponse(saved);
   }
 
-  async updateItem(itemId: string, dto: any) {
-    const item = await this.itemRepo.findOne({ where: { id: itemId }, relations: ['list'] });
+  async updateItem(itemId: string, houseId: string, dto: any) {
+    const item = await this.itemRepo
+      .createQueryBuilder('i')
+      .innerJoin('i.list', 'list')
+      .innerJoin('list.house', 'house')
+      .where('i.id = :itemId AND house.id = :houseId', { itemId, houseId })
+      .getOne();
     if (!item) throw new NotFoundException('Producto no encontrado');
     Object.assign(item, dto);
     const saved = await this.itemRepo.save(item);
     return this.formatItemResponse(saved);
   }
 
-  async removeItem(itemId: string) {
-    const item = await this.itemRepo.findOne({ where: { id: itemId } });
+  async removeItem(itemId: string, houseId: string) {
+    const item = await this.itemRepo
+      .createQueryBuilder('i')
+      .innerJoin('i.list', 'list')
+      .innerJoin('list.house', 'house')
+      .where('i.id = :itemId AND house.id = :houseId', { itemId, houseId })
+      .getOne();
     if (!item) throw new NotFoundException('Producto no encontrado');
     await this.itemRepo.remove(item);
     return { message: 'Producto eliminado' };

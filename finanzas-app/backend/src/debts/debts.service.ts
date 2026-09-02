@@ -104,7 +104,8 @@ export class DebtsService {
   constructor(@InjectRepository(Debt) private debtRepo: Repository<Debt>) {}
 
   async findAll(houseId?: string) {
-    return this.debtRepo.find({ where: houseId ? { house: { id: houseId } } : {}, order: { createdAt: 'DESC' } });
+    if (!houseId) return [];
+    return this.debtRepo.find({ where: { house: { id: houseId } }, order: { createdAt: 'DESC' } });
   }
 
   async findOne(id: string, houseId: string) {
