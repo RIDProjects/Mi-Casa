@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 
 import { AuthModule } from './auth/auth.module';
@@ -43,6 +44,7 @@ if (process.env.NODE_ENV === 'production') {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     ThrottlerModule.forRoot([
       { name: 'short',  ttl: 1000,   limit: 20  },  // 20 req/s por IP — protege bursts
       { name: 'medium', ttl: 60000,  limit: 300 },  // 300 req/min — uso normal de la app

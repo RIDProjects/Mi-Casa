@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SummaryController } from './summary.controller';
 import { SummaryService } from './summary.service';
+import { UpcomingBillsNotifierService } from './upcoming-bills-notifier.service';
 import { BudgetModule } from '../budget/budget.module';
 import { DebtsModule } from '../debts/debts.module';
 import { CreditCardsModule } from '../credit-cards/credit-cards.module';
@@ -13,6 +14,8 @@ import { AuthModule } from '../auth/auth.module';
 import { TransactionsModule } from '../transactions/transactions.module';
 import { InvestmentsModule } from '../investments/investments.module';
 import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
+import { HousesModule } from '../houses/houses.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -28,8 +31,10 @@ import { HouseCurrenciesModule } from '../house-currencies/house-currencies.modu
     TransactionsModule,
     InvestmentsModule,
     HouseCurrenciesModule,
+    HousesModule,
+    NotificationsModule,
   ],
   controllers: [SummaryController],
-  providers: [SummaryService],
+  providers: [SummaryService, UpcomingBillsNotifierService],
 })
 export class SummaryModule {}
