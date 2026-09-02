@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsDateString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { HouseholdCategory } from '../../database/entities/household-expense.entity';
 
 export class CreateHouseholdExpenseDto {
@@ -8,7 +9,7 @@ export class CreateHouseholdExpenseDto {
 
   @IsOptional() @IsEnum(HouseholdCategory) categoria?: HouseholdCategory;
 
-  @IsNumber() @Min(0) montoCUP: number;
+  @Type(() => Number) @IsNumber() @Min(0) montoCUP: number;
 
   @IsOptional() @IsString() lugar?: string;
 
