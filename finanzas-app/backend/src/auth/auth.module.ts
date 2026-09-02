@@ -5,7 +5,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
@@ -31,7 +30,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
   controllers: [AuthController],
   providers: [
     AuthService,
-    JwtStrategy,
     JwtAuthGuard,
   ],
   exports: [AuthService, PassportModule, JwtModule, JwtAuthGuard, TypeOrmModule],
