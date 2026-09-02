@@ -10,6 +10,7 @@ import {
 } from '../database/entities/budget.entity';
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
 
@@ -105,6 +106,7 @@ export class BudgetService {
     private savingsGoalRepo: Repository<SavingsGoal>,
 
     private readonly notificationsService: NotificationsService,
+    private readonly inAppNotificationsService: InAppNotificationsService,
   ) {}
 
   private computeMonthlyAmount(
@@ -185,6 +187,11 @@ export class BudgetService {
           'Gastos superan ingresos',
           'Tus gastos del mes superan tus ingresos. Revisá tu presupuesto.',
         );
+        await this.inAppNotificationsService.createIfNotRecent(houseId, {
+          type: 'budget_over',
+          title: 'Gastos superan ingresos',
+          message: 'Tus gastos del mes superan tus ingresos. Revisá tu presupuesto.',
+        });
       }
       if (summary.alerts?.antExpensesWarning) {
         await this.notificationsService.sendBudgetAlert(
@@ -192,6 +199,11 @@ export class BudgetService {
           'Alerta gastos hormiga',
           'Los gastos hormiga superan el 15% de tus ingresos.',
         );
+        await this.inAppNotificationsService.createIfNotRecent(houseId, {
+          type: 'ant_expenses',
+          title: 'Alerta gastos hormiga',
+          message: 'Los gastos hormiga superan el 15% de tus ingresos.',
+        });
       }
     } catch (e) {
       // swallow — never fail the main request due to notification errors

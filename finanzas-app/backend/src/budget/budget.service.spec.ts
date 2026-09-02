@@ -9,6 +9,7 @@ import {
 } from '../database/entities/budget.entity';
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { NotificationsService } from '../notifications/notifications.service';
+import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
 
 /**
  * Regression test for the IDOR fix on BudgetService.findOne.
@@ -35,6 +36,9 @@ describe('BudgetService.findOne (IDOR regression)', () => {
     const notificationsService = {
       sendBudgetAlert: jest.fn(),
     } as unknown as NotificationsService;
+    const inAppNotificationsService = {
+      createIfNotRecent: jest.fn(),
+    } as unknown as InAppNotificationsService;
 
     service = new BudgetService(
       budgetRepo,
@@ -43,6 +47,7 @@ describe('BudgetService.findOne (IDOR regression)', () => {
       noop as Repository<IncomeSource>,
       noop as Repository<SavingsGoal>,
       notificationsService,
+      inAppNotificationsService,
     );
   });
 

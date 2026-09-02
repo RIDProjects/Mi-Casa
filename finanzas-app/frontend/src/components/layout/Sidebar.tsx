@@ -1,15 +1,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useQuery } from 'react-query';
 import {
   LayoutDashboard, Wallet, Receipt, PiggyBank, TrendingUp,
   CreditCard, DollarSign, Calculator, ShoppingCart, BookOpen,
   BarChart2, Settings, LogOut, Moon, Sun, Users,
-  ShieldCheck, Building2, X,
+  ShieldCheck, Building2, X, Bell,
   Landmark, Layers, TrendingDown, Shield, CalendarClock,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
+import { notificationsAPI } from '../../services/api';
 import clsx from 'clsx';
 import MiCasaProLogo from '../ui/MiCasaProLogo';
 
@@ -39,6 +41,7 @@ const houseNavItems: NavItem[] = [
   { href: '/purchases',     label: 'Lista Compra',   icon: ShoppingCart, module: 'purchases' },
   { href: '/registro-gastos',label: 'Reg. Gastos',   icon: BookOpen,    module: 'purchases' },
   { href: '/analytics',     label: 'Reportes',       icon: BarChart2 },
+  { href: '/notificaciones',label: 'Notificaciones', icon: Bell },
 ];
 
 const adminNavItems: NavItem[] = [
@@ -58,6 +61,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const isAdminRoute = router.pathname.startsWith('/admin');
   const navItems     = isAdminRoute ? adminNavItems : houseNavItems;
 
+  // Polling liviano (60s) en vez de websockets/push: alcanza para que el
+  // numerito de no leídas en el nav no quede pegado toda la sesión sin
+  // agregar infraestructura nueva.
+  const { data: notifications = [] } = useQuery(
+    'notifications',
+    () => notificationsAPI.getAll().then(r => r.data),
+    { enabled: !isAdminRoute, refetchInterval: 60_000, staleTime: 30_000 },
+  );
+  const unreadCount = Array.isArray(notifications)
+    ? notifications.filter((n: any) => !n.isRead).length
+    : 0;
+
   const handleLinkClick = () => onClose?.();
 
   const NavLink = ({ item }: { item: NavItem }) => {
@@ -66,6 +81,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const isActive = router.pathname === item.href ||
       (item.href !== '/dashboard' && router.pathname.startsWith(item.href));
     const Icon = item.icon;
+    const badgeCount = item.href === '/notificaciones' ? unreadCount : 0;
 
     return (
       <Link
@@ -79,7 +95,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             : 'text-on-surface-variant hover:bg-surface-variant',
         )}
       >
-        <Icon size={18} className="shrink-0" />
+        <span className="relative shrink-0">
+          <Icon size={18} />
+          {badgeCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[15px] h-[15px] px-[3px] rounded-full bg-danger text-white text-[9px] font-bold flex items-center justify-center leading-none">
+              {badgeCount > 9 ? '9+' : badgeCount}
+            </span>
+          )}
+        </span>
         <span className="text-label-upper font-label-upper">{item.label}</span>
       </Link>
     );

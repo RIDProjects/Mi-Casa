@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { AppNotification } from '../database/entities/app-notification.entity';
 
 @Injectable()
@@ -41,5 +41,24 @@ export class InAppNotificationsService {
       type: data.type ?? 'sistema',
     });
     return this.repo.save(notification);
+  }
+
+  // create() se llama desde chequeos que corren en CADA request (ej.
+  // GET /budget dispara notifyBudgetAlerts en cada carga de la pantalla de
+  // presupuesto) -- sin dedup, una alerta que sigue activa generaria una
+  // fila nueva por cada fetch, inundando la campanita. createIfNotRecent
+  // solo inserta si no hay una notificacion sin leer del mismo `type` para
+  // esa casa creada dentro de `windowHours` (24hs por default).
+  async createIfNotRecent(
+    houseId: string,
+    data: { message: string; title?: string; body?: string; type: string },
+    windowHours = 24,
+  ): Promise<AppNotification | null> {
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+    const recent = await this.repo.findOne({
+      where: { houseId, type: data.type, isRead: false, createdAt: MoreThan(since) },
+    });
+    if (recent) return null;
+    return this.create(houseId, data);
   }
 }
