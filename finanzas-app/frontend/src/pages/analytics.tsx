@@ -96,7 +96,10 @@ export default function AnalyticsPage() {
     ? validMonths.reduce((s, d) => s + d.Ingresos, 0) / validMonths.length
     : 0;
 
-  const currentTxData = (currentMonthTxResults[0].data as any[]) ?? [];
+  const currentTxData = useMemo(
+    () => (currentMonthTxResults[0].data as any[]) ?? [],
+    [currentMonthTxResults[0].data]
+  );
 
   const categoryBreakdown = useMemo(() => {
     const map: Record<string, number> = {};
