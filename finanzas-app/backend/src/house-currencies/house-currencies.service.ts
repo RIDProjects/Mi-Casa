@@ -59,12 +59,14 @@ export class HouseCurrenciesService {
   }
 
   async setBase(houseId: string, currencyId: string): Promise<HouseCurrency> {
+    const currency = await this.repo.findOne({
+      where: { id: currencyId, house: { id: houseId } },
+    });
+    if (!currency) throw new NotFoundException('Moneda no encontrada');
+
     await this.repo.update({ house: { id: houseId } }, { isBase: false });
-    await this.repo.update(
-      { id: currencyId, house: { id: houseId } },
-      { isBase: true },
-    );
-    return this.repo.findOneOrFail({ where: { id: currencyId } });
+    await this.repo.update({ id: currencyId, house: { id: houseId } }, { isBase: true });
+    return this.repo.findOneOrFail({ where: { id: currencyId, house: { id: houseId } } });
   }
 
   async remove(houseId: string, currencyId: string): Promise<void> {
