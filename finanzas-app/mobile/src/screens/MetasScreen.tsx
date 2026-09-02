@@ -20,9 +20,9 @@ import EmptyState from '../components/common/EmptyState';
 const fmt = formatMoney;
 
 function GoalCard({ goal }: { goal: SavingsGoal }) {
-  const pct = goal.progressPercentage ?? (
-    goal.targetAmount > 0
-      ? Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)
+  const pct = goal.progress ?? (
+    goal.montoMeta > 0
+      ? Math.min(100, (goal.ahorrosActuales / goal.montoMeta) * 100)
       : 0
   );
   const isComplete = pct >= 100;
@@ -40,14 +40,12 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
           />
         </View>
         <View style={styles.goalTitleBlock}>
-          <Text style={styles.goalName} numberOfLines={1}>{goal.name}</Text>
-          {goal.deadline && (
+          <Text style={styles.goalName} numberOfLines={1}>
+            {goal.emoji ? `${goal.emoji} ` : ''}{goal.nombre}
+          </Text>
+          {goal.mesesParaAhorrarla > 0 && (
             <Text style={styles.goalDeadline}>
-              Plazo: {new Date(goal.deadline).toLocaleDateString('es-CU', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
+              {goal.mesesParaAhorrarla} {goal.mesesParaAhorrarla === 1 ? 'mes' : 'meses'} para lograrla
             </Text>
           )}
         </View>
@@ -55,11 +53,6 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
           <Text style={[styles.pctText, { color: fillColor }]}>{pct.toFixed(0)}%</Text>
         </View>
       </View>
-
-      {/* Description */}
-      {goal.description ? (
-        <Text style={styles.goalDesc} numberOfLines={2}>{goal.description}</Text>
-      ) : null}
 
       {/* Progress bar */}
       <View style={styles.barBg}>
@@ -76,13 +69,13 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
         <View>
           <Text style={styles.amountLabel}>Ahorrado</Text>
           <Text style={[styles.amountValue, { color: Colors.green }]}>
-            {fmt(goal.currentAmount)}
+            {fmt(goal.ahorrosActuales)}
           </Text>
         </View>
         <View style={styles.amountDivider} />
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={styles.amountLabel}>Objetivo</Text>
-          <Text style={styles.amountValue}>{fmt(goal.targetAmount)}</Text>
+          <Text style={styles.amountValue}>{fmt(goal.montoMeta)}</Text>
         </View>
       </View>
 
@@ -113,9 +106,9 @@ export default function MetasScreen() {
 
   if (isLoading) return <LoadingSpinner message="Cargando metas..." />;
 
-  const completed = goals.filter((g) => g.progressPercentage >= 100 || g.isCompleted).length;
-  const totalTarget = goals.reduce((s, g) => s + Number(g.targetAmount), 0);
-  const totalSaved = goals.reduce((s, g) => s + Number(g.currentAmount), 0);
+  const completed = goals.filter((g) => g.progress >= 100).length;
+  const totalTarget = goals.reduce((s, g) => s + Number(g.montoMeta), 0);
+  const totalSaved = goals.reduce((s, g) => s + Number(g.ahorrosActuales), 0);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
