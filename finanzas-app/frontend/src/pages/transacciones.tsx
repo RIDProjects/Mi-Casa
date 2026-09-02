@@ -13,7 +13,8 @@ import {
   Laptop, Calendar,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { fmt, MONTH_NAMES } from '../lib/format';
+import { MONTH_NAMES } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
 
 const CATEGORIES = [
@@ -92,6 +93,7 @@ function MetodoBadge({ metodo }: { metodo: string }) {
 
 export default function TransaccionesPage() {
   const qc = useQueryClient();
+  const { fmt: cfmt } = useCurrencyFormatter();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -372,11 +374,11 @@ export default function TransaccionesPage() {
           <div className="grid grid-cols-3 gap-4 mb-5">
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">INGRESOS REALES</p>
-              <p className="text-[20px] font-bold text-success">${fmt(ingresos)}</p>
+              <p className="text-[20px] font-bold text-success">{cfmt(ingresos)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">GASTOS REALES</p>
-              <p className="text-[20px] font-bold text-danger">${fmt(gastos)}</p>
+              <p className="text-[20px] font-bold text-danger">{cfmt(gastos)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">% USO</p>
@@ -391,7 +393,7 @@ export default function TransaccionesPage() {
                 <span className="font-caption text-caption text-on-surface-variant flex items-center gap-1.5">
                   <ArrowUpRight size={12} className="text-success" /> Ingresos
                 </span>
-                <span className="font-caption text-caption text-on-surface">${fmt(ingresos)}</span>
+                <span className="font-caption text-caption text-on-surface">{cfmt(ingresos)}</span>
               </div>
               <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
                 <div className="bg-success h-full rounded-full transition-all duration-1000" style={{ width: '100%' }} />
@@ -402,7 +404,7 @@ export default function TransaccionesPage() {
                 <span className="font-caption text-caption text-on-surface-variant flex items-center gap-1.5">
                   <ArrowDownRight size={12} className="text-danger" /> Gastos
                 </span>
-                <span className="font-caption text-caption text-on-surface">${fmt(gastos)}</span>
+                <span className="font-caption text-caption text-on-surface">{cfmt(gastos)}</span>
               </div>
               <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
                 <div
@@ -425,7 +427,7 @@ export default function TransaccionesPage() {
           </div>
           <div className="py-4">
             <span className={`font-hero-title text-[38px] leading-tight ${disponible >= 0 ? 'text-advisory-text' : 'text-danger'}`}>
-              {disponible >= 0 ? '+' : ''}{disponible < 0 ? '-$' : '$'}{fmt(Math.abs(disponible))}
+              {disponible >= 0 ? '+' : '-'}{cfmt(Math.abs(disponible))}
             </span>
           </div>
           <div className="bg-white/5 rounded-lg p-3 border border-white/10">
@@ -447,7 +449,7 @@ export default function TransaccionesPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant, #e5e7eb)" />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={50} />
-              <Tooltip formatter={(value: number) => `$${fmt(value)}`} />
+              <Tooltip formatter={(value: number) => cfmt(value)} />
               <Bar dataKey="Ingresos" fill="#16a34a" radius={[3, 3, 0, 0]} />
               <Bar dataKey="Gastos" fill="#d97706" radius={[3, 3, 0, 0]} />
             </BarChart>
@@ -567,7 +569,7 @@ export default function TransaccionesPage() {
                       )}
                     </td>
                     <td className={`px-6 py-4 text-right font-card-title text-card-title ${isIncome ? 'text-primary' : 'text-warning'}`}>
-                      {isIncome ? '+' : '-'}${fmt(t.monto)}
+                      {isIncome ? '+' : '-'}{cfmt(t.monto)}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <ActionButtons
@@ -641,7 +643,7 @@ export default function TransaccionesPage() {
                   <CategoryIcon categoria={cat} />
                 </div>
                 <p className="font-caption text-caption text-on-surface-variant mb-1 truncate">{cat}</p>
-                <p className="font-card-title text-card-title text-danger">${fmt(total)}</p>
+                <p className="font-card-title text-card-title text-danger">{cfmt(total)}</p>
               </div>
             ))}
           </div>

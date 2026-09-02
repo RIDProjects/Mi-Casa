@@ -11,7 +11,7 @@ import {
   Plus, AlertTriangle, RefreshCw, PiggyBank,
   TrendingUp, CheckCircle, Calendar, DollarSign, ChevronRight,
 } from 'lucide-react';
-import { fmt } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
 
 const EMOJI_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '🎓', '💍', '🏖️', '💰', '🏋️', '🎸'];
@@ -30,6 +30,7 @@ type Tab = typeof TABS[number];
 
 export default function MetasPage() {
   const qc = useQueryClient();
+  const { fmt: cfmt } = useCurrencyFormatter();
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -277,9 +278,9 @@ export default function MetasPage() {
                         {/* Progress bar */}
                         <div>
                           <div className="flex justify-between items-center mb-2">
-                            <span className="font-caption text-caption text-on-surface-variant">${fmt(Number(g.ahorrosActuales))} ahorrados</span>
+                            <span className="font-caption text-caption text-on-surface-variant">{cfmt(Number(g.ahorrosActuales))} ahorrados</span>
                             <span className="font-card-title text-card-title text-primary">{pct.toFixed(0)}%</span>
-                            <span className="font-caption text-caption text-on-surface-variant">Meta: ${fmt(Number(g.montoMeta))}</span>
+                            <span className="font-caption text-caption text-on-surface-variant">Meta: {cfmt(Number(g.montoMeta))}</span>
                           </div>
                           <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
                             <div
@@ -299,13 +300,13 @@ export default function MetasPage() {
                           {monthly > 0 && (
                             <div className="bg-surface-container-low rounded-lg p-3">
                               <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">CUOTA MENSUAL</p>
-                              <p className="font-card-title text-card-title text-primary">${fmt(monthly)}/mes</p>
+                              <p className="font-card-title text-card-title text-primary">{cfmt(monthly)}/mes</p>
                             </div>
                           )}
                           {faltante > 0 && (
                             <div className="bg-surface-container-low rounded-lg p-3">
                               <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">FALTANTE</p>
-                              <p className="font-card-title text-card-title text-warning">${fmt(faltante)}</p>
+                              <p className="font-card-title text-card-title text-warning">{cfmt(faltante)}</p>
                             </div>
                           )}
                           {meses > 0 && (
@@ -324,7 +325,7 @@ export default function MetasPage() {
                               <div>
                                 <p className="text-[10px] font-formula-code text-advisory-text-dim/70 uppercase">Cuota Mensual Estimada (PMT)</p>
                                 <p className="font-formula-code text-[18px] text-advisory-text font-bold">
-                                  ${fmt(monthly)} <span className="text-[12px] font-normal text-advisory-text-dim/70">/ mes</span>
+                                  {cfmt(monthly)} <span className="text-[12px] font-normal text-advisory-text-dim/70">/ mes</span>
                                 </p>
                               </div>
                             </div>
@@ -373,8 +374,8 @@ export default function MetasPage() {
                     {/* Progress */}
                     <div>
                       <div className="flex justify-between mb-1.5">
-                        <span className="font-caption text-caption text-on-surface-variant">${fmt(Number(g.ahorrosActuales))}</span>
-                        <span className="font-caption text-caption text-on-surface-variant">${fmt(Number(g.montoMeta))}</span>
+                        <span className="font-caption text-caption text-on-surface-variant">{cfmt(Number(g.ahorrosActuales))}</span>
+                        <span className="font-caption text-caption text-on-surface-variant">{cfmt(Number(g.montoMeta))}</span>
                       </div>
                       <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
                         <div
@@ -393,12 +394,12 @@ export default function MetasPage() {
                     <div className="flex items-center justify-between text-sm">
                       {monthly > 0 && (
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Cuota: <span className="text-primary font-medium">${fmt(monthly)}/mes</span>
+                          Cuota: <span className="text-primary font-medium">{cfmt(monthly)}/mes</span>
                         </span>
                       )}
                       {faltante > 0 && (
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Faltante: <span className="text-warning font-medium">${fmt(faltante)}</span>
+                          Faltante: <span className="text-warning font-medium">{cfmt(faltante)}</span>
                         </span>
                       )}
                       {pct >= 100 && (
@@ -422,7 +423,7 @@ export default function MetasPage() {
                 </div>
                 <div>
                   <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">CAPACIDAD DE AHORRO</p>
-                  <p className="text-[20px] font-bold text-on-surface">${fmt(totalMensual)}<span className="text-[12px] font-normal text-on-surface-variant">/mes</span></p>
+                  <p className="text-[20px] font-bold text-on-surface">{cfmt(totalMensual)}<span className="text-[12px] font-normal text-on-surface-variant">/mes</span></p>
                 </div>
               </div>
 
@@ -483,10 +484,10 @@ export default function MetasPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 font-body-default text-body-default text-primary">
-                          ${fmt(Number(g.ahorrosActuales))}
+                          {cfmt(Number(g.ahorrosActuales))}
                         </td>
                         <td className="px-6 py-4 font-body-default text-body-default text-on-surface">
-                          ${fmt(Number(g.montoMeta))}
+                          {cfmt(Number(g.montoMeta))}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -500,7 +501,7 @@ export default function MetasPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 font-body-default text-body-default text-on-surface-variant">
-                          {monthly > 0 ? `$${fmt(monthly)}/mes` : '—'}
+                          {monthly > 0 ? `${cfmt(monthly)}/mes` : '—'}
                         </td>
                       </tr>
                     );

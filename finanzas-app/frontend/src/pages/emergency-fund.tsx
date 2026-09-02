@@ -10,7 +10,7 @@ import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, PiggyBank, Lock } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
-import { fmt } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
 
 const DEFAULT_CATEGORIES = [
@@ -37,6 +37,7 @@ const defaultForm = {
 
 export default function EmergencyFundPage() {
   const qc = useQueryClient();
+  const { fmt: cfmt } = useCurrencyFormatter();
   const { hasPermission } = useAuthStore();
   const canCreate = hasPermission('emergency_fund', 'create');
   const canEdit = hasPermission('emergency_fund', 'edit');
@@ -123,7 +124,7 @@ export default function EmergencyFundPage() {
   const totalMonthlyExpenses = fund?.categories?.reduce((sum: number, c: any) => sum + Number(c.monthlyAmount || 0), 0) || 0;
   const optimalFund = totalMonthlyExpenses * fund?.targetMonths;
   const minimumFund = totalMonthlyExpenses * fund?.minimumMonths;
-  const monthlySavingsRequired = optimalFund / fund?.savingPeriodMonths;
+  const monthlySavingsRequired = fund?.savingPeriodMonths > 0 ? optimalFund / fund.savingPeriodMonths : 0;
 
   return (
     <Layout>
@@ -156,7 +157,7 @@ export default function EmergencyFundPage() {
             };
             fCalc.optimalFund = fCalc.totalMonthlyExpenses * f.targetMonths;
             fCalc.minimumFund = fCalc.totalMonthlyExpenses * f.minimumMonths;
-            fCalc.monthlySavingsRequired = fCalc.optimalFund / f.savingPeriodMonths;
+            fCalc.monthlySavingsRequired = f.savingPeriodMonths > 0 ? fCalc.optimalFund / f.savingPeriodMonths : 0;
 
             return (
               <div key={f.id} onClick={() => setSelectedFund(f)}
@@ -181,8 +182,8 @@ export default function EmergencyFundPage() {
                 </div>
                 {fCalc && (
                   <div className="mt-2 text-xs text-outline">
-                    <p>Óptimo: <strong className="text-on-surface">${fmt(fCalc.optimalFund)}</strong></p>
-                    <p>Ahorro: <strong className="text-on-surface">${fmt(fCalc.monthlySavingsRequired)}/mes</strong></p>
+                    <p>Óptimo: <strong className="text-on-surface">{cfmt(fCalc.optimalFund)}</strong></p>
+                    <p>Ahorro: <strong className="text-on-surface">{f.savingPeriodMonths > 0 ? `${cfmt(fCalc.monthlySavingsRequired)}/mes` : '—'}</strong></p>
                   </div>
                 )}
               </div>
@@ -232,15 +233,15 @@ export default function EmergencyFundPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
                       <p className="text-sm text-green-700 dark:text-green-400">🏆 Monto óptimo ({fund.targetMonths} meses)</p>
-                      <p className="text-2xl font-bold text-green-700 dark:text-green-400">${fmt(optimalFund)}</p>
+                      <p className="text-2xl font-bold text-green-700 dark:text-green-400">{cfmt(optimalFund)}</p>
                     </div>
                     <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
                       <p className="text-sm text-orange-700 dark:text-orange-400">🎯 Monto mínimo ({fund.minimumMonths} meses)</p>
-                      <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">${fmt(minimumFund)}</p>
+                      <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">{cfmt(minimumFund)}</p>
                     </div>
                     <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                       <p className="text-sm text-blue-700 dark:text-blue-400">📅 Ahorro mensual mínimo</p>
-                      <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">${fmt(monthlySavingsRequired)}</p>
+                      <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{fund.savingPeriodMonths > 0 ? cfmt(monthlySavingsRequired) : '—'}</p>
                     </div>
                   </div>
 
@@ -280,7 +281,7 @@ export default function EmergencyFundPage() {
                   {coverage && (
                     <div className={`rounded-xl p-4 border mb-6 ${coverage.status === 'safe' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' : coverage.status === 'low' ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700' : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'}`}>
                       <p className="font-semibold text-sm">Cobertura: {coverage.monthsCovered.toFixed(1)} meses</p>
-                      <p className="text-xs text-on-surface-variant mt-1">Meta: 6 meses | Gastos promedio: ${fmt(coverage.monthlyExpenses)}/mes</p>
+                      <p className="text-xs text-on-surface-variant mt-1">Meta: 6 meses | Gastos promedio: {cfmt(coverage.monthlyExpenses)}/mes</p>
                       <div className="mt-2 h-2 bg-surface-container rounded-full">
                         <div className="h-2 bg-green-500 rounded-full" style={{ width: `${Math.min(100, (coverage.monthsCovered / 6) * 100)}%` }} />
                       </div>
@@ -304,7 +305,7 @@ export default function EmergencyFundPage() {
                           <tr key={idx} className="hover:bg-surface-gray">
                             <td className="px-4 py-3 text-on-surface">{cat.name}</td>
                             <td className="px-4 py-3 text-right font-medium text-on-surface">
-                              {Number(cat.monthlyAmount) > 0 ? `$${fmt(cat.monthlyAmount)}` : <span className="text-outline">-</span>}
+                              {Number(cat.monthlyAmount) > 0 ? cfmt(cat.monthlyAmount) : <span className="text-outline">-</span>}
                             </td>
                           </tr>
                         ))}
@@ -312,7 +313,7 @@ export default function EmergencyFundPage() {
                       <tfoot className="bg-surface-container-low border-t-2 font-semibold">
                         <tr>
                           <td className="px-4 py-3 text-on-surface">TOTAL GASTOS MENSUALES</td>
-                          <td className="px-4 py-3 text-right text-on-surface text-base">${fmt(totalMonthlyExpenses)}</td>
+                          <td className="px-4 py-3 text-right text-on-surface text-base">{cfmt(totalMonthlyExpenses)}</td>
                         </tr>
                       </tfoot>
                     </table>
@@ -382,7 +383,7 @@ export default function EmergencyFundPage() {
               ))}
             </div>
             <div className="mt-2 text-right text-sm font-semibold text-on-surface">
-              Total: ${fmt(form.categories.reduce((s: number, c: any) => s + (Number(c.monthlyAmount) || 0), 0))}
+              Total: {cfmt(form.categories.reduce((s: number, c: any) => s + (Number(c.monthlyAmount) || 0), 0))}
             </div>
           </div>
 
