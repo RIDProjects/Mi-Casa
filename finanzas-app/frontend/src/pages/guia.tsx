@@ -48,7 +48,7 @@ export default function GuiaPage() {
               <p className="font-semibold text-on-primary-container text-sm">¡Bienvenido/a a Mi Casa Pro!</p>
               <p className="text-sm text-on-primary-container/80 mt-0.5">
                 Acá está la guía completa de todos los módulos del sistema. Cuando estés listo/a,
-                hacé clic en "Ir al Dashboard" para empezar a usarlo.
+                hacé clic en &quot;Ir al Dashboard&quot; para empezar a usarlo.
               </p>
             </div>
             <button

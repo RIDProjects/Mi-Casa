@@ -262,7 +262,7 @@ export default function PurchasesPage() {
                 {items.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-3 py-12 text-center text-outline text-xs">
-                      Sin productos este mes — usá el botón "Agregar producto"
+                      Sin productos este mes — usá el botón &quot;Agregar producto&quot;
                     </td>
                   </tr>
                 ) : (

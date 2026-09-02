@@ -222,7 +222,7 @@ export default function RegistroGastosPage() {
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {salidas.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">Sin salidas registradas — usá el botón "Nueva salida"</td></tr>
+                    <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">Sin salidas registradas — usá el botón &quot;Nueva salida&quot;</td></tr>
                   ) : (
                     salidas.map((s: any) => (
                       <tr key={s.id} className="hover:bg-surface-gray">
