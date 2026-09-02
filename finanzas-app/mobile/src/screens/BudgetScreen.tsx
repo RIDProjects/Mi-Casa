@@ -12,53 +12,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { Colors } from '../theme/colors';
 import { budgetService } from '../services/budget.service';
-import { BudgetCategory } from '../types';
+import { BudgetCategory, Periodicity } from '../types';
 import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 
-const MONTH_NAMES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-];
-
 const fmt = formatMoney;
 
+// Mirrors backend PERIODICITY_FACTOR (backend/src/budget/budget.service.ts)
+const PERIODICITY_FACTOR: Record<Periodicity, number> = {
+  daily: 1 / 30,
+  weekly: 1 / 4,
+  biweekly: 1 / 2,
+  monthly: 1,
+  bimonthly: 2,
+  quarterly: 3,
+  fourmonthly: 4,
+  semiannual: 6,
+  annual: 12,
+};
+
+const toMonthly = (amount: number, periodicity: Periodicity) =>
+  Number(amount) / PERIODICITY_FACTOR[periodicity];
+
 function CategoryRow({ cat }: { cat: BudgetCategory }) {
-  const overBudget = cat.spent > cat.budgeted;
-  const pct = cat.budgeted > 0
-    ? Math.min(100, (cat.spent / cat.budgeted) * 100)
-    : 0;
-  const fillColor = overBudget ? Colors.red : pct > 80 ? '#f59e0b' : Colors.green;
+  const monthlyTotal = cat.expenses.reduce(
+    (s, e) => s + toMonthly(e.amount, e.periodicity),
+    0,
+  );
 
   return (
     <View style={catStyles.row}>
       <View style={catStyles.header}>
         <Text style={catStyles.name}>{cat.name}</Text>
-        <View style={catStyles.amounts}>
-          <Text style={[catStyles.spent, { color: overBudget ? Colors.red : Colors.textPrimary }]}>
-            {fmt(cat.spent)}
-          </Text>
-          <Text style={catStyles.slash}> / </Text>
-          <Text style={catStyles.budgeted}>{fmt(cat.budgeted)}</Text>
-        </View>
+        <Text style={catStyles.budgeted}>{fmt(monthlyTotal)}/mes</Text>
       </View>
-      <View style={catStyles.barBg}>
-        <View
-          style={[
-            catStyles.barFill,
-            { width: `${pct}%` as any, backgroundColor: fillColor },
-          ]}
-        />
-      </View>
-      <View style={catStyles.footer}>
-        <Text style={[catStyles.pct, { color: fillColor }]}>
-          {pct.toFixed(0)}% usado
-        </Text>
-        <Text style={[catStyles.remaining, { color: overBudget ? Colors.red : Colors.textSecondary }]}>
-          {overBudget ? `+${fmt(cat.spent - cat.budgeted)} excedido` : `${fmt(cat.remaining)} restante`}
-        </Text>
-      </View>
+      <Text style={catStyles.count}>
+        {cat.expenses.length} {cat.expenses.length === 1 ? 'gasto' : 'gastos'}
+      </Text>
     </View>
   );
 }
@@ -83,42 +74,13 @@ const catStyles = StyleSheet.create({
     fontWeight: '600',
     flex: 1,
   },
-  amounts: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  spent: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  slash: {
-    color: Colors.textMuted,
-    fontSize: 13,
-  },
   budgeted: {
     color: Colors.textSecondary,
     fontSize: 13,
+    fontWeight: '700',
   },
-  barBg: {
-    height: 6,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  pct: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  remaining: {
+  count: {
+    color: Colors.textMuted,
     fontSize: 12,
   },
 });
@@ -158,8 +120,8 @@ export default function BudgetScreen() {
 
   const { summary } = budget;
   const overBudget = summary?.alerts?.overBudget ?? false;
-  const pctGlobal = summary?.totalBudgeted > 0
-    ? Math.min(100, (summary.totalGastos / summary.totalBudgeted) * 100)
+  const pctGlobal = (summary?.totalMonthlyIncome ?? 0) > 0
+    ? Math.min(100, ((summary?.totalMonthlyExpenses ?? 0) / summary.totalMonthlyIncome) * 100)
     : 0;
 
   return (
@@ -181,7 +143,7 @@ export default function BudgetScreen() {
           <View>
             <Text style={styles.title}>Presupuesto</Text>
             <Text style={styles.subtitle}>
-              {budget.name} — {MONTH_NAMES[(budget.month ?? 1) - 1]} {budget.year}
+              {budget.name}{budget.year ? ` — ${budget.year}` : ''}
             </Text>
           </View>
         </View>
@@ -190,20 +152,15 @@ export default function BudgetScreen() {
         {overBudget && (
           <View style={styles.alertBanner}>
             <Ionicons name="warning-outline" size={18} color={Colors.red} />
-            <Text style={styles.alertText}>
-              Presupuesto excedido
-              {summary.alerts.categories?.length > 0
-                ? `: ${summary.alerts.categories.join(', ')}`
-                : ''}
-            </Text>
+            <Text style={styles.alertText}>Los gastos superan los ingresos</Text>
           </View>
         )}
 
         {/* Resumen global */}
         <View style={styles.summaryCard}>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total presupuestado</Text>
-            <Text style={styles.summaryValue}>{fmt(summary?.totalBudgeted ?? 0)}</Text>
+            <Text style={styles.summaryLabel}>Total presupuestado (mensual)</Text>
+            <Text style={styles.summaryValue}>{fmt(summary?.totalMonthlyExpenses ?? 0)}</Text>
           </View>
           <View style={styles.progressBar}>
             <View
@@ -219,24 +176,24 @@ export default function BudgetScreen() {
           <View style={styles.summaryRow}>
             <View style={styles.legendItem}>
               <View style={[styles.dot, { backgroundColor: Colors.green }]} />
-              <Text style={styles.legendText}>Ingresos: {fmt(summary?.totalIngresos ?? 0)}</Text>
+              <Text style={styles.legendText}>Ingresos: {fmt(summary?.totalMonthlyIncome ?? 0)}</Text>
             </View>
             <View style={styles.legendItem}>
               <View style={[styles.dot, { backgroundColor: Colors.red }]} />
-              <Text style={styles.legendText}>Gastos: {fmt(summary?.totalGastos ?? 0)}</Text>
+              <Text style={styles.legendText}>Gastos: {fmt(summary?.totalMonthlyExpenses ?? 0)}</Text>
             </View>
           </View>
           <View style={[styles.summaryRow, styles.borderTop]}>
-            <Text style={styles.summaryLabel}>Balance</Text>
+            <Text style={styles.summaryLabel}>Disponible</Text>
             <Text style={[
               styles.summaryValue,
               {
-                color: (summary?.totalIngresos ?? 0) >= (summary?.totalGastos ?? 0)
+                color: (summary?.available ?? 0) >= 0
                   ? Colors.green
                   : Colors.red,
               },
             ]}>
-              {fmt((summary?.totalIngresos ?? 0) - (summary?.totalGastos ?? 0))}
+              {fmt(summary?.available ?? 0)}
             </Text>
           </View>
         </View>
