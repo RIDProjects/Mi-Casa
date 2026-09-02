@@ -100,6 +100,110 @@ export interface ShoppingItem {
   tienda: string;
 }
 
+// ─── Household Expenses (Registro de Gastos, CUP) ─────────────────────────────
+// Backend: Controller('household-expenses'). House resuelta server-side.
+
+export type HouseholdCategory = TransactionCategory;
+
+export interface HouseholdExpense {
+  id: string;
+  fecha: string;
+  descripcion: string;
+  categoria: HouseholdCategory;
+  montoCUP: number;
+  lugar: string | null;
+  mes: string;
+  createdAt: string;
+}
+
+export interface CreateHouseholdExpenseDto {
+  fecha: string;
+  descripcion: string;
+  categoria?: HouseholdCategory;
+  montoCUP: number;
+  lugar?: string;
+  mes: string;
+}
+
+// Fila agregada de compras del mercado (derivada de la Lista de Compras, sin id propio)
+export interface HouseholdComprasPorLugar {
+  fecha: string;
+  descripcion: string;
+  categoria: string;
+  lugar: string;
+  totalCUP: number;
+}
+
+export interface HouseholdResumenCategoria {
+  categoria: string;
+  totalCUP: number;
+}
+
+export interface HouseholdExpensesMonth {
+  month: string;
+  comprasMercado: HouseholdComprasPorLugar[];
+  salidas: HouseholdExpense[];
+  resumenCategoria: HouseholdResumenCategoria[];
+  totalCompras: number;
+  totalSalidas: number;
+  total: number;
+}
+
+// ─── Purchases (Lista de la Compra) ────────────────────────────────────────────
+// Backend: Controller('purchases'). Modelo de dos niveles: lista mensual -> items.
+
+export type PurchaseStatus = 'pending' | 'purchased' | 'cancelled';
+
+export interface PurchaseItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  currency: string | null;
+  lugar: string | null;
+  status: PurchaseStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PurchaseListSummary {
+  total: number;
+  budget: number;
+  remaining: number | null;
+  status: string;
+  purchased: number;
+  pending: number;
+  count: number;
+}
+
+export interface PurchaseList {
+  id: string;
+  name: string;
+  description: string | null;
+  budget: number;
+  baseCurrencyCode: string | null;
+  items: PurchaseItem[];
+  createdAt: string;
+  updatedAt: string;
+  summary?: PurchaseListSummary;
+}
+
+export interface CreatePurchaseListDto {
+  name: string;
+  description?: string;
+  budget?: number;
+  baseCurrencyCode?: string;
+}
+
+export interface CreatePurchaseItemDto {
+  name: string;
+  quantity?: number;
+  unitPrice?: number;
+  currency?: string;
+  lugar?: string;
+  status?: PurchaseStatus;
+}
+
 // ─── Aggregations ────────────────────────────────────────────────────────────
 
 export interface CategoryTotal {
