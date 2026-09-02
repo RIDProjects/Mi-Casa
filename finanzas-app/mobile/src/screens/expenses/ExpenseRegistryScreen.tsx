@@ -12,8 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
-import { transactionsService } from '../../services/transactions.service';
-import { Transaction, TransactionCategory, CategoryTotal } from '../../types';
+import { householdExpensesService } from '../../services/household-expenses.service';
+import { HouseholdResumenCategoria } from '../../types';
 import { formatMoney } from '../../utils/currency';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
@@ -23,7 +23,21 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-const fmt = formatMoney;
+const fmt = (amount: number) => formatMoney(amount, 'CUP');
+
+// Fila normalizada para renderizar tanto "compras de mercado" (agregadas, sin id,
+// no editables desde esta pantalla — vienen de la Lista de la Compra) como
+// "salidas" (entradas manuales del household-expenses, con id y borrables).
+interface ExpenseRow {
+  key: string;
+  id?: string;
+  descripcion: string;
+  categoria: string;
+  fecha: string;
+  lugar?: string | null;
+  monto: number;
+  deletable: boolean;
+}
 
 function CategoryBar({
   label,
@@ -71,21 +85,20 @@ const catStyles = StyleSheet.create({
   barFill: { height: '100%', borderRadius: 3 },
 });
 
-function TransactionItem({
+function ExpenseRowItem({
   item,
   onDelete,
 }: {
-  item: Transaction;
+  item: ExpenseRow;
   onDelete: (id: string) => void;
 }) {
-  const isGasto = item.tipo === 'gasto';
-  const color = isGasto ? Colors.red : Colors.green;
   const catColor = Colors.categories[item.categoria] ?? Colors.textSecondary;
 
   const handleDelete = () => {
-    Alert.alert('Eliminar transacción', `¿Eliminar "${item.concepto}"?`, [
+    if (!item.id) return;
+    Alert.alert('Eliminar gasto', `¿Eliminar "${item.descripcion}"?`, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Eliminar', style: 'destructive', onPress: () => onDelete(item.id) },
+      { text: 'Eliminar', style: 'destructive', onPress: () => onDelete(item.id!) },
     ]);
   };
 
@@ -94,22 +107,22 @@ function TransactionItem({
       <View style={[txStyles.catIndicator, { backgroundColor: catColor }]} />
       <View style={txStyles.content}>
         <View style={txStyles.topRow}>
-          <Text style={txStyles.concepto} numberOfLines={1}>{item.concepto}</Text>
-          <Text style={[txStyles.monto, { color }]}>
-            {isGasto ? '-' : '+'}{fmt(item.monto)}
-          </Text>
+          <Text style={txStyles.concepto} numberOfLines={1}>{item.descripcion}</Text>
+          <Text style={[txStyles.monto, { color: Colors.red }]}>-{fmt(item.monto)}</Text>
         </View>
         <View style={txStyles.bottomRow}>
           <View style={[txStyles.catBadge, { backgroundColor: catColor + '30' }]}>
             <Text style={[txStyles.catLabel, { color: catColor }]}>{item.categoria}</Text>
           </View>
-          <Text style={txStyles.metodo}>{item.metodoPago}</Text>
+          {!!item.lugar && <Text style={txStyles.metodo}>{item.lugar}</Text>}
           <Text style={txStyles.fecha}>{item.fecha}</Text>
         </View>
       </View>
-      <TouchableOpacity style={txStyles.deleteBtn} onPress={handleDelete}>
-        <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
-      </TouchableOpacity>
+      {item.deletable && (
+        <TouchableOpacity style={txStyles.deleteBtn} onPress={handleDelete}>
+          <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -144,21 +157,31 @@ export default function ExpenseRegistryScreen() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-indexed
 
+  const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+  const qKey = ['household-expenses', monthStr];
+
   const {
-    data: transactions = [],
+    data,
     isLoading,
     isRefetching,
     refetch,
   } = useQuery({
-    queryKey: ['transactions', year, month],
-    queryFn: () => transactionsService.getByMonth(year, month),
+    queryKey: qKey,
+    queryFn: () => householdExpensesService.getMonth(monthStr),
     staleTime: 0,
   });
 
+  const comprasMercado = data?.comprasMercado ?? [];
+  const salidas = data?.salidas ?? [];
+  const resumenCategoria = data?.resumenCategoria ?? [];
+  const totalCompras = data?.totalCompras ?? 0;
+  const totalSalidas = data?.totalSalidas ?? 0;
+  const total = data?.total ?? 0;
+
   const deleteMut = useMutation({
-    mutationFn: (id: string) => transactionsService.delete(id),
+    mutationFn: (id: string) => householdExpensesService.delete(id),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['transactions', year, month] });
+      qc.invalidateQueries({ queryKey: qKey });
     },
     onError: (err: any) => {
       Alert.alert('Error', err?.message ?? 'No se pudo eliminar');
@@ -176,38 +199,34 @@ export default function ExpenseRegistryScreen() {
   };
   const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
 
-  // Calcular totales
-  const gastos = useMemo(
-    () => transactions.filter((t) => t.tipo === 'gasto'),
-    [transactions],
-  );
-  const ingresos = useMemo(
-    () => transactions.filter((t) => t.tipo !== 'gasto'),
-    [transactions],
-  );
-  const totalGastos = useMemo(
-    () => gastos.reduce((s, t) => s + Number(t.monto), 0),
-    [gastos],
-  );
-  const totalIngresos = useMemo(
-    () => ingresos.reduce((s, t) => s + Number(t.monto), 0),
-    [ingresos],
-  );
+  // Compras de mercado (agregadas por lugar, vienen de Lista de la Compra — no editables acá)
+  // + salidas (entradas manuales, editables/borrables) combinadas para la lista.
+  const rows: ExpenseRow[] = useMemo(() => {
+    const compraRows: ExpenseRow[] = comprasMercado.map((c, i) => ({
+      key: `compra-${c.lugar}-${i}`,
+      descripcion: c.descripcion,
+      categoria: c.categoria,
+      fecha: c.fecha,
+      lugar: c.lugar,
+      monto: c.totalCUP,
+      deletable: false,
+    }));
+    const salidaRows: ExpenseRow[] = salidas.map((s) => ({
+      key: s.id,
+      id: s.id,
+      descripcion: s.descripcion,
+      categoria: s.categoria,
+      fecha: s.fecha,
+      lugar: s.lugar,
+      monto: s.montoCUP,
+      deletable: true,
+    }));
+    return [...salidaRows, ...compraRows];
+  }, [comprasMercado, salidas]);
 
-  // Breakdown por categoría (solo gastos)
-  const categoryTotals = useMemo((): CategoryTotal[] => {
-    const map: Record<string, number> = {};
-    gastos.forEach((t) => {
-      map[t.categoria] = (map[t.categoria] ?? 0) + Number(t.monto);
-    });
-    return Object.entries(map)
-      .sort((a, b) => b[1] - a[1])
-      .map(([category, total]) => ({
-        category: category as TransactionCategory,
-        total,
-        percentage: totalGastos > 0 ? (total / totalGastos) * 100 : 0,
-      }));
-  }, [gastos, totalGastos]);
+  const categoryTotals = useMemo((): HouseholdResumenCategoria[] => {
+    return [...resumenCategoria].sort((a, b) => b.totalCUP - a.totalCUP);
+  }, [resumenCategoria]);
 
   if (isLoading) return <LoadingSpinner message="Cargando gastos..." />;
 
@@ -240,20 +259,20 @@ export default function ExpenseRegistryScreen() {
         <View style={styles.summaryMain}>
           <Text style={styles.summaryLabel}>Total gastos del mes</Text>
           <Text style={[styles.summaryAmount, { color: Colors.red }]}>
-            -{fmt(totalGastos)}
+            -{fmt(total)}
           </Text>
         </View>
-        {totalIngresos > 0 && (
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryRowLabel}>Ingresos registrados</Text>
-            <Text style={[styles.summaryRowValue, { color: Colors.green }]}>
-              +{fmt(totalIngresos)}
-            </Text>
-          </View>
-        )}
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryRowLabel}>Transacciones</Text>
-          <Text style={styles.summaryRowValue}>{transactions.length}</Text>
+          <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
+          <Text style={styles.summaryRowValue}>{fmt(totalCompras)}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
+          <Text style={styles.summaryRowValue}>{fmt(totalSalidas)}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryRowLabel}>Registros</Text>
+          <Text style={styles.summaryRowValue}>{rows.length}</Text>
         </View>
       </View>
 
@@ -263,18 +282,18 @@ export default function ExpenseRegistryScreen() {
           <Text style={styles.sectionTitle}>Gastos por categoría</Text>
           {categoryTotals.map((ct) => (
             <CategoryBar
-              key={ct.category}
-              label={ct.category}
-              total={ct.total}
-              percentage={ct.percentage}
+              key={ct.categoria}
+              label={ct.categoria}
+              total={ct.totalCUP}
+              percentage={total > 0 ? (ct.totalCUP / total) * 100 : 0}
             />
           ))}
         </View>
       )}
 
       {/* Título de la lista */}
-      {transactions.length > 0 && (
-        <Text style={styles.sectionTitle}>Transacciones del mes</Text>
+      {rows.length > 0 && (
+        <Text style={styles.sectionTitle}>Gastos del mes</Text>
       )}
     </>
   );
@@ -282,10 +301,10 @@ export default function ExpenseRegistryScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <FlatList
-        data={transactions}
-        keyExtractor={(item) => item.id}
+        data={rows}
+        keyExtractor={(item) => item.key}
         renderItem={({ item }) => (
-          <TransactionItem
+          <ExpenseRowItem
             item={item}
             onDelete={(id) => deleteMut.mutate(id)}
           />
@@ -294,7 +313,7 @@ export default function ExpenseRegistryScreen() {
         ListEmptyComponent={
           <EmptyState
             icon="receipt-outline"
-            title="Sin transacciones"
+            title="Sin gastos"
             subtitle={`No hay registros para ${MONTH_NAMES[month - 1]} ${year}`}
           />
         }
