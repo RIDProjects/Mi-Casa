@@ -9,6 +9,7 @@ import { Plus, Trash2, Edit2, ShoppingCart, ChevronLeft, ChevronRight, AlertTria
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 
 const defaultItemForm = { name: '', quantity: 1, unitPrice: 0, currency: '', lugar: '' };
 const defaultConfigForm = { budget: 0 };
@@ -16,6 +17,7 @@ const defaultConfigForm = { budget: 0 };
 export default function PurchasesPage() {
   const qc = useQueryClient();
   const { hasPermission } = useAuthStore();
+  const { fmt: cfmt } = useCurrencyFormatter();
   const { currencies, rates } = useCurrencyStore();
   const baseCurrency = currencies.find(c => c.isBase);
   const canCreate = hasPermission('purchases', 'create');
@@ -156,8 +158,6 @@ export default function PurchasesPage() {
     return currencies.find(c => c.currencyCode === code)?.symbol ?? code;
   };
 
-  const baseSymbol = baseCurrency?.symbol ?? '$';
-
   if (isLoading) return (
     <Layout>
       <div className="space-y-4">
@@ -242,7 +242,7 @@ export default function PurchasesPage() {
             </h2>
             {totalInBase > 0 && (
               <span className="text-sm font-bold text-on-surface">
-                Total: {baseSymbol}{fmt(totalInBase)}
+                Total: {cfmt(totalInBase)}
               </span>
             )}
           </div>
@@ -281,7 +281,7 @@ export default function PurchasesPage() {
                         <td className="px-3 py-2 text-right font-semibold text-on-surface">
                           <div>{sym}{fmt(lineTotal)}</div>
                           {showConverted && (
-                            <div className="text-[10px] text-outline font-normal">≈ {baseSymbol}{fmt(baseTotalLine)}</div>
+                            <div className="text-[10px] text-outline font-normal">≈ {cfmt(baseTotalLine)}</div>
                           )}
                         </td>
                         <td className="px-3 py-2 text-on-surface-variant text-xs">{item.lugar || '—'}</td>
@@ -307,7 +307,7 @@ export default function PurchasesPage() {
                   <tr>
                     <td colSpan={3} className="px-3 py-2 text-xs font-bold text-on-surface-variant">TOTAL</td>
                     <td className="px-3 py-2 text-right text-sm font-bold text-on-surface">
-                      {baseSymbol}{fmt(totalInBase)}
+                      {cfmt(totalInBase)}
                     </td>
                     <td colSpan={2} />
                   </tr>
@@ -337,13 +337,13 @@ export default function PurchasesPage() {
                   {porLugar.map(({ lugar, total, pct }) => (
                     <div key={lugar} className="flex items-center text-sm">
                       <span className="flex-1 text-on-surface-variant truncate text-xs">{lugar}</span>
-                      <span className="w-28 text-right font-medium text-on-surface text-xs">{baseSymbol}{fmt(total)}</span>
+                      <span className="w-28 text-right font-medium text-on-surface text-xs">{cfmt(total)}</span>
                       <span className="w-12 text-right text-outline text-xs">{pct}%</span>
                     </div>
                   ))}
                   <div className="flex items-center text-sm font-bold border-t border-outline-variant pt-2 mt-1">
                     <span className="flex-1 text-on-surface text-xs">TOTAL</span>
-                    <span className="w-28 text-right text-on-surface text-xs">{baseSymbol}{fmt(totalInBase)}</span>
+                    <span className="w-28 text-right text-on-surface text-xs">{cfmt(totalInBase)}</span>
                     <span className="w-12 text-right text-outline text-xs">100%</span>
                   </div>
                 </div>
@@ -358,16 +358,16 @@ export default function PurchasesPage() {
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-xs text-on-surface-variant">Asignado</p>
-                  <p className="text-sm font-bold text-on-surface">{baseSymbol}{fmt(budget)}</p>
+                  <p className="text-sm font-bold text-on-surface">{cfmt(budget)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant">Gastado</p>
-                  <p className="text-sm font-bold text-on-surface">{baseSymbol}{fmt(totalInBase)}</p>
+                  <p className="text-sm font-bold text-on-surface">{cfmt(totalInBase)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant">Restante</p>
                   <p className={`text-sm font-bold ${remaining !== null && remaining >= 0 ? 'text-success' : 'text-danger'}`}>
-                    {remaining !== null ? `${remaining >= 0 ? '+' : ''}${baseSymbol}${fmt(remaining)}` : '—'}
+                    {remaining !== null ? `${remaining >= 0 ? '+' : ''}${cfmt(remaining)}` : '—'}
                   </p>
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function PurchasesPage() {
                   {getCurrencySymbol(itemForm.currency || baseCurrency?.currencyCode)}{fmt(Number(itemForm.quantity) * Number(itemForm.unitPrice))}
                   {itemForm.currency && itemForm.currency !== baseCurrency?.currencyCode && (
                     <span className="ml-2 text-xs text-outline font-normal">
-                      ≈ {baseSymbol}{fmt(toBase(Number(itemForm.quantity) * Number(itemForm.unitPrice), itemForm.currency))}
+                      ≈ {cfmt(toBase(Number(itemForm.quantity) * Number(itemForm.unitPrice), itemForm.currency))}
                     </span>
                   )}
                 </div>
