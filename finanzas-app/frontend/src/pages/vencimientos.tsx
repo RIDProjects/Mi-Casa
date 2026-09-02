@@ -4,7 +4,7 @@ import { useQuery } from 'react-query';
 import { upcomingBillsAPI } from '../services/api';
 import { Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 
-import { fmt } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 
 const FILTER_OPTIONS = [
   { label: '7 días', value: 7 },
@@ -34,6 +34,7 @@ function urgencyClasses(days: number) {
 }
 
 export default function VencimientosPage() {
+  const { fmt: cfmt } = useCurrencyFormatter();
   const [days, setDays] = useState(30);
 
   const { data, isLoading, isError, refetch } = useQuery(
@@ -101,7 +102,7 @@ export default function VencimientosPage() {
             </p>
             <div className="text-right">
               <p className="text-xs text-on-surface-variant uppercase tracking-wide">Total a pagar</p>
-              <p className="text-xl font-bold text-danger">${fmt(totalDue)}</p>
+              <p className="text-xl font-bold text-danger">{cfmt(totalDue)}</p>
             </div>
           </div>
 
@@ -121,7 +122,7 @@ export default function VencimientosPage() {
                     <p className="text-xs text-on-surface-variant mt-0.5">{dateLabel}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-semibold text-on-surface">${fmt(Number(bill.amount || 0))}</p>
+                    <p className="font-semibold text-on-surface">{cfmt(Number(bill.amount || 0))}</p>
                     <span className={`inline-block mt-1 text-xs font-medium px-2 py-0.5 rounded-full ${badge}`}>
                       {d === 0 ? 'Hoy' : d === 1 ? 'Mañana' : `en ${d} días`}
                     </span>

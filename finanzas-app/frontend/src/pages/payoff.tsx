@@ -4,7 +4,7 @@ import { useQuery } from 'react-query';
 import { debtPayoffAPI } from '../services/api';
 import { TrendingDown, Award, AlertTriangle, RefreshCw } from 'lucide-react';
 
-import { fmt } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 
 const fmtMonth = (months: number) => {
   if (months === 0) return '0 meses';
@@ -38,6 +38,7 @@ const STRATEGY_META: Record<string, { label: string; subtitle: string; color: st
 };
 
 export default function PayoffPage() {
+  const { fmt: cfmt } = useCurrencyFormatter();
   const [extraPayment, setExtraPayment] = useState(0);
   const [debouncedExtra, setDebouncedExtra] = useState(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -140,7 +141,7 @@ export default function PayoffPage() {
                     </div>
                     <div>
                       <p className="text-xs text-on-surface-variant">Total intereses</p>
-                      <p className="font-semibold text-danger text-sm">${fmt(s.totalInterest ?? 0)}</p>
+                      <p className="font-semibold text-danger text-sm">{cfmt(s.totalInterest ?? 0)}</p>
                     </div>
                     {key !== 'minimum' && monthsSaved > 0 && (
                       <div className="pt-2 border-t border-outline-variant">
@@ -152,7 +153,7 @@ export default function PayoffPage() {
                     {key !== 'minimum' && interestSaved > 0 && (
                       <div>
                         <p className="text-xs text-success font-medium">
-                          Ahorrás ${fmt(interestSaved)} en intereses
+                          Ahorrás {cfmt(interestSaved)} en intereses
                         </p>
                       </div>
                     )}
@@ -190,7 +191,7 @@ export default function PayoffPage() {
                         <tr key={d.id ?? i} className="hover:bg-surface-gray">
                           <td className="px-4 py-3 text-on-surface-variant font-bold">{i + 1}</td>
                           <td className="px-4 py-3 font-medium text-on-surface">{d.name}</td>
-                          <td className="px-4 py-3 text-right text-danger">${fmt(d.balance ?? d.saldo ?? 0)}</td>
+                          <td className="px-4 py-3 text-right text-danger">{cfmt(d.balance ?? d.saldo ?? 0)}</td>
                           <td className="px-4 py-3 text-right text-on-surface-variant">
                             {d.rate != null ? `${d.rate}%` : '—'}
                           </td>

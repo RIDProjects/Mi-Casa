@@ -5,7 +5,7 @@ import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import StatCard from '../components/ui/StatCard';
-import { fmt } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 
 function calcPayment(amount: number, annualRate: number, months: number): number {
   if (months <= 0) return 0;
@@ -45,6 +45,7 @@ function buildAmortization(amount: number, annualRate: number, months: number, p
 }
 
 export default function SimuladorPage() {
+  const { fmt: cfmt } = useCurrencyFormatter();
   const [amount, setAmount] = useState<string>('');
   const [rate, setRate] = useState<string>('');
   const [months, setMonths] = useState<number>(12);
@@ -169,17 +170,17 @@ export default function SimuladorPage() {
             <div className="space-y-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-center">
                 <p className="text-xs font-semibold text-primary uppercase mb-1">Cuota mensual</p>
-                <p className="text-4xl font-bold text-blue-700 dark:text-blue-300">${fmt(payment)}</p>
+                <p className="text-4xl font-bold text-blue-700 dark:text-blue-300">{cfmt(payment)}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-surface-container-low rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">Total a pagar</p>
-                  <p className="text-base font-bold text-on-surface">${fmt(totalPago)}</p>
+                  <p className="text-base font-bold text-on-surface">{cfmt(totalPago)}</p>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">Total intereses</p>
-                  <p className="text-base font-bold text-danger">${fmt(totalIntereses)}</p>
+                  <p className="text-base font-bold text-danger">{cfmt(totalIntereses)}</p>
                 </div>
                 <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">% intereses</p>
@@ -190,8 +191,8 @@ export default function SimuladorPage() {
               {/* Interest bar */}
               <div>
                 <div className="flex justify-between text-xs text-on-surface-variant mb-1">
-                  <span>Capital: ${fmt(numAmount)}</span>
-                  <span>Intereses: ${fmt(totalIntereses)}</span>
+                  <span>Capital: {cfmt(numAmount)}</span>
+                  <span>Intereses: {cfmt(totalIntereses)}</span>
                 </div>
                 <div
                   className="w-full h-3 bg-surface-container rounded-full overflow-hidden flex"
@@ -226,9 +227,9 @@ export default function SimuladorPage() {
       {/* Summary StatCards */}
       {hasResults && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <StatCard title="Cuota mensual" value={`$${fmt(payment)}`} color="blue" />
-          <StatCard title="Total a pagar" value={`$${fmt(totalPago)}`} color="gray" />
-          <StatCard title="Total intereses" value={`$${fmt(totalIntereses)}`} color="red" />
+          <StatCard title="Cuota mensual" value={cfmt(payment)} color="blue" />
+          <StatCard title="Total a pagar" value={cfmt(totalPago)} color="gray" />
+          <StatCard title="Total intereses" value={cfmt(totalIntereses)} color="red" />
           <StatCard title="Costo financiero" value={`${pctIntereses.toFixed(1)}%`} color="yellow" />
         </div>
       )}
@@ -256,10 +257,10 @@ export default function SimuladorPage() {
                 {displayedRows.map(row => (
                   <tr key={row.cuota} className="hover:bg-surface-gray transition-colors">
                     <td className="px-4 py-2 text-center text-on-surface-variant font-medium">{row.cuota}</td>
-                    <td className="px-4 py-2 text-right text-on-surface">${fmt(row.pago)}</td>
-                    <td className="px-4 py-2 text-right text-primary">${fmt(row.capital)}</td>
-                    <td className="px-4 py-2 text-right text-red-500 dark:text-red-400">${fmt(row.interes)}</td>
-                    <td className="px-4 py-2 text-right font-medium text-on-surface">${fmt(row.saldo)}</td>
+                    <td className="px-4 py-2 text-right text-on-surface">{cfmt(row.pago)}</td>
+                    <td className="px-4 py-2 text-right text-primary">{cfmt(row.capital)}</td>
+                    <td className="px-4 py-2 text-right text-red-500 dark:text-red-400">{cfmt(row.interes)}</td>
+                    <td className="px-4 py-2 text-right font-medium text-on-surface">{cfmt(row.saldo)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -30,12 +30,12 @@ function CurrencyLoader() {
     houseCurrenciesAPI
       .getAll(houseId)
       .then(r => setCurrencies(r.data))
-      .catch(() => {});
+      .catch(err => console.error('Failed to load house currencies', err));
 
     houseCurrenciesAPI
       .getRates(houseId)
       .then(r => setRates(r.data))
-      .catch(() => {});
+      .catch(err => console.error('Failed to load currency rates', err));
   }, [houseId]);
 
   return null;
