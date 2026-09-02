@@ -32,7 +32,10 @@ export class HousesController {
 
   @Get(':id/members')
   @ApiOperation({ summary: 'Ver miembros de una casa' })
-  getMembers(@Param('id') id: string) {
+  async getMembers(@Param('id') id: string, @Request() req) {
+    // Reuse findOne's membership/admin check so only members of the house
+    // (or a global admin) can see who belongs to it.
+    await this.housesService.findOne(id, req.user.id);
     return this.housesService.getHouseMembers(id);
   }
 
@@ -68,11 +71,14 @@ export class HousesController {
 
   @Post(':id/invite')
   @ApiOperation({ summary: 'Invitar un usuario al hogar por email' })
-  inviteUser(
+  async inviteUser(
     @Param('id') houseId: string,
     @Body() dto: { email: string; role?: string },
     @Request() req,
   ) {
+    // Only members of the house (or a global admin) can invite new members —
+    // previously any authenticated user could add someone to any house by ID.
+    await this.housesService.findOne(houseId, req.user.id);
     return this.housesService.inviteUser(houseId, dto.email, dto.role || 'member', req.user.id);
   }
 }
