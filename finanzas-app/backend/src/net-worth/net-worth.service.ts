@@ -71,11 +71,20 @@ export class NetWorthService {
   }
 
   async getHistory(houseId: string, months = 12) {
-    return this.snapshotRepo.find({
+    const snapshots = await this.snapshotRepo.find({
       where: { house: { id: houseId } },
       order: { snapshotDate: 'DESC' },
       take: months,
     });
+    // Frontend (patrimonio.tsx) reads month/netWorth/assets/liabilities from
+    // each history point -- the entity stores snapshotDate/totalAssets/
+    // totalLiabilities, so map to the contract the chart expects.
+    return snapshots.map(s => ({
+      month: s.snapshotDate,
+      netWorth: Number(s.netWorth),
+      assets: Number(s.totalAssets),
+      liabilities: Number(s.totalLiabilities),
+    }));
   }
 
   async getNetWorthSummary(
