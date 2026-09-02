@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useQueries, useMutation, useQueryClient } from 'react-query';
-import { transactionsAPI, exportTransactionsCSV, importTransactionsCSV } from '../services/api';
+import { transactionsAPI, recurringTransactionsAPI, exportTransactionsCSV, importTransactionsCSV } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -10,7 +10,7 @@ import {
   Plus, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw,
   Download, Upload, TrendingUp, DollarSign,
   ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight,
-  Laptop, Calendar,
+  Laptop, Calendar, Repeat, Zap,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { MONTH_NAMES } from '../lib/format';
@@ -46,7 +46,18 @@ const defaultForm = {
 
 const TABS = ['Historial', 'Programadas', 'Pendientes'] as const;
 type Tab = typeof TABS[number];
-const TABS_WIP: Tab[] = ['Programadas', 'Pendientes'];
+// Pendientes no tiene modulo de backend todavia. Programadas ya se cablea a
+// /recurring-transactions (el modulo existia hecho hace tiempo pero nunca
+// se habia conectado a ninguna pantalla).
+const TABS_WIP: Tab[] = ['Pendientes'];
+
+const defaultRecurringForm = {
+  name: '',
+  amount: '',
+  category: '',
+  dayOfMonth: '1',
+  isActive: true,
+};
 
 /** Map category name to a lucide icon */
 function CategoryIcon({ categoria }: { categoria: string }) {
@@ -102,6 +113,10 @@ export default function TransaccionesPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
   const [activeTab, setActiveTab] = useState<Tab>('Historial');
+  const [showRecurringModal, setShowRecurringModal] = useState(false);
+  const [editRecurringItem, setEditRecurringItem] = useState<any>(null);
+  const [deleteRecurringId, setDeleteRecurringId] = useState<string | null>(null);
+  const [recurringForm, setRecurringForm] = useState<any>(defaultRecurringForm);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterTipo, setFilterTipo] = useState('');
   const [filterCategoria, setFilterCategoria] = useState('');
@@ -161,6 +176,65 @@ export default function TransaccionesPage() {
     onSuccess: () => { toast.success('Eliminada'); setDeleteId(null); refreshCache(); },
     onError: (e: any) => { toast.error(getErrorMessage(e)); },
   });
+
+  // ── Programadas (transacciones recurrentes) ──
+  const recurringKey = ['recurring-transactions'];
+  const { data: recurringTransactions = [], isLoading: recurringLoading } = useQuery(
+    recurringKey,
+    () => recurringTransactionsAPI.getAll().then(r => r.data),
+    { enabled: activeTab === 'Programadas' },
+  );
+
+  const createRecurringMut = useMutation((d: any) => recurringTransactionsAPI.create(d), {
+    onSuccess: () => {
+      toast.success('Recurrente creada');
+      setShowRecurringModal(false);
+      setRecurringForm(defaultRecurringForm);
+      qc.invalidateQueries(recurringKey);
+    },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
+  });
+
+  const updateRecurringMut = useMutation((d: any) => recurringTransactionsAPI.update(editRecurringItem?.id, d), {
+    onSuccess: () => {
+      toast.success('Recurrente actualizada');
+      setEditRecurringItem(null);
+      setShowRecurringModal(false);
+      qc.invalidateQueries(recurringKey);
+    },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
+  });
+
+  const deleteRecurringMut = useMutation((id: string) => recurringTransactionsAPI.delete(id), {
+    onSuccess: () => { toast.success('Eliminada'); setDeleteRecurringId(null); qc.invalidateQueries(recurringKey); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
+  });
+
+  const generateMut = useMutation(() => recurringTransactionsAPI.generate(year, month), {
+    onSuccess: (r: any) => {
+      const n = r.data?.generated ?? 0;
+      toast.success(n > 0 ? `${n} transacción(es) generada(s) para ${MONTH_NAMES[month - 1]}` : 'No había nada nuevo para generar este mes');
+      refreshCache();
+    },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
+  });
+
+  const handleEditRecurring = (rt: any) => {
+    setRecurringForm({
+      name: rt.name,
+      amount: rt.amount,
+      category: rt.category || '',
+      dayOfMonth: String(rt.dayOfMonth ?? 1),
+      isActive: rt.isActive,
+    });
+    setEditRecurringItem(rt);
+    setShowRecurringModal(true);
+  };
+
+  const handleRecurringSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    editRecurringItem ? updateRecurringMut.mutate(recurringForm) : createRecurringMut.mutate(recurringForm);
+  };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -333,6 +407,107 @@ export default function TransaccionesPage() {
           <p className="font-body-default text-body-default opacity-60">
             La sección <strong>{activeTab}</strong> estará disponible en una próxima versión.
           </p>
+        </div>
+      )}
+
+      {/* ── Programadas content ── */}
+      {activeTab === 'Programadas' && (
+        <div className="mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+            <p className="font-body-default text-body-default text-on-surface-variant">
+              Plantillas que generan una transacción real al mes cuando las corrés desde acá — no se crean solas.
+            </p>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => generateMut.mutate()}
+                disabled={generateMut.isLoading}
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-border-light text-on-surface-variant hover:bg-surface-gray rounded-xl transition-colors disabled:opacity-50"
+              >
+                <Zap size={15} /> {generateMut.isLoading ? 'Generando...' : `Generar para ${MONTH_NAMES[month - 1]}`}
+              </button>
+              <button
+                onClick={() => { setRecurringForm(defaultRecurringForm); setEditRecurringItem(null); setShowRecurringModal(true); }}
+                className="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-section-title text-section-title transition-opacity hover:opacity-90"
+              >
+                <Plus size={18} /> Nueva recurrente
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-surface-container-low border-b border-outline-variant">
+                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">NOMBRE</th>
+                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CATEGORÍA</th>
+                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">DÍA</th>
+                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">ESTADO</th>
+                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-right">MONTO</th>
+                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">ACC.</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-light">
+                {recurringLoading ? (
+                  [1, 2, 3].map(i => (
+                    <tr key={i}>
+                      {[1, 2, 3, 4, 5, 6].map(j => (
+                        <td key={j} className="px-6 py-4">
+                          <div className="h-4 bg-surface-container-low rounded animate-pulse" />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : recurringTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <p className="font-body-default text-body-default text-on-surface-variant">
+                        No tenés transacciones programadas todavía.
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  recurringTransactions.map((rt: any) => (
+                    <tr key={rt.id} className="hover:bg-surface-gray transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant flex-shrink-0">
+                            <Repeat size={14} />
+                          </div>
+                          <p className="font-card-title text-card-title text-on-surface">{rt.name}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {rt.category ? (
+                          <span className="font-body-small text-body-small text-on-surface-variant">{rt.category}</span>
+                        ) : (
+                          <span className="font-caption text-caption text-outline">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center font-body-small text-body-small text-on-surface-variant">
+                        {rt.dayOfMonth}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${
+                          rt.isActive ? 'bg-success/10 text-success' : 'bg-surface-container text-on-surface-variant'
+                        }`}>
+                          {rt.isActive ? 'Activa' : 'Pausada'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right font-card-title text-card-title text-warning">
+                        {cfmt(rt.amount)}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <ActionButtons
+                          onEdit={() => handleEditRecurring(rt)}
+                          onDelete={() => setDeleteRecurringId(rt.id)}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -790,6 +965,113 @@ export default function TransaccionesPage() {
         onClose={() => setDeleteId(null)}
         onConfirm={() => deleteMut.mutate(deleteId!)}
         loading={deleteMut.isLoading}
+      />
+
+      {/* ── Modal Create/Edit Recurrente ── */}
+      <Modal
+        isOpen={showRecurringModal}
+        onClose={() => { setShowRecurringModal(false); setEditRecurringItem(null); }}
+        title={editRecurringItem ? 'Editar recurrente' : 'Nueva transacción programada'}
+        size="md"
+      >
+        <form onSubmit={handleRecurringSubmit} className="space-y-4">
+          <div>
+            <label className="label" htmlFor="rt-name">Nombre</label>
+            <input
+              id="rt-name"
+              className="input"
+              value={recurringForm.name}
+              onChange={e => setRecurringForm({ ...recurringForm, name: e.target.value })}
+              placeholder="Ej: Alquiler, Netflix, Gimnasio"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="rt-amount">Monto</label>
+            <input
+              id="rt-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              className="input"
+              value={recurringForm.amount}
+              onChange={e => setRecurringForm({ ...recurringForm, amount: e.target.value })}
+              placeholder="0.00"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="rt-categoria">Categoría</label>
+            <select
+              id="rt-categoria"
+              className="input"
+              value={recurringForm.category}
+              onChange={e => setRecurringForm({ ...recurringForm, category: e.target.value })}
+            >
+              <option value="">Sin categoría</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label className="label" htmlFor="rt-dia">Día del mes</label>
+            <input
+              id="rt-dia"
+              type="number"
+              min="1"
+              max="31"
+              className="input"
+              value={recurringForm.dayOfMonth}
+              onChange={e => setRecurringForm({ ...recurringForm, dayOfMonth: e.target.value })}
+              required
+            />
+            <p className="font-caption text-caption text-on-surface-variant mt-1">
+              En meses de menos días (ej. febrero) se genera el día 28.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between bg-surface-container-low rounded-xl px-4 py-3">
+            <label htmlFor="rt-activa" className="font-body-default text-body-default text-on-surface">
+              Recurrente activa
+            </label>
+            <button
+              type="button"
+              id="rt-activa"
+              role="switch"
+              aria-checked={recurringForm.isActive}
+              onClick={() => setRecurringForm({ ...recurringForm, isActive: !recurringForm.isActive })}
+              className={`w-11 h-6 rounded-full transition-colors relative ${recurringForm.isActive ? 'bg-primary' : 'bg-outline-variant'}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${recurringForm.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </button>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => { setShowRecurringModal(false); setEditRecurringItem(null); }}
+              className="btn-secondary"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={createRecurringMut.isLoading || updateRecurringMut.isLoading}
+              className="btn-primary"
+            >
+              {createRecurringMut.isLoading || updateRecurringMut.isLoading ? 'Guardando...' : editRecurringItem ? 'Actualizar' : 'Crear'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteRecurringId}
+        onClose={() => setDeleteRecurringId(null)}
+        onConfirm={() => deleteRecurringMut.mutate(deleteRecurringId!)}
+        loading={deleteRecurringMut.isLoading}
       />
     </Layout>
   );

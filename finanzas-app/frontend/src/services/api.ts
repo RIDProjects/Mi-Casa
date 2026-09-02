@@ -121,6 +121,20 @@ export const transactionsAPI = {
   delete: (id: string) => api.delete(`/transactions/${id}`),
 };
 
+// Nota: a diferencia del resto de la app, este modulo usa nombres de campo
+// en ingles (name/amount/category/dayOfMonth/isActive) tal cual estan en el
+// DTO/entity del backend -- no habia ningun consumidor previo (frontend ni
+// mobile) que hubiera fijado ya un contrato en espanol, asi que se mantiene
+// el nombre real del backend en vez de agregar una capa de traduccion que
+// no hace falta.
+export const recurringTransactionsAPI = {
+  getAll: () => api.get('/recurring-transactions'),
+  create: (data: any) => api.post('/recurring-transactions', data),
+  update: (id: string, data: any) => api.put(`/recurring-transactions/${id}`, data),
+  delete: (id: string) => api.delete(`/recurring-transactions/${id}`),
+  generate: (year: number, month: number) => api.post(`/recurring-transactions/generate?year=${year}&month=${month}`),
+};
+
 export const savingsGoalsAPI = {
   getAll: () => api.get('/savings-goals'),
   create: (data: any) => api.post('/savings-goals', data),
