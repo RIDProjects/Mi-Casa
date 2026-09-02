@@ -1,9 +1,10 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateExpenseCategoryDto {
   @IsString() @IsNotEmpty() name: string;
 
-  @IsNumber() @Min(0) monthlyAmount: number;
+  @Type(() => Number) @IsNumber() @Min(0) monthlyAmount: number;
 
-  @IsOptional() @IsInt() sortOrder?: number;
+  @IsOptional() @Type(() => Number) @IsInt() sortOrder?: number;
 }
