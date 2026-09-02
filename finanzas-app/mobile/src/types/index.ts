@@ -1,10 +1,18 @@
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
+// Backend (auth.service.ts login/register/getProfile) returns a `roles`
+// array of Role entities (each with a `name`), never a singular `role`
+// string field — this is the actual response contract.
+export interface UserRole {
+  id: string;
+  name: string;
+}
+
 export interface User {
   id: string;
   email: string;
   name: string;
-  role?: string;
+  roles?: UserRole[];
 }
 
 export interface AuthResponse {

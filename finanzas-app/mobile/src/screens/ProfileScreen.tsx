@@ -114,6 +114,7 @@ export default function ProfileScreen() {
   };
 
   const initials = getInitials(user?.name);
+  const roleName = user?.roles?.[0]?.name;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -131,9 +132,9 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.userName}>{user?.name ?? 'Usuario'}</Text>
           <Text style={styles.userEmail}>{user?.email ?? ''}</Text>
-          {user?.role && (
+          {roleName && (
             <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{user.role}</Text>
+              <Text style={styles.roleText}>{roleName}</Text>
             </View>
           )}
         </View>
