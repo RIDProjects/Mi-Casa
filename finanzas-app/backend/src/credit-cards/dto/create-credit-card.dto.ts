@@ -1,11 +1,18 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { CardPaymentType } from '../../database/entities/credit-card.entity';
 
 // Field names already match tarjetas.tsx defaultForm exactly (banco,
 // nombreTarjeta, tasaAnual, saldoActual, lineaCredito, fechaCorte,
 // fechaPago, tipoPago). The form initializes numeric fields with '' though,
 // so they were being sent as strings -> IsNumber() rejected them with 400.
+// tipoPago is always defaulted to a valid value in tarjetas.tsx today, but
+// tipoPago is an @IsOptional() @IsEnum() field — same shape as the
+// investments moneda/fechaInicio/fechaFin bug, where "" survives
+// @IsOptional() and still trips @IsEnum(). Transform defensively so a
+// future blank/reset form state can't 400.
+const emptyToUndefined = ({ value }: { value: unknown }) => (value === '' ? undefined : value);
+
 export class CreateCreditCardDto {
   @IsOptional() @IsString() banco?: string;
 
@@ -21,5 +28,5 @@ export class CreateCreditCardDto {
 
   @IsOptional() @IsString() fechaPago?: string;
 
-  @IsOptional() @IsEnum(CardPaymentType) tipoPago?: CardPaymentType;
+  @IsOptional() @Transform(emptyToUndefined) @IsEnum(CardPaymentType) tipoPago?: CardPaymentType;
 }
