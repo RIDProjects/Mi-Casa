@@ -8,7 +8,7 @@ interface SavingsGoalFrontendDto {
   montoMeta?: number;
   ahorrosActuales?: number;
   mesesParaAhorrarla?: number;
-  tasaInteresAnual?: number;
+  tasaInteres?: number;
   emoji?: string;
 }
 
@@ -46,7 +46,7 @@ export class SavingsGoalsService {
       montoMeta:            goal.goalAmount,
       ahorrosActuales:      goal.currentSavings,
       mesesParaAhorrarla:   goal.months,
-      tasaInteresAnual:     goal.annualInterestRate,
+      tasaInteres:          goal.annualInterestRate,
       emoji:                goal.emoji,
       createdAt:            goal.createdAt,
       updatedAt:            goal.updatedAt,
@@ -61,7 +61,7 @@ export class SavingsGoalsService {
       goalAmount:         dto.montoMeta,
       currentSavings:     dto.ahorrosActuales,
       months:             dto.mesesParaAhorrarla,
-      annualInterestRate: dto.tasaInteresAnual,
+      annualInterestRate: dto.tasaInteres,
       emoji:              dto.emoji,
     };
   }
