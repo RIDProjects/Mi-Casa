@@ -226,47 +226,87 @@ export interface MonthlySummary {
 
 // ─── Budget ──────────────────────────────────────────────────────────────────
 
+export type Periodicity =
+  | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly'
+  | 'quarterly' | 'fourmonthly' | 'semiannual' | 'annual';
+
+export interface BudgetExpense {
+  id: string;
+  name: string;
+  amount: number;
+  periodicity: Periodicity;
+  isFixed: boolean;
+  isCreditCard: boolean;
+  isAntExpense: boolean;
+}
+
+export interface BudgetIncomeSource {
+  id: string;
+  name: string;
+  type: string;
+  amount: number;
+}
+
 export interface BudgetCategory {
   id: string;
   name: string;
-  budgeted: number;
-  spent: number;
-  remaining: number;
-  percentage: number;
+  sortOrder: number;
+  isDefault: boolean;
+  expenses: BudgetExpense[];
+}
+
+export interface BudgetPlan {
+  rule: '50-30-20' | '70-20-10';
+  fiTarget: number;
+  minMonthlyInvestment: number;
+  emergencyFundTarget: number;
+  entertainmentBudget: number;
+  fixedExpensesCap: number;
+}
+
+export interface BudgetSummary {
+  totalMonthlyIncome: number;
+  totalMonthlyExpenses: number;
+  available: number;
+  savingsTargetAmount: number;
+  antExpensesTotal: number;
+  advisory: 'ok' | 'warning' | 'danger';
+  alerts: {
+    overBudget: boolean;
+    nearLimit: boolean;
+    savingsShortfall: number;
+    antExpensesWarning: boolean;
+  };
+  plan: BudgetPlan | null;
 }
 
 export interface Budget {
   id: string;
   name: string;
-  year: number;
-  month: number;
+  year: number | null;
+  savingsTargetPercent: number;
+  rule: '50-30-20' | '70-20-10';
+  incomeSources: BudgetIncomeSource[];
   categories: BudgetCategory[];
-  summary: {
-    totalBudgeted: number;
-    totalSpent: number;
-    totalRemaining: number;
-    totalIngresos: number;
-    totalGastos: number;
-    alerts: {
-      overBudget: boolean;
-      categories: string[];
-    };
-  };
+  summary: BudgetSummary;
 }
 
 // ─── Savings Goals ───────────────────────────────────────────────────────────
 
+// Backend (savings-goals.service.ts `toFrontend`) returns Spanish field
+// names — this is the actual response contract, not request-body-only.
 export interface SavingsGoal {
   id: string;
-  name: string;
-  targetAmount: number;
-  currentAmount: number;
-  deadline?: string;
-  description?: string;
-  isCompleted: boolean;
-  progressPercentage: number;
+  nombre: string;
+  montoMeta: number;
+  ahorrosActuales: number;
+  mesesParaAhorrarla: number;
+  tasaInteres: number;
+  emoji?: string;
   createdAt: string;
   updatedAt: string;
+  monthlyContribution: number;
+  progress: number;
 }
 
 // ─── Upcoming Bills ──────────────────────────────────────────────────────────
@@ -295,18 +335,22 @@ export interface AppNotification {
 
 export type CardPaymentType = 'full' | 'minimum' | 'stopped' | 'partial';
 
+// Backend (credit-cards.service.ts `toFrontend`) returns Spanish field
+// names — this is the actual response contract, not request-body-only.
 export interface CreditCard {
   id: string;
-  bankName: string;
-  cardName: string;
-  annualRate: number;
-  currentBalance: number;
-  creditLimit: number;
-  cutDate: string | null;
-  paymentDate: string | null;
-  paymentType: CardPaymentType;
+  banco: string;
+  nombreTarjeta: string;
+  tasaAnual: number;
+  saldoActual: number;
+  lineaCredito: number;
+  fechaCorte: string | null;
+  fechaPago: string | null;
+  tipoPago: CardPaymentType;
   createdAt: string;
   updatedAt: string;
+  utilizationPercent: number;
+  advisory: string;
 }
 
 // ─── Cuotas ──────────────────────────────────────────────────────────────────
