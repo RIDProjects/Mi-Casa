@@ -17,7 +17,7 @@ import {
   TrendingUp, TrendingDown, Receipt,
   ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
 } from 'lucide-react';
-import { fmt, MONTHS } from '../lib/format';
+import { MONTHS } from '../lib/format';
 
 const safeNum = (n: unknown): number => { const v = Number(n); return Number.isFinite(v) ? v : 0; };
 
@@ -150,7 +150,7 @@ export default function Dashboard() {
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Patrimonio neto</p>
               <div className={`fin-hero ${netWorthPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
-                {netWorthPositive ? '' : '–'}${fmt(Math.abs(netWorthAnim))}
+                {netWorthPositive ? '' : '–'}{cfmt(Math.abs(netWorthAnim))}
               </div>
               {netWorth !== 0 && (
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
@@ -162,9 +162,9 @@ export default function Dashboard() {
             {/* Global KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 min-w-0">
               {[
-                { label: 'Total deudas',  value: `$${fmt(safeNum((globalSummary as any).debts?.total ?? 0))}`,               color: 'text-red-600 dark:text-red-400' },
-                { label: 'Ahorro metas',  value: `$${fmt(safeNum((globalSummary as any).savingsGoals?.totalSaved ?? 0))}`,   color: 'text-emerald-600 dark:text-emerald-400' },
-                { label: 'Cuotas/mes',    value: `$${fmt(safeNum((globalSummary as any).loans?.monthlyPayments ?? 0))}`,     color: 'text-amber-600 dark:text-amber-400' },
+                { label: 'Total deudas',  value: cfmt(safeNum((globalSummary as any).debts?.total ?? 0)),               color: 'text-red-600 dark:text-red-400' },
+                { label: 'Ahorro metas',  value: cfmt(safeNum((globalSummary as any).savingsGoals?.totalSaved ?? 0)),   color: 'text-emerald-600 dark:text-emerald-400' },
+                { label: 'Cuotas/mes',    value: cfmt(safeNum((globalSummary as any).loans?.monthlyPayments ?? 0)),     color: 'text-amber-600 dark:text-amber-400' },
                 { label: 'Salud fin.',    value: insights ? `${(insights as any).savingsRate?.toFixed(0) ?? 0}% ahorro` : '—', color: 'text-blue-600 dark:text-blue-400' },
               ].map(k => (
                 <div key={k.label} className="text-center">
@@ -204,9 +204,9 @@ export default function Dashboard() {
       {/* ── Debts row ── */}
       {hasPermission('debts', 'view') && debtsSummary && (
         <div className="grid grid-cols-3 gap-3 mb-6 animate-stagger-2">
-          <StatCard title="Me deben" value={`$${fmt(debtsSummary.totalTheyOweMe)}`} icon="💙" color="green" />
-          <StatCard title="Debo"     value={`$${fmt(debtsSummary.totalIOwe)}`}       icon="❤️" color="red" />
-          <StatCard title="Balance"  value={`$${fmt(balance)}`} icon={balance >= 0 ? '✅' : '⚠️'} color={balance >= 0 ? 'green' : 'red'} />
+          <StatCard title="Me deben" value={cfmt(debtsSummary.totalTheyOweMe)} icon="💙" color="green" />
+          <StatCard title="Debo"     value={cfmt(debtsSummary.totalIOwe)}       icon="❤️" color="red" />
+          <StatCard title="Balance"  value={cfmt(balance)} icon={balance >= 0 ? '✅' : '⚠️'} color={balance >= 0 ? 'green' : 'red'} />
         </div>
       )}
 
@@ -252,13 +252,13 @@ export default function Dashboard() {
                 <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> Ingresos reales
                 </span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 fin-number">${fmt(txSummary.totalIncome)}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 fin-number">{cfmt(txSummary.totalIncome)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                   <TrendingDown className="w-3.5 h-3.5 text-red-400" /> Gastos reales
                 </span>
-                <span className="font-bold text-red-600 dark:text-red-400 fin-number">${fmt(txSummary.totalExpenses)}</span>
+                <span className="font-bold text-red-600 dark:text-red-400 fin-number">{cfmt(txSummary.totalExpenses)}</span>
               </div>
               {txSummary.expectedExpenses > 0 && (
                 <div className="pt-1">
@@ -287,11 +287,11 @@ export default function Dashboard() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-3 text-center">
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide font-medium">Presupuesto/mes</p>
-                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 fin-number">${fmt(budgetSummary.antExpensesTotal)}</p>
+                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 fin-number">{cfmt(budgetSummary.antExpensesTotal)}</p>
               </div>
               <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-3 text-center">
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide font-medium">Máximo/día</p>
-                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 fin-number">${fmt(budgetSummary.antExpensesTotal / 30)}</p>
+                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 fin-number">{cfmt(budgetSummary.antExpensesTotal / 30)}</p>
               </div>
             </div>
             <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
@@ -312,7 +312,7 @@ export default function Dashboard() {
                     <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => `$${fmt(v)}`} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 12 }} />
+                <Tooltip formatter={(v: number) => cfmt(v)} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 12 }} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
               </PieChart>
             </ResponsiveContainer>
@@ -354,7 +354,7 @@ export default function Dashboard() {
         <div className="mb-6">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Resumen inteligente</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard title="Promedio mensual"     value={`$${fmt((insights as any).monthlyAverageExpenses)}`}            icon="📊" color="yellow" />
+            <StatCard title="Promedio mensual"     value={cfmt((insights as any).monthlyAverageExpenses)}            icon="📊" color="yellow" />
             <StatCard title="Tasa de ahorro"       value={`${(insights as any).savingsRate?.toFixed(1) ?? 0}%`}           icon="💹" color="green" />
             <StatCard title="Fondo emergencia"     value={`${(insights as any).monthsOfEmergencyFund?.toFixed(1) ?? 0} m`} icon="🛡️" color="blue" />
             <StatCard title="Transacciones mes"    value={`${(insights as any).transactionCount ?? 0}`}                   icon="🔢" color="gray" />
