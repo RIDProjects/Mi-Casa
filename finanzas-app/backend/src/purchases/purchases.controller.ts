@@ -22,24 +22,46 @@ export class PurchasesController {
     return this.purchasesService.findAllLists(houseId);
   }
   
-  @Get('lists/:id') @RequirePermission('purchases', 'view') findOneList(@Param('id') id: string) { return this.purchasesService.findOneList(id); }
-  
-  @Post('lists') @RequirePermission('purchases', 'create') 
+  @Get('lists/:id') @RequirePermission('purchases', 'view')
+  findOneList(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.purchasesService.findOneList(id, houseId);
+  }
+
+  @Post('lists') @RequirePermission('purchases', 'create')
   createList(@Body() dto: CreatePurchaseListDto, @Request() req) {
     const houseId = req.user.house?.id;
     if (!houseId) throw new Error('Usuario no pertenece a una casa');
     return this.purchasesService.createList(dto, houseId);
   }
 
-  @Put('lists/:id') @RequirePermission('purchases', 'edit') updateList(@Param('id') id: string, @Body() dto: UpdatePurchaseListDto) { return this.purchasesService.updateList(id, dto); }
-  @Delete('lists/:id') @RequirePermission('purchases', 'delete') removeList(@Param('id') id: string) { return this.purchasesService.removeList(id); }
+  @Put('lists/:id') @RequirePermission('purchases', 'edit')
+  updateList(@Param('id') id: string, @Body() dto: UpdatePurchaseListDto, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.purchasesService.updateList(id, houseId, dto);
+  }
+
+  @Delete('lists/:id') @RequirePermission('purchases', 'delete')
+  removeList(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.purchasesService.removeList(id, houseId);
+  }
 
   @Post('lists/:listId/items') @RequirePermission('purchases', 'create')
-  addItem(@Param('listId') listId: string, @Body() dto: CreatePurchaseItemDto) { return this.purchasesService.addItem(listId, dto); }
+  addItem(@Param('listId') listId: string, @Body() dto: CreatePurchaseItemDto, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.purchasesService.addItem(listId, houseId, dto);
+  }
 
   @Put('items/:id') @RequirePermission('purchases', 'edit')
-  updateItem(@Param('id') id: string, @Body() dto: UpdatePurchaseItemDto) { return this.purchasesService.updateItem(id, dto); }
+  updateItem(@Param('id') id: string, @Body() dto: UpdatePurchaseItemDto, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.purchasesService.updateItem(id, houseId, dto);
+  }
 
   @Delete('items/:id') @RequirePermission('purchases', 'delete')
-  removeItem(@Param('id') id: string) { return this.purchasesService.removeItem(id); }
+  removeItem(@Param('id') id: string, @Request() req) {
+    const houseId = req.user.house?.id ?? '';
+    return this.purchasesService.removeItem(id, houseId);
+  }
 }
