@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 
-import { fmt } from '../lib/format';
+import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
 
 const TIPO_PAGO_OPTIONS = [
@@ -52,6 +52,7 @@ function utilizationBarColor(pct: number) {
 
 export default function TarjetasPage() {
   const qc = useQueryClient();
+  const { fmt: cfmt } = useCurrencyFormatter();
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -144,11 +145,11 @@ export default function TarjetasPage() {
           <div className="flex flex-wrap gap-6 items-center">
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Deuda total</p>
-              <p className="text-xl font-bold text-danger">${fmt(totalDeuda)}</p>
+              <p className="text-xl font-bold text-danger">{cfmt(totalDeuda)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Límite total</p>
-              <p className="text-xl font-bold text-on-surface">${fmt(totalLimite)}</p>
+              <p className="text-xl font-bold text-on-surface">{cfmt(totalLimite)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Utilización global</p>
@@ -210,8 +211,12 @@ export default function TarjetasPage() {
                   let urgVariant: 'red' | 'amber' | 'gray' = 'gray';
                   if (payDay) {
                     const today = new Date();
-                    const nextPayment = new Date(today.getFullYear(), today.getMonth(), payDay);
-                    if (nextPayment <= today) nextPayment.setMonth(nextPayment.getMonth() + 1);
+                    const daysInCurrentMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+                    const nextPayment = new Date(today.getFullYear(), today.getMonth(), Math.min(payDay, daysInCurrentMonth));
+                    if (nextPayment <= today) {
+                      const daysInNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0).getDate();
+                      nextPayment.setMonth(nextPayment.getMonth() + 1, Math.min(payDay, daysInNextMonth));
+                    }
                     daysLeft = Math.ceil((nextPayment.getTime() - today.getTime()) / 86400000);
                     urgVariant = daysLeft <= 3 ? 'red' : daysLeft <= 7 ? 'amber' : 'gray';
                   }
@@ -227,8 +232,8 @@ export default function TarjetasPage() {
                           {daysLeft !== null && <Badge variant={urgVariant}>Pago en {daysLeft}d</Badge>}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-danger">${fmt(saldo)}</td>
-                      <td className="px-4 py-3 text-right text-on-surface-variant">${fmt(limite)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-danger">{cfmt(saldo)}</td>
+                      <td className="px-4 py-3 text-right text-on-surface-variant">{cfmt(limite)}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${utilizationColor(util)}`}>
                           {util.toFixed(1)}%

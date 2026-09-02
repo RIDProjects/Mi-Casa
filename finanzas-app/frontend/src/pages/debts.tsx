@@ -11,12 +11,13 @@ import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, Ref
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
 import { getErrorMessage } from '../utils/errors';
+import { useCurrencyFormatter } from '../lib/currency';
 
-const fmt = (n: number) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '' };
 
 export default function DebtsPage() {
   const qc = useQueryClient();
+  const { fmt: cfmt } = useCurrencyFormatter();
   const { hasPermission } = useAuthStore();
   const canCreate = hasPermission('debts', 'create');
   const canEdit = hasPermission('debts', 'edit');
@@ -149,17 +150,17 @@ export default function DebtsPage() {
           <div className="flex items-center gap-4">
             <span className="text-lg font-semibold text-on-surface">Saldo:</span>
             <span className={`text-2xl font-bold ${balance >= 0 ? 'text-success' : 'text-danger'}`}>
-              {balance >= 0 ? '✅' : '⚠️'} {balance >= 0 ? '+' : ''}{fmt(balance)}
+              {balance >= 0 ? '✅' : '⚠️'} {balance >= 0 ? '+' : ''}{cfmt(balance)}
             </span>
           </div>
           <div className="flex gap-8">
             <div className="text-center">
               <p className="text-sm text-on-surface-variant">Total que me adeudan</p>
-              <p className="text-xl font-bold text-success">+{fmt(totalTheyOweMe)}</p>
+              <p className="text-xl font-bold text-success">+{cfmt(totalTheyOweMe)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-on-surface-variant">Total adeudado por mí</p>
-              <p className="text-xl font-bold text-danger">-{fmt(totalIOwe)}</p>
+              <p className="text-xl font-bold text-danger">-{cfmt(totalIOwe)}</p>
             </div>
           </div>
         </div>
@@ -207,7 +208,7 @@ export default function DebtsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-success">
-                    <div>{fmt(d.amount)}</div>
+                    <div>{cfmt(d.amount)}</div>
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
@@ -230,7 +231,7 @@ export default function DebtsPage() {
             <tfoot className="bg-blue-50 dark:bg-blue-900/20 border-t-2 border-blue-200 dark:border-blue-800">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL QUE ME ADEUDAN</td>
-                <td className="px-4 py-3 text-right font-bold text-success">{fmt(totalTheyOweMe)}</td>
+                <td className="px-4 py-3 text-right font-bold text-success">{cfmt(totalTheyOweMe)}</td>
                 <td colSpan={2}></td>
               </tr>
             </tfoot>
@@ -261,7 +262,7 @@ export default function DebtsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-danger">
-                    <div>{fmt(d.amount)}</div>
+                    <div>{cfmt(d.amount)}</div>
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant text-xs">{d.note || '-'}</td>
                   <td className="px-4 py-3 text-center">
@@ -284,7 +285,7 @@ export default function DebtsPage() {
             <tfoot className="bg-red-50 dark:bg-red-900/20 border-t-2 border-red-200 dark:border-red-800">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL ADEUDADO POR MÍ</td>
-                <td className="px-4 py-3 text-right font-bold text-danger">{fmt(totalIOwe)}</td>
+                <td className="px-4 py-3 text-right font-bold text-danger">{cfmt(totalIOwe)}</td>
                 <td colSpan={2}></td>
               </tr>
             </tfoot>
@@ -310,7 +311,7 @@ export default function DebtsPage() {
               {paidDebts.map((d: any) => (
                 <tr key={d.id} className="opacity-60">
                   <td className="px-4 py-2 text-on-surface">{d.personName}</td>
-                  <td className="px-4 py-2 text-right text-on-surface-variant line-through">{fmt(d.amount)}</td>
+                  <td className="px-4 py-2 text-right text-on-surface-variant line-through">{cfmt(d.amount)}</td>
                   <td className="px-4 py-2">
                     {d.type === 'they_owe_me'
                       ? <Badge variant="green">Me debían</Badge>
@@ -391,7 +392,7 @@ export default function DebtsPage() {
                 <DollarSign size={18} className="text-on-surface-variant" />
                 <div>
                   <p className="text-xs text-on-surface-variant">Monto pagado</p>
-                  <p className="font-medium text-success">${fmt(paidDebtInfo.amount)}</p>
+                  <p className="font-medium text-success">{cfmt(paidDebtInfo.amount)}</p>
                 </div>
               </div>
 
