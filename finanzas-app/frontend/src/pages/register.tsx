@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
@@ -9,6 +9,7 @@ import { Moon, Sun, ArrowLeft, Home, Eye, EyeOff } from 'lucide-react';
 export default function Register() {
   const router = useRouter();
   const setAuth = useAuthStore(s => s.setAuth);
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const { theme, toggleTheme } = useThemeStore();
   const [form, setForm] = useState({
     name: '',
@@ -21,6 +22,10 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showHousePassword, setShowHousePassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) router.replace('/dashboard');
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
