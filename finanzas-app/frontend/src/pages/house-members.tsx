@@ -2,7 +2,6 @@ import Layout from '../components/layout/Layout';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { housesAPI, houseInviteAPI } from '../services/api';
-import { usersAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import toast from 'react-hot-toast';
 import { Users, Plus, UserCheck, UserX, Loader2 } from 'lucide-react';
@@ -25,17 +24,9 @@ export default function HouseMembersPage() {
   const houseId = user?.house?.id;
   const houseName = user?.house?.name;
 
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [userEmail, setUserEmail] = useState('');
   const emptyCreateForm = { name: '', email: '', password: '', role: 'user' };
   const [createForm, setCreateForm] = useState(emptyCreateForm);
-
-  const { data: allUsers = [] } = useQuery('allUsersForHouse', () =>
-    usersAPI.getAll().then(r => r.data)
-  );
 
   const { data: members = [], isLoading, refetch } = useQuery(['houseMembers', houseId], () =>
     houseId ? housesAPI.getMembers(houseId).then(r => r.data) : []
@@ -51,7 +42,7 @@ export default function HouseMembersPage() {
   const removeMut = useMutation((userId: string) =>
     houseId ? housesAPI.removeUserFromHouse(houseId, userId) : Promise.reject('No house')
   , {
-    onSuccess: () => { toast.success('Usuario eliminado'); setShowEditModal(false); refetch(); },
+    onSuccess: () => { toast.success('Usuario eliminado'); refetch(); },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
 
@@ -66,35 +57,6 @@ export default function HouseMembersPage() {
     },
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al crear el usuario'); },
   });
-
-  const handleSearchUser = async () => {
-    if (!userEmail.trim()) {
-      toast.error('Ingresa un email');
-      return;
-    }
-    const foundUser = allUsers.find((u: any) => u.email.toLowerCase() === userEmail.toLowerCase());
-    if (foundUser) {
-      setSelectedMember(foundUser);
-      setShowAddModal(false);
-      setShowEditModal(true);
-      setUserEmail('');
-    } else {
-      toast.error('Usuario no encontrado');
-    }
-  };
-
-  const handleAddUserToHouse = async () => {
-    if (!selectedMember || !houseId) return;
-    try {
-      await houseInviteAPI.invite(houseId, selectedMember.email, 'user');
-      toast.success(`${selectedMember.name} agregado a la casa`);
-      setShowEditModal(false);
-      setSelectedMember(null);
-      qc.invalidateQueries(['houseMembers', houseId]);
-    } catch (e: any) {
-      toast.error(e.response?.data?.message || 'Error al agregar usuario');
-    }
-  };
 
   const handleRemoveUser = (member: Member) => {
     if (confirm(`¿Eliminar a ${member.name} de la casa?`)) {
@@ -140,15 +102,9 @@ export default function HouseMembersPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <Plus size={18} /> Crear usuario
-            </button>
-            <button
-              onClick={() => setShowAddModal(true)}
               className="btn-primary flex items-center gap-2"
             >
-              <Plus size={18} /> Agregar usuario
+              <Plus size={18} /> Crear usuario
             </button>
           </div>
         }
@@ -159,7 +115,7 @@ export default function HouseMembersPage() {
           emoji="👥"
           title="Sin miembros en el hogar"
           description="Agregá usuarios para gestionar el acceso a la casa"
-          action={{ label: 'Agregar usuario', onClick: () => setShowAddModal(true) }}
+          action={{ label: 'Crear usuario', onClick: () => setShowCreateModal(true) }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -280,46 +236,6 @@ export default function HouseMembersPage() {
         </div>
       </Modal>
 
-      <Modal isOpen={showAddModal} onClose={() => { setShowAddModal(false); setUserEmail(''); }} title="Agregar usuario a la casa">
-        <div className="space-y-4">
-          <div>
-            <label className="label">Buscar por email</label>
-            <input
-              className="input"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              placeholder="usuario@email.com"
-              onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}
-            />
-          </div>
-          <button
-            onClick={handleSearchUser}
-            className="btn-primary w-full"
-          >
-            Buscar usuario
-          </button>
-        </div>
-      </Modal>
-
-      <Modal isOpen={showEditModal && !!selectedMember} onClose={() => { setShowEditModal(false); setSelectedMember(null); }} title="Agregar a la casa">
-        {selectedMember && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-surface-container-low rounded-lg">
-              <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-bold">
-                {(selectedMember.name?.[0] || selectedMember.email?.[0] || '?').toUpperCase()}
-              </div>
-              <div>
-                <p className="font-medium text-on-surface">{selectedMember.name}</p>
-                <p className="font-body-default text-on-surface-variant">{selectedMember.email}</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setShowEditModal(false)} className="btn-secondary flex-1">Cancelar</button>
-              <button onClick={handleAddUserToHouse} className="btn-primary flex-1">Agregar</button>
-            </div>
-          </div>
-        )}
-      </Modal>
     </Layout>
   );
 }
