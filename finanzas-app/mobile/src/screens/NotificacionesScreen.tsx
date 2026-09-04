@@ -16,6 +16,7 @@ import { notificationsService } from '../services/notifications.service';
 import { AppNotification } from '../types';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import { useManualRefresh } from '../hooks/useManualRefresh';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('es-CU', {
@@ -62,7 +63,6 @@ export default function NotificacionesScreen() {
   const {
     data: notifications = [],
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ['notifications'],
@@ -85,7 +85,7 @@ export default function NotificacionesScreen() {
     onSuccess: invalidate,
   });
 
-  const onRefresh = useCallback(() => { refetch(); }, [refetch]);
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   if (isLoading) return <LoadingSpinner message="Cargando notificaciones..." />;
 
@@ -103,7 +103,7 @@ export default function NotificacionesScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}

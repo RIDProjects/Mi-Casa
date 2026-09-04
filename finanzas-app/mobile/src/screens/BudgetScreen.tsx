@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { BudgetCategory, Periodicity } from '../types';
 import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import { useManualRefresh } from '../hooks/useManualRefresh';
 
 const fmt = formatMoney;
 
@@ -89,7 +90,6 @@ export default function BudgetScreen() {
   const {
     data: budget,
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ['budget'],
@@ -98,7 +98,7 @@ export default function BudgetScreen() {
     retry: 1,
   });
 
-  const onRefresh = useCallback(() => { refetch(); }, [refetch]);
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   if (isLoading) return <LoadingSpinner message="Cargando presupuesto..." />;
 
@@ -131,7 +131,7 @@ export default function BudgetScreen() {
         contentContainerStyle={styles.scroll}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}

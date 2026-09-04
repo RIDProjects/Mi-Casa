@@ -17,6 +17,7 @@ import { HouseholdResumenCategoria } from '../../types';
 import { formatMoney } from '../../utils/currency';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -163,13 +164,13 @@ export default function ExpenseRegistryScreen() {
   const {
     data,
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: qKey,
     queryFn: () => householdExpensesService.getMonth(monthStr),
     staleTime: 0,
   });
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   const comprasMercado = data?.comprasMercado ?? [];
   const salidas = data?.salidas ?? [];
@@ -320,8 +321,8 @@ export default function ExpenseRegistryScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}
           />

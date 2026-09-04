@@ -22,6 +22,7 @@ import DebtCard from '../../components/debts/DebtCard';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
 import { DebtsStackParamList } from '../../navigation/types';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 
 type Nav = NativeStackNavigationProp<DebtsStackParamList>;
 
@@ -42,13 +43,13 @@ export default function DebtsSummaryScreen() {
   const {
     data: debts = [],
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ['debts'],
     queryFn: debtsService.getAll,
     staleTime: 0,
   });
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   const {
     data: summary,
@@ -219,8 +220,8 @@ export default function DebtsSummaryScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}
           />

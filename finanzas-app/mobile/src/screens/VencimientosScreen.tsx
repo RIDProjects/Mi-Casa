@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -10,6 +10,7 @@ import { UpcomingBill } from '../types';
 import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import { useManualRefresh } from '../hooks/useManualRefresh';
 
 const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   credit_card: 'card-outline',
@@ -55,7 +56,6 @@ export default function VencimientosScreen() {
   const {
     data: bills = [],
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ['upcoming-bills'],
@@ -64,7 +64,7 @@ export default function VencimientosScreen() {
     retry: 1,
   });
 
-  const onRefresh = useCallback(() => { refetch(); }, [refetch]);
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   if (isLoading) return <LoadingSpinner message="Cargando vencimientos..." />;
 
@@ -78,7 +78,7 @@ export default function VencimientosScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}

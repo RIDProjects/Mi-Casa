@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { SavingsGoal } from '../types';
 import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
+import { useManualRefresh } from '../hooks/useManualRefresh';
 
 const fmt = formatMoney;
 
@@ -93,7 +94,6 @@ export default function MetasScreen() {
   const {
     data: goals = [],
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ['savings-goals'],
@@ -102,7 +102,7 @@ export default function MetasScreen() {
     retry: 1,
   });
 
-  const onRefresh = useCallback(() => { refetch(); }, [refetch]);
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   if (isLoading) return <LoadingSpinner message="Cargando metas..." />;
 
@@ -120,7 +120,7 @@ export default function MetasScreen() {
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}

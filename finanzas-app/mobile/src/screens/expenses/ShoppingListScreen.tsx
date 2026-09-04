@@ -22,6 +22,7 @@ import { purchasesService } from '../../services/purchases.service';
 import { PurchaseItem, CreatePurchaseItemDto } from '../../types';
 import { formatMoney } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
+import { useManualRefresh } from '../../hooks/useManualRefresh';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
 
@@ -42,13 +43,13 @@ export default function ShoppingListScreen() {
   const {
     data: lists = [],
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: listsQKey,
     queryFn: () => purchasesService.getLists(),
     staleTime: 0,
   });
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   const selectedList = useMemo(
     () => lists.find((l) => l.name === monthStr) ?? null,
@@ -178,8 +179,8 @@ export default function ShoppingListScreen() {
           keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
               tintColor={Colors.blue}
               colors={[Colors.blue]}
             />

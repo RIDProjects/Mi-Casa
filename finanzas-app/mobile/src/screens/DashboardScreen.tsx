@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { summaryService } from '../services/summary.service';
 import { notificationsService } from '../services/notifications.service';
 import { creditCardsService } from '../services/creditCards.service';
 import { cuotasService } from '../services/cuotas.service';
+import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useAuth } from '../context/AuthContext';
 import { StatCard } from '../components/common/StatCard';
 import { RootStackParamList } from '../navigation/types';
@@ -82,7 +83,6 @@ export default function DashboardScreen() {
   const {
     data: summary,
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: ['summary'],
@@ -112,7 +112,7 @@ export default function DashboardScreen() {
     retry: 1,
   });
 
-  const onRefresh = useCallback(() => { refetch(); }, [refetch]);
+  const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   const totalIngresos = summary?.totalIngresos ?? 0;
   const totalGastos = summary?.totalGastos ?? 0;
@@ -130,7 +130,7 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.scroll}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={Colors.blue}
             colors={[Colors.blue]}
