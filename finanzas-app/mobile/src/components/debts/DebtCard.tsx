@@ -125,6 +125,16 @@ export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) 
             </Text>
           ) : null}
         </View>
+        <TouchableOpacity
+          style={styles.paidIconBtn}
+          onPress={(e) => {
+            e.stopPropagation();
+            handleMarkPaid();
+          }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="checkmark-circle-outline" size={22} color={Colors.green} />
+        </TouchableOpacity>
         <Ionicons
           name="create-outline"
           size={16}
@@ -180,6 +190,9 @@ const styles = StyleSheet.create({
   note: {
     color: Colors.textSecondary,
     fontSize: 12,
+  },
+  paidIconBtn: {
+    paddingHorizontal: 6,
   },
   swipeHint: {
     paddingRight: 10,
