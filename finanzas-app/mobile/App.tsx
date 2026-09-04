@@ -1,8 +1,8 @@
 import 'react-native-gesture-handler';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { StyleSheet, AppState, AppStateStatus, Platform } from 'react-native';
+import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 0,
       retry: 2,
-      refetchOnWindowFocus: false, // no aplica en mobile, pero evita advertencias
+      refetchOnWindowFocus: true,
     },
     mutations: {
       retry: 0,
@@ -27,7 +27,21 @@ const queryClient = new QueryClient({
   },
 });
 
+// React Query no escucha AppState por su cuenta en React Native — sin esto,
+// volver del background nunca revalida queries aunque refetchOnWindowFocus
+// esté en true, y el usuario tiene que refrescar a mano para ver datos nuevos.
+function onAppStateChange(status: AppStateStatus) {
+  if (Platform.OS !== 'web') {
+    focusManager.setFocused(status === 'active');
+  }
+}
+
 export default function App() {
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', onAppStateChange);
+    return () => subscription.remove();
+  }, []);
+
   return (
     <ErrorBoundary>
       <GestureHandlerRootView style={styles.flex}>
