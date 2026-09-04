@@ -27,6 +27,7 @@ export default function HouseMembersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const emptyCreateForm = { name: '', email: '', password: '', role: 'user' };
   const [createForm, setCreateForm] = useState(emptyCreateForm);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
 
   const { data: members = [], isLoading, refetch } = useQuery(['houseMembers', houseId], () =>
     houseId ? housesAPI.getMembers(houseId).then(r => r.data) : []
@@ -42,7 +43,7 @@ export default function HouseMembersPage() {
   const removeMut = useMutation((userId: string) =>
     houseId ? housesAPI.removeUserFromHouse(houseId, userId) : Promise.reject('No house')
   , {
-    onSuccess: () => { toast.success('Usuario eliminado'); refetch(); },
+    onSuccess: () => { toast.success('Usuario eliminado'); setMemberToDelete(null); refetch(); },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
 
@@ -59,9 +60,7 @@ export default function HouseMembersPage() {
   });
 
   const handleRemoveUser = (member: Member) => {
-    if (confirm(`¿Eliminar a ${member.name} de la casa?`)) {
-      removeMut.mutate(member.id);
-    }
+    setMemberToDelete(member);
   };
 
   const handleToggleActive = (member: Member) => {
@@ -234,6 +233,26 @@ export default function HouseMembersPage() {
             </button>
           </div>
         </div>
+      </Modal>
+
+      <Modal isOpen={!!memberToDelete} onClose={() => setMemberToDelete(null)} title="Eliminar del hogar">
+        {memberToDelete && (
+          <div className="space-y-4">
+            <p className="text-on-surface">
+              ¿Eliminar a <strong>{memberToDelete.name}</strong> de la casa?
+            </p>
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setMemberToDelete(null)} className="btn-secondary flex-1">Cancelar</button>
+              <button
+                onClick={() => removeMut.mutate(memberToDelete.id)}
+                disabled={removeMut.isLoading}
+                className="flex-1 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+              >
+                {removeMut.isLoading ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
 
     </Layout>
