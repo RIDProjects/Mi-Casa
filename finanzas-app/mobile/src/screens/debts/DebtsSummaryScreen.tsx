@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SectionList,
   SectionListData,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -68,11 +69,13 @@ export default function DebtsSummaryScreen() {
   const markPaidMut = useMutation({
     mutationFn: (id: string) => debtsService.markAsPaid(id),
     onSuccess: invalidate,
+    onError: () => Alert.alert('Error', 'No se pudo marcar la deuda como pagada'),
   });
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => debtsService.delete(id),
     onSuccess: invalidate,
+    onError: () => Alert.alert('Error', 'No se pudo eliminar la deuda'),
   });
 
   if (isLoading || loadingSummary) {

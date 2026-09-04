@@ -6,6 +6,7 @@ import {
   FlatList,
   RefreshControl,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -78,11 +79,13 @@ export default function NotificacionesScreen() {
   const markReadMut = useMutation({
     mutationFn: (id: string) => notificationsService.markRead(id),
     onSuccess: invalidate,
+    onError: () => Alert.alert('Error', 'No se pudo marcar como leída'),
   });
 
   const markAllReadMut = useMutation({
     mutationFn: () => notificationsService.markAllRead(),
     onSuccess: invalidate,
+    onError: () => Alert.alert('Error', 'No se pudieron marcar todas como leídas'),
   });
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);

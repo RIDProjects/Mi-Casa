@@ -57,7 +57,9 @@ export default function ShoppingListScreen() {
   );
   const items: PurchaseItem[] = selectedList?.items ?? [];
 
-  // Estado del formulario de entrada rápida
+  // Estado del formulario de entrada rápida — se reusa tanto para agregar
+  // como para editar (editingItemId != null cambia el modo del formulario).
+  const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
   const [inputProducto, setInputProducto] = React.useState('');
   const [inputCantidad, setInputCantidad] = React.useState('1');
   const [inputPrecio, setInputPrecio] = React.useState('');
@@ -100,6 +102,39 @@ export default function ShoppingListScreen() {
     },
   });
 
+  const updateItemMut = useMutation({
+    mutationFn: (vars: { id: string; dto: Partial<CreatePurchaseItemDto> }) =>
+      purchasesService.updateItem(vars.id, vars.dto),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: listsQKey });
+      setEditingItemId(null);
+      setInputProducto('');
+      setInputCantidad('1');
+      setInputPrecio('');
+      setInputTienda('');
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Error al guardar los cambios';
+      Alert.alert('Error', Array.isArray(msg) ? msg.join(', ') : msg);
+    },
+  });
+
+  const handleStartEdit = (item: PurchaseItem) => {
+    setEditingItemId(item.id);
+    setInputProducto(item.name);
+    setInputCantidad(String(item.quantity));
+    setInputPrecio(String(item.unitPrice));
+    setInputTienda(item.lugar ?? '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setInputProducto('');
+    setInputCantidad('1');
+    setInputPrecio('');
+    setInputTienda('');
+  };
+
   const handleAddItem = () => {
     const producto = inputProducto.trim();
     if (!producto) {
@@ -112,6 +147,19 @@ export default function ShoppingListScreen() {
       return;
     }
     const cantidad = parseInt(inputCantidad, 10) || 1;
+
+    if (editingItemId) {
+      updateItemMut.mutate({
+        id: editingItemId,
+        dto: {
+          name: producto,
+          quantity: cantidad,
+          unitPrice: precio,
+          lugar: inputTienda.trim() || undefined,
+        },
+      });
+      return;
+    }
 
     addItemMut.mutate({
       name: producto,
@@ -208,7 +256,12 @@ export default function ShoppingListScreen() {
                     <Text style={styles.storeTotal}>{fmt(storeTot)}</Text>
                   </View>
                   {storeItems.map((item) => (
-                    <View key={item.id} style={styles.itemRow}>
+                    <TouchableOpacity
+                      key={item.id}
+                      style={[styles.itemRow, editingItemId === item.id && styles.itemRowEditing]}
+                      activeOpacity={0.7}
+                      onPress={() => handleStartEdit(item)}
+                    >
                       <View style={styles.itemInfo}>
                         <Text style={styles.itemName}>{item.name}</Text>
                         <Text style={styles.itemDetail}>
@@ -225,7 +278,7 @@ export default function ShoppingListScreen() {
                       >
                         <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
                       </TouchableOpacity>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </View>
               );
@@ -233,8 +286,16 @@ export default function ShoppingListScreen() {
           )}
         </ScrollView>
 
-        {/* Barra de entrada rápida */}
+        {/* Barra de entrada rápida — cambia a modo edición al tocar un ítem */}
         <View style={styles.inputBar}>
+          {editingItemId && (
+            <View style={styles.editingBanner}>
+              <Text style={styles.editingBannerText}>Editando producto</Text>
+              <TouchableOpacity onPress={handleCancelEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                <Ionicons name="close" size={16} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+          )}
           <View style={styles.inputBarTop}>
             <TextInput
               style={[styles.quickInput, { flex: 2 }]}
@@ -278,17 +339,17 @@ export default function ShoppingListScreen() {
               onSubmitEditing={handleAddItem}
             />
             <TouchableOpacity
-              style={[styles.addItemBtn, addItemMut.isPending && { opacity: 0.6 }]}
+              style={[styles.addItemBtn, (addItemMut.isPending || updateItemMut.isPending) && { opacity: 0.6 }]}
               onPress={handleAddItem}
               activeOpacity={0.8}
-              disabled={addItemMut.isPending}
+              disabled={addItemMut.isPending || updateItemMut.isPending}
             >
-              {addItemMut.isPending ? (
+              {(addItemMut.isPending || updateItemMut.isPending) ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
                 <>
-                  <Ionicons name="add" size={22} color={Colors.white} />
-                  <Text style={styles.addItemText}>Agregar</Text>
+                  <Ionicons name={editingItemId ? 'checkmark' : 'add'} size={22} color={Colors.white} />
+                  <Text style={styles.addItemText}>{editingItemId ? 'Guardar' : 'Agregar'}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -407,6 +468,23 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border + '80',
     gap: 8,
+  },
+  itemRowEditing: {
+    backgroundColor: Colors.blueBg,
+  },
+  editingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.blueBg,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  editingBannerText: {
+    color: Colors.blue,
+    fontSize: 12,
+    fontWeight: '700',
   },
   itemInfo: {
     flex: 1,

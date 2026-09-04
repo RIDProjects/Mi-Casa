@@ -22,6 +22,7 @@ export type MainTabParamList = {
 export type GastosStackParamList = {
   ShoppingList: undefined;
   ExpenseRegistry: undefined;
+  AddHouseholdExpense: { expenseId?: string } | undefined;
 };
 
 // Stack anidado dentro del tab de Deudas

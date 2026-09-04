@@ -4,6 +4,7 @@ import { GastosStackParamList } from './types';
 import { Colors } from '../theme/colors';
 import ShoppingListScreen from '../screens/expenses/ShoppingListScreen';
 import ExpenseRegistryScreen from '../screens/expenses/ExpenseRegistryScreen';
+import AddHouseholdExpenseScreen from '../screens/expenses/AddHouseholdExpenseScreen';
 
 const Stack = createNativeStackNavigator<GastosStackParamList>();
 
@@ -26,6 +27,14 @@ export default function GastosStack() {
         name="ExpenseRegistry"
         component={ExpenseRegistryScreen}
         options={{ title: 'Gastos del Mes' }}
+      />
+      <Stack.Screen
+        name="AddHouseholdExpense"
+        component={AddHouseholdExpenseScreen}
+        options={({ route }) => ({
+          presentation: 'modal',
+          title: route.params?.expenseId ? 'Editar Gasto' : 'Registrar Gasto',
+        })}
       />
     </Stack.Navigator>
   );

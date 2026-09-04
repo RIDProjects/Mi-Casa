@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { householdExpensesService } from '../../services/household-expenses.service';
@@ -18,6 +20,9 @@ import { formatMoney } from '../../utils/currency';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
+import { GastosStackParamList } from '../../navigation/types';
+
+type Nav = NativeStackNavigationProp<GastosStackParamList>;
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -89,9 +94,11 @@ const catStyles = StyleSheet.create({
 function ExpenseRowItem({
   item,
   onDelete,
+  onEdit,
 }: {
   item: ExpenseRow;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }) {
   const catColor = Colors.categories[item.categoria] ?? Colors.textSecondary;
 
@@ -104,7 +111,12 @@ function ExpenseRowItem({
   };
 
   return (
-    <View style={txStyles.card}>
+    <TouchableOpacity
+      style={txStyles.card}
+      activeOpacity={item.deletable ? 0.7 : 1}
+      disabled={!item.deletable}
+      onPress={() => item.id && onEdit(item.id)}
+    >
       <View style={[txStyles.catIndicator, { backgroundColor: catColor }]} />
       <View style={txStyles.content}>
         <View style={txStyles.topRow}>
@@ -124,7 +136,7 @@ function ExpenseRowItem({
           <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -153,6 +165,7 @@ const txStyles = StyleSheet.create({
 });
 
 export default function ExpenseRegistryScreen() {
+  const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -308,6 +321,7 @@ export default function ExpenseRegistryScreen() {
           <ExpenseRowItem
             item={item}
             onDelete={(id) => deleteMut.mutate(id)}
+            onEdit={(id) => navigation.navigate('AddHouseholdExpense', { expenseId: id })}
           />
         )}
         ListHeaderComponent={ListHeader}
@@ -328,6 +342,13 @@ export default function ExpenseRegistryScreen() {
           />
         }
       />
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('AddHouseholdExpense', undefined)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="add" size={28} color={Colors.white} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -409,5 +430,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     marginBottom: 10,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    backgroundColor: Colors.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: Colors.blue,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
 });
