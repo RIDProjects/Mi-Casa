@@ -1,40 +1,28 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 @Injectable()
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
+  private fromAddress: string;
   private isConfigured: boolean = false;
 
   constructor() {
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const smtpPort = parseInt(process.env.SMTP_PORT || '587');
-    const smtpSecure = process.env.SMTP_SECURE === 'true';
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASS;
+    // Railway (y muchos hostings) bloquean SMTP saliente (puertos 587/465) —
+    // por eso usamos la API HTTP de Resend en vez de nodemailer.
+    const apiKey = process.env.RESEND_API_KEY;
 
-    // Check if credentials are configured
-    if (!smtpUser || !smtpPass) {
-      this.logger.warn('⚠️ SMTP credentials not configured. Email notifications will be skipped.');
-      this.logger.warn('Please set SMTP_USER and SMTP_PASS environment variables.');
+    if (!apiKey) {
+      this.logger.warn('⚠️ RESEND_API_KEY not configured. Email notifications will be skipped.');
       this.isConfigured = false;
       return;
     }
 
-    // Create transporter with environment variables
-    this.transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: smtpSecure,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    });
-
+    this.resend = new Resend(apiKey);
+    this.fromAddress = process.env.RESEND_FROM || 'Mi Casa Pro <onboarding@resend.dev>';
     this.isConfigured = true;
-    this.logger.log(`📧 Email service initialized with SMTP host: ${smtpHost}:${smtpPort}`);
+    this.logger.log('📧 Email service initialized with Resend');
   }
 
   /**
@@ -42,17 +30,18 @@ export class NotificationsService {
    */
   async sendBudgetAlert(to: string, title: string, message: string): Promise<void> {
     if (!this.isConfigured) {
-      this.logger.warn(`Budget alert skipped (SMTP not configured): ${title}`);
+      this.logger.warn(`Budget alert skipped (Resend not configured): ${title}`);
       return;
     }
     try {
-      await this.transporter.sendMail({
-        from: `"Mi Casa Pro" <${process.env.SMTP_USER || 'noreply@micasa.pro'}>`,
+      const { error } = await this.resend.emails.send({
+        from: this.fromAddress,
         to,
         subject: `⚠️ ${title}`,
         text: message,
         html: `<p>${message}</p>`,
       });
+      if (error) throw new Error(error.message);
       this.logger.log(`Budget alert sent to ${to}: ${title}`);
     } catch (err) {
       this.logger.error(`Failed to send budget alert "${title}": ${err.message}`);
@@ -66,12 +55,12 @@ export class NotificationsService {
     acceptUrl: string,
   ): Promise<void> {
     if (!this.isConfigured) {
-      this.logger.warn(`House invitation email skipped (SMTP not configured). Accept URL: ${acceptUrl}`);
+      this.logger.warn(`House invitation email skipped (Resend not configured). Accept URL: ${acceptUrl}`);
       return;
     }
     try {
-      await this.transporter.sendMail({
-        from: `"Mi Casa Pro" <${process.env.SMTP_USER}>`,
+      const { error } = await this.resend.emails.send({
+        from: this.fromAddress,
         to,
         subject: `🏠 ${inviterName} te invitó a "${houseName}" — Mi Casa Pro`,
         html: `
@@ -100,6 +89,7 @@ export class NotificationsService {
           </div>
         `,
       });
+      if (error) throw new Error(error.message);
       this.logger.log(`House invitation sent to ${to} for house "${houseName}"`);
     } catch (err) {
       this.logger.error(`Failed to send house invitation to ${to}: ${err.message}`);
@@ -108,12 +98,12 @@ export class NotificationsService {
 
   async sendPasswordReset(to: string, name: string, resetUrl: string): Promise<void> {
     if (!this.isConfigured) {
-      this.logger.warn(`Password reset email skipped (SMTP not configured). Token URL: ${resetUrl}`);
+      this.logger.warn(`Password reset email skipped (Resend not configured). Token URL: ${resetUrl}`);
       return;
     }
     try {
-      await this.transporter.sendMail({
-        from: `"Mi Casa Pro" <${process.env.SMTP_USER}>`,
+      const { error } = await this.resend.emails.send({
+        from: this.fromAddress,
         to,
         subject: '🔑 Recuperación de contraseña — Mi Casa Pro',
         html: `
@@ -142,10 +132,10 @@ export class NotificationsService {
           </div>
         `,
       });
+      if (error) throw new Error(error.message);
       this.logger.log(`Password reset email sent to ${to}`);
     } catch (err) {
       this.logger.error(`Failed to send password reset email to ${to}: ${err.message}`);
     }
   }
-
 }
