@@ -109,7 +109,24 @@ export class HousesService {
     return this.houseRepo.save(house);
   }
 
-  async toggleUserActive(houseId: string, userId: string) {
+  // Global admin, o house_admin de esa casa puntual, puede gestionar sus propios miembros.
+  private async assertCanManageHouse(houseId: string, requestingUserId: string): Promise<void> {
+    const requester = await this.userRepo.findOne({
+      where: { id: requestingUserId },
+      relations: ['roles', 'houses'],
+    });
+    const isGlobalAdmin = requester?.roles?.some((r) => r.name === 'admin');
+    const isHouseAdminHere =
+      requester?.roles?.some((r) => r.name === 'house_admin') &&
+      requester?.houses?.some((h) => h.id === houseId);
+    if (!isGlobalAdmin && !isHouseAdminHere) {
+      throw new ForbiddenException('No tenés permiso para gestionar los miembros de esta casa');
+    }
+  }
+
+  async toggleUserActive(houseId: string, userId: string, requestingUserId: string) {
+    await this.assertCanManageHouse(houseId, requestingUserId);
+
     const house = await this.houseRepo.findOne({ where: { id: houseId }, relations: ['members'] });
     if (!house) throw new NotFoundException('Casa no encontrada');
 
@@ -123,7 +140,9 @@ export class HousesService {
     return this.userRepo.save(user);
   }
 
-  async removeUserFromHouse(houseId: string, userId: string) {
+  async removeUserFromHouse(houseId: string, userId: string, requestingUserId: string) {
+    await this.assertCanManageHouse(houseId, requestingUserId);
+
     const house = await this.houseRepo.findOne({ where: { id: houseId }, relations: ['members'] });
     if (!house) throw new NotFoundException('Casa no encontrada');
 
@@ -216,17 +235,7 @@ export class HousesService {
     const house = await this.houseRepo.findOne({ where: { id: houseId } });
     if (!house) throw new NotFoundException('Casa no encontrada');
 
-    const requester = await this.userRepo.findOne({
-      where: { id: requestingUserId },
-      relations: ['roles', 'houses'],
-    });
-    const isGlobalAdmin = requester?.roles?.some((r) => r.name === 'admin');
-    const isHouseAdminHere =
-      requester?.roles?.some((r) => r.name === 'house_admin') &&
-      requester?.houses?.some((h) => h.id === houseId);
-    if (!isGlobalAdmin && !isHouseAdminHere) {
-      throw new ForbiddenException('Solo el administrador de la casa puede crear usuarios');
-    }
+    await this.assertCanManageHouse(houseId, requestingUserId);
 
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
     if (existing) throw new ConflictException('El email ya está registrado');
