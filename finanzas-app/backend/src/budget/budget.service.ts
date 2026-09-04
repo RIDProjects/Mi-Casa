@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -89,6 +89,8 @@ const DEFAULT_CATEGORIES = [
 
 @Injectable()
 export class BudgetService {
+  private readonly logger = new Logger(BudgetService.name);
+
   constructor(
     @InjectRepository(Budget)
     private budgetRepo: Repository<Budget>,
@@ -206,7 +208,10 @@ export class BudgetService {
         });
       }
     } catch (e) {
-      // swallow — never fail the main request due to notification errors
+      // No relanzar — nunca debe fallar la request principal por un error de
+      // notificación, pero antes ni siquiera se logueaba, así que un fallo
+      // silencioso de email/in-app quedaba completamente invisible.
+      this.logger.error(`Failed to send budget alerts for house ${houseId}: ${e.message}`);
     }
   }
 

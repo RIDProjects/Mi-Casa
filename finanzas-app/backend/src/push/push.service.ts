@@ -24,8 +24,17 @@ export class PushService {
   }
 
   async subscribe(houseId: string, subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) {
-    const existing = await this.repo.findOne({ where: { endpoint: subscription.endpoint } });
-    if (existing) return existing;
+    const existing = await this.repo.findOne({ where: { endpoint: subscription.endpoint }, relations: ['house'] });
+    if (existing) {
+      // Un mismo endpoint (dispositivo/navegador) puede volver a suscribirse
+      // desde otra casa (cambio de casa, dispositivo compartido) — sin esto
+      // quedaba pegado a la casa vieja para siempre.
+      if (existing.house?.id !== houseId) {
+        existing.house = { id: houseId } as any;
+        await this.repo.save(existing);
+      }
+      return existing;
+    }
     const sub = this.repo.create({
       endpoint: subscription.endpoint,
       keys: subscription.keys,

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Asset, AssetType } from '../database/entities/asset.entity';
@@ -13,6 +13,8 @@ interface AssetFrontendDto {
 
 @Injectable()
 export class NetWorthService {
+  private readonly logger = new Logger(NetWorthService.name);
+
   constructor(
     @InjectRepository(Asset) private repo: Repository<Asset>,
     @InjectRepository(NetWorthSnapshot) private snapshotRepo: Repository<NetWorthSnapshot>,
@@ -104,7 +106,9 @@ export class NetWorthService {
     const totalAssets = physical + cash;
     const totalDebts  = totalCardBalances + totalLoanDebt;
 
-    this.saveSnapshot(houseId, totalAssets, totalDebts).catch(() => undefined);
+    this.saveSnapshot(houseId, totalAssets, totalDebts).catch((err) =>
+      this.logger.error(`Failed to save net-worth snapshot for house ${houseId}: ${err.message}`),
+    );
 
     return {
       physicalAssets: Math.round(physical * 100) / 100,
