@@ -14,12 +14,18 @@ initSentry();
 // QueryClient con configuración sensata para mobile:
 // - staleTime 0 para siempre refetch al volver a una pantalla
 // - retry 2 para no bloquear al usuario en caso de error de red
+// - refetchInterval 10s: la web y mobile no comparten ningún mecanismo de
+//   tiempo real, así que sin polling un cambio hecho en la web nunca
+//   aparece en mobile hasta que el usuario haga algo (background/foreground,
+//   pull-to-refresh). El polling pausa solo cuando la app está en background
+//   (comportamiento default de React Query) y retoma al volver.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
       retry: 2,
       refetchOnWindowFocus: true,
+      refetchInterval: 10000,
     },
     mutations: {
       retry: 0,
