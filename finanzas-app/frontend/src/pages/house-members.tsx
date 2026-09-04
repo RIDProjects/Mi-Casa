@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { housesAPI, houseInviteAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import toast from 'react-hot-toast';
-import { Users, Plus, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { Users, Plus, UserCheck, UserX, Loader2, ShieldAlert } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
@@ -23,6 +23,7 @@ export default function HouseMembersPage() {
   const { user } = useAuthStore();
   const houseId = user?.house?.id;
   const houseName = user?.house?.name;
+  const canManage = user?.roles?.some(r => ['admin', 'house_admin'].includes(r.name)) ?? false;
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const emptyCreateForm = { name: '', email: '', password: '', role: 'user' };
@@ -98,23 +99,32 @@ export default function HouseMembersPage() {
         title={<><Users size={22} /> Miembros de Casa</>}
         subtitle={`Gestiona los usuarios de: ${houseName}`}
         action={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Plus size={18} /> Crear usuario
-            </button>
-          </div>
+          canManage ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Plus size={18} /> Crear usuario
+              </button>
+            </div>
+          ) : undefined
         }
       />
+
+      {!canManage && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          <ShieldAlert size={16} className="shrink-0" />
+          Solo el administrador de la casa puede crear, activar/desactivar o eliminar miembros. Podés ver la lista, pero no gestionarla.
+        </div>
+      )}
 
       {members.length === 0 ? (
         <EmptyState
           emoji="👥"
           title="Sin miembros en el hogar"
           description="Agregá usuarios para gestionar el acceso a la casa"
-          action={{ label: 'Crear usuario', onClick: () => setShowCreateModal(true) }}
+          action={canManage ? { label: 'Crear usuario', onClick: () => setShowCreateModal(true) } : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -146,7 +156,7 @@ export default function HouseMembersPage() {
                   </div>
                 </div>
 
-                {!isAdmin && (
+                {!isAdmin && canManage && (
                   <div className="flex gap-2 mt-3 pt-3 border-t border-outline-variant">
                     <button
                       onClick={() => handleToggleActive(member)}
