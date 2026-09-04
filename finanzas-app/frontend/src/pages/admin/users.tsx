@@ -98,9 +98,11 @@ export default function UsersPage() {
   });
   const deleteMut = useMutation((id: string) => usersAPI.delete(id), {
     onSuccess: () => { qc.invalidateQueries('users'); toast.success('Eliminado'); setDeleteId(null); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al eliminar'); },
   });
   const toggleMut = useMutation((user: any) => usersAPI.update(user.id, { isActive: !user.isActive }), {
     onSuccess: (_, user) => { qc.invalidateQueries('users'); toast.success(user.isActive ? 'Usuario desactivado' : 'Usuario activado'); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al cambiar el estado'); },
   });
   const planMut = useMutation(({ id, plan }: { id: string; plan: string }) => usersAPI.update(id, { plan }), {
     onSuccess: () => { qc.invalidateQueries('users'); qc.invalidateQueries('adminStats'); toast.success('Plan actualizado'); setPlanTarget(null); },

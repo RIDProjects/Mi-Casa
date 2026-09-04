@@ -21,6 +21,7 @@ export default function AdminHouses() {
   const [selectedHouse, setSelectedHouse] = useState<any>(null);
   const [editNameModal, setEditNameModal] = useState(false);
   const [houseName, setHouseName] = useState('');
+  const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
 
   const { data: houses = [], isLoading } = useQuery('adminHouses', () => housesAPI.getAll().then(r => r.data));
 
@@ -53,6 +54,7 @@ export default function AdminHouses() {
       toast.success('Usuario eliminado de la casa');
       qc.invalidateQueries('adminHouses');
       setShowMembersModal(false);
+      setMemberToRemove(null);
     },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error al eliminar'); },
   });
@@ -80,10 +82,8 @@ export default function AdminHouses() {
     toggleUserMut.mutate({ userId });
   };
 
-  const handleRemoveUser = (userId: string, userName: string) => {
-    if (confirm(`¿Eliminar a ${userName} de esta casa?`)) {
-      removeUserMut.mutate({ userId });
-    }
+  const handleRemoveUser = (member: Member) => {
+    setMemberToRemove(member);
   };
 
   if (isLoading) {
@@ -203,7 +203,7 @@ export default function AdminHouses() {
                           {member.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
                         </button>
                         <button
-                          onClick={() => handleRemoveUser(member.id, member.name)}
+                          onClick={() => handleRemoveUser(member)}
                           disabled={removeUserMut.isLoading}
                           className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Eliminar de la casa"
@@ -261,6 +261,38 @@ export default function AdminHouses() {
                 >
                   {updateHouseMut.isLoading && <Loader2 size={16} className="animate-spin" />}
                   Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Remove Member Modal */}
+      {memberToRemove && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-lowest rounded-2xl w-full max-w-sm">
+            <div className="flex items-center justify-between p-6 border-b border-outline-variant">
+              <h3 className="text-lg font-semibold text-on-surface">Eliminar del hogar</h3>
+              <button onClick={() => setMemberToRemove(null)} className="p-2 hover:bg-surface-variant rounded-lg">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-on-surface">
+                ¿Eliminar a <strong>{memberToRemove.name}</strong> de esta casa?
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setMemberToRemove(null)} className="flex-1 btn-secondary">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => removeUserMut.mutate({ userId: memberToRemove.id })}
+                  disabled={removeUserMut.isLoading}
+                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {removeUserMut.isLoading && <Loader2 size={16} className="animate-spin" />}
+                  Eliminar
                 </button>
               </div>
             </div>

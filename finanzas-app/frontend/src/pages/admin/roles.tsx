@@ -26,12 +26,15 @@ export default function RolesPage() {
 
   const createMut = useMutation((d: any) => rolesAPI.create(d), {
     onSuccess: () => { qc.invalidateQueries('roles'); toast.success('Rol creado'); setShowModal(false); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al crear el rol'); },
   });
   const updateMut = useMutation((d: any) => rolesAPI.update(editRole?.id, d), {
     onSuccess: () => { qc.invalidateQueries('roles'); toast.success('Rol actualizado'); setEditRole(null); setShowModal(false); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al actualizar el rol'); },
   });
   const deleteMut = useMutation((id: string) => rolesAPI.delete(id), {
     onSuccess: () => { qc.invalidateQueries('roles'); toast.success('Rol eliminado'); setDeleteId(null); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al eliminar el rol'); },
   });
 
   const togglePerm = (permId: string) => {
