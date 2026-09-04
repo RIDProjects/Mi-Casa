@@ -28,10 +28,10 @@ export class NotificationsService {
   /**
    * Send a budget alert email (overBudget, antExpensesWarning, etc.)
    */
-  async sendBudgetAlert(to: string, title: string, message: string): Promise<void> {
+  async sendBudgetAlert(to: string, title: string, message: string): Promise<boolean> {
     if (!this.isConfigured) {
       this.logger.warn(`Budget alert skipped (Resend not configured): ${title}`);
-      return;
+      return false;
     }
     try {
       const { error } = await this.resend.emails.send({
@@ -43,8 +43,10 @@ export class NotificationsService {
       });
       if (error) throw new Error(error.message);
       this.logger.log(`Budget alert sent to ${to}: ${title}`);
+      return true;
     } catch (err) {
       this.logger.error(`Failed to send budget alert "${title}": ${err.message}`);
+      return false;
     }
   }
 
@@ -53,10 +55,10 @@ export class NotificationsService {
     houseName: string,
     inviterName: string,
     acceptUrl: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (!this.isConfigured) {
       this.logger.warn(`House invitation email skipped (Resend not configured). Accept URL: ${acceptUrl}`);
-      return;
+      return false;
     }
     try {
       const { error } = await this.resend.emails.send({
@@ -91,15 +93,17 @@ export class NotificationsService {
       });
       if (error) throw new Error(error.message);
       this.logger.log(`House invitation sent to ${to} for house "${houseName}"`);
+      return true;
     } catch (err) {
       this.logger.error(`Failed to send house invitation to ${to}: ${err.message}`);
+      return false;
     }
   }
 
-  async sendPasswordReset(to: string, name: string, resetUrl: string): Promise<void> {
+  async sendPasswordReset(to: string, name: string, resetUrl: string): Promise<boolean> {
     if (!this.isConfigured) {
       this.logger.warn(`Password reset email skipped (Resend not configured). Token URL: ${resetUrl}`);
-      return;
+      return false;
     }
     try {
       const { error } = await this.resend.emails.send({
@@ -134,8 +138,10 @@ export class NotificationsService {
       });
       if (error) throw new Error(error.message);
       this.logger.log(`Password reset email sent to ${to}`);
+      return true;
     } catch (err) {
       this.logger.error(`Failed to send password reset email to ${to}: ${err.message}`);
+      return false;
     }
   }
 }

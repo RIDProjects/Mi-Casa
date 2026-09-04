@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -12,6 +12,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class HousesService {
+  private readonly logger = new Logger(HousesService.name);
+
   constructor(
     @InjectRepository(House) private houseRepo: Repository<House>,
     @InjectRepository(User) private userRepo: Repository<User>,
@@ -206,12 +208,15 @@ export class HousesService {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const acceptUrl = `${frontendUrl}/register?invitationToken=${token}`;
-    await this.notificationsService.sendHouseInvitation(
+    const sent = await this.notificationsService.sendHouseInvitation(
       email,
       house.name,
       inviter?.name || 'Un miembro de la casa',
       acceptUrl,
     );
+    if (!sent) {
+      this.logger.warn(`House invitation email failed to send to ${email} for house ${houseId} — invitation record was still created`);
+    }
 
     return { status: 'invitation_sent', message: 'Invitación enviada por email' };
   }

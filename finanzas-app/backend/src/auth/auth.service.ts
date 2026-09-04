@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,6 +16,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Role) private roleRepo: Repository<Role>,
@@ -209,7 +211,10 @@ export class AuthService {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
 
-    await this.notificationsService.sendPasswordReset(user.email, user.name, resetUrl);
+    const sent = await this.notificationsService.sendPasswordReset(user.email, user.name, resetUrl);
+    if (!sent) {
+      this.logger.warn(`Password reset email failed to send for user ${user.id} — token was created but the user won't receive it`);
+    }
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {

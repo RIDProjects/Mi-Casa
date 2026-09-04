@@ -75,7 +75,7 @@ export class HousesController {
     // Only members of the house (or a global admin) can invite new members —
     // previously any authenticated user could add someone to any house by ID.
     await this.housesService.findOne(houseId, req.user.id);
-    return this.housesService.inviteUser(houseId, dto.email, dto.role || 'member', req.user.id);
+    return this.housesService.inviteUser(houseId, dto.email, dto.role || 'user', req.user.id);
   }
 
   @Post(':id/members')
