@@ -17,11 +17,12 @@ interface Props {
   debt: Debt;
   onMarkPaid: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
 }
 
 const fmt = formatMoney;
 
-export default function DebtCard({ debt, onMarkPaid, onDelete }: Props) {
+export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) {
   const swipeableRef = useRef<Swipeable>(null);
   const isTheyOweMe = debt.type === 'they_owe_me';
 
@@ -100,7 +101,11 @@ export default function DebtCard({ debt, onMarkPaid, onDelete }: Props) {
       rightThreshold={40}
       friction={2}
     >
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={0.7}
+        onPress={() => onEdit(debt.id)}
+      >
         <View style={[styles.indicator, { backgroundColor: isTheyOweMe ? Colors.blue : Colors.red }]} />
         <View style={styles.content}>
           <View style={styles.row}>
@@ -121,12 +126,12 @@ export default function DebtCard({ debt, onMarkPaid, onDelete }: Props) {
           ) : null}
         </View>
         <Ionicons
-          name="chevron-back-outline"
+          name="create-outline"
           size={16}
           color={Colors.textMuted}
           style={styles.swipeHint}
         />
-      </View>
+      </TouchableOpacity>
     </Swipeable>
   );
 }

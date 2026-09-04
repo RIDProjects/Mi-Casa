@@ -26,11 +26,11 @@ export default function DebtsStack() {
       <Stack.Screen
         name="AddDebt"
         component={AddDebtScreen}
-        options={{
+        options={({ route }) => ({
           presentation: 'modal',
           headerShown: true,
-          headerTitle: 'Registrar Deuda',
-        }}
+          headerTitle: route.params?.debtId ? 'Editar Deuda' : 'Registrar Deuda',
+        })}
       />
     </Stack.Navigator>
   );

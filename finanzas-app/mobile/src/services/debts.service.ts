@@ -17,6 +17,11 @@ export const debtsService = {
     return res.data;
   },
 
+  update: async (id: string, data: Partial<CreateDebtDto>): Promise<Debt> => {
+    const res = await apiClient.put<Debt>(`/debts/${id}`, data);
+    return res.data;
+  },
+
   markAsPaid: async (id: string): Promise<Debt> => {
     const res = await apiClient.put<Debt>(`/debts/${id}`, { isPaid: true });
     return res.data;

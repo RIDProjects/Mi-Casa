@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { debtsService } from '../../services/debts.service';
-import { CreateDebtDto, DebtType } from '../../types';
+import { CreateDebtDto, Debt, DebtType } from '../../types';
 import { DebtsStackParamList } from '../../navigation/types';
 
 type RouteT = RouteProp<DebtsStackParamList, 'AddDebt'>;
@@ -31,12 +31,18 @@ export default function AddDebtScreen() {
   const route = useRoute<RouteT>();
   const qc = useQueryClient();
 
+  const debtId = route.params?.debtId;
+  const isEditing = !!debtId;
+  const existingDebt = isEditing
+    ? qc.getQueryData<Debt[]>(['debts'])?.find((d) => d.id === debtId)
+    : undefined;
+
   const [debtType, setDebtType] = useState<DebtType>(
-    route.params?.debtType ?? 'they_owe_me',
+    existingDebt?.type ?? route.params?.debtType ?? 'they_owe_me',
   );
-  const [personName, setPersonName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
+  const [personName, setPersonName] = useState(existingDebt?.personName ?? '');
+  const [amount, setAmount] = useState(existingDebt ? String(existingDebt.amount) : '');
+  const [note, setNote] = useState(existingDebt?.note ?? '');
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['debts'] });
@@ -55,6 +61,20 @@ export default function AddDebtScreen() {
     },
   });
 
+  const updateMut = useMutation({
+    mutationFn: (data: Partial<CreateDebtDto>) => debtsService.update(debtId!, data),
+    onSuccess: () => {
+      invalidate();
+      navigation.goBack();
+    },
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Error al guardar';
+      Alert.alert('Error', Array.isArray(msg) ? msg.join(', ') : msg);
+    },
+  });
+
+  const isPending = createMut.isPending || updateMut.isPending;
+
   const handleSubmit = () => {
     if (!personName.trim()) {
       Alert.alert('Falta el nombre', 'Ingresá el nombre de la persona.');
@@ -66,12 +86,18 @@ export default function AddDebtScreen() {
       return;
     }
 
-    createMut.mutate({
+    const payload = {
       personName: personName.trim(),
       amount: parsedAmount,
       note: note.trim() || undefined,
       type: debtType,
-    });
+    };
+
+    if (isEditing) {
+      updateMut.mutate(payload);
+    } else {
+      createMut.mutate(payload);
+    }
   };
 
   const isTheyOweMe = debtType === 'they_owe_me';
@@ -132,7 +158,7 @@ export default function AddDebtScreen() {
               onChangeText={setPersonName}
               placeholder="Ej: Juan, Papá, Empresa X..."
               placeholderTextColor={Colors.textMuted}
-              editable={!createMut.isPending}
+              editable={!isPending}
               returnKeyType="next"
             />
           </View>
@@ -149,7 +175,7 @@ export default function AddDebtScreen() {
               placeholder="0.00"
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
-              editable={!createMut.isPending}
+              editable={!isPending}
               returnKeyType="next"
             />
           </View>
@@ -167,7 +193,7 @@ export default function AddDebtScreen() {
               placeholderTextColor={Colors.textMuted}
               multiline
               numberOfLines={3}
-              editable={!createMut.isPending}
+              editable={!isPending}
             />
           </View>
         </View>
@@ -177,22 +203,22 @@ export default function AddDebtScreen() {
           <TouchableOpacity
             style={styles.cancelBtn}
             onPress={() => navigation.goBack()}
-            disabled={createMut.isPending}
+            disabled={isPending}
           >
             <Text style={styles.cancelBtnText}>Cancelar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: accentColor }, createMut.isPending && styles.disabled]}
+            style={[styles.saveBtn, { backgroundColor: accentColor }, isPending && styles.disabled]}
             onPress={handleSubmit}
-            disabled={createMut.isPending}
+            disabled={isPending}
             activeOpacity={0.85}
           >
-            {createMut.isPending ? (
+            {isPending ? (
               <ActivityIndicator size="small" color={Colors.white} />
             ) : (
               <>
                 <Ionicons name="checkmark-outline" size={18} color={Colors.white} />
-                <Text style={styles.saveBtnText}>Registrar deuda</Text>
+                <Text style={styles.saveBtnText}>{isEditing ? 'Guardar cambios' : 'Registrar deuda'}</Text>
               </>
             )}
           </TouchableOpacity>

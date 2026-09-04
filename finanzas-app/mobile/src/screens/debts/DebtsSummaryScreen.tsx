@@ -134,6 +134,7 @@ export default function DebtsSummaryScreen() {
         debt={item}
         onMarkPaid={(id) => markPaidMut.mutate(id)}
         onDelete={(id) => deleteMut.mutate(id)}
+        onEdit={(id) => navigation.navigate('AddDebt', { debtId: id })}
       />
     );
   };
