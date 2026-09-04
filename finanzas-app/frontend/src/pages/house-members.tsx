@@ -27,10 +27,11 @@ export default function HouseMembersPage() {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [userEmail, setUserEmail] = useState('');
-  const [inviteForm, setInviteForm] = useState({ email: '', role: 'user' });
+  const emptyCreateForm = { name: '', email: '', password: '', role: 'user' };
+  const [createForm, setCreateForm] = useState(emptyCreateForm);
 
   const { data: allUsers = [] } = useQuery('allUsersForHouse', () =>
     usersAPI.getAll().then(r => r.data)
@@ -54,24 +55,16 @@ export default function HouseMembersPage() {
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error'); },
   });
 
-  const inviteMut = useMutation(({ email, role }: { email: string; role: string }) =>
-    houseInviteAPI.invite(houseId, email, role)
+  const createMemberMut = useMutation((data: typeof emptyCreateForm) =>
+    houseInviteAPI.createMember(houseId, data)
   , {
-    onSuccess: (res: any) => {
-      const status = res?.data?.status;
-      if (status === 'invitation_sent') {
-        toast.success('Invitación enviada por email');
-      } else if (status === 'added') {
-        toast.success('Miembro agregado');
-      } else {
-        toast.error(res?.data?.message || 'No se pudo procesar la invitación');
-        return;
-      }
-      setShowInviteModal(false);
-      setInviteForm({ email: '', role: 'user' });
+    onSuccess: () => {
+      toast.success('Usuario creado — pasale el email y la contraseña para que inicie sesión');
+      setShowCreateModal(false);
+      setCreateForm(emptyCreateForm);
       qc.invalidateQueries(['houseMembers', houseId]);
     },
-    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al invitar'); },
+    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al crear el usuario'); },
   });
 
   const handleSearchUser = async () => {
@@ -146,10 +139,10 @@ export default function HouseMembersPage() {
         action={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowInviteModal(true)}
+              onClick={() => setShowCreateModal(true)}
               className="btn-secondary flex items-center gap-2"
             >
-              <Plus size={18} /> Invitar por email
+              <Plus size={18} /> Crear usuario
             </button>
             <button
               onClick={() => setShowAddModal(true)}
@@ -224,40 +217,64 @@ export default function HouseMembersPage() {
         </div>
       )}
 
-      <Modal isOpen={showInviteModal} onClose={() => { setShowInviteModal(false); setInviteForm({ email: '', role: 'user' }); }} title="Invitar miembro al hogar">
+      <Modal isOpen={showCreateModal} onClose={() => { setShowCreateModal(false); setCreateForm(emptyCreateForm); }} title="Crear usuario en el hogar">
         <div className="space-y-4">
+          <div>
+            <label className="label">Nombre</label>
+            <input
+              className="input"
+              value={createForm.name}
+              onChange={e => setCreateForm({ ...createForm, name: e.target.value })}
+              placeholder="Nombre completo"
+            />
+          </div>
           <div>
             <label className="label">Email</label>
             <input
               className="input"
               type="email"
-              value={inviteForm.email}
-              onChange={e => setInviteForm({ ...inviteForm, email: e.target.value })}
+              value={createForm.email}
+              onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
               placeholder="usuario@email.com"
+            />
+          </div>
+          <div>
+            <label className="label">Contraseña</label>
+            <input
+              className="input"
+              type="text"
+              value={createForm.password}
+              onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
+              placeholder="Mínimo 6 caracteres"
             />
           </div>
           <div>
             <label className="label">Rol</label>
             <select
               className="input"
-              value={inviteForm.role}
-              onChange={e => setInviteForm({ ...inviteForm, role: e.target.value })}
+              value={createForm.role}
+              onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
             >
               <option value="user">Miembro</option>
               <option value="house_admin">Administrador de la casa</option>
             </select>
           </div>
           <p className="text-xs text-on-surface-variant">
-            Si el email no tiene cuenta todavía, le mandamos una invitación para que se registre y quede unido a esta casa automáticamente.
+            Se crea la cuenta al instante — pasale el email y la contraseña a la persona para que inicie sesión.
           </p>
           <div className="flex gap-2 pt-2">
-            <button onClick={() => setShowInviteModal(false)} className="btn-secondary flex-1">Cancelar</button>
+            <button onClick={() => setShowCreateModal(false)} className="btn-secondary flex-1">Cancelar</button>
             <button
-              onClick={() => inviteMut.mutate(inviteForm)}
-              disabled={inviteMut.isLoading || !inviteForm.email.trim()}
+              onClick={() => createMemberMut.mutate(createForm)}
+              disabled={
+                createMemberMut.isLoading ||
+                !createForm.name.trim() ||
+                !createForm.email.trim() ||
+                createForm.password.length < 6
+              }
               className="btn-primary flex-1"
             >
-              {inviteMut.isLoading ? 'Invitando...' : 'Invitar'}
+              {createMemberMut.isLoading ? 'Creando...' : 'Crear usuario'}
             </button>
           </div>
         </div>

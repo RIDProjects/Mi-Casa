@@ -70,7 +70,7 @@ export class HousesController {
   }
 
   @Post(':id/invite')
-  @ApiOperation({ summary: 'Invitar un usuario al hogar por email' })
+  @ApiOperation({ summary: 'Invitar un usuario al hogar por email (requiere dominio verificado en Resend)' })
   async inviteUser(
     @Param('id') houseId: string,
     @Body() dto: { email: string; role?: string },
@@ -80,5 +80,15 @@ export class HousesController {
     // previously any authenticated user could add someone to any house by ID.
     await this.housesService.findOne(houseId, req.user.id);
     return this.housesService.inviteUser(houseId, dto.email, dto.role || 'member', req.user.id);
+  }
+
+  @Post(':id/members')
+  @ApiOperation({ summary: 'Crear un usuario directo dentro de la casa (solo house_admin)' })
+  createMember(
+    @Param('id') houseId: string,
+    @Body() dto: { name: string; email: string; password: string; role?: string },
+    @Request() req,
+  ) {
+    return this.housesService.createHouseMember(houseId, dto, req.user.id);
   }
 }

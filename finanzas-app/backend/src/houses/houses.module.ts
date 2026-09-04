@@ -4,6 +4,7 @@ import { HousesController } from './houses.controller';
 import { HousesService } from './houses.service';
 import { House } from '../database/entities/house.entity';
 import { User } from '../database/entities/user.entity';
+import { Role } from '../database/entities/role.entity';
 import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { AuthModule } from '../auth/auth.module';
 import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
@@ -11,7 +12,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([House, User, HouseInvitation]),
+    TypeOrmModule.forFeature([House, User, Role, HouseInvitation]),
     forwardRef(() => AuthModule),
     HouseCurrenciesModule,
     NotificationsModule,

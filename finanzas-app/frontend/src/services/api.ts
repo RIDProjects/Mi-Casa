@@ -229,6 +229,8 @@ export const emergencyFundCoverageAPI = {
 export const houseInviteAPI = {
   invite: (houseId: string, email: string, role?: string) =>
     api.post(`/houses/${houseId}/invite`, { email, role }),
+  createMember: (houseId: string, data: { name: string; email: string; password: string; role?: string }) =>
+    api.post(`/houses/${houseId}/members`, data),
 };
 
 export const insightsAPI = {

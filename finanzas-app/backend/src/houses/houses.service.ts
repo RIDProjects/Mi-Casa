@@ -2,8 +2,10 @@ import { Injectable, NotFoundException, UnauthorizedException, ForbiddenExceptio
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { House } from '../database/entities/house.entity';
 import { User } from '../database/entities/user.entity';
+import { Role } from '../database/entities/role.entity';
 import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { HouseCurrenciesService, CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -13,6 +15,7 @@ export class HousesService {
   constructor(
     @InjectRepository(House) private houseRepo: Repository<House>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Role) private roleRepo: Repository<Role>,
     @InjectRepository(HouseInvitation) private invitationRepo: Repository<HouseInvitation>,
     private readonly houseCurrenciesService: HouseCurrenciesService,
     private readonly notificationsService: NotificationsService,
@@ -200,5 +203,53 @@ export class HousesService {
 
   async markInvitationAccepted(id: string): Promise<void> {
     await this.invitationRepo.update(id, { status: 'accepted' });
+  }
+
+  // El house_admin puede crear cuentas directamente dentro de su propia casa
+  // (nombre + email + contraseña) y pasarle esas credenciales al usuario a mano —
+  // no depende de mandar ningún email.
+  async createHouseMember(
+    houseId: string,
+    dto: { name: string; email: string; password: string; role?: string },
+    requestingUserId: string,
+  ) {
+    const house = await this.houseRepo.findOne({ where: { id: houseId } });
+    if (!house) throw new NotFoundException('Casa no encontrada');
+
+    const requester = await this.userRepo.findOne({
+      where: { id: requestingUserId },
+      relations: ['roles', 'houses'],
+    });
+    const isGlobalAdmin = requester?.roles?.some((r) => r.name === 'admin');
+    const isHouseAdminHere =
+      requester?.roles?.some((r) => r.name === 'house_admin') &&
+      requester?.houses?.some((h) => h.id === houseId);
+    if (!isGlobalAdmin && !isHouseAdminHere) {
+      throw new ForbiddenException('Solo el administrador de la casa puede crear usuarios');
+    }
+
+    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    if (existing) throw new ConflictException('El email ya está registrado');
+
+    const roleName = dto.role === 'house_admin' ? 'house_admin' : 'user';
+    const roleToAssign =
+      (await this.roleRepo.findOne({ where: { name: roleName }, relations: ['permissions'] })) ||
+      (await this.roleRepo.findOne({ where: { name: 'user' }, relations: ['permissions'] }));
+    if (!roleToAssign) throw new Error('Rol no encontrado. Contacte al administrador.');
+
+    const hashedPassword = await bcrypt.hash(dto.password, 12);
+    const user = this.userRepo.create({
+      name: dto.name,
+      email: dto.email,
+      password: hashedPassword,
+      roles: [roleToAssign],
+      houses: [house],
+      activeHouseId: house.id,
+      isActive: true,
+    });
+    const saved = await this.userRepo.save(user);
+
+    const { password, ...result } = saved;
+    return { status: 'created', user: result };
   }
 }
