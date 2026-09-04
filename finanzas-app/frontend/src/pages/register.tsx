@@ -11,6 +11,8 @@ export default function Register() {
   const setAuth = useAuthStore(s => s.setAuth);
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
   const { theme, toggleTheme } = useThemeStore();
+  const invitationToken = typeof router.query.invitationToken === 'string' ? router.query.invitationToken : '';
+  const isInvitation = !!invitationToken;
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -35,7 +37,7 @@ export default function Register() {
       return;
     }
 
-    if (form.housePassword.length < 3) {
+    if (!isInvitation && form.housePassword.length < 3) {
       toast.error('La contraseña de la casa debe tener al menos 3 caracteres');
       return;
     }
@@ -43,7 +45,10 @@ export default function Register() {
     setError(null);
     setLoading(true);
     try {
-      const { data } = await authAPI.register(form);
+      const payload = isInvitation
+        ? { name: form.name, email: form.email, password: form.password, invitationToken }
+        : form;
+      const { data } = await authAPI.register(payload);
       setAuth(data.user, data.access_token);
       toast.success('¡Registro exitoso! Bienvenido a tu casa.');
 
@@ -94,51 +99,60 @@ export default function Register() {
         <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
           <h2 className="font-section-title text-[22px] text-on-surface mb-6">Registrarse</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Casa Info */}
-            <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center gap-2 mb-3">
+            {isInvitation ? (
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
                 <Home size={18} className="text-primary" />
-                <span className="font-medium text-blue-900 dark:text-blue-200">Información de la Casa</span>
+                <span className="text-sm text-blue-900 dark:text-blue-200">
+                  Te invitaron a unirte a una casa — completá tus datos para aceptar la invitación.
+                </span>
               </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="label">Nombre de la casa</label>
-                  <input
-                    type="text"
-                    value={form.houseName}
-                    onChange={e => { setError(null); setForm({ ...form, houseName: e.target.value }); }}
-                    className="input"
-                    placeholder="Mi Casa"
-                    required
-                    minLength={2}
-                  />
+            ) : (
+              /* Casa Info */
+              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <Home size={18} className="text-primary" />
+                  <span className="font-medium text-blue-900 dark:text-blue-200">Información de la Casa</span>
                 </div>
-                <div>
-                  <label className="label">Contraseña de la casa</label>
-                  <div className="relative">
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Nombre de la casa</label>
                     <input
-                      type={showHousePassword ? 'text' : 'password'}
-                      value={form.housePassword}
-                      onChange={e => { setError(null); setForm({ ...form, housePassword: e.target.value }); }}
-                      className="input pr-10"
-                      placeholder="••••••••"
+                      type="text"
+                      value={form.houseName}
+                      onChange={e => { setError(null); setForm({ ...form, houseName: e.target.value }); }}
+                      className="input"
+                      placeholder="Mi Casa"
                       required
-                      minLength={3}
+                      minLength={2}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowHousePassword(!showHousePassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant"
-                    >
-                      {showHousePassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
-                  <p className="text-xs text-primary mt-1">
-                    Comparte esta contraseña con los miembros de tu casa
-                  </p>
+                  <div>
+                    <label className="label">Contraseña de la casa</label>
+                    <div className="relative">
+                      <input
+                        type={showHousePassword ? 'text' : 'password'}
+                        value={form.housePassword}
+                        onChange={e => { setError(null); setForm({ ...form, housePassword: e.target.value }); }}
+                        className="input pr-10"
+                        placeholder="••••••••"
+                        required
+                        minLength={3}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowHousePassword(!showHousePassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant"
+                      >
+                        {showHousePassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-primary mt-1">
+                      Comparte esta contraseña con los miembros de tu casa
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="label">Nombre completo</label>

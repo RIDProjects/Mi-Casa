@@ -10,6 +10,7 @@ import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
 import { House } from '../database/entities/house.entity';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
+import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
@@ -24,7 +25,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
         return { secret, signOptions: { expiresIn: '24h' } };
       },
     }),
-    TypeOrmModule.forFeature([User, Role, House, HouseCurrency]),
+    TypeOrmModule.forFeature([User, Role, House, HouseCurrency, HouseInvitation]),
     forwardRef(() => NotificationsModule),
   ],
   controllers: [AuthController],

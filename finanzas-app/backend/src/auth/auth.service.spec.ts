@@ -7,6 +7,7 @@ import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
 import { House } from '../database/entities/house.entity';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
+import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -17,6 +18,7 @@ describe('AuthService', () => {
   let roleRepo: jest.Mocked<Repository<Role>>;
   let houseRepo: jest.Mocked<Repository<House>>;
   let houseCurrencyRepo: jest.Mocked<Repository<HouseCurrency>>;
+  let invitationRepo: jest.Mocked<Repository<HouseInvitation>>;
   let jwtService: jest.Mocked<JwtService>;
   let notificationsService: jest.Mocked<NotificationsService>;
 
@@ -51,12 +53,18 @@ describe('AuthService', () => {
       save: jest.fn(),
     } as unknown as jest.Mocked<Repository<HouseCurrency>>;
 
+    invitationRepo = {
+      findOne: jest.fn(),
+      update: jest.fn(),
+    } as unknown as jest.Mocked<Repository<HouseInvitation>>;
+
     jwtService = {
       sign: jest.fn().mockReturnValue('signed.jwt.token'),
     } as unknown as jest.Mocked<JwtService>;
 
     notificationsService = {
       sendPasswordReset: jest.fn(),
+      sendHouseInvitation: jest.fn(),
     } as unknown as jest.Mocked<NotificationsService>;
 
     service = new AuthService(
@@ -64,6 +72,7 @@ describe('AuthService', () => {
       roleRepo,
       houseRepo,
       houseCurrencyRepo,
+      invitationRepo,
       jwtService,
       notificationsService,
     );

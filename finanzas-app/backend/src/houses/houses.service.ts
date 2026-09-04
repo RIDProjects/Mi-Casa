@@ -1,16 +1,21 @@
 import { Injectable, NotFoundException, UnauthorizedException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as crypto from 'crypto';
 import { House } from '../database/entities/house.entity';
 import { User } from '../database/entities/user.entity';
+import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { HouseCurrenciesService, CURRENCY_META } from '../house-currencies/house-currencies.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class HousesService {
   constructor(
     @InjectRepository(House) private houseRepo: Repository<House>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(HouseInvitation) private invitationRepo: Repository<HouseInvitation>,
     private readonly houseCurrenciesService: HouseCurrenciesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -134,22 +139,66 @@ export class HousesService {
     return { message: 'Usuario eliminado de la casa' };
   }
 
-  // Invite a user by email — returns status object instead of throwing for not-found
+  // Invite a user by email — if they already have an account, add them directly;
+  // otherwise create/refresh a pending HouseInvitation and email them a signup link.
   async inviteUser(houseId: string, email: string, role: string, invitedById: string) {
     const house = await this.houseRepo.findOne({ where: { id: houseId } });
     if (!house) throw new NotFoundException('Casa no encontrada');
 
+    const roleToUse = role === 'house_admin' ? 'house_admin' : 'user';
+
     const user = await this.userRepo.findOne({ where: { email }, relations: ['houses'] });
-    if (!user) {
-      return { status: 'not_found', message: 'Usuario no registrado' };
+    if (user) {
+      const alreadyMember = user.houses?.some(h => h.id === houseId);
+      if (alreadyMember) throw new ConflictException('Ya es miembro de este hogar');
+
+      user.houses = [...(user.houses || []), house];
+      if (!user.activeHouseId) user.activeHouseId = houseId;
+      await this.userRepo.save(user);
+      return { status: 'added', userId: user.id };
     }
 
-    const alreadyMember = user.houses?.some(h => h.id === houseId);
-    if (alreadyMember) throw new ConflictException('Ya es miembro de este hogar');
+    const inviter = await this.userRepo.findOne({ where: { id: invitedById } });
 
-    user.houses = [...(user.houses || []), house];
-    if (!user.activeHouseId) user.activeHouseId = houseId;
-    await this.userRepo.save(user);
-    return { status: 'added', userId: user.id };
+    let invitation = await this.invitationRepo.findOne({
+      where: { email, houseId, status: 'pending' },
+    });
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 días
+
+    if (invitation) {
+      invitation.token = token;
+      invitation.expiresAt = expiresAt;
+      invitation.role = roleToUse;
+    } else {
+      invitation = this.invitationRepo.create({
+        email,
+        houseId,
+        role: roleToUse,
+        token,
+        expiresAt,
+        invitedById,
+      });
+    }
+    await this.invitationRepo.save(invitation);
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const acceptUrl = `${frontendUrl}/register?invitationToken=${token}`;
+    await this.notificationsService.sendHouseInvitation(
+      email,
+      house.name,
+      inviter?.name || 'Un miembro de la casa',
+      acceptUrl,
+    );
+
+    return { status: 'invitation_sent', message: 'Invitación enviada por email' };
+  }
+
+  async getInvitationByToken(token: string): Promise<HouseInvitation | null> {
+    return this.invitationRepo.findOne({ where: { token }, relations: ['house'] });
+  }
+
+  async markInvitationAccepted(id: string): Promise<void> {
+    await this.invitationRepo.update(id, { status: 'accepted' });
   }
 }

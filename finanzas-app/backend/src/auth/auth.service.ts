@@ -8,6 +8,7 @@ import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
 import { House } from '../database/entities/house.entity';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
+import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -21,6 +22,8 @@ export class AuthService {
     @InjectRepository(House) private houseRepo: Repository<House>,
     @InjectRepository(HouseCurrency)
     private houseCurrencyRepo: Repository<HouseCurrency>,
+    @InjectRepository(HouseInvitation)
+    private invitationRepo: Repository<HouseInvitation>,
     private jwtService: JwtService,
     private notificationsService: NotificationsService,
   ) {}
@@ -30,46 +33,73 @@ export class AuthService {
     const existing = await this.userRepo.findOne({ where: { email: dto.email } });
     if (existing) throw new ConflictException('El email ya está registrado');
 
-    // Hash passwords
+    // Hash password
     const hashedPassword = await bcrypt.hash(dto.password, 12);
-    const hashedHousePassword = await bcrypt.hash(dto.housePassword, 12);
 
-    // Find or create house, loading members to determine admin status
-    let house = await this.houseRepo.findOne({ where: { name: dto.houseName }, relations: ['members'] });
+    let house: House;
+    let invitation: HouseInvitation | null = null;
+    let isHouseAdmin = false;
+    let roleName: string;
 
-    if (house) {
-      // password column has `select: false`, must be re-selected explicitly
-      const houseWithPassword = await this.houseRepo.findOne({
-        where: { id: house.id },
-        select: ['id', 'password'],
+    if (dto.invitationToken) {
+      // Registro vía invitación: la casa y el rol ya vienen definidos por la invitación,
+      // no se pide/valida nombre ni contraseña de casa.
+      invitation = await this.invitationRepo.findOne({
+        where: { token: dto.invitationToken },
+        relations: ['house'],
       });
-      const validHousePassword = await bcrypt.compare(dto.housePassword, houseWithPassword.password);
-      if (!validHousePassword) throw new UnauthorizedException('Contraseña de casa incorrecta');
+      if (!invitation || invitation.status !== 'pending') {
+        throw new BadRequestException('Invitación inválida o ya utilizada');
+      }
+      if (new Date() > invitation.expiresAt) {
+        throw new BadRequestException('La invitación expiró');
+      }
+      if (invitation.email.toLowerCase() !== dto.email.toLowerCase()) {
+        throw new BadRequestException('El email no coincide con la invitación');
+      }
+      house = invitation.house;
+      roleName = invitation.role;
     } else {
-      house = this.houseRepo.create({ name: dto.houseName, password: hashedHousePassword });
-      house = await this.houseRepo.save(house);
-      house.members = [];
+      // Hash de la contraseña de casa
+      const hashedHousePassword = await bcrypt.hash(dto.housePassword, 12);
 
-      // Seed default base currency for the new house
-      const baseCurrencyCode = (dto as any).baseCurrencyCode ?? 'CUP';
-      const meta = CURRENCY_META[baseCurrencyCode] ?? CURRENCY_META['CUP'];
-      await this.houseCurrencyRepo.save(
-        this.houseCurrencyRepo.create({
-          currencyCode: baseCurrencyCode,
-          currencyName: meta.name,
-          symbol: meta.symbol,
-          locale: meta.locale,
-          isBase: true,
-          house: { id: house.id },
-        }),
-      );
+      // Find or create house, loading members to determine admin status
+      house = await this.houseRepo.findOne({ where: { name: dto.houseName }, relations: ['members'] });
+
+      if (house) {
+        // password column has `select: false`, must be re-selected explicitly
+        const houseWithPassword = await this.houseRepo.findOne({
+          where: { id: house.id },
+          select: ['id', 'password'],
+        });
+        const validHousePassword = await bcrypt.compare(dto.housePassword, houseWithPassword.password);
+        if (!validHousePassword) throw new UnauthorizedException('Contraseña de casa incorrecta');
+      } else {
+        house = this.houseRepo.create({ name: dto.houseName, password: hashedHousePassword });
+        house = await this.houseRepo.save(house);
+        house.members = [];
+
+        // Seed default base currency for the new house
+        const baseCurrencyCode = (dto as any).baseCurrencyCode ?? 'CUP';
+        const meta = CURRENCY_META[baseCurrencyCode] ?? CURRENCY_META['CUP'];
+        await this.houseCurrencyRepo.save(
+          this.houseCurrencyRepo.create({
+            currencyCode: baseCurrencyCode,
+            currencyName: meta.name,
+            symbol: meta.symbol,
+            locale: meta.locale,
+            isBase: true,
+            house: { id: house.id },
+          }),
+        );
+      }
+
+      // First member becomes house_admin; subsequent members get user role
+      const houseMembers = house.members?.length ?? 0;
+      isHouseAdmin = houseMembers === 0;
+      roleName = isHouseAdmin ? 'house_admin' : 'user';
     }
 
-    // First member becomes house_admin; subsequent members get user role
-    const houseMembers = house.members?.length ?? 0;
-    const isHouseAdmin = houseMembers === 0;
-
-    const roleName = isHouseAdmin ? 'house_admin' : 'user';
     const roleToAssign =
       (await this.roleRepo.findOne({ where: { name: roleName }, relations: ['permissions'] })) ||
       (await this.roleRepo.findOne({ where: { name: 'user' }, relations: ['permissions'] }));
@@ -87,6 +117,10 @@ export class AuthService {
     });
 
     const savedUser = await this.userRepo.save(newUser);
+
+    if (invitation) {
+      await this.invitationRepo.update(invitation.id, { status: 'accepted' });
+    }
 
     const isAdmin = roleToAssign.name === 'admin' || roleToAssign.name === 'house_admin';
     const token = this.jwtService.sign(

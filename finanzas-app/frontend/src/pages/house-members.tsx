@@ -30,7 +30,7 @@ export default function HouseMembersPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [userEmail, setUserEmail] = useState('');
-  const [inviteForm, setInviteForm] = useState({ email: '', role: 'member' });
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'user' });
 
   const { data: allUsers = [] } = useQuery('allUsersForHouse', () =>
     usersAPI.getAll().then(r => r.data)
@@ -57,10 +57,18 @@ export default function HouseMembersPage() {
   const inviteMut = useMutation(({ email, role }: { email: string; role: string }) =>
     houseInviteAPI.invite(houseId, email, role)
   , {
-    onSuccess: () => {
-      toast.success('Miembro agregado');
+    onSuccess: (res: any) => {
+      const status = res?.data?.status;
+      if (status === 'invitation_sent') {
+        toast.success('Invitación enviada por email');
+      } else if (status === 'added') {
+        toast.success('Miembro agregado');
+      } else {
+        toast.error(res?.data?.message || 'No se pudo procesar la invitación');
+        return;
+      }
       setShowInviteModal(false);
-      setInviteForm({ email: '', role: 'member' });
+      setInviteForm({ email: '', role: 'user' });
       qc.invalidateQueries(['houseMembers', houseId]);
     },
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error al invitar'); },
@@ -85,7 +93,7 @@ export default function HouseMembersPage() {
   const handleAddUserToHouse = async () => {
     if (!selectedMember || !houseId) return;
     try {
-      await houseInviteAPI.invite(houseId, selectedMember.email, 'member');
+      await houseInviteAPI.invite(houseId, selectedMember.email, 'user');
       toast.success(`${selectedMember.name} agregado a la casa`);
       setShowEditModal(false);
       setSelectedMember(null);
@@ -216,7 +224,7 @@ export default function HouseMembersPage() {
         </div>
       )}
 
-      <Modal isOpen={showInviteModal} onClose={() => { setShowInviteModal(false); setInviteForm({ email: '', role: 'member' }); }} title="Invitar miembro al hogar">
+      <Modal isOpen={showInviteModal} onClose={() => { setShowInviteModal(false); setInviteForm({ email: '', role: 'user' }); }} title="Invitar miembro al hogar">
         <div className="space-y-4">
           <div>
             <label className="label">Email</label>
@@ -235,11 +243,13 @@ export default function HouseMembersPage() {
               value={inviteForm.role}
               onChange={e => setInviteForm({ ...inviteForm, role: e.target.value })}
             >
-              <option value="member">Miembro</option>
-              <option value="admin">Administrador</option>
-              <option value="viewer">Solo lectura</option>
+              <option value="user">Miembro</option>
+              <option value="house_admin">Administrador de la casa</option>
             </select>
           </div>
+          <p className="text-xs text-on-surface-variant">
+            Si el email no tiene cuenta todavía, le mandamos una invitación para que se registre y quede unido a esta casa automáticamente.
+          </p>
           <div className="flex gap-2 pt-2">
             <button onClick={() => setShowInviteModal(false)} className="btn-secondary flex-1">Cancelar</button>
             <button
