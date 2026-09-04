@@ -12,12 +12,9 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CuotasService } from './cuotas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { CreateCuotaDto } from './dto/create-cuota.dto';
 import { UpdateCuotaDto } from './dto/update-cuota.dto';
-
-function resolveHouseId(user: any): string {
-  return user?.house?.id ?? user?.activeHouseId ?? user?.houses?.[0]?.id ?? '';
-}
 
 @ApiTags('Cuotas')
 @ApiBearerAuth()

@@ -18,20 +18,12 @@ import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Request as ExpressRequest, Response } from 'express';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { User } from '../database/entities/user.entity';
 
 interface AuthRequest extends ExpressRequest {
   user: User;
-}
-
-function resolveHouseId(user: User): string {
-  return (
-    (user as any).house?.id ??
-    user.activeHouseId ??
-    ((user as any).houses?.[0]?.id) ??
-    ''
-  );
 }
 
 @ApiTags('Transacciones')

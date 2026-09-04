@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { BudgetService } from './budget.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { AddIncomeDto } from './dto/add-income.dto';
@@ -21,10 +22,6 @@ import { AddCategoryDto } from './dto/add-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { AddExpenseDto } from './dto/add-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
-
-function resolveHouseId(user: any): string {
-  return user?.house?.id ?? user?.activeHouseId ?? user?.houses?.[0]?.id ?? '';
-}
 
 @ApiTags('Presupuesto')
 @ApiBearerAuth()

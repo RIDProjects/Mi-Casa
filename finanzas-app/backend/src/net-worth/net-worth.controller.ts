@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGuards, ParseIntPipe, DefaultValuePipe, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NetWorthService } from './net-worth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 
@@ -21,9 +22,8 @@ export class NetWorthController {
     @Query('totalCardBalances') cardBalances?: string,
     @Query('totalLoanDebt') loanDebt?: string,
   ) {
-    const houseId = req.user.house?.id;
     return this.service.getNetWorthSummary(
-      houseId,
+      resolveHouseId(req.user),
       cardBalances ? parseFloat(cardBalances) : 0,
       loanDebt ? parseFloat(loanDebt) : 0,
     );
@@ -36,28 +36,26 @@ export class NetWorthController {
     @Request() req,
     @Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number,
   ) {
-    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
-    return this.service.getHistory(houseId, months);
+    return this.service.getHistory(resolveHouseId(req.user), months);
   }
 
   @Post()
   @ApiOperation({ summary: 'Registrar activo' })
   create(@Body() dto: CreateAssetDto, @Request() req) {
-    const houseId = req.user.house?.id;
+    const houseId = resolveHouseId(req.user);
+    if (!houseId) throw new BadRequestException('Usuario no pertenece a una casa');
     return this.service.create(dto, houseId);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar activo' })
   update(@Param('id') id: string, @Body() dto: UpdateAssetDto, @Request() req) {
-    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
-    return this.service.update(id, houseId, dto);
+    return this.service.update(id, resolveHouseId(req.user), dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar activo' })
   remove(@Param('id') id: string, @Request() req) {
-    const houseId = req.user.house?.id ?? req.user?.activeHouseId ?? req.user?.houses?.[0]?.id ?? '';
-    return this.service.remove(id, houseId);
+    return this.service.remove(id, resolveHouseId(req.user));
   }
 }

@@ -13,12 +13,9 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { HouseCurrenciesService } from './house-currencies.service';
+import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { UpsertRateDto } from './dto/upsert-rate.dto';
 import { AddCurrencyDto } from './dto/add-currency.dto';
-
-function resolveHouseId(user: any): string {
-  return user?.house?.id ?? user?.activeHouseId ?? user?.houses?.[0]?.id ?? '';
-}
 
 function assertHouseAccess(user: any, pathHouseId: string): string {
   const houseId = resolveHouseId(user);
@@ -33,6 +30,16 @@ function assertHouseAccess(user: any, pathHouseId: string): string {
   }
 
   return houseId === pathHouseId ? houseId : pathHouseId;
+}
+
+// Cambiar la moneda base o borrar monedas/tasas es una config a nivel casa,
+// no algo que cualquier miembro debería poder tocar — antes solo se
+// verificaba membresía, no rol.
+function assertHouseAdmin(user: any): void {
+  const isAdmin = user?.roles?.some((r: any) => r.name === 'admin' || r.name === 'house_admin');
+  if (!isAdmin) {
+    throw new ForbiddenException('Solo el administrador de la casa puede modificar las monedas');
+  }
 }
 
 @ApiTags('Monedas por Casa')
@@ -55,6 +62,7 @@ export class HouseCurrenciesController {
     @Request() req,
   ) {
     const verifiedHouseId = assertHouseAccess(req.user, houseId);
+    assertHouseAdmin(req.user);
     return this.svc.upsertRate(verifiedHouseId, dto);
   }
 
@@ -71,6 +79,7 @@ export class HouseCurrenciesController {
     @Request() req,
   ) {
     const verifiedHouseId = assertHouseAccess(req.user, houseId);
+    assertHouseAdmin(req.user);
     return this.svc.add(verifiedHouseId, dto);
   }
 
@@ -81,6 +90,7 @@ export class HouseCurrenciesController {
     @Request() req,
   ) {
     const verifiedHouseId = assertHouseAccess(req.user, houseId);
+    assertHouseAdmin(req.user);
     return this.svc.setBase(verifiedHouseId, id);
   }
 
@@ -90,6 +100,7 @@ export class HouseCurrenciesController {
     @Param('id') id: string,
     @Request() req,
   ) {
+    assertHouseAdmin(req.user);
     const verifiedHouseId = assertHouseAccess(req.user, houseId);
     return this.svc.remove(verifiedHouseId, id);
   }

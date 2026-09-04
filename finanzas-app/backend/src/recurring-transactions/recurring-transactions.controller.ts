@@ -13,6 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RecurringTransactionsService } from './recurring-transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
 import { UpdateRecurringTransactionDto } from './dto/update-recurring-transaction.dto';
 import { User } from '../database/entities/user.entity';
@@ -20,15 +21,6 @@ import { Request as ExpressRequest } from 'express';
 
 interface AuthRequest extends ExpressRequest {
   user: User;
-}
-
-function resolveHouseId(user: User): string {
-  return (
-    (user as any).house?.id ??
-    user.activeHouseId ??
-    ((user as any).houses?.[0]?.id) ??
-    ''
-  );
 }
 
 @ApiTags('Transacciones Recurrentes')

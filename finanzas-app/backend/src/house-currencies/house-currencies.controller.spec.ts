@@ -35,6 +35,13 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
     roles: [{ name: 'admin' }],
   };
 
+  const houseAdminOfHouseA = {
+    id: 'house-admin-1',
+    house: { id: HOUSE_A },
+    houses: [{ id: HOUSE_A }],
+    roles: [{ name: 'house_admin' }],
+  };
+
   beforeEach(() => {
     svc = {
       getRates: jest.fn().mockResolvedValue([]),
@@ -105,10 +112,42 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
       expect(svc.getRates).toHaveBeenCalledWith(HOUSE_A);
     });
 
-    it('add: resolves for the user own house', async () => {
+    it('add: resolves for a house_admin of their own house', async () => {
       const dto = { currencyCode: 'EUR' } as any;
-      await controller.add(HOUSE_A, dto, { user: userOfHouseA } as any);
+      await controller.add(HOUSE_A, dto, { user: houseAdminOfHouseA } as any);
       expect(svc.add).toHaveBeenCalledWith(HOUSE_A, dto);
+    });
+  });
+
+  describe('mutating routes require house_admin or global admin', () => {
+    it('add: throws 403 for a plain user role, even on their own house', () => {
+      const dto = { currencyCode: 'EUR' } as any;
+      expect(() =>
+        controller.add(HOUSE_A, dto, { user: userOfHouseA } as any),
+      ).toThrow(ForbiddenException);
+      expect(svc.add).not.toHaveBeenCalled();
+    });
+
+    it('setBase: throws 403 for a plain user role', () => {
+      expect(() =>
+        controller.setBase(HOUSE_A, 'currency-id', { user: userOfHouseA } as any),
+      ).toThrow(ForbiddenException);
+      expect(svc.setBase).not.toHaveBeenCalled();
+    });
+
+    it('remove: throws 403 for a plain user role', () => {
+      expect(() =>
+        controller.remove(HOUSE_A, 'currency-id', { user: userOfHouseA } as any),
+      ).toThrow(ForbiddenException);
+      expect(svc.remove).not.toHaveBeenCalled();
+    });
+
+    it('upsertRate: throws 403 for a plain user role', () => {
+      const dto = { currencyCode: 'USD', rate: 1 } as any;
+      expect(() =>
+        controller.upsertRate(HOUSE_A, dto, { user: userOfHouseA } as any),
+      ).toThrow(ForbiddenException);
+      expect(svc.upsertRate).not.toHaveBeenCalled();
     });
   });
 
