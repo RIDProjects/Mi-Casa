@@ -7,7 +7,6 @@
 /finanzas-app/frontend/node_modules/
 /finanzas-app/mobile/node_modules/
 *.tsbuildinfo
-/AGENTS.md
 /node_modules/
 
 # Archivos reservados de Windows que no deben entrar al repo
