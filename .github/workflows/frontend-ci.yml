@@ -32,11 +32,8 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      # NOTE: ESLint is not configured in this project yet (`next lint` prompts
-      # interactively for a config on first run). Re-enable this step once
-      # an .eslintrc is committed.
-      # - name: Lint
-      #   run: npm run lint
+      - name: Lint
+        run: npm run lint
 
       - name: Run tests
         run: npm test
