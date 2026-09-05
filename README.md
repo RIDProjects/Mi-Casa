@@ -4,6 +4,32 @@ Sistema de gestión financiera del hogar. SaaS web + app móvil (Android/iOS) qu
 
 ---
 
+## Demo
+
+- 🔗 **Demo en vivo**: _agregar URL de producción (Vercel) aquí_
+- 📱 **APK de prueba**: _agregar link de build EAS (perfil `preview`) aquí_
+- 🖼️ **Screenshots**: _pendiente — agregar capturas del dashboard, presupuesto y mobile_
+
+---
+
+## Features
+
+- 📊 **Dashboard** con KPIs, termómetro de gastos vs presupuesto y alertas de stock
+- 💰 **Presupuesto mensual** con categorías, periodicidad flexible (diaria a anual) y gastos hormiga
+- 🔄 **Transacciones** con registro y seguimiento mensual
+- 🎯 **Metas de ahorro** con cálculo de cuota (PMT) y proyección temporal
+- 🤝 **Deudas bidireccionales** (ME DEBEN / LES DEBO) con balance neto
+- 💳 **Tarjetas de crédito**: utilización, límite y estado de pago
+- 🏦 **Créditos y préstamos** con tabla de amortización y progreso
+- 📈 **Patrimonio neto** en tiempo real (activos físicos + efectivo − deudas)
+- 🆘 **Fondo de emergencia** con calculadora por categoría de gasto
+- 🧮 **Simulador de préstamos** sin necesidad de API
+- 📦 **Inventario y lista de compras** del hogar
+- 🔐 **RBAC multi-hogar**: roles y permisos por módulo (admin, house_admin, member)
+- 📱 **App móvil** (Android/iOS) con las pantallas core: login, deudas, compras, gastos
+
+---
+
 ## Arquitectura
 
 ```
@@ -183,6 +209,12 @@ export const API_BASE_URL = 'http://192.168.1.10:3001/api/v1';
 // Producción
 export const API_BASE_URL = 'https://api.micasapro.com/api/v1';
 ```
+
+---
+
+## Modelo de datos
+
+El esquema completo de PostgreSQL (tablas, relaciones, constraints) está documentado en [`finanzas-app/docs/schema.sql`](./finanzas-app/docs/schema.sql).
 
 ---
 
