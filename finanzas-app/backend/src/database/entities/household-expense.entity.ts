@@ -19,7 +19,10 @@ export class HouseholdExpense {
   @Column({ type: 'date' }) date: string;
   @Column() description: string;
   @Column({ type: 'enum', enum: HouseholdCategory, default: HouseholdCategory.OTROS }) category: HouseholdCategory;
-  @Column('decimal', { precision: 12, scale: 2, default: 0 }) amountCUP: number;
+  @Column('decimal', { precision: 12, scale: 2, default: 0 }) amount: number;
+  @Column({ type: 'varchar', length: 3 }) currencyCode: string;
+  @Column('decimal', { precision: 15, scale: 4 }) exchangeRate: number;
+  @Column('decimal', { precision: 12, scale: 2 }) amountLocal: number;
   @Column({ nullable: true }) place: string | null;
   @Index()
   @Column() month: string;

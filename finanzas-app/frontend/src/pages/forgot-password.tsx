@@ -18,7 +18,7 @@ export default function ForgotPassword() {
       await authAPI.forgotPassword(email);
       setSent(true);
     } catch {
-      setError('Ocurrió un error. Intentá de nuevo.');
+      setError('Ocurrió un error. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -41,7 +41,7 @@ export default function ForgotPassword() {
                   <CheckCircle size={32} className="text-success" />
                 </div>
               </div>
-              <h2 className="font-section-title text-[22px] text-on-surface mb-3">Revisá tu email</h2>
+              <h2 className="font-section-title text-[22px] text-on-surface mb-3">Revisa tu email</h2>
               <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">
                 Si el email <strong>{email}</strong> está registrado, vas a recibir un enlace para
                 restablecer tu contraseña en los próximos minutos.
@@ -62,7 +62,7 @@ export default function ForgotPassword() {
 
               <h2 className="font-section-title text-[22px] text-on-surface mb-2">Recuperar contraseña</h2>
               <p className="font-body-default text-on-surface-variant mb-6">
-                Ingresá tu email y te enviamos un enlace para crear una nueva contraseña.
+                Ingresa tu email y te enviamos un enlace para crear una nueva contraseña.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">

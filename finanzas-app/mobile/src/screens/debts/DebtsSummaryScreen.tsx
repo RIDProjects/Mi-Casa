@@ -163,7 +163,7 @@ export default function DebtsSummaryScreen() {
           <Text style={styles.emptySectionText}>
             {section.title === 'ME DEBEN'
               ? 'Nadie te debe dinero'
-              : 'No debés dinero a nadie'}
+              : 'No debes dinero a nadie'}
           </Text>
         </View>
       );
@@ -233,7 +233,7 @@ export default function DebtsSummaryScreen() {
           <EmptyState
             icon="wallet-outline"
             title="Sin deudas registradas"
-            subtitle="Pulsá el botón + para registrar una nueva deuda"
+            subtitle="Pulsa el botón + para registrar una nueva deuda"
           />
         }
       />

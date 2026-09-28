@@ -30,11 +30,11 @@ export default function PrivacyPolicyScreen() {
         <Section title="1. Datos que recolectamos">
           Recolectamos la información que ingresás voluntariamente para usar
           la app: tu nombre y email al registrarte, y los datos financieros
-          que cargás vos mismo (gastos, ingresos, presupuestos, metas de
+          que cargas tú mismo (gastos, ingresos, presupuestos, metas de
           ahorro, deudas, tarjetas de crédito, préstamos e inversiones). No
           recolectamos datos de terceros, no accedemos a tu cuenta bancaria
           directamente ni usamos ningún servicio de scraping o agregación
-          bancaria — toda la información financiera es la que vos cargás a
+          bancaria — toda la información financiera es la que tú cargas a
           mano.
         </Section>
 
@@ -80,7 +80,7 @@ export default function PrivacyPolicyScreen() {
         </Section>
 
         <Section title="6. Tus derechos">
-          Podés acceder, corregir, exportar o solicitar la eliminación de tus
+          Puedes acceder, corregir, exportar o solicitar la eliminación de tus
           datos personales y financieros en cualquier momento, ya sea desde
           la propia app o contactándonos por los medios indicados abajo.
         </Section>

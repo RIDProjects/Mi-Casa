@@ -19,7 +19,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isAuthenticated && isAdminRoute && !isAdmin) {
-      toast.error('No tenés permisos para acceder a esa sección');
+      toast.error('No tienes permisos para acceder a esa sección');
       router.replace('/dashboard');
     }
   }, [isAuthenticated, isAdminRoute, isAdmin, router]);

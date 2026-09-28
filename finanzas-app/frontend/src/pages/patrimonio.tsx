@@ -47,8 +47,8 @@ export default function PatrimonioPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState<any>(defaultForm);
   const { activeCurrencyCode, rates, currencies } = useCurrencyStore();
-  const baseCurrency = currencies.find(c => c.isBase);
-  const activeCurrency = currencies.find(c => c.currencyCode === activeCurrencyCode) ?? baseCurrency;
+  const localCurrency = currencies.find(c => c.isLocal);
+  const activeCurrency = currencies.find(c => c.currencyCode === activeCurrencyCode) ?? localCurrency;
   const [usdRate, setUsdRate] = useState<number>(1200);
   const [historyMonths, setHistoryMonths] = useState(12);
 
@@ -88,10 +88,10 @@ export default function PatrimonioPage() {
   const totalDebts = totalCardBalances + totalLoanDebt;
 
   // Base currency is always 1. For non-base, divide by the exchange rate.
-  const activeCode = activeCurrency?.currencyCode ?? baseCurrency?.currencyCode ?? '';
-  const baseCode = baseCurrency?.currencyCode ?? '';
+  const activeCode = activeCurrency?.currencyCode ?? localCurrency?.currencyCode ?? '';
+  const localCode = localCurrency?.currencyCode ?? '';
   const rawDivider =
-    activeCode === baseCode || !activeCode
+    activeCode === localCode || !activeCode
       ? 1
       : activeCode === 'USD'
         ? (usdRate || rates['USD'] || 125)
@@ -169,7 +169,7 @@ export default function PatrimonioPage() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <TrendingUp size={24} /> Patrimonio Neto {activeCode !== baseCode ? `(${activeCode})` : ''}
+            <TrendingUp size={24} /> Patrimonio Neto {activeCode !== localCode ? `(${activeCode})` : ''}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Activos físicos, efectivo y deudas consolidadas</p>
         </div>
@@ -210,7 +210,7 @@ export default function PatrimonioPage() {
 
       {(isErrorCards || isErrorLoans || isErrorNetWorth) && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm text-red-700 dark:text-red-300 mb-6">
-          {isErrorNetWorth && 'No se pudo cargar el patrimonio. Intentá recargar.'}
+          {isErrorNetWorth && 'No se pudo cargar el patrimonio. Intenta recargar.'}
           {isErrorCards && !isErrorNetWorth && 'No se pudieron cargar las tarjetas de crédito.'}
           {isErrorLoans && !isErrorNetWorth && 'No se pudieron cargar los créditos.'}
         </div>
@@ -218,7 +218,7 @@ export default function PatrimonioPage() {
 
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6 text-center">
         <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-          Patrimonio Neto {activeCode !== baseCode ? `(en ${activeCode})` : ''}
+          Patrimonio Neto {activeCode !== localCode ? `(en ${activeCode})` : ''}
         </p>
         <p className={`text-5xl font-bold mb-4 ${netWorthPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
           {netWorthPositive ? '+' : '-'}{currencySymbol}{fmt(Math.abs(netWorth))}

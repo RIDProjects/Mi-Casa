@@ -77,7 +77,7 @@ export default function SimuladorPage() {
     <Layout>
       <PageHeader
         title={<><Calculator size={24} /> Simulador de Crédito</>}
-        subtitle="Calculá cuotas, intereses y tabla de amortización"
+        subtitle="Calcula cuotas, intereses y tabla de amortización"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -164,7 +164,7 @@ export default function SimuladorPage() {
           {!hasResults ? (
             <div className="flex flex-col items-center justify-center h-40 text-outline">
               <Calculator size={40} className="mb-3 opacity-40" />
-              <p className="text-sm">Ingresá un monto y plazo para ver los resultados</p>
+              <p className="text-sm">Ingresa un monto y plazo para ver los resultados</p>
             </div>
           ) : (
             <div className="space-y-4">

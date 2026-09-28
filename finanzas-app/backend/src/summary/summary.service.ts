@@ -10,6 +10,7 @@ import { CuotasService } from '../cuotas/cuotas.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { InvestmentsService } from '../investments/investments.service';
 import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
+import { HouseholdExpensesService } from '../household-expenses/household-expenses.service';
 import { TransactionType } from '../database/entities/transaction.entity';
 
 export interface UpcomingBill {
@@ -34,6 +35,7 @@ export class SummaryService {
     private readonly transactionsService: TransactionsService,
     private readonly investmentsService: InvestmentsService,
     private readonly houseCurrenciesService: HouseCurrenciesService,
+    private readonly householdExpensesService: HouseholdExpensesService,
   ) {}
 
   async getUpcomingBills(houseId: string, days = 30): Promise<UpcomingBill[]> {
@@ -147,8 +149,19 @@ export class SummaryService {
       ? Math.round((efCurrentBalance / efMonthlyExpenses) * 10) / 10
       : 0;
 
-    const baseCurrency = await this.houseCurrenciesService.getBaseCurrency(houseId);
+    const localCurrency = await this.houseCurrenciesService.getLocalCurrency(houseId);
     const exchangeRates = await this.houseCurrenciesService.getRates(houseId);
+
+    // Household expenses total for the current month, already denominated
+    // in the house's local currency (amountLocal, snapshotted at write time
+    // — no re-conversion here). Market purchases (totalCompras/totalCUP) are
+    // explicitly out of scope for this change — see household-expenses
+    // module's summary.service.ts comment near totalCompras.
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const householdExpensesTotal = await this.householdExpensesService.sumLocalForMonth(
+      houseId,
+      currentMonth,
+    );
 
     return {
       budget: {
@@ -187,8 +200,12 @@ export class SummaryService {
         monthsCovered: efMonthsCovered,
       },
       cuotas: await this.cuotasService.getMonthlyCommitment(houseId),
-      baseCurrency: baseCurrency?.currencyCode ?? 'CUP',
-      baseCurrencySymbol: baseCurrency?.symbol ?? '$',
+      householdExpenses: {
+        month: currentMonth,
+        total: householdExpensesTotal,
+      },
+      localCurrency: localCurrency?.currencyCode ?? 'CUP',
+      localCurrencySymbol: localCurrency?.symbol ?? '$',
       exchangeRates,
     };
   }

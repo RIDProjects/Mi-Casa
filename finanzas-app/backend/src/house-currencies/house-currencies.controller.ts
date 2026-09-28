@@ -26,7 +26,7 @@ function assertHouseAccess(user: any, pathHouseId: string): string {
     user?.houses?.some((h: any) => h.id === pathHouseId);
 
   if (!belongsToHouse) {
-    throw new ForbiddenException('No tenés acceso a esta casa');
+    throw new ForbiddenException('No tienes acceso a esta casa');
   }
 
   return houseId === pathHouseId ? houseId : pathHouseId;
@@ -83,15 +83,15 @@ export class HouseCurrenciesController {
     return this.svc.add(verifiedHouseId, dto);
   }
 
-  @Put(':id/set-base')
-  setBase(
+  @Put(':id/set-local')
+  setLocal(
     @Param('houseId') houseId: string,
     @Param('id') id: string,
     @Request() req,
   ) {
     const verifiedHouseId = assertHouseAccess(req.user, houseId);
     assertHouseAdmin(req.user);
-    return this.svc.setBase(verifiedHouseId, id);
+    return this.svc.setLocal(verifiedHouseId, id);
   }
 
   @Delete(':id')

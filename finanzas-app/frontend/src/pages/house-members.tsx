@@ -52,7 +52,7 @@ export default function HouseMembersPage() {
     houseInviteAPI.createMember(houseId, data)
   , {
     onSuccess: () => {
-      toast.success('Usuario creado — pasale el email y la contraseña para que inicie sesión');
+      toast.success('Usuario creado — pásale el email y la contraseña para que inicie sesión');
       setShowCreateModal(false);
       setCreateForm(emptyCreateForm);
       qc.invalidateQueries(['houseMembers', houseId]);
@@ -115,7 +115,7 @@ export default function HouseMembersPage() {
       {!canManage && (
         <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
           <ShieldAlert size={16} className="shrink-0" />
-          Solo el administrador de la casa puede crear, activar/desactivar o eliminar miembros. Podés ver la lista, pero no gestionarla.
+          Solo el administrador de la casa puede crear, activar/desactivar o eliminar miembros. Puedes ver la lista, pero no gestionarla.
         </div>
       )}
 
@@ -123,7 +123,7 @@ export default function HouseMembersPage() {
         <EmptyState
           emoji="👥"
           title="Sin miembros en el hogar"
-          description="Agregá usuarios para gestionar el acceso a la casa"
+          description="Agrega usuarios para gestionar el acceso a la casa"
           action={canManage ? { label: 'Crear usuario', onClick: () => setShowCreateModal(true) } : undefined}
         />
       ) : (
@@ -225,7 +225,7 @@ export default function HouseMembersPage() {
             </select>
           </div>
           <p className="text-xs text-on-surface-variant">
-            Se crea la cuenta al instante — pasale el email y la contraseña a la persona para que inicie sesión.
+            Se crea la cuenta al instante — pásale el email y la contraseña a la persona para que inicie sesión.
           </p>
           <div className="flex gap-2 pt-2">
             <button onClick={() => setShowCreateModal(false)} className="btn-secondary flex-1">Cancelar</button>

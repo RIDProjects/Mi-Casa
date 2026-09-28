@@ -77,12 +77,12 @@ export default function AddDebtScreen() {
 
   const handleSubmit = () => {
     if (!personName.trim()) {
-      Alert.alert('Falta el nombre', 'Ingresá el nombre de la persona.');
+      Alert.alert('Falta el nombre', 'Ingresa el nombre de la persona.');
       return;
     }
     const parsedAmount = parseFloat(amount.replace(',', '.'));
     if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
-      Alert.alert('Monto inválido', 'Ingresá un monto mayor a cero.');
+      Alert.alert('Monto inválido', 'Ingresa un monto mayor a cero.');
       return;
     }
 
@@ -142,8 +142,8 @@ export default function AddDebtScreen() {
         <View style={[styles.hint, { backgroundColor: accentBg, borderColor: accentColor }]}>
           <Text style={[styles.hintText, { color: accentColor }]}>
             {isTheyOweMe
-              ? 'Alguien te debe dinero a vos'
-              : 'Vos le debés dinero a alguien'}
+              ? 'Alguien te debe dinero a ti'
+              : 'Tú le debes dinero a alguien'}
           </Text>
         </View>
 

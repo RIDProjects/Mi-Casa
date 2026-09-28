@@ -138,12 +138,12 @@ export default function ShoppingListScreen() {
   const handleAddItem = () => {
     const producto = inputProducto.trim();
     if (!producto) {
-      Alert.alert('Falta el producto', 'Ingresá el nombre del producto.');
+      Alert.alert('Falta el producto', 'Ingresa el nombre del producto.');
       return;
     }
     const precio = parseFloat(inputPrecio.replace(',', '.'));
     if (!inputPrecio || isNaN(precio) || precio <= 0) {
-      Alert.alert('Precio inválido', 'Ingresá un precio mayor a cero.');
+      Alert.alert('Precio inválido', 'Ingresa un precio mayor a cero.');
       return;
     }
     const cantidad = parseInt(inputCantidad, 10) || 1;
@@ -239,7 +239,7 @@ export default function ShoppingListScreen() {
               <Ionicons name="cart-outline" size={48} color={Colors.textMuted} />
               <Text style={styles.emptyTitle}>Lista vacía</Text>
               <Text style={styles.emptySubtitle}>
-                Agregá ítems usando el formulario de abajo
+                Agrega ítems usando el formulario de abajo
               </Text>
             </View>
           ) : (

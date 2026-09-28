@@ -29,11 +29,11 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-const fmt = (amount: number) => formatMoney(amount, 'CUP');
-
 // Fila normalizada para renderizar tanto "compras de mercado" (agregadas, sin id,
-// no editables desde esta pantalla — vienen de la Lista de la Compra) como
-// "salidas" (entradas manuales del household-expenses, con id y borrables).
+// no editables desde esta pantalla — vienen de la Lista de la Compra, siempre en
+// CUP — moneda-menos, fuera de alcance de este cambio) como "salidas" (entradas
+// manuales del household-expenses, con id y borrables, ya denominadas en la
+// moneda local de la casa vía montoLocal).
 interface ExpenseRow {
   key: string;
   id?: string;
@@ -42,6 +42,7 @@ interface ExpenseRow {
   fecha: string;
   lugar?: string | null;
   monto: number;
+  currency: string;
   deletable: boolean;
 }
 
@@ -49,10 +50,12 @@ function CategoryBar({
   label,
   total,
   percentage,
+  currency,
 }: {
   label: string;
   total: number;
   percentage: number;
+  currency: string;
 }) {
   const color = Colors.categories[label] ?? Colors.textSecondary;
   return (
@@ -61,7 +64,7 @@ function CategoryBar({
         <View style={[catStyles.dot, { backgroundColor: color }]} />
         <Text style={catStyles.label}>{label}</Text>
         <Text style={catStyles.percentage}>{percentage.toFixed(0)}%</Text>
-        <Text style={catStyles.amount}>{fmt(total)}</Text>
+        <Text style={catStyles.amount}>{formatMoney(total, currency)}</Text>
       </View>
       <View style={catStyles.barBg}>
         <View
@@ -121,7 +124,7 @@ function ExpenseRowItem({
       <View style={txStyles.content}>
         <View style={txStyles.topRow}>
           <Text style={txStyles.concepto} numberOfLines={1}>{item.descripcion}</Text>
-          <Text style={[txStyles.monto, { color: Colors.red }]}>-{fmt(item.monto)}</Text>
+          <Text style={[txStyles.monto, { color: Colors.red }]}>-{formatMoney(item.monto, item.currency)}</Text>
         </View>
         <View style={txStyles.bottomRow}>
           <View style={[txStyles.catBadge, { backgroundColor: catColor + '30' }]}>
@@ -191,6 +194,10 @@ export default function ExpenseRegistryScreen() {
   const totalCompras = data?.totalCompras ?? 0;
   const totalSalidas = data?.totalSalidas ?? 0;
   const total = data?.total ?? 0;
+  // House base currency — salidas (manual expenses) are already snapshotted
+  // in this currency at write time. Market purchases (comprasMercado /
+  // totalCompras) stay CUP-only, out of scope for this change.
+  const monedaLocal = data?.monedaLocal ?? 'CUP';
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => householdExpensesService.delete(id),
@@ -223,6 +230,7 @@ export default function ExpenseRegistryScreen() {
       fecha: c.fecha,
       lugar: c.lugar,
       monto: c.totalCUP,
+      currency: 'CUP',
       deletable: false,
     }));
     const salidaRows: ExpenseRow[] = salidas.map((s) => ({
@@ -232,11 +240,12 @@ export default function ExpenseRegistryScreen() {
       categoria: s.categoria,
       fecha: s.fecha,
       lugar: s.lugar,
-      monto: s.montoCUP,
+      monto: s.montoLocal ?? s.montoCUP,
+      currency: monedaLocal,
       deletable: true,
     }));
     return [...salidaRows, ...compraRows];
-  }, [comprasMercado, salidas]);
+  }, [comprasMercado, salidas, monedaLocal]);
 
   const categoryTotals = useMemo((): HouseholdResumenCategoria[] => {
     return [...resumenCategoria].sort((a, b) => b.totalCUP - a.totalCUP);
@@ -273,16 +282,16 @@ export default function ExpenseRegistryScreen() {
         <View style={styles.summaryMain}>
           <Text style={styles.summaryLabel}>Total gastos del mes</Text>
           <Text style={[styles.summaryAmount, { color: Colors.red }]}>
-            -{fmt(total)}
+            -{formatMoney(total, monedaLocal)}
           </Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
-          <Text style={styles.summaryRowValue}>{fmt(totalCompras)}</Text>
+          <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, 'CUP')}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
-          <Text style={styles.summaryRowValue}>{fmt(totalSalidas)}</Text>
+          <Text style={styles.summaryRowValue}>{formatMoney(totalSalidas, monedaLocal)}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>Registros</Text>
@@ -300,6 +309,7 @@ export default function ExpenseRegistryScreen() {
               label={ct.categoria}
               total={ct.totalCUP}
               percentage={total > 0 ? (ct.totalCUP / total) * 100 : 0}
+              currency={monedaLocal}
             />
           ))}
         </View>

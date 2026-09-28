@@ -14,7 +14,7 @@ export default function ServerErrorPage() {
         </div>
         <h1 className="font-section-title text-[22px] text-on-surface mt-3">Error del servidor</h1>
         <p className="font-body-default text-body-default text-on-surface-variant mt-2">
-          Algo salió mal de nuestro lado. Intentá de nuevo en unos minutos.
+          Algo salió mal de nuestro lado. Intenta de nuevo en unos minutos.
         </p>
         <button
           onClick={() => router.push('/dashboard')}

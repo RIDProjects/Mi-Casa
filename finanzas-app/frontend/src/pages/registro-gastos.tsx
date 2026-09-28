@@ -8,6 +8,8 @@ import PageHeader from '../components/ui/PageHeader';
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
+import { useCurrencyStore } from '../store/currency.store';
+import { useCurrencyFormatter } from '../lib/currency';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
 
@@ -28,13 +30,16 @@ const CAT_COLORS: Record<Category, string> = {
   Otros:      'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
 };
 
-const defaultForm = {
-  fecha:       new Date().toISOString().split('T')[0],
-  descripcion: '',
-  categoria:   'Otros' as Category,
-  montoCUP:    '',
-  lugar:       '',
-};
+function buildDefaultForm(monedaLocal: string) {
+  return {
+    fecha:       new Date().toISOString().split('T')[0],
+    descripcion: '',
+    categoria:   'Otros' as Category,
+    monto:       '',
+    moneda:      monedaLocal,
+    lugar:       '',
+  };
+}
 
 export default function RegistroGastosPage() {
   const qc = useQueryClient();
@@ -43,7 +48,13 @@ export default function RegistroGastosPage() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
-  const [form, setForm] = useState<any>(defaultForm);
+
+  const { currencies } = useCurrencyStore();
+  const { fmt: fmtLocal } = useCurrencyFormatter();
+  const localCurrency = currencies.find(c => c.isLocal);
+  const monedaLocal = localCurrency?.currencyCode ?? 'CUP';
+
+  const [form, setForm] = useState<any>(() => buildDefaultForm(monedaLocal));
 
   const monthStr = `${year}-${String(month).padStart(2, '0')}`;
   const qKey = ['household-expenses', monthStr];
@@ -62,7 +73,7 @@ export default function RegistroGastosPage() {
   const total: number           = data?.total            ?? 0;
 
   const createMut = useMutation((d: any) => householdExpensesAPI.create(d), {
-    onSuccess: () => { toast.success('Gasto registrado'); setShowModal(false); setForm(defaultForm); qc.invalidateQueries(qKey); },
+    onSuccess: () => { toast.success('Gasto registrado'); setShowModal(false); setForm(buildDefaultForm(monedaLocal)); qc.invalidateQueries(qKey); },
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
@@ -84,7 +95,8 @@ export default function RegistroGastosPage() {
       fecha:       item.fecha,
       descripcion: item.descripcion,
       categoria:   item.categoria,
-      montoCUP:    item.montoCUP,
+      monto:       item.monto ?? item.montoCUP,
+      moneda:      item.moneda ?? monedaLocal,
       lugar:       item.lugar || '',
     });
     setEditItem(item);
@@ -93,9 +105,9 @@ export default function RegistroGastosPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.descripcion.trim()) { toast.error('Ingresá una descripción'); return; }
-    if (!form.montoCUP || Number(form.montoCUP) <= 0) { toast.error('Ingresá un monto válido'); return; }
-    const dto = { ...form, montoCUP: Number(form.montoCUP), mes: monthStr };
+    if (!form.descripcion.trim()) { toast.error('Ingresa una descripción'); return; }
+    if (!form.monto || Number(form.monto) <= 0) { toast.error('Ingresa un monto válido'); return; }
+    const dto = { ...form, monto: Number(form.monto), mes: monthStr };
     editItem ? updateMut.mutate(dto) : createMut.mutate(dto);
   };
 
@@ -164,7 +176,7 @@ export default function RegistroGastosPage() {
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {comprasMercado.length === 0 ? (
-                    <tr><td colSpan={4} className="px-3 py-8 text-center text-outline text-xs">Sin compras este mes — agregá productos en Lista de la Compra</td></tr>
+                    <tr><td colSpan={4} className="px-3 py-8 text-center text-outline text-xs">Sin compras este mes — agrega productos en Lista de la Compra</td></tr>
                   ) : (
                     comprasMercado.map((c: any, i: number) => (
                       <tr key={i} className="hover:bg-surface-gray">
@@ -202,7 +214,7 @@ export default function RegistroGastosPage() {
                 Salidas y Otros Gastos
               </h2>
               <button
-                onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
+                onClick={() => { setForm(buildDefaultForm(monedaLocal)); setEditItem(null); setShowModal(true); }}
                 className="ml-auto flex items-center gap-1 text-xs font-medium text-orange-700 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-100 bg-orange-100 dark:bg-orange-900/40 hover:bg-orange-200 dark:hover:bg-orange-900/60 px-2.5 py-1.5 rounded-lg transition-colors"
               >
                 <Plus size={13} /> Nueva salida
@@ -216,13 +228,13 @@ export default function RegistroGastosPage() {
                     <th className="px-3 py-2 text-left">Descripción</th>
                     <th className="px-3 py-2 text-left">Categoría</th>
                     <th className="px-3 py-2 text-left">Lugar</th>
-                    <th className="px-3 py-2 text-right">Monto CUP</th>
+                    <th className="px-3 py-2 text-right">Monto</th>
                     <th className="px-3 py-2 text-center">Acc.</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {salidas.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">Sin salidas registradas — usá el botón &quot;Nueva salida&quot;</td></tr>
+                    <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">Sin salidas registradas — usa el botón &quot;Nueva salida&quot;</td></tr>
                   ) : (
                     salidas.map((s: any) => (
                       <tr key={s.id} className="hover:bg-surface-gray">
@@ -234,7 +246,12 @@ export default function RegistroGastosPage() {
                           </span>
                         </td>
                         <td className="px-3 py-2 text-on-surface-variant text-xs">{s.lugar || '—'}</td>
-                        <td className="px-3 py-2 text-right font-semibold text-on-surface">{fmt(s.montoCUP)} CUP</td>
+                        <td className="px-3 py-2 text-right">
+                          <div className="font-semibold text-on-surface">{fmt(s.monto ?? s.montoCUP)} {s.moneda ?? monedaLocal}</div>
+                          {s.moneda && s.moneda !== monedaLocal && (
+                            <div className="text-xs text-on-surface-variant">≈ {fmtLocal(s.montoLocal ?? s.montoCUP)}</div>
+                          )}
+                        </td>
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
@@ -253,7 +270,7 @@ export default function RegistroGastosPage() {
                   <tfoot className="bg-orange-50 dark:bg-orange-900/20">
                     <tr>
                       <td colSpan={4} className="px-3 py-2 text-xs font-bold text-orange-800 dark:text-orange-300">Subtotal Salidas</td>
-                      <td className="px-3 py-2 text-right text-sm font-bold text-orange-700 dark:text-orange-300">{fmt(totalSalidas)} CUP</td>
+                      <td className="px-3 py-2 text-right text-sm font-bold text-orange-700 dark:text-orange-300">{fmtLocal(totalSalidas)}</td>
                       <td />
                     </tr>
                   </tfoot>
@@ -275,7 +292,7 @@ export default function RegistroGastosPage() {
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CAT_COLORS[r.categoria as Category] ?? CAT_COLORS['Otros']}`}>
                     {r.categoria}
                   </span>
-                  <span className="text-sm font-semibold text-on-surface">{fmt(r.totalCUP)} CUP</span>
+                  <span className="text-sm font-semibold text-on-surface">{fmtLocal(r.totalCUP)}</span>
                 </div>
               ))}
               {resumen.length === 0 && (
@@ -289,11 +306,11 @@ export default function RegistroGastosPage() {
               </div>
               <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Salidas</span>
-                <span className="font-medium text-orange-600 dark:text-orange-400">{fmt(totalSalidas)} CUP</span>
+                <span className="font-medium text-orange-600 dark:text-orange-400">{fmtLocal(totalSalidas)}</span>
               </div>
               <div className="flex justify-between text-base font-bold text-on-surface border-t border-outline-variant pt-2 mt-1">
                 <span>TOTAL</span>
-                <span>{fmt(total)} CUP</span>
+                <span>{fmtLocal(total)}</span>
               </div>
             </div>
           </div>
@@ -334,21 +351,30 @@ export default function RegistroGastosPage() {
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
-                  label="Monto CUP"
+                  label="Monto"
                   type="number"
                   min="0"
                   step="0.01"
-                  value={form.montoCUP}
-                  onChange={e => setForm({ ...form, montoCUP: e.target.value })}
+                  value={form.monto}
+                  onChange={e => setForm({ ...form, monto: e.target.value })}
                   required
                 />
-                <Input
-                  label="Lugar (opcional)"
-                  value={form.lugar}
-                  onChange={e => setForm({ ...form, lugar: e.target.value })}
-                  placeholder="Dónde fue..."
-                />
+                <Select
+                  label="Moneda"
+                  value={form.moneda}
+                  onChange={e => setForm({ ...form, moneda: e.target.value })}
+                >
+                  {(currencies.length > 0 ? currencies : [{ currencyCode: monedaLocal }]).map(c => (
+                    <option key={c.currencyCode} value={c.currencyCode}>{c.currencyCode}</option>
+                  ))}
+                </Select>
               </div>
+              <Input
+                label="Lugar (opcional)"
+                value={form.lugar}
+                onChange={e => setForm({ ...form, lugar: e.target.value })}
+                placeholder="Dónde fue..."
+              />
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => { setShowModal(false); setEditItem(null); }} className="btn-secondary">
                   Cancelar

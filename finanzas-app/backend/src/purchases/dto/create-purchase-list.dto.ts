@@ -8,5 +8,5 @@ export class CreatePurchaseListDto {
 
   @IsOptional() @Type(() => Number) @IsNumber() @Min(0) budget?: number;
 
-  @IsOptional() @IsString() baseCurrencyCode?: string;
+  @IsOptional() @IsString() localCurrencyCode?: string;
 }

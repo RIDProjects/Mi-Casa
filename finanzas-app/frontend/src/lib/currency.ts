@@ -3,20 +3,20 @@ import { useCurrencyStore } from '../store/currency.store';
 export function useCurrencyFormatter() {
   const { currencies, rates, activeCurrencyCode } = useCurrencyStore();
 
-  const baseCurrency = currencies.find(c => c.isBase);
+  const localCurrency = currencies.find(c => c.isLocal);
   const activeCurrency =
-    currencies.find(c => c.currencyCode === activeCurrencyCode) ?? baseCurrency;
+    currencies.find(c => c.currencyCode === activeCurrencyCode) ?? localCurrency;
 
-  const convert = (amountInBase: number): number => {
-    if (!activeCurrency || !baseCurrency) return amountInBase;
-    if (activeCurrency.currencyCode === baseCurrency.currencyCode) return amountInBase;
+  const convert = (amountInLocal: number): number => {
+    if (!activeCurrency || !localCurrency) return amountInLocal;
+    if (activeCurrency.currencyCode === localCurrency.currencyCode) return amountInLocal;
     const rate = rates[activeCurrency.currencyCode];
-    if (!rate || rate === 0) return amountInBase;
-    return amountInBase / rate;
+    if (!rate || rate === 0) return amountInLocal;
+    return amountInLocal / rate;
   };
 
-  const fmt = (amountInBase: number): string => {
-    const converted = convert(amountInBase);
+  const fmt = (amountInLocal: number): string => {
+    const converted = convert(amountInLocal);
     const symbol = activeCurrency?.symbol ?? '$';
     const locale = activeCurrency?.locale ?? 'es-CU';
     return `${symbol}${new Intl.NumberFormat(locale, {
@@ -25,8 +25,8 @@ export function useCurrencyFormatter() {
     }).format(converted)}`;
   };
 
-  const fmtWithCode = (amountInBase: number): string => {
-    return `${fmt(amountInBase)} ${activeCurrency?.currencyCode ?? ''}`.trim();
+  const fmtWithCode = (amountInLocal: number): string => {
+    return `${fmt(amountInLocal)} ${activeCurrency?.currencyCode ?? ''}`.trim();
   };
 
   return {
@@ -34,7 +34,7 @@ export function useCurrencyFormatter() {
     fmtWithCode,
     convert,
     activeCurrency,
-    baseCurrency,
+    localCurrency,
     symbol: activeCurrency?.symbol ?? '$',
   };
 }

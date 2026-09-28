@@ -112,7 +112,7 @@ export default function BudgetScreen() {
         <EmptyState
           icon="pie-chart-outline"
           title="Sin presupuesto activo"
-          subtitle="Creá un presupuesto desde la app web para verlo acá"
+          subtitle="Crea un presupuesto desde la app web para verlo acá"
         />
       </SafeAreaView>
     );

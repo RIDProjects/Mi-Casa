@@ -8,7 +8,7 @@ export class PurchaseList {
   @Column() name: string;
   @Column({ nullable: true }) description: string | null;
   @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 }) budget: number;
-  @Column({ nullable: true }) baseCurrencyCode: string | null;
+  @Column({ nullable: true }) localCurrencyCode: string | null;
   @OneToMany(() => PurchaseItem, item => item.list, { cascade: true, eager: true }) items: PurchaseItem[];
   @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;
   @CreateDateColumn() createdAt: Date;

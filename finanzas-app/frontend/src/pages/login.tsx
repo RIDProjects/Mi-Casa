@@ -34,9 +34,9 @@ export default function Login() {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 401) {
-        setError('Credenciales incorrectas. Verificá tu email y contraseña.');
+        setError('Credenciales incorrectas. Verifica tu email y contraseña.');
       } else {
-        setError(err.response?.data?.message || 'Error al iniciar sesión. Intentá de nuevo.');
+        setError(err.response?.data?.message || 'Error al iniciar sesión. Intenta de nuevo.');
       }
       setForm(f => ({ ...f, password: '' }));
     } finally {

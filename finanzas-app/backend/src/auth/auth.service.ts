@@ -81,16 +81,16 @@ export class AuthService {
         house = await this.houseRepo.save(house);
         house.members = [];
 
-        // Seed default base currency for the new house
-        const baseCurrencyCode = (dto as any).baseCurrencyCode ?? 'CUP';
-        const meta = CURRENCY_META[baseCurrencyCode] ?? CURRENCY_META['CUP'];
+        // Seed default local currency for the new house
+        const localCurrencyCode = (dto as any).localCurrencyCode ?? 'CUP';
+        const meta = CURRENCY_META[localCurrencyCode] ?? CURRENCY_META['CUP'];
         await this.houseCurrencyRepo.save(
           this.houseCurrencyRepo.create({
-            currencyCode: baseCurrencyCode,
+            currencyCode: localCurrencyCode,
             currencyName: meta.name,
             symbol: meta.symbol,
             locale: meta.locale,
-            isBase: true,
+            isLocal: true,
             house: { id: house.id },
           }),
         );

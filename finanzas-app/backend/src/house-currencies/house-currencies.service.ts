@@ -37,7 +37,7 @@ export class HouseCurrenciesService {
   async findByHouse(houseId: string): Promise<HouseCurrency[]> {
     return this.repo.find({
       where: { house: { id: houseId }, isActive: true },
-      order: { isBase: 'DESC', currencyCode: 'ASC' },
+      order: { isLocal: 'DESC', currencyCode: 'ASC' },
     });
   }
 
@@ -48,24 +48,24 @@ export class HouseCurrenciesService {
       currencyName: string;
       symbol: string;
       locale?: string;
-      isBase?: boolean;
+      isLocal?: boolean;
     },
   ): Promise<HouseCurrency> {
-    if (dto.isBase) {
-      await this.repo.update({ house: { id: houseId } }, { isBase: false });
+    if (dto.isLocal) {
+      await this.repo.update({ house: { id: houseId } }, { isLocal: false });
     }
     const currency = this.repo.create({ ...dto, house: { id: houseId } });
     return this.repo.save(currency);
   }
 
-  async setBase(houseId: string, currencyId: string): Promise<HouseCurrency> {
+  async setLocal(houseId: string, currencyId: string): Promise<HouseCurrency> {
     const currency = await this.repo.findOne({
       where: { id: currencyId, house: { id: houseId } },
     });
     if (!currency) throw new NotFoundException('Moneda no encontrada');
 
-    await this.repo.update({ house: { id: houseId } }, { isBase: false });
-    await this.repo.update({ id: currencyId, house: { id: houseId } }, { isBase: true });
+    await this.repo.update({ house: { id: houseId } }, { isLocal: false });
+    await this.repo.update({ id: currencyId, house: { id: houseId } }, { isLocal: true });
     return this.repo.findOneOrFail({ where: { id: currencyId, house: { id: houseId } } });
   }
 
@@ -74,39 +74,97 @@ export class HouseCurrenciesService {
       where: { id: currencyId, house: { id: houseId } },
     });
     if (!c) throw new NotFoundException('Moneda no encontrada');
-    if (c.isBase)
-      throw new BadRequestException('No se puede eliminar la moneda base');
+    if (c.isLocal)
+      throw new BadRequestException('No se puede eliminar la moneda local');
     await this.repo.remove(c);
   }
 
-  async getBaseCurrency(houseId: string): Promise<HouseCurrency | null> {
+  async getLocalCurrency(houseId: string): Promise<HouseCurrency | null> {
     return this.repo.findOne({
-      where: { house: { id: houseId }, isBase: true },
+      where: { house: { id: houseId }, isLocal: true },
     });
   }
 
   /**
-   * Returns a map of currencyCode → rate-in-terms-of-base-currency.
-   * The base currency always has rate 1.
+   * Returns a map of currencyCode → rate-in-terms-of-local-currency.
+   * The local currency always has rate 1.
    */
   async getRates(houseId: string): Promise<Record<string, number>> {
     const currencies = await this.findByHouse(houseId);
-    const base = currencies.find((c) => c.isBase);
-    if (!base) return {};
+    const local = currencies.find((c) => c.isLocal);
+    if (!local) return {};
 
-    const rates: Record<string, number> = { [base.currencyCode]: 1 };
+    const rates: Record<string, number> = { [local.currencyCode]: 1 };
 
-    for (const c of currencies.filter((x) => !x.isBase)) {
+    for (const c of currencies.filter((x) => !x.isLocal)) {
       const rate = await this.ratesRepo.findOne({
         where: {
           fromCurrency: c.currencyCode,
-          toCurrency: base.currencyCode,
+          toCurrency: local.currencyCode,
         },
         order: { date: 'DESC' },
       });
       rates[c.currencyCode] = rate ? Number(rate.rate) : 1;
     }
     return rates;
+  }
+
+  /**
+   * Resolves the rate to convert `code` → the house's local currency, valid
+   * on `onDate`. Used only by the household-expenses write path (create and
+   * update) to compute the persisted local-currency snapshot. Unlike
+   * `getRates()` (display-only, silently falls back to rate 1 when a rate
+   * is missing), this method hard-fails so no expense is ever persisted
+   * with a fabricated rate.
+   *
+   * Precedence: newest `ExchangeRate` row with `date <= onDate` → newest
+   * `ExchangeRate` row overall → 400 BadRequestException.
+   */
+  async resolveRateToLocal(
+    houseId: string,
+    code: string,
+    onDate: string,
+  ): Promise<{ localCode: string; rate: number }> {
+    const local = await this.getLocalCurrency(houseId);
+    if (!local) {
+      throw new BadRequestException('La casa no tiene una moneda local configurada');
+    }
+
+    if (code === local.currencyCode) {
+      return { localCode: local.currencyCode, rate: 1 };
+    }
+
+    const currency = await this.repo.findOne({
+      where: { house: { id: houseId }, currencyCode: code, isActive: true },
+    });
+    if (!currency) {
+      throw new BadRequestException(
+        `La moneda ${code} no está activa en esta casa`,
+      );
+    }
+
+    const dated = await this.ratesRepo
+      .createQueryBuilder('er')
+      .where('er.fromCurrency = :from', { from: code })
+      .andWhere('er.toCurrency = :to', { to: local.currencyCode })
+      .andWhere('er.date <= :onDate', { onDate })
+      .orderBy('er.date', 'DESC')
+      .getOne();
+
+    const rateRow =
+      dated ??
+      (await this.ratesRepo.findOne({
+        where: { fromCurrency: code, toCurrency: local.currencyCode },
+        order: { date: 'DESC' },
+      }));
+
+    if (!rateRow) {
+      throw new BadRequestException(
+        `No hay tasa de cambio configurada para ${code} → ${local.currencyCode}`,
+      );
+    }
+
+    return { localCode: local.currencyCode, rate: Number(rateRow.rate) };
   }
 
   async upsertRate(

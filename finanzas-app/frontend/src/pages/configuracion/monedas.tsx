@@ -42,7 +42,7 @@ export default function MonedasPage() {
   const [rateInputs, setRateInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
 
-  const baseCurrency = currencies.find(c => c.isBase);
+  const localCurrency = currencies.find(c => c.isLocal);
 
   const reload = async () => {
     if (!houseId) return;
@@ -88,15 +88,15 @@ export default function MonedasPage() {
     }
   };
 
-  const handleSetBase = async (currency: HouseCurrency) => {
-    if (!houseId || currency.isBase) return;
+  const handleSetLocal = async (currency: HouseCurrency) => {
+    if (!houseId || currency.isLocal) return;
     setLoading(l => ({ ...l, [`base-${currency.id}`]: true }));
     try {
-      await houseCurrenciesAPI.setBase(houseId, currency.id);
-      toast.success(`${currency.currencyCode} es ahora la moneda base`);
+      await houseCurrenciesAPI.setLocal(houseId, currency.id);
+      toast.success(`${currency.currencyCode} es ahora la moneda local`);
       await reload();
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Error al cambiar la moneda base');
+      toast.error(err?.response?.data?.message ?? 'Error al cambiar la moneda local');
     } finally {
       setLoading(l => ({ ...l, [`base-${currency.id}`]: false }));
     }
@@ -104,8 +104,8 @@ export default function MonedasPage() {
 
   const handleRemove = async (currency: HouseCurrency) => {
     if (!houseId) return;
-    if (currency.isBase) {
-      toast.error('No podés eliminar la moneda base');
+    if (currency.isLocal) {
+      toast.error('No puedes eliminar la moneda local');
       return;
     }
     setLoading(l => ({ ...l, [`del-${currency.id}`]: true }));
@@ -121,18 +121,18 @@ export default function MonedasPage() {
   };
 
   const handleSaveRate = async (currency: HouseCurrency) => {
-    if (!houseId || !baseCurrency) return;
+    if (!houseId || !localCurrency) return;
     const rawRate = rateInputs[currency.currencyCode];
     const rate = parseFloat(rawRate);
     if (!rawRate || isNaN(rate) || rate <= 0) {
-      toast.error('Ingresá una tasa válida mayor a 0');
+      toast.error('Ingresa una tasa válida mayor a 0');
       return;
     }
     setLoading(l => ({ ...l, [`rate-${currency.id}`]: true }));
     try {
       await houseCurrenciesAPI.upsertRate(houseId, {
         fromCurrency: currency.currencyCode,
-        toCurrency: baseCurrency.currencyCode,
+        toCurrency: localCurrency.currencyCode,
         rate,
       });
       toast.success(`Tasa de ${currency.currencyCode} actualizada`);
@@ -155,7 +155,7 @@ export default function MonedasPage() {
     <Layout>
       <PageHeader
         title={<><Coins size={24} /> Monedas del hogar</>}
-        subtitle="Configurá las monedas que usa tu hogar y sus tasas de cambio"
+        subtitle="Configura las monedas que usa tu hogar y sus tasas de cambio"
         action={
           <button
             onClick={() => setShowAddModal(true)}
@@ -170,7 +170,7 @@ export default function MonedasPage() {
         <EmptyState
           emoji="💱"
           title="No hay monedas configuradas"
-          description="Agregá una moneda base y luego sumá las que uses habitualmente"
+          description="Agrega una moneda local y luego suma las que uses habitualmente"
           action={{ label: 'Agregar moneda', onClick: () => setShowAddModal(true) }}
         />
       ) : (
@@ -195,8 +195,8 @@ export default function MonedasPage() {
                         <span className="font-semibold text-on-surface">
                           {currency.currencyCode}
                         </span>
-                        {currency.isBase && (
-                          <Badge variant="green">Base</Badge>
+                        {currency.isLocal && (
+                          <Badge variant="green">Local</Badge>
                         )}
                       </div>
                       <p className="text-xs text-on-surface-variant truncate">{currency.currencyName}</p>
@@ -204,7 +204,7 @@ export default function MonedasPage() {
                   </div>
 
                   {/* Rate field — only for non-base currencies */}
-                  {!currency.isBase && baseCurrency && (
+                  {!currency.isLocal && localCurrency && (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-on-surface-variant whitespace-nowrap">
                         1 {currency.currencyCode} =
@@ -220,7 +220,7 @@ export default function MonedasPage() {
                           setRateInputs(r => ({ ...r, [currency.currencyCode]: e.target.value }))
                         }
                       />
-                      <span className="text-xs text-on-surface-variant">{baseCurrency.currencyCode}</span>
+                      <span className="text-xs text-on-surface-variant">{localCurrency.currencyCode}</span>
                       <button
                         onClick={() => handleSaveRate(currency)}
                         disabled={loading[`rate-${currency.id}`] || !rateInput}
@@ -233,21 +233,21 @@ export default function MonedasPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 shrink-0">
-                    {!currency.isBase && (
+                    {!currency.isLocal && (
                       <button
-                        onClick={() => handleSetBase(currency)}
+                        onClick={() => handleSetLocal(currency)}
                         disabled={loading[`base-${currency.id}`]}
-                        title="Establecer como moneda base"
+                        title="Establecer como moneda local"
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors disabled:opacity-50"
                       >
                         <Star size={13} />
-                        {loading[`base-${currency.id}`] ? '...' : 'Hacer base'}
+                        {loading[`base-${currency.id}`] ? '...' : 'Hacer local'}
                       </button>
                     )}
                     <button
                       onClick={() => handleRemove(currency)}
-                      disabled={currency.isBase || loading[`del-${currency.id}`]}
-                      title={currency.isBase ? 'No se puede eliminar la moneda base' : 'Eliminar moneda'}
+                      disabled={currency.isLocal || loading[`del-${currency.id}`]}
+                      title={currency.isLocal ? 'No se puede eliminar la moneda local' : 'Eliminar moneda'}
                       className="p-1.5 rounded-lg text-outline hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Trash2 size={16} />
@@ -256,9 +256,9 @@ export default function MonedasPage() {
                 </div>
 
                 {/* Current rate display */}
-                {!currency.isBase && currentRate && !rateInput && (
+                {!currency.isLocal && currentRate && !rateInput && (
                   <p className="text-xs text-outline mt-2 pl-13">
-                    Tasa actual: 1 {currency.currencyCode} = {currentRate} {baseCurrency?.currencyCode}
+                    Tasa actual: 1 {currency.currencyCode} = {currentRate} {localCurrency?.currencyCode}
                   </p>
                 )}
               </div>
@@ -294,7 +294,7 @@ export default function MonedasPage() {
 
           <div className="relative flex items-center gap-3">
             <div className="flex-1 border-t border-outline-variant" />
-            <span className="text-xs text-outline">o ingresá manualmente</span>
+            <span className="text-xs text-outline">o ingresa manualmente</span>
             <div className="flex-1 border-t border-outline-variant" />
           </div>
 

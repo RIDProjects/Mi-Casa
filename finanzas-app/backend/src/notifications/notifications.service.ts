@@ -75,7 +75,7 @@ export class NotificationsService {
               <h2 style="color:#0f172a;font-size:18px;margin:0 0 12px">¡Te invitaron a una casa!</h2>
               <p style="color:#475569;line-height:1.6;margin:0 0 20px">
                 <strong>${inviterName}</strong> te invitó a unirte a <strong>"${houseName}"</strong> en Mi Casa Pro.
-                Hacé clic en el botón de abajo para crear tu cuenta y unirte automáticamente.
+                Haz clic en el botón de abajo para crear tu cuenta y unirte automáticamente.
               </p>
               <div style="text-align:center;margin:24px 0">
                 <a href="${acceptUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">
@@ -84,7 +84,7 @@ export class NotificationsService {
               </div>
               <p style="color:#94a3b8;font-size:13px;margin:16px 0 0;line-height:1.5">
                 Este enlace expira en <strong>7 días</strong>.<br>
-                Si no esperabas esta invitación, podés ignorar este email.
+                Si no esperabas esta invitación, puedes ignorar este email.
               </p>
             </div>
             <p style="text-align:center;color:#cbd5e1;font-size:12px;margin:20px 0 0">Mi Casa Pro · Sistema de gestión financiera</p>
@@ -120,7 +120,7 @@ export class NotificationsService {
               <h2 style="color:#0f172a;font-size:18px;margin:0 0 12px">Hola ${name},</h2>
               <p style="color:#475569;line-height:1.6;margin:0 0 20px">
                 Recibimos una solicitud para restablecer la contraseña de tu cuenta.
-                Hacé clic en el botón de abajo para crear una nueva contraseña.
+                Haz clic en el botón de abajo para crear una nueva contraseña.
               </p>
               <div style="text-align:center;margin:24px 0">
                 <a href="${resetUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">
@@ -129,7 +129,7 @@ export class NotificationsService {
               </div>
               <p style="color:#94a3b8;font-size:13px;margin:16px 0 0;line-height:1.5">
                 Este enlace expira en <strong>1 hora</strong>.<br>
-                Si no solicitaste este cambio, podés ignorar este email.
+                Si no solicitaste este cambio, puedes ignorar este email.
               </p>
             </div>
             <p style="text-align:center;color:#cbd5e1;font-size:12px;margin:20px 0 0">Mi Casa Pro · Sistema de gestión financiera</p>

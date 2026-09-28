@@ -48,7 +48,7 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
       upsertRate: jest.fn().mockResolvedValue({}),
       findByHouse: jest.fn().mockResolvedValue([]),
       add: jest.fn().mockResolvedValue({}),
-      setBase: jest.fn().mockResolvedValue({}),
+      setLocal: jest.fn().mockResolvedValue({}),
       remove: jest.fn().mockResolvedValue({ message: 'ok' }),
     } as unknown as jest.Mocked<HouseCurrenciesService>;
 
@@ -86,11 +86,11 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
       expect(svc.add).not.toHaveBeenCalled();
     });
 
-    it('setBase: throws 403 for a foreign houseId', () => {
+    it('setLocal: throws 403 for a foreign houseId', () => {
       expect(() =>
-        controller.setBase(HOUSE_B, 'currency-id', { user: userOfHouseA } as any),
+        controller.setLocal(HOUSE_B, 'currency-id', { user: userOfHouseA } as any),
       ).toThrow(ForbiddenException);
-      expect(svc.setBase).not.toHaveBeenCalled();
+      expect(svc.setLocal).not.toHaveBeenCalled();
     });
 
     it('remove: throws 403 for a foreign houseId', () => {
@@ -128,11 +128,11 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
       expect(svc.add).not.toHaveBeenCalled();
     });
 
-    it('setBase: throws 403 for a plain user role', () => {
+    it('setLocal: throws 403 for a plain user role', () => {
       expect(() =>
-        controller.setBase(HOUSE_A, 'currency-id', { user: userOfHouseA } as any),
+        controller.setLocal(HOUSE_A, 'currency-id', { user: userOfHouseA } as any),
       ).toThrow(ForbiddenException);
-      expect(svc.setBase).not.toHaveBeenCalled();
+      expect(svc.setLocal).not.toHaveBeenCalled();
     });
 
     it('remove: throws 403 for a plain user role', () => {

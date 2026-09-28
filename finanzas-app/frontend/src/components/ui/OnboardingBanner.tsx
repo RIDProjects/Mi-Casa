@@ -1,20 +1,21 @@
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Wallet, TrendingUp, Target, CheckCircle } from 'lucide-react';
 
 const STEPS = [
   {
-    num: 1, done: false, icon: <Wallet size={20} />, title: 'Creá tu presupuesto',
-    desc: 'Definí tus ingresos mensuales y distribuí en categorías de gastos.',
+    num: 1, done: false, icon: <Wallet size={20} />, title: 'Crea tu presupuesto',
+    desc: 'Define tus ingresos mensuales y distribuye en categorías de gastos.',
     href: '/presupuesto', cta: 'Ir a Presupuesto',
   },
   {
-    num: 2, done: false, icon: <TrendingUp size={20} />, title: 'Registrá transacciones',
-    desc: 'Llevá un registro de tus ingresos y gastos reales cada mes.',
+    num: 2, done: false, icon: <TrendingUp size={20} />, title: 'Registra transacciones',
+    desc: 'Lleva un registro de tus ingresos y gastos reales cada mes.',
     href: '/transacciones', cta: 'Ver Transacciones',
   },
   {
-    num: 3, done: false, icon: <Target size={20} />, title: 'Establecé metas de ahorro',
-    desc: 'Definí objetivos concretos y hacé seguimiento de tu progreso.',
+    num: 3, done: false, icon: <Target size={20} />, title: 'Establece metas de ahorro',
+    desc: 'Define objetivos concretos y haz seguimiento de tu progreso.',
     href: '/metas', cta: 'Crear Meta',
   },
 ];
@@ -33,7 +34,15 @@ export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props
   ];
 
   const allDone = steps.every(s => s.done);
-  if (allDone) return null;
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if (!allDone) return;
+    const timer = setTimeout(() => setDismissed(true), 1800);
+    return () => clearTimeout(timer);
+  }, [allDone]);
+
+  if (dismissed) return null;
 
   const completedCount = steps.filter(s => s.done).length;
   const pct = Math.round((completedCount / steps.length) * 100);
@@ -47,7 +56,7 @@ export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props
             <h2 className="text-lg font-bold text-gray-900 dark:text-white">Bienvenido a Mi Casa Pro</h2>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Completá estos pasos para empezar a controlar tus finanzas.
+            Completa estos pasos para empezar a controlar tus finanzas.
           </p>
         </div>
         <div className="shrink-0 text-right">

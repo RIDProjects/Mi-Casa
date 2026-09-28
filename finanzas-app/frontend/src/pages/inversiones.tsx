@@ -70,7 +70,7 @@ const defaultForm = {
 export default function InversionesPage() {
   const qc = useQueryClient();
   const { currencies } = useCurrencyStore();
-  const baseCurrency = currencies.find(c => c.isBase);
+  const localCurrency = currencies.find(c => c.isLocal);
   const getCurrencySymbol = (code: string) => currencies.find(c => c.currencyCode === code)?.symbol ?? code;
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
@@ -119,7 +119,7 @@ export default function InversionesPage() {
       nombre: inv.nombre ?? inv.name ?? '',
       tipo: inv.tipo ?? inv.type ?? 'plazo_fijo',
       monto: String(inv.monto ?? inv.amount ?? ''),
-      moneda: inv.moneda ?? inv.currency ?? baseCurrency?.currencyCode ?? '',
+      moneda: inv.moneda ?? inv.currency ?? localCurrency?.currencyCode ?? '',
       tna: String(inv.tna ?? inv.rate ?? ''),
       fechaInicio: inv.fechaInicio ?? inv.startDate ?? '',
       fechaFin: inv.fechaFin ?? inv.endDate ?? '',
@@ -147,7 +147,7 @@ export default function InversionesPage() {
 
   const totalsByCurrency: Record<string, number> = {};
   list.forEach(i => {
-    const code = i.moneda ?? i.currency ?? baseCurrency?.currencyCode ?? '';
+    const code = i.moneda ?? i.currency ?? localCurrency?.currencyCode ?? '';
     totalsByCurrency[code] = (totalsByCurrency[code] ?? 0) + calcCurrentValue(i);
   });
 
@@ -197,7 +197,7 @@ export default function InversionesPage() {
         <div className="text-center py-16">
           <div className="text-5xl mb-4">📈</div>
           <h3 className="text-lg font-semibold text-on-surface">Sin inversiones registradas</h3>
-          <p className="text-sm text-on-surface-variant mt-1">Agregá tu primera inversión para comenzar</p>
+          <p className="text-sm text-on-surface-variant mt-1">Agrega tu primera inversión para comenzar</p>
         </div>
       ) : (
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
@@ -218,7 +218,7 @@ export default function InversionesPage() {
               <tbody className="divide-y divide-outline-variant">
                 {list.map((inv: any) => {
                   const tipo: InvestmentType = inv.tipo ?? inv.type ?? 'otros';
-                  const moneda: string = inv.moneda ?? inv.currency ?? baseCurrency?.currencyCode ?? '';
+                  const moneda: string = inv.moneda ?? inv.currency ?? localCurrency?.currencyCode ?? '';
                   const symbol = getCurrencySymbol(moneda);
                   const currentValue = calcCurrentValue(inv);
                   const fechaFin = inv.fechaFin ?? inv.endDate;
@@ -310,7 +310,7 @@ export default function InversionesPage() {
               <label className="label">Moneda</label>
               <select
                 className="input"
-                value={form.moneda || baseCurrency?.currencyCode || ''}
+                value={form.moneda || localCurrency?.currencyCode || ''}
                 onChange={e => setForm({ ...form, moneda: e.target.value })}
               >
                 {currencies.filter(c => c.isActive).map(c => (

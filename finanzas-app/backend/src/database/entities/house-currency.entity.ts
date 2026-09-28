@@ -18,7 +18,7 @@ export class HouseCurrency {
   @Column() symbol: string;         // '$', '€', 'CUP$', 'MLC$'
   @Column({ default: 'en-US' }) locale: string; // for Intl.NumberFormat
 
-  @Column({ default: false }) isBase: boolean;   // exactly ONE per house is base
+  @Column({ default: false }) isLocal: boolean;  // exactly ONE per house is local
   @Column({ default: true }) isActive: boolean;
 
   @Index()

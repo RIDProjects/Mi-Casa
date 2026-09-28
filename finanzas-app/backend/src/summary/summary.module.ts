@@ -16,6 +16,7 @@ import { InvestmentsModule } from '../investments/investments.module';
 import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
 import { HousesModule } from '../houses/houses.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { HouseholdExpensesModule } from '../household-expenses/household-expenses.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     HouseCurrenciesModule,
     HousesModule,
     NotificationsModule,
+    HouseholdExpensesModule,
   ],
   controllers: [SummaryController],
   providers: [SummaryService, UpcomingBillsNotifierService],

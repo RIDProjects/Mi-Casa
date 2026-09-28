@@ -34,7 +34,7 @@ type AdvisoryStatus = 'ok' | 'warning' | 'danger';
 const ADVISORY: Record<AdvisoryStatus, { label: string; sub: string; bg: string; text: string; dot: string }> = {
   ok:      { label: 'En camino con tus metas',   sub: 'Tus gastos están dentro del presupuesto.',        bg: 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800',     text: 'text-emerald-800 dark:text-emerald-300', dot: 'bg-emerald-500' },
   warning: { label: 'Cuidado con los gastos',    sub: 'Estás cerca del límite del presupuesto mensual.', bg: 'bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800',           text: 'text-amber-800 dark:text-amber-300',   dot: 'bg-amber-500' },
-  danger:  { label: 'Gastos superan ingresos',   sub: 'Revisá tu presupuesto — estás en déficit.',       bg: 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800',                   text: 'text-red-800 dark:text-red-300',       dot: 'bg-red-500' },
+  danger:  { label: 'Gastos superan ingresos',   sub: 'Revisa tu presupuesto — estás en déficit.',       bg: 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800',                   text: 'text-red-800 dark:text-red-300',       dot: 'bg-red-500' },
 };
 
 function thermometerColor(pct: number) { return pct > 100 ? 'bg-red-500' : pct > 80 ? 'bg-amber-500' : 'bg-emerald-500'; }

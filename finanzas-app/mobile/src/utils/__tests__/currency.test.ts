@@ -41,6 +41,21 @@ describe('formatMoney', () => {
     });
   });
 
+  describe('arbitrary currency codes (multi-currency support)', () => {
+    it('formats an amount with an arbitrary 3-letter code, not just CUP/USD', () => {
+      expect(formatMoney(1234.5, 'EUR')).toBe('1,234.50 EUR');
+    });
+
+    it('formats zero with an arbitrary code', () => {
+      expect(formatMoney(0, 'MXN')).toBe('0.00 MXN');
+    });
+
+    it('accepts a currency code string type, not a hardcoded union', () => {
+      const code: string = 'ARS';
+      expect(formatMoney(50, code)).toBe('50.00 ARS');
+    });
+  });
+
   describe('guard against non-number input (Number(amount) || 0)', () => {
     // TypeORM/pg drivers return Postgres `decimal` columns as strings, not
     // numbers, at runtime -- even though the TS signature says `number`.

@@ -168,7 +168,7 @@ export default function AdminDashboard() {
             <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
               <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
                 ⚠️ {stats!.churnRisk} usuario{stats!.churnRisk !== 1 ? 's' : ''} sin actividad en 30 días.
-                Considerá enviar un recordatorio.
+                Considera enviar un recordatorio.
               </p>
             </div>
           )}

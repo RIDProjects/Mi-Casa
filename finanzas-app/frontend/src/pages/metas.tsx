@@ -213,7 +213,7 @@ export default function MetasPage() {
                 {activeTab === 'Activas' ? 'No hay metas activas' : 'No hay metas completadas'}
               </h3>
               <p className="font-body-default text-body-default text-on-surface-variant mb-6">
-                {activeTab === 'Activas' ? 'Creá tu primera meta para empezar a planificar' : 'Completá una meta para verla acá'}
+                {activeTab === 'Activas' ? 'Crea tu primera meta para empezar a planificar' : 'Completa una meta para verla acá'}
               </p>
               {activeTab === 'Activas' && (
                 <button

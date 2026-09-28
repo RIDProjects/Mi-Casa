@@ -118,6 +118,11 @@ export interface HouseholdExpense {
   fecha: string;
   descripcion: string;
   categoria: HouseholdCategory;
+  monto: number;
+  moneda: string;
+  montoLocal: number;
+  tasaCambio: number;
+  /** @deprecated Equal to montoLocal. Kept for app builds predating multi-currency support. */
   montoCUP: number;
   lugar: string | null;
   mes: string;
@@ -128,7 +133,10 @@ export interface CreateHouseholdExpenseDto {
   fecha: string;
   descripcion: string;
   categoria?: HouseholdCategory;
-  montoCUP: number;
+  monto: number;
+  moneda: string;
+  /** @deprecated Send `monto`/`moneda` instead. Treated as moneda='CUP' by the backend. */
+  montoCUP?: number;
   lugar?: string;
   mes: string;
 }
@@ -155,6 +163,11 @@ export interface HouseholdExpensesMonth {
   totalCompras: number;
   totalSalidas: number;
   total: number;
+  /** House's local currency code (e.g. 'CUP'). Absent on responses from
+   * backend builds predating this change. */
+  monedaLocal?: string;
+  /** Currencies available for this house's currency picker. */
+  monedas?: { code: string; symbol: string }[];
 }
 
 // ─── Purchases (Lista de la Compra) ────────────────────────────────────────────
@@ -189,7 +202,7 @@ export interface PurchaseList {
   name: string;
   description: string | null;
   budget: number;
-  baseCurrencyCode: string | null;
+  localCurrencyCode: string | null;
   items: PurchaseItem[];
   createdAt: string;
   updatedAt: string;
@@ -200,7 +213,7 @@ export interface CreatePurchaseListDto {
   name: string;
   description?: string;
   budget?: number;
-  baseCurrencyCode?: string;
+  localCurrencyCode?: string;
 }
 
 export interface CreatePurchaseItemDto {

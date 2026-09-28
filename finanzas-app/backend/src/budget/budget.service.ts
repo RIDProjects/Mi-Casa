@@ -187,12 +187,12 @@ export class BudgetService {
         await this.notificationsService.sendBudgetAlert(
           to,
           'Gastos superan ingresos',
-          'Tus gastos del mes superan tus ingresos. Revisá tu presupuesto.',
+          'Tus gastos del mes superan tus ingresos. Revisa tu presupuesto.',
         );
         await this.inAppNotificationsService.createIfNotRecent(houseId, {
           type: 'budget_over',
           title: 'Gastos superan ingresos',
-          message: 'Tus gastos del mes superan tus ingresos. Revisá tu presupuesto.',
+          message: 'Tus gastos del mes superan tus ingresos. Revisa tu presupuesto.',
         });
       }
       if (summary.alerts?.antExpensesWarning) {

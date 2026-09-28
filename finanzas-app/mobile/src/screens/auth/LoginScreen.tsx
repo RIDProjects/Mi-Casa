@@ -25,7 +25,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      setError('Por favor ingresá tu email y contraseña.');
+      setError('Por favor ingresa tu email y contraseña.');
       return;
     }
 
@@ -37,7 +37,7 @@ export default function LoginScreen() {
       const raw = err?.response?.data?.message ?? err?.response?.data ?? err?.message;
       let msg: string;
       if (!raw) {
-        msg = 'Error al iniciar sesión. Verificá tus credenciales.';
+        msg = 'Error al iniciar sesión. Verifica tus credenciales.';
       } else if (Array.isArray(raw)) {
         msg = raw.join(', ');
       } else if (typeof raw === 'string') {

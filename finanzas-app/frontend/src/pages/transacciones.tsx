@@ -461,7 +461,7 @@ export default function TransaccionesPage() {
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center">
                       <p className="font-body-default text-body-default text-on-surface-variant">
-                        No tenés transacciones programadas todavía.
+                        No tienes transacciones programadas todavía.
                       </p>
                     </td>
                   </tr>
@@ -876,7 +876,7 @@ export default function TransaccionesPage() {
                 onChange={e => setForm({ ...form, categoria: e.target.value })}
                 required
               >
-                <option value="">Seleccioná una categoría</option>
+                <option value="">Selecciona una categoría</option>
                 {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>

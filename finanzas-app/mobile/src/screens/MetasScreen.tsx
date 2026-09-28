@@ -172,7 +172,7 @@ export default function MetasScreen() {
           <EmptyState
             icon="trophy-outline"
             title="Sin metas registradas"
-            subtitle="Creá tus metas de ahorro desde la app web"
+            subtitle="Crea tus metas de ahorro desde la app web"
           />
         }
       />

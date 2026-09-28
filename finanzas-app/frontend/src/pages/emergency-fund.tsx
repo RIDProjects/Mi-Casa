@@ -226,7 +226,7 @@ export default function EmergencyFundPage() {
                       <span className="text-lg font-bold text-primary">{fund.savingPeriodMonths}</span>
                       <span className="text-sm text-on-surface-variant">meses</span>
                     </div>
-                    <p className="text-xs text-outline mt-1">Editá el valor desde el panel lateral</p>
+                    <p className="text-xs text-outline mt-1">Edita el valor desde el panel lateral</p>
                   </div>
 
                   {/* Results Display */}
@@ -248,7 +248,7 @@ export default function EmergencyFundPage() {
                   {/* Current balance input */}
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4 mb-6">
                     <label className="block text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
-                      Lo que tenés ahorrado actualmente
+                      Lo que tienes ahorrado actualmente
                     </label>
                     <div className="flex gap-2">
                       <input

@@ -7,13 +7,13 @@ export interface HouseCurrency {
   currencyName: string;
   symbol: string;
   locale: string;
-  isBase: boolean;
+  isLocal: boolean;
   isActive: boolean;
 }
 
 interface CurrencyState {
   currencies: HouseCurrency[];
-  rates: Record<string, number>; // { USD: 125 } — units of base per 1 unit of foreign
+  rates: Record<string, number>; // { USD: 125 } — units of local currency per 1 unit of foreign
   activeCurrencyCode: string;
   setCurrencies: (currencies: HouseCurrency[]) => void;
   setRates: (rates: Record<string, number>) => void;

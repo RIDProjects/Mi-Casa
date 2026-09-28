@@ -93,7 +93,7 @@ export default function ProfileScreen() {
   const handleLogout = () => {
     Alert.alert(
       'Cerrar sesión',
-      '¿Estás seguro que querés cerrar sesión?',
+      '¿Estás seguro que quieres cerrar sesión?',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
               await logout();
             } catch {
               setIsLoggingOut(false);
-              Alert.alert('Error', 'No se pudo cerrar sesión. Intentá de nuevo.');
+              Alert.alert('Error', 'No se pudo cerrar sesión. Intenta de nuevo.');
             }
           },
         },

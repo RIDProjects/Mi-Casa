@@ -47,8 +47,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
           </View>
           <Text style={styles.title}>Algo salió mal</Text>
           <Text style={styles.message}>
-            Ocurrió un error inesperado. Podés intentar de nuevo; si el problema
-            persiste, cerrá y volvé a abrir la app.
+            Ocurrió un error inesperado. Puedes intentar de nuevo; si el problema
+            persiste, cierra y vuelve a abrir la app.
           </Text>
           <TouchableOpacity
             style={styles.retryBtn}

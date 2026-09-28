@@ -57,9 +57,9 @@ export default function Register() {
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 401) {
-        setError('No autorizado. Verificá los datos ingresados.');
+        setError('No autorizado. Verifica los datos ingresados.');
       } else {
-        setError(err.response?.data?.message || 'Error al registrarse. Intentá de nuevo.');
+        setError(err.response?.data?.message || 'Error al registrarse. Intenta de nuevo.');
       }
       setForm(f => ({ ...f, password: '' }));
     } finally {
@@ -103,7 +103,7 @@ export default function Register() {
               <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
                 <Home size={18} className="text-primary" />
                 <span className="text-sm text-blue-900 dark:text-blue-200">
-                  Te invitaron a unirte a una casa — completá tus datos para aceptar la invitación.
+                  Te invitaron a unirte a una casa — completa tus datos para aceptar la invitación.
                 </span>
               </div>
             ) : (

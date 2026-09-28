@@ -19,7 +19,7 @@ export default function PurchasesPage() {
   const { hasPermission } = useAuthStore();
   const { fmt: cfmt } = useCurrencyFormatter();
   const { currencies, rates } = useCurrencyStore();
-  const baseCurrency = currencies.find(c => c.isBase);
+  const localCurrency = currencies.find(c => c.isLocal);
   const canCreate = hasPermission('purchases', 'create');
   const canDelete = hasPermission('purchases', 'delete');
 
@@ -44,30 +44,30 @@ export default function PurchasesPage() {
   const items: any[] = selectedList?.items ?? [];
   const budget = selectedList?.budget ?? configForm.budget;
 
-  const toBase = (amount: number, currencyCode: string | null | undefined): number => {
-    if (!currencyCode || currencyCode === baseCurrency?.currencyCode) return amount;
+  const toLocal = (amount: number, currencyCode: string | null | undefined): number => {
+    if (!currencyCode || currencyCode === localCurrency?.currencyCode) return amount;
     const rate = rates[currencyCode];
     return rate ? amount * rate : amount;
   };
 
-  const totalInBase = items.reduce((s, i) => {
-    return s + toBase(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
+  const totalInLocal = items.reduce((s, i) => {
+    return s + toLocal(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
   }, 0);
 
-  const remaining = budget > 0 ? budget - totalInBase : null;
+  const remaining = budget > 0 ? budget - totalInLocal : null;
 
   const porLugar = (() => {
     const map: Record<string, number> = {};
     items.forEach(i => {
       const l = i.lugar?.trim() || 'Sin especificar';
-      map[l] = (map[l] ?? 0) + toBase(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
+      map[l] = (map[l] ?? 0) + toLocal(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
     });
     return Object.entries(map)
       .sort((a, b) => b[1] - a[1])
       .map(([lugar, total]) => ({
         lugar,
         total,
-        pct: totalInBase > 0 ? Math.round((total / totalInBase) * 1000) / 10 : 0,
+        pct: totalInLocal > 0 ? Math.round((total / totalInLocal) * 1000) / 10 : 0,
       }));
   })();
 
@@ -96,22 +96,22 @@ export default function PurchasesPage() {
   const nextMonth = () => { if (month === 12) { setMonth(1); setYear(y => y + 1); } else setMonth(m => m + 1); };
 
   const handleOpenAdd = () => {
-    setItemForm({ ...defaultItemForm, currency: baseCurrency?.currencyCode ?? '' });
+    setItemForm({ ...defaultItemForm, currency: localCurrency?.currencyCode ?? '' });
     setEditItem(null);
     setShowItemModal(true);
   };
 
   const handleSaveItem = () => {
-    if (!itemForm.name.trim())   { toast.error('Ingresá el nombre del producto'); return; }
-    if (itemForm.unitPrice <= 0) { toast.error('Ingresá un precio válido'); return; }
+    if (!itemForm.name.trim())   { toast.error('Ingresa el nombre del producto'); return; }
+    if (itemForm.unitPrice <= 0) { toast.error('Ingresa un precio válido'); return; }
 
     if (!selectedList) {
       createListMut.mutate({
         name: monthStr,
         budget: configForm.budget,
-        baseCurrencyCode: baseCurrency?.currencyCode ?? null,
+        localCurrencyCode: localCurrency?.currencyCode ?? null,
       });
-      toast('Lista del mes creada. Agregá tu producto.');
+      toast('Lista del mes creada. Agrega tu producto.');
       setShowItemModal(false);
       return;
     }
@@ -120,7 +120,7 @@ export default function PurchasesPage() {
       name:      itemForm.name,
       quantity:  itemForm.quantity,
       unitPrice: itemForm.unitPrice,
-      currency:  itemForm.currency || baseCurrency?.currencyCode || null,
+      currency:  itemForm.currency || localCurrency?.currencyCode || null,
       lugar:     itemForm.lugar || null,
     };
 
@@ -136,7 +136,7 @@ export default function PurchasesPage() {
       name: item.name,
       quantity: item.quantity,
       unitPrice: item.unitPrice || 0,
-      currency: item.currency || baseCurrency?.currencyCode || '',
+      currency: item.currency || localCurrency?.currencyCode || '',
       lugar: item.lugar || '',
     });
     setEditItem(item);
@@ -144,7 +144,7 @@ export default function PurchasesPage() {
   };
 
   const handleSaveConfig = () => {
-    const payload = { budget: configForm.budget, baseCurrencyCode: baseCurrency?.currencyCode ?? null };
+    const payload = { budget: configForm.budget, localCurrencyCode: localCurrency?.currencyCode ?? null };
     if (!selectedList) {
       createListMut.mutate({ name: monthStr, ...payload });
     } else {
@@ -154,7 +154,7 @@ export default function PurchasesPage() {
   };
 
   const getCurrencySymbol = (code: string | null | undefined): string => {
-    if (!code) return baseCurrency?.symbol ?? '$';
+    if (!code) return localCurrency?.symbol ?? '$';
     return currencies.find(c => c.currencyCode === code)?.symbol ?? code;
   };
 
@@ -240,9 +240,9 @@ export default function PurchasesPage() {
             <h2 className="text-sm font-semibold text-on-surface">
               {MONTH_NAMES[month - 1]} {year} — {items.length} producto{items.length !== 1 ? 's' : ''}
             </h2>
-            {totalInBase > 0 && (
+            {totalInLocal > 0 && (
               <span className="text-sm font-bold text-on-surface">
-                Total: {cfmt(totalInBase)}
+                Total: {cfmt(totalInLocal)}
               </span>
             )}
           </div>
@@ -262,15 +262,15 @@ export default function PurchasesPage() {
                 {items.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-3 py-12 text-center text-outline text-xs">
-                      Sin productos este mes — usá el botón &quot;Agregar producto&quot;
+                      Sin productos este mes — usa el botón &quot;Agregar producto&quot;
                     </td>
                   </tr>
                 ) : (
                   items.map((item: any) => {
                     const lineTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
                     const sym = getCurrencySymbol(item.currency);
-                    const baseTotalLine = toBase(lineTotal, item.currency);
-                    const showConverted = item.currency && item.currency !== baseCurrency?.currencyCode;
+                    const localTotalLine = toLocal(lineTotal, item.currency);
+                    const showConverted = item.currency && item.currency !== localCurrency?.currencyCode;
                     return (
                       <tr key={item.id} className="hover:bg-surface-gray">
                         <td className="px-3 py-2 font-medium text-on-surface">{item.name}</td>
@@ -281,7 +281,7 @@ export default function PurchasesPage() {
                         <td className="px-3 py-2 text-right font-semibold text-on-surface">
                           <div>{sym}{fmt(lineTotal)}</div>
                           {showConverted && (
-                            <div className="text-[10px] text-outline font-normal">≈ {cfmt(baseTotalLine)}</div>
+                            <div className="text-[10px] text-outline font-normal">≈ {cfmt(localTotalLine)}</div>
                           )}
                         </td>
                         <td className="px-3 py-2 text-on-surface-variant text-xs">{item.lugar || '—'}</td>
@@ -307,7 +307,7 @@ export default function PurchasesPage() {
                   <tr>
                     <td colSpan={3} className="px-3 py-2 text-xs font-bold text-on-surface-variant">TOTAL</td>
                     <td className="px-3 py-2 text-right text-sm font-bold text-on-surface">
-                      {cfmt(totalInBase)}
+                      {cfmt(totalInLocal)}
                     </td>
                     <td colSpan={2} />
                   </tr>
@@ -343,7 +343,7 @@ export default function PurchasesPage() {
                   ))}
                   <div className="flex items-center text-sm font-bold border-t border-outline-variant pt-2 mt-1">
                     <span className="flex-1 text-on-surface text-xs">TOTAL</span>
-                    <span className="w-28 text-right text-on-surface text-xs">{cfmt(totalInBase)}</span>
+                    <span className="w-28 text-right text-on-surface text-xs">{cfmt(totalInLocal)}</span>
                     <span className="w-12 text-right text-outline text-xs">100%</span>
                   </div>
                 </div>
@@ -362,7 +362,7 @@ export default function PurchasesPage() {
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant">Gastado</p>
-                  <p className="text-sm font-bold text-on-surface">{cfmt(totalInBase)}</p>
+                  <p className="text-sm font-bold text-on-surface">{cfmt(totalInLocal)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant">Restante</p>
@@ -371,11 +371,11 @@ export default function PurchasesPage() {
                   </p>
                 </div>
               </div>
-              {budget > 0 && totalInBase > 0 && (
+              {budget > 0 && totalInLocal > 0 && (
                 <div className="w-full bg-surface-container rounded-full h-1.5">
                   <div
-                    className={`h-1.5 rounded-full transition-all ${totalInBase / budget > 1 ? 'bg-red-500' : totalInBase / budget > 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                    style={{ width: `${Math.min((totalInBase / budget) * 100, 100)}%` }}
+                    className={`h-1.5 rounded-full transition-all ${totalInLocal / budget > 1 ? 'bg-red-500' : totalInLocal / budget > 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                    style={{ width: `${Math.min((totalInLocal / budget) * 100, 100)}%` }}
                   />
                 </div>
               )}
@@ -418,7 +418,7 @@ export default function PurchasesPage() {
                   <label className="label">Moneda</label>
                   <select
                     className="input"
-                    value={itemForm.currency || baseCurrency?.currencyCode || ''}
+                    value={itemForm.currency || localCurrency?.currencyCode || ''}
                     onChange={e => setItemForm({ ...itemForm, currency: e.target.value })}
                   >
                     {currencies.filter(c => c.isActive).map(c => (
@@ -431,7 +431,7 @@ export default function PurchasesPage() {
               </div>
               <div>
                 <label className="label">
-                  Precio unitario ({getCurrencySymbol(itemForm.currency || baseCurrency?.currencyCode)})
+                  Precio unitario ({getCurrencySymbol(itemForm.currency || localCurrency?.currencyCode)})
                 </label>
                 <input
                   className="input"
@@ -445,10 +445,10 @@ export default function PurchasesPage() {
               <div>
                 <label className="label">Total</label>
                 <div className="input bg-surface-container-low text-on-surface font-semibold">
-                  {getCurrencySymbol(itemForm.currency || baseCurrency?.currencyCode)}{fmt(Number(itemForm.quantity) * Number(itemForm.unitPrice))}
-                  {itemForm.currency && itemForm.currency !== baseCurrency?.currencyCode && (
+                  {getCurrencySymbol(itemForm.currency || localCurrency?.currencyCode)}{fmt(Number(itemForm.quantity) * Number(itemForm.unitPrice))}
+                  {itemForm.currency && itemForm.currency !== localCurrency?.currencyCode && (
                     <span className="ml-2 text-xs text-outline font-normal">
-                      ≈ {cfmt(toBase(Number(itemForm.quantity) * Number(itemForm.unitPrice), itemForm.currency))}
+                      ≈ {cfmt(toLocal(Number(itemForm.quantity) * Number(itemForm.unitPrice), itemForm.currency))}
                     </span>
                   )}
                 </div>
@@ -493,7 +493,7 @@ export default function PurchasesPage() {
             <h3 className="text-lg font-semibold mb-4 text-on-surface">⚙️ Configuración del mes</h3>
             <div className="space-y-4">
               <div>
-                <label className="label">Presupuesto ({baseCurrency?.symbol ?? '$'}{baseCurrency?.currencyCode ?? ''})</label>
+                <label className="label">Presupuesto ({localCurrency?.symbol ?? '$'}{localCurrency?.currencyCode ?? ''})</label>
                 <input
                   className="input"
                   type="number"

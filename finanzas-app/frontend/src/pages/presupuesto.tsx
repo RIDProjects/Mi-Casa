@@ -56,8 +56,8 @@ const PERIOD_DIVISOR: Record<Periodicity, number> = {
 const toMonthly = (amount: number, p: Periodicity) => Number(amount) / PERIOD_DIVISOR[p];
 
 function savingsRating(pct: number): { emoji: string; text: string; color: string } {
-  if (pct <= 5)  return { emoji: '⚠️', text: 'Muy bajo. Intentá ahorrar más.',           color: 'text-danger' };
-  if (pct <= 10) return { emoji: '😐', text: 'Aceptable, pero podés mejorar.',            color: 'text-warning' };
+  if (pct <= 5)  return { emoji: '⚠️', text: 'Muy bajo. Intenta ahorrar más.',           color: 'text-danger' };
+  if (pct <= 10) return { emoji: '😐', text: 'Aceptable, pero puedes mejorar.',            color: 'text-warning' };
   if (pct <= 15) return { emoji: '👍', text: 'Bueno. Seguí así.',                         color: 'text-primary' };
   if (pct <= 25) return { emoji: '💪', text: '¡Ideal! Muy buen hábito de ahorro.',        color: 'text-success' };
   return              { emoji: '🏆', text: '¡Excelente! Estás en el top de ahorradores.', color: 'text-success' };
@@ -383,7 +383,7 @@ export default function PresupuestoPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-page-title text-page-title text-on-surface">Presupuesto</h1>
-            <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planificá tus ingresos y gastos mensuales</p>
+            <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planifica tus ingresos y gastos mensuales</p>
           </div>
         </div>
         <ErrorState
@@ -400,14 +400,14 @@ export default function PresupuestoPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-page-title text-page-title text-on-surface">Presupuesto</h1>
-            <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planificá tus ingresos y gastos mensuales</p>
+            <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planifica tus ingresos y gastos mensuales</p>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-24">
           <div className="bg-surface-container-lowest rounded-2xl border border-border-light p-10 text-center max-w-md w-full">
             <Calculator size={48} className="mx-auto text-outline mb-4" />
-            <h2 className="font-section-title text-section-title text-on-surface mb-2">No tenés un presupuesto creado</h2>
-            <p className="font-body-default text-body-default text-on-surface-variant mb-6">Creá tu presupuesto para empezar a planificar tus finanzas del hogar.</p>
+            <h2 className="font-section-title text-section-title text-on-surface mb-2">No tienes un presupuesto creado</h2>
+            <p className="font-body-default text-body-default text-on-surface-variant mb-6">Crea tu presupuesto para empezar a planificar tus finanzas del hogar.</p>
             <button onClick={() => setShowBudgetModal(true)} className="btn-primary flex items-center gap-2 mx-auto">
               <Plus size={18} /> Crear presupuesto
             </button>
@@ -443,7 +443,7 @@ export default function PresupuestoPage() {
   const gastosVariables   = summary.totalMonthlyExpenses - gastosFijos;
 
   const advisoryBanner = {
-    ok:      { cls: 'bg-surface-container border border-success/30 text-success',  msg: '¡Felicidades! Podés alcanzar tus metas de ahorro.' },
+    ok:      { cls: 'bg-surface-container border border-success/30 text-success',  msg: '¡Felicidades! Puedes alcanzar tus metas de ahorro.' },
     warning: { cls: 'bg-surface-container border border-warning/30 text-warning',  msg: `Cuidado — no alcanzás tu meta de ahorro del ${budget.savingsTargetPercent}%.` },
     danger:  { cls: 'bg-surface-container border border-danger/30 text-danger',    msg: 'Tus gastos superan tus ingresos.' },
   }[summary.advisory];
@@ -676,12 +676,12 @@ export default function PresupuestoPage() {
                   : 'bg-surface-container border-danger/30 text-danger'
               }`}>
                 {summary.available >= savingsMonthly
-                  ? 'Bien, podés lograr tus metas de ahorro.'
-                  : 'Considerá recortar estos gastos para alcanzar tu meta.'}
+                  ? 'Bien, puedes lograr tus metas de ahorro.'
+                  : 'Considera recortar estos gastos para alcanzar tu meta.'}
               </div>
             ) : (
               <p className="font-body-small text-body-small text-outline text-center py-3">
-                Sin gastos hormiga marcados. Usá el ícono de insecto en cada gasto.
+                Sin gastos hormiga marcados. Usa el ícono de insecto en cada gasto.
               </p>
             )}
           </div>
@@ -809,7 +809,7 @@ export default function PresupuestoPage() {
 
       {categories.length === 0 ? (
         <div className="bg-surface-container-lowest rounded-xl border border-border-light p-10 text-center">
-          <p className="font-body-default text-outline">Sin categorías de gastos. Agregá una para empezar.</p>
+          <p className="font-body-default text-outline">Sin categorías de gastos. Agrega una para empezar.</p>
         </div>
       ) : (
         <div className="space-y-3">

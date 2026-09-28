@@ -9,5 +9,5 @@ export class AddCurrencyDto {
 
   @IsOptional() @IsString() locale?: string;
 
-  @IsOptional() @IsBoolean() isBase?: boolean;
+  @IsOptional() @IsBoolean() isLocal?: boolean;
 }

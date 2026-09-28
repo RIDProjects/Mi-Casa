@@ -63,7 +63,7 @@ export default function NotificacionesPage() {
         <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between">
           <div>
             <p className="font-semibold text-blue-800 dark:text-blue-200 text-sm">Activar notificaciones push</p>
-            <p className="text-xs text-primary mt-0.5">Recibí alertas de presupuesto y vencimientos en tu dispositivo</p>
+            <p className="text-xs text-primary mt-0.5">Recibe alertas de presupuesto y vencimientos en tu dispositivo</p>
           </div>
           <button onClick={requestPermission} className="px-3 py-1.5 bg-primary-container text-on-primary text-sm rounded-lg hover:opacity-90">
             Activar
@@ -138,7 +138,7 @@ export default function NotificacionesPage() {
           <div className="text-5xl mb-4">🔔</div>
           <h3 className="text-lg font-semibold text-on-surface">No hay notificaciones</h3>
           <p className="font-body-default text-on-surface-variant mt-1">
-            {filter === 'no_leidas' ? 'No tenés notificaciones sin leer' : 'No hay notificaciones en esta categoría'}
+            {filter === 'no_leidas' ? 'No tienes notificaciones sin leer' : 'No hay notificaciones en esta categoría'}
           </p>
         </div>
       )}

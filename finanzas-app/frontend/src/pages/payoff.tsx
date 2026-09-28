@@ -65,7 +65,7 @@ export default function PayoffPage() {
         <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
           <TrendingDown size={24} /> Calculadora de Liquidación de Deudas
         </h1>
-        <p className="text-on-surface-variant mt-1">Compará estrategias para salir de deudas más rápido</p>
+        <p className="text-on-surface-variant mt-1">Compara estrategias para salir de deudas más rápido</p>
       </div>
 
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 mb-6 shadow-sm">
@@ -104,7 +104,7 @@ export default function PayoffPage() {
         <div className="text-center py-16">
           <div className="text-5xl mb-4">💸</div>
           <h3 className="text-lg font-semibold text-on-surface">Sin deudas registradas</h3>
-          <p className="text-sm text-on-surface-variant mt-1">Registrá tarjetas y créditos para calcular estrategias de pago</p>
+          <p className="text-sm text-on-surface-variant mt-1">Registra tarjetas y créditos para calcular estrategias de pago</p>
         </div>
       ) : (
         <>

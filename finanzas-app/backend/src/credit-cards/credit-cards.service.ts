@@ -28,9 +28,9 @@ export class CreditCardsService {
 
     const advisoryMap: Record<string, string> = {
       [CardPaymentType.FULL]:    'Bien, esa es la mejor manera',
-      [CardPaymentType.MINIMUM]: 'Considerá refinanciar o pagar más del mínimo',
+      [CardPaymentType.MINIMUM]: 'Considera refinanciar o pagar más del mínimo',
       [CardPaymentType.STOPPED]: 'Cuidado, te están cobrando intereses y penalidades',
-      [CardPaymentType.PARTIAL]: 'Bien, intentá pagar el total para evitar intereses',
+      [CardPaymentType.PARTIAL]: 'Bien, intenta pagar el total para evitar intereses',
     };
 
     return {

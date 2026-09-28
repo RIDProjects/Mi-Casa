@@ -24,13 +24,13 @@ export class HousesService {
   ) {}
 
   /**
-   * Creates a house (with hashed password) and seeds the base currency.
+   * Creates a house (with hashed password) and seeds the local currency.
    * Used by programmatic house creation outside of the auth registration flow.
    */
   async create(dto: {
     name: string;
     hashedPassword: string;
-    baseCurrencyCode?: string;
+    localCurrencyCode?: string;
   }): Promise<House> {
     const house = this.houseRepo.create({
       name: dto.name,
@@ -38,14 +38,14 @@ export class HousesService {
     });
     const saved = await this.houseRepo.save(house);
 
-    const code = dto.baseCurrencyCode ?? 'CUP';
+    const code = dto.localCurrencyCode ?? 'CUP';
     const meta = CURRENCY_META[code] ?? CURRENCY_META['CUP'];
     await this.houseCurrenciesService.add(saved.id, {
       currencyCode: code,
       currencyName: meta.name,
       symbol: meta.symbol,
       locale: meta.locale,
-      isBase: true,
+      isLocal: true,
     });
 
     return saved;
@@ -64,7 +64,7 @@ export class HousesService {
       if (!isMember) {
         const user = await this.userRepo.findOne({ where: { id: requestingUserId }, relations: ['roles'] });
         const isAdmin = user?.roles?.some((r: any) => r.name === 'admin');
-        if (!isAdmin) throw new ForbiddenException('No tenés acceso a esta casa');
+        if (!isAdmin) throw new ForbiddenException('No tienes acceso a esta casa');
       }
     }
 
@@ -92,7 +92,7 @@ export class HousesService {
     const belongsToHouse = user.houses?.some(h => h.id === houseId);
 
     if (!isAdminGlobal && !belongsToHouse) {
-      throw new UnauthorizedException('No pertenecés a esta casa');
+      throw new UnauthorizedException('No perteneces a esta casa');
     }
 
     // Admins can freely browse any house — add it to their list if not already present
@@ -122,7 +122,7 @@ export class HousesService {
       requester?.roles?.some((r) => r.name === 'house_admin') &&
       requester?.houses?.some((h) => h.id === houseId);
     if (!isGlobalAdmin && !isHouseAdminHere) {
-      throw new ForbiddenException('No tenés permiso para gestionar los miembros de esta casa');
+      throw new ForbiddenException('No tienes permiso para gestionar los miembros de esta casa');
     }
   }
 

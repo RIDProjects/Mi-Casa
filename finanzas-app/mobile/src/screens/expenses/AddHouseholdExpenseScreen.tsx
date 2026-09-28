@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,10 +13,15 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { householdExpensesService } from '../../services/household-expenses.service';
-import { HouseholdExpense, TransactionCategory, TRANSACTION_CATEGORIES } from '../../types';
+import {
+  HouseholdExpense,
+  HouseholdExpensesMonth,
+  TransactionCategory,
+  TRANSACTION_CATEGORIES,
+} from '../../types';
 import { GastosStackParamList } from '../../navigation/types';
 
 type RouteT = RouteProp<GastosStackParamList, 'AddHouseholdExpense'>;
@@ -37,11 +42,32 @@ export default function AddHouseholdExpenseScreen() {
   const now = new Date();
   const monthStr = existingExpense?.mes ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
+  // The month query already carries this house's currency picker options
+  // (monedaLocal/monedas) — mobile has no direct houseId to call
+  // /houses/:houseId/currencies, see design.md "Currency options on mobile".
+  const { data: monthData } = useQuery<HouseholdExpensesMonth>({
+    queryKey: ['household-expenses', monthStr],
+    queryFn: () => householdExpensesService.getMonth(monthStr),
+  });
+  const monedaLocal = monthData?.monedaLocal ?? 'CUP';
+  const monedas = monthData?.monedas ?? [];
+
   const [descripcion, setDescripcion] = useState(existingExpense?.descripcion ?? '');
-  const [monto, setMonto] = useState(existingExpense ? String(existingExpense.montoCUP) : '');
+  const [monto, setMonto] = useState(
+    existingExpense ? String(existingExpense.monto ?? existingExpense.montoCUP) : '',
+  );
+  const [moneda, setMoneda] = useState(existingExpense?.moneda ?? monedaLocal);
   const [categoria, setCategoria] = useState<TransactionCategory>(existingExpense?.categoria ?? 'Otros');
   const [lugar, setLugar] = useState(existingExpense?.lugar ?? '');
   const [fecha] = useState(existingExpense?.fecha ?? now.toISOString().split('T')[0]);
+
+  // Once the month data resolves, default the currency to the house base if
+  // the user has not touched the picker yet (new expense only).
+  useEffect(() => {
+    if (!isEditing && monthData?.monedaLocal) {
+      setMoneda((prev) => prev || monthData.monedaLocal!);
+    }
+  }, [monthData?.monedaLocal, isEditing]);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['household-expenses'] });
@@ -53,7 +79,8 @@ export default function AddHouseholdExpenseScreen() {
         fecha,
         descripcion: descripcion.trim(),
         categoria,
-        montoCUP: parseFloat(monto.replace(',', '.')),
+        monto: parseFloat(monto.replace(',', '.')),
+        moneda,
         lugar: lugar.trim() || undefined,
         mes: monthStr,
       }),
@@ -73,7 +100,8 @@ export default function AddHouseholdExpenseScreen() {
         fecha,
         descripcion: descripcion.trim(),
         categoria,
-        montoCUP: parseFloat(monto.replace(',', '.')),
+        monto: parseFloat(monto.replace(',', '.')),
+        moneda,
         lugar: lugar.trim() || undefined,
         mes: monthStr,
       }),
@@ -91,12 +119,12 @@ export default function AddHouseholdExpenseScreen() {
 
   const handleSubmit = () => {
     if (!descripcion.trim()) {
-      Alert.alert('Falta la descripción', 'Ingresá una descripción del gasto.');
+      Alert.alert('Falta la descripción', 'Ingresa una descripción del gasto.');
       return;
     }
     const parsedMonto = parseFloat(monto.replace(',', '.'));
     if (!monto || isNaN(parsedMonto) || parsedMonto <= 0) {
-      Alert.alert('Monto inválido', 'Ingresá un monto mayor a cero.');
+      Alert.alert('Monto inválido', 'Ingresa un monto mayor a cero.');
       return;
     }
 
@@ -133,7 +161,7 @@ export default function AddHouseholdExpenseScreen() {
         </View>
 
         <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Monto (CUP)</Text>
+          <Text style={styles.label}>Monto</Text>
           <View style={styles.inputWrapper}>
             <Ionicons name="cash-outline" size={18} color={Colors.textSecondary} style={styles.inputIcon} />
             <TextInput
@@ -146,6 +174,28 @@ export default function AddHouseholdExpenseScreen() {
               editable={!isPending}
               returnKeyType="next"
             />
+          </View>
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Moneda</Text>
+          <View style={styles.catRow}>
+            {(monedas.length > 0 ? monedas.map((m) => m.code) : [monedaLocal]).map((code) => {
+              const active = moneda === code;
+              return (
+                <TouchableOpacity
+                  key={code}
+                  style={[
+                    styles.catChip,
+                    active && { backgroundColor: Colors.blue + '30', borderColor: Colors.blue },
+                  ]}
+                  onPress={() => setMoneda(code)}
+                  disabled={isPending}
+                >
+                  <Text style={[styles.catChipText, active && { color: Colors.blue }]}>{code}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 

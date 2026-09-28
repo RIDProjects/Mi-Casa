@@ -26,7 +26,7 @@ export default function ResetPassword() {
       await authAPI.resetPassword(token as string, password);
       setDone(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Token inválido o expirado. Solicitá un nuevo enlace.');
+      setError(err.response?.data?.message || 'Token inválido o expirado. Solicita un nuevo enlace.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ export default function ResetPassword() {
               </div>
               <h2 className="font-section-title text-[22px] text-on-surface mb-3">¡Contraseña actualizada!</h2>
               <p className="text-on-surface-variant text-sm mb-6">
-                Ya podés iniciar sesión con tu nueva contraseña.
+                Ya puedes iniciar sesión con tu nueva contraseña.
               </p>
               <button onClick={() => router.push('/login')} className="btn-primary w-full">
                 Ir al inicio de sesión
@@ -76,7 +76,7 @@ export default function ResetPassword() {
             <>
               <h2 className="font-section-title text-[22px] text-on-surface mb-2">Nueva contraseña</h2>
               <p className="font-body-default text-on-surface-variant mb-6">
-                Elegí una contraseña segura con al menos 6 caracteres.
+                Elige una contraseña segura con al menos 6 caracteres.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,7 +106,7 @@ export default function ResetPassword() {
                     value={confirm}
                     onChange={e => { setConfirm(e.target.value); setError(null); }}
                     className={`input ${mismatch ? 'border-red-400' : ''}`}
-                    placeholder="Repetí la contraseña"
+                    placeholder="Repite la contraseña"
                     required
                   />
                   {mismatch && <p className="text-xs text-danger mt-1">Las contraseñas no coinciden</p>}

@@ -179,7 +179,7 @@ export default function TarjetasPage() {
         <div className="text-center py-16">
           <div className="text-5xl mb-4">💳</div>
           <h3 className="text-lg font-semibold text-on-surface">No hay tarjetas registradas</h3>
-          <p className="text-sm text-on-surface-variant mt-1">Agregá tu primera tarjeta para empezar a hacer seguimiento</p>
+          <p className="text-sm text-on-surface-variant mt-1">Agrega tu primera tarjeta para empezar a hacer seguimiento</p>
           <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
             Agregar tarjeta
           </button>
