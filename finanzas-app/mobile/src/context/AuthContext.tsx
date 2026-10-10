@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, LoginDto, AuthResponse } from '../types';
 import apiClient, { registerUnauthorizedHandler } from '../services/apiClient';
@@ -21,6 +22,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,9 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await AsyncStorage.multiRemove(['token', 'user']);
+    queryClient.clear();
     setToken(null);
     setUser(null);
-  }, []);
+  }, [queryClient]);
 
   // Registrar el callback de 401 para el interceptor de axios
   useEffect(() => {
@@ -63,9 +66,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ['token', access_token],
       ['user', JSON.stringify(userData)],
     ]);
+    // Query keys carry no user id: drop any previous user's cached data.
+    queryClient.clear();
     setToken(access_token);
     setUser(userData);
-  }, []);
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider

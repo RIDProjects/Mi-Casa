@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { resetSessionState } from '../lib/session';
 
 interface House { id: string; name: string; }
 
@@ -33,6 +34,8 @@ const getInitialState = () => {
 export const useAuthStore = create<AuthStore>()((set, get) => ({
   ...getInitialState(),
   setAuth: (user, token) => {
+    const previousUserId = get().user?.id;
+    if (previousUserId !== user.id) resetSessionState();
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     set({ user, token, isAuthenticated: true });
@@ -40,6 +43,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    resetSessionState();
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('auth:logout'));
     }
