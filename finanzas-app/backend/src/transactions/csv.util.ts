@@ -15,6 +15,7 @@ export function parseCsv(text: string): string[][] {
   let record: string[] = [];
   let field = '';
   let inQuotes = false;
+  let fieldStart = true;
 
   const endRecord = () => {
     record.push(field);
@@ -37,16 +38,20 @@ export function parseCsv(text: string): string[][] {
       } else {
         field += ch;
       }
-    } else if (ch === '"') {
+    } else if (ch === '"' && fieldStart) {
       inQuotes = true;
+      fieldStart = false;
     } else if (ch === ',') {
       record.push(field);
       field = '';
+      fieldStart = true;
     } else if (ch === '\n' || ch === '\r') {
       if (ch === '\r' && input[i + 1] === '\n') i++;
       endRecord();
+      fieldStart = true;
     } else {
       field += ch;
+      fieldStart = false;
     }
   }
   if (field !== '' || record.length > 0) endRecord();

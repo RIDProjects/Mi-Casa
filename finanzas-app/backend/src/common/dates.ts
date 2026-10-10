@@ -1,7 +1,29 @@
+import { Logger } from '@nestjs/common';
+
 export const DEFAULT_APP_TIMEZONE = 'America/Havana';
 
+let warnedTimezone: string | undefined;
+
+function isValidTimezone(zone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-CA', { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// An invalid APP_TIMEZONE would make every Intl call throw a RangeError, so
+// fall back to the default and warn once per distinct bad value.
 function appTimezone(): string {
-  return process.env.APP_TIMEZONE || DEFAULT_APP_TIMEZONE;
+  const zone = process.env.APP_TIMEZONE;
+  if (!zone) return DEFAULT_APP_TIMEZONE;
+  if (isValidTimezone(zone)) return zone;
+  if (warnedTimezone !== zone) {
+    warnedTimezone = zone;
+    new Logger('Dates').warn(`Invalid APP_TIMEZONE "${zone}", falling back to ${DEFAULT_APP_TIMEZONE}`);
+  }
+  return DEFAULT_APP_TIMEZONE;
 }
 
 // Calendar date (YYYY-MM-DD) of `now` in the app timezone. The 'en-CA'

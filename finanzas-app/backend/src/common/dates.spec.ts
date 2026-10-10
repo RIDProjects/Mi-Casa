@@ -52,4 +52,12 @@ describe('calendar date helpers', () => {
     expect(daysBetween('2026-11-03', '2026-10-31')).toBe(-3);
     expect(daysBetween('2026-03-01', '2026-04-01')).toBe(31);
   });
+
+  it('falls back to America/Havana on an invalid APP_TIMEZONE without throwing', () => {
+    process.env.APP_TIMEZONE = 'Not/AZone';
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-01T02:00:00Z'));
+    expect(() => todayInAppTimezone()).not.toThrow();
+    expect(todayInAppTimezone()).toBe('2026-10-31');
+    expect(currentMonthInAppTimezone()).toBe('2026-10');
+  });
 });

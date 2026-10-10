@@ -61,4 +61,8 @@ describe('csv.util', () => {
   it('parses CRLF, BOM and blank lines', () => {
     expect(parseCsv('\ufeffa,b\r\n\r\n"x,1",y\r\n')).toEqual([['a', 'b'], ['x,1', 'y']]);
   });
+
+  it('treats a quote inside an unquoted field as literal', () => {
+    expect(parseCsv('a,b"c,d\nx,y,z')).toEqual([['a', 'b"c', 'd'], ['x', 'y', 'z']]);
+  });
 });
