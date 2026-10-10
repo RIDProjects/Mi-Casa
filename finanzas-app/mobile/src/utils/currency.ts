@@ -37,3 +37,22 @@ export function resolveCurrency(
 ): Currency {
   return picked || monedaLocal || '';
 }
+
+/**
+ * Sums `quantity × unitPrice` per currency and formats each subtotal
+ * ("100.00 CUP + US$ 25.00"). Mobile has no exchange rates, so mixed-currency
+ * items are never added into a single mislabeled total. Items without a
+ * currency count toward `defaultCurrency`.
+ */
+export function formatCurrencyTotals(
+  items: { quantity: number; unitPrice: number; currency?: string | null }[],
+  defaultCurrency: Currency,
+): string {
+  const totals = new Map<string, number>();
+  items.forEach((i) => {
+    const code = i.currency || defaultCurrency;
+    totals.set(code, (totals.get(code) ?? 0) + Number(i.quantity || 0) * Number(i.unitPrice || 0));
+  });
+  if (totals.size === 0) return formatMoney(0, defaultCurrency);
+  return [...totals.entries()].map(([code, amount]) => formatMoney(amount, code)).join(' + ');
+}

@@ -105,3 +105,21 @@ describe('resolveCurrency', () => {
     expect(resolveCurrency('', undefined)).toBe('');
   });
 });
+
+describe('formatCurrencyTotals', () => {
+  const { formatCurrencyTotals } = require('../currency');
+  const mk = (quantity: number, unitPrice: number, currency: string | null) => ({ quantity, unitPrice, currency });
+
+  it('sums per currency instead of mixing them', () => {
+    const text = formatCurrencyTotals([mk(2, 10, 'USD'), mk(1, 100, 'CUP'), mk(1, 5, 'USD')], 'CUP');
+    expect(text).toBe('US$ 25.00 + 100.00 CUP');
+  });
+
+  it('falls back to the default currency for items without one', () => {
+    expect(formatCurrencyTotals([mk(1, 50, null)], 'CUP')).toBe('50.00 CUP');
+  });
+
+  it('formats an empty list as zero in the default currency', () => {
+    expect(formatCurrencyTotals([], 'CUP')).toBe('0.00 CUP');
+  });
+});

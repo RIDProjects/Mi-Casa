@@ -32,19 +32,22 @@ export class HouseholdExpensesService {
       relations: ['items'],
     });
 
-    const comprasPorLugar = this.calcComprasPorLugar(list?.items ?? []);
-    const totalCompras = comprasPorLugar.reduce((s, c) => s + c.totalCUP, 0);
+    // Purchase items carry their own currency: convert each to the house
+    // local currency (rates fetched once per call) before summing.
+    const houseCurrencies = await this.houseCurrenciesService.findByHouse(houseId);
+    const localCurrency = houseCurrencies.find(c => c.isLocal);
+    const rates = await this.houseCurrenciesService.getRates(houseId);
+
+    const comprasPorLugar = this.calcComprasPorLugar(list?.items ?? [], rates, localCurrency?.currencyCode);
+    const totalCompras = comprasPorLugar.reduce((s, c) => s + c.totalLocal, 0);
+    const unconvertedItems = comprasPorLugar.reduce((s, c) => s + c.unconvertedItems, 0);
     const totalSalidas = salidas.reduce((s, e) => s + Number(e.amountLocal), 0);
 
     const resumenCategoria = this.calcResumen(salidas, totalCompras);
 
-    // Currency picker options for clients (mobile has no direct houseId to
-    // call /houses/:houseId/currencies — see design.md "Currency options on
-    // mobile"). Not itself required by any Phase 2 task, but Phase 5's
-    // AddHouseholdExpenseScreen currency picker depends on it at runtime.
-    const houseCurrencies = await this.houseCurrenciesService.findByHouse(houseId);
-    const localCurrency = houseCurrencies.find(c => c.isLocal);
-
+    // `monedas`: currency picker options for clients (mobile has no direct
+    // houseId to call /houses/:houseId/currencies — see design.md "Currency
+    // options on mobile").
     return {
       month,
       comprasMercado: comprasPorLugar,
@@ -53,6 +56,7 @@ export class HouseholdExpensesService {
       totalCompras: Math.round(totalCompras * 100) / 100,
       totalSalidas: Math.round(totalSalidas * 100) / 100,
       total: Math.round((totalCompras + totalSalidas) * 100) / 100,
+      unconvertedItems,
       monedaLocal: localCurrency?.currencyCode ?? 'CUP',
       monedas: houseCurrencies.map(c => ({ code: c.currencyCode, symbol: c.symbol })),
     };
@@ -183,20 +187,42 @@ export class HouseholdExpensesService {
     };
   }
 
-  private calcComprasPorLugar(items: PurchaseItem[]) {
-    const map: Record<string, number> = {};
+  /**
+   * Groups market purchase items by place, converting each item to the house
+   * local currency with `rates` (code → rate to local, null when unknown).
+   * Items whose currency has no rate are excluded from the total and counted
+   * in `unconvertedItems`. `totalCUP` is kept as a legacy alias of `totalLocal`.
+   */
+  private calcComprasPorLugar(
+    items: PurchaseItem[],
+    rates: Record<string, number | null>,
+    localCode?: string,
+  ) {
+    const map: Record<string, { total: number; unconverted: number }> = {};
     items.forEach(item => {
       const lugar = item.lugar?.trim() || 'Sin especificar';
-      map[lugar] = (map[lugar] ?? 0) + Number(item.unitPrice || 0) * Number(item.quantity || 0);
+      const entry = (map[lugar] ??= { total: 0, unconverted: 0 });
+      const code = item.currency || localCode;
+      const rate = code && code === localCode ? 1 : code ? rates[code] : undefined;
+      if (!rate || rate <= 0) {
+        entry.unconverted += 1;
+        return;
+      }
+      entry.total += Number(item.unitPrice || 0) * Number(item.quantity || 0) * rate;
     });
     const today = todayInAppTimezone();
-    return Object.entries(map).map(([lugar, totalCUP]) => ({
-      fecha:    today,
-      descripcion: `Compra en ${lugar}`,
-      categoria:   'Comida',
-      lugar,
-      totalCUP: Math.round(totalCUP * 100) / 100,
-    }));
+    return Object.entries(map).map(([lugar, { total, unconverted }]) => {
+      const totalLocal = Math.round(total * 100) / 100;
+      return {
+        fecha:    today,
+        descripcion: `Compra en ${lugar}`,
+        categoria:   'Comida',
+        lugar,
+        totalLocal,
+        totalCUP: totalLocal,
+        unconvertedItems: unconverted,
+      };
+    });
   }
 
   private calcResumen(salidas: HouseholdExpense[], totalCompras: number) {
@@ -214,7 +240,7 @@ export class HouseholdExpensesService {
   private emptyMonth(month: string) {
     return {
       month, comprasMercado: [], salidas: [], resumenCategoria: [],
-      totalCompras: 0, totalSalidas: 0, total: 0,
+      totalCompras: 0, totalSalidas: 0, total: 0, unconvertedItems: 0,
       monedaLocal: 'CUP', monedas: [],
     };
   }
