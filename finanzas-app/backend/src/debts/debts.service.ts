@@ -15,6 +15,7 @@ type StrategyType = 'avalanche' | 'snowball' | 'minimum';
 
 export interface PayoffResult {
   monthsToPayoff: number;
+  feasible: boolean;
   totalInterestPaid: number;
   order: string[];
   payoffTimeline: { month: number; totalBalance: number }[];
@@ -25,7 +26,11 @@ export interface PayoffResult {
   debtDetails: { id: string; label: string; balance: number; interestRate: number; payoffMonth: number }[];
 }
 
-function computeStrategy(
+const MAX_SIMULATION_MONTHS = 600;
+
+const roundMoney = (value: number): number => Math.round(value * 100) / 100;
+
+export function computeStrategy(
   debts: DebtSnapshot[],
   strategy: StrategyType,
   extraPayment: number,
@@ -33,35 +38,51 @@ function computeStrategy(
   const working = debts.map(d => ({ ...d }));
   let month = 0;
   let totalInterestPaid = 0;
+  let feasible = true;
   const timeline: { month: number; totalBalance: number }[] = [];
   const order: string[] = [];
   const payoffMonthById = new Map<string, number>();
 
-  while (working.some(d => d.balance > 0) && month < 600) {
+  // Presupuesto mensual fijo: suma de los mínimos originales + extra. Cuando
+  // una deuda se liquida su mínimo queda libre y se re-aplica (snowball /
+  // avalanche). La estrategia "minimum" solo paga mínimos y no rueda nada.
+  const rolls = strategy !== 'minimum';
+  const monthlyBudget = working.reduce((s, d) => s + d.minimumPayment, 0) + extraPayment;
+
+  let previousTotal = roundMoney(working.reduce((s, d) => s + Math.max(0, d.balance), 0));
+
+  while (working.some(d => d.balance > 0)) {
+    if (month >= MAX_SIMULATION_MONTHS) {
+      feasible = false;
+      break;
+    }
     month++;
 
+    let spent = 0;
     for (const d of working) {
       if (d.balance <= 0) continue;
       const interest = (d.balance * (d.interestRate / 100)) / 12;
       totalInterestPaid += interest;
       d.balance += interest;
       const payment = Math.min(d.minimumPayment, d.balance);
-      d.balance -= payment;
-      d.balance = Math.max(0, Math.round(d.balance * 100) / 100);
+      spent += payment;
+      d.balance = Math.max(0, roundMoney(d.balance - payment));
     }
 
-    const active = working.filter(d => d.balance > 0);
-
-    if (active.length > 0 && extraPayment > 0) {
-      let priority: DebtSnapshot;
+    if (rolls) {
+      let leftover = roundMoney(monthlyBudget - spent);
+      const targets = working.filter(d => d.balance > 0);
       if (strategy === 'avalanche') {
-        priority = active.reduce((a, b) => (a.interestRate >= b.interestRate ? a : b));
+        targets.sort((a, b) => b.interestRate - a.interestRate);
       } else {
-        priority = active.reduce((a, b) => (a.balance <= b.balance ? a : b));
+        targets.sort((a, b) => a.balance - b.balance);
       }
-      const extra = Math.min(extraPayment, priority.balance);
-      priority.balance -= extra;
-      priority.balance = Math.max(0, Math.round(priority.balance * 100) / 100);
+      for (const target of targets) {
+        if (leftover <= 0) break;
+        const extra = Math.min(leftover, target.balance);
+        target.balance = Math.max(0, roundMoney(target.balance - extra));
+        leftover = roundMoney(leftover - extra);
+      }
     }
 
     for (const d of working) {
@@ -73,10 +94,17 @@ function computeStrategy(
       }
     }
 
-    const totalBalance = working.reduce((s, d) => s + d.balance, 0);
-    timeline.push({ month, totalBalance: Math.round(totalBalance * 100) / 100 });
+    const totalBalance = roundMoney(working.reduce((s, d) => s + d.balance, 0));
+    timeline.push({ month, totalBalance });
 
     if (totalBalance <= 0) break;
+
+    // Los pagos no cubren el interés: la deuda total no baja nunca.
+    if (totalBalance >= previousTotal) {
+      feasible = false;
+      break;
+    }
+    previousTotal = totalBalance;
   }
 
   const debtDetails = debts.map(d => ({
@@ -89,7 +117,8 @@ function computeStrategy(
 
   return {
     monthsToPayoff: month,
-    totalInterestPaid: Math.round(totalInterestPaid * 100) / 100,
+    feasible,
+    totalInterestPaid: roundMoney(totalInterestPaid),
     order,
     payoffTimeline: timeline,
     debtDetails,
@@ -182,6 +211,7 @@ export class DebtsService {
     // totalInterestPaid/debtDetails), acá se traduce a esa forma.
     const toFrontend = (result: PayoffResult, baseline: PayoffResult) => ({
       totalMonths: result.monthsToPayoff,
+      feasible: result.feasible,
       totalInterest: result.totalInterestPaid,
       interestSaved: Math.max(0, Math.round((baseline.totalInterestPaid - result.totalInterestPaid) * 100) / 100),
       debtOrder: result.debtDetails.map(d => ({
