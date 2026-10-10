@@ -5,6 +5,7 @@ import { debtPayoffAPI } from '../services/api';
 import { TrendingDown, Award, AlertTriangle, RefreshCw } from 'lucide-react';
 
 import { useCurrencyFormatter } from '../lib/currency';
+import { parseLocalDate } from '../lib/dates';
 
 const fmtMonth = (months: number) => {
   if (months === 0) return '0 meses';
@@ -197,7 +198,7 @@ export default function PayoffPage() {
                           </td>
                           <td className="px-4 py-3 text-right text-on-surface-variant">
                             {d.payoffDate
-                              ? new Date(d.payoffDate).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
+                              ? parseLocalDate(d.payoffDate).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
                               : d.payoffMonths != null ? fmtMonth(d.payoffMonths) : '—'}
                           </td>
                         </tr>

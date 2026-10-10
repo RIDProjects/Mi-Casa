@@ -12,6 +12,7 @@ import { useCurrencyStore } from '../store/currency.store';
 import { useCurrencyFormatter } from '../lib/currency';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
+import { todayLocalISO } from '../lib/dates';
 
 const CATEGORIES = [
   'Comida', 'Transporte', 'Hogar', 'Salud', 'Ocio', 'Salidas', 'Shopper', 'Otros',
@@ -32,7 +33,7 @@ const CAT_COLORS: Record<Category, string> = {
 
 function buildDefaultForm(monedaLocal: string) {
   return {
-    fecha:       new Date().toISOString().split('T')[0],
+    fecha:       todayLocalISO(),
     descripcion: '',
     categoria:   'Otros' as Category,
     monto:       '',

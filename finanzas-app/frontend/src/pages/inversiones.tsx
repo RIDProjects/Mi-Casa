@@ -13,6 +13,7 @@ import { CardSkeleton } from '../components/ui/Skeleton';
 import { Plus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmt } from '../lib/format';
+import { parseLocalDate } from '../lib/dates';
 
 type InvestmentType = 'plazo_fijo' | 'fci' | 'acciones' | 'crypto' | 'dolar' | 'propiedades' | 'otros';
 
@@ -48,7 +49,7 @@ function calcCurrentValue(inv: any): number {
 
   if (tipo !== 'plazo_fijo' || !startDate || rate === 0) return amount;
 
-  const start = new Date(startDate);
+  const start = parseLocalDate(startDate);
   const now = new Date();
   const daysElapsed = Math.max(0, (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   return amount * (1 + (rate / 100) * (daysElapsed / 365));
@@ -258,7 +259,7 @@ export default function InversionesPage() {
                         {symbol}{fmt(currentValue)}
                       </td>
                       <td className="px-4 py-3 text-on-surface-variant text-xs">
-                        {fechaFin ? new Date(fechaFin).toLocaleDateString('es-ES') : '—'}
+                        {fechaFin ? parseLocalDate(fechaFin).toLocaleDateString('es-ES') : '—'}
                       </td>
                       <td className="px-4 py-3">
                         <ActionButtons

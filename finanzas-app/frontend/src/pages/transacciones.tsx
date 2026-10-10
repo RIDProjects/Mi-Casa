@@ -15,6 +15,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { MONTH_NAMES } from '../lib/format';
 import { useCurrencyFormatter } from '../lib/currency';
+import { parseLocalDate, todayLocalISO } from '../lib/dates';
 import { getErrorMessage } from '../utils/errors';
 
 const CATEGORIES = [
@@ -41,7 +42,7 @@ const defaultForm = {
   monto: '',
   metodoPago: 'efectivo',
   nombreTarjeta: '',
-  fecha: new Date().toISOString().split('T')[0],
+  fecha: todayLocalISO(),
 };
 
 const TABS = ['Historial', 'Programadas', 'Pendientes'] as const;
@@ -714,7 +715,7 @@ export default function TransaccionesPage() {
                   <tr key={t.id} className="hover:bg-surface-gray transition-colors group">
                     <td className="px-6 py-4 font-body-default text-body-default text-on-surface whitespace-nowrap">
                       {t.fecha
-                        ? new Date(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                        ? parseLocalDate(t.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
                         : '—'}
                     </td>
                     <td className="px-6 py-4">

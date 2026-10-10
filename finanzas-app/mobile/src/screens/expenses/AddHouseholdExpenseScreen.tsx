@@ -23,6 +23,7 @@ import {
   TRANSACTION_CATEGORIES,
 } from '../../types';
 import { GastosStackParamList } from '../../navigation/types';
+import { currentMonthLocal, todayLocalISO } from '../../utils/dates';
 
 type RouteT = RouteProp<GastosStackParamList, 'AddHouseholdExpense'>;
 
@@ -40,7 +41,7 @@ export default function AddHouseholdExpenseScreen() {
     : undefined;
 
   const now = new Date();
-  const monthStr = existingExpense?.mes ?? `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const monthStr = existingExpense?.mes ?? currentMonthLocal();
 
   // The month query already carries this house's currency picker options
   // (monedaLocal/monedas) — mobile has no direct houseId to call
@@ -59,7 +60,7 @@ export default function AddHouseholdExpenseScreen() {
   const [moneda, setMoneda] = useState(existingExpense?.moneda ?? monedaLocal);
   const [categoria, setCategoria] = useState<TransactionCategory>(existingExpense?.categoria ?? 'Otros');
   const [lugar, setLugar] = useState(existingExpense?.lugar ?? '');
-  const [fecha] = useState(existingExpense?.fecha ?? now.toISOString().split('T')[0]);
+  const [fecha] = useState(existingExpense?.fecha ?? todayLocalISO());
 
   // Once the month data resolves, default the currency to the house base if
   // the user has not touched the picker yet (new expense only).
