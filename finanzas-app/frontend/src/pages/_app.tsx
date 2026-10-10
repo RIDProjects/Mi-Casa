@@ -60,9 +60,13 @@ function ThemeInitializer({ children }: { children: React.ReactNode }) {
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
-    const handleLogout = () => queryClient.clear();
-    window.addEventListener('auth:logout', handleLogout);
-    return () => window.removeEventListener('auth:logout', handleLogout);
+    const handleReset = () => queryClient.clear();
+    window.addEventListener('auth:logout', handleReset);
+    window.addEventListener('session:reset', handleReset);
+    return () => {
+      window.removeEventListener('auth:logout', handleReset);
+      window.removeEventListener('session:reset', handleReset);
+    };
   }, []);
 
   useEffect(() => {

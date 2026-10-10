@@ -48,4 +48,28 @@ describe('session reset', () => {
 
     expect(useCurrencyStore.getState().currencies).toEqual([usd]);
   });
+
+  describe('react-query cache reset event', () => {
+    const listener = jest.fn();
+    beforeEach(() => {
+      listener.mockClear();
+      window.addEventListener('session:reset', listener);
+    });
+    afterEach(() => window.removeEventListener('session:reset', listener));
+
+    it('fires when a different user logs in', () => {
+      useAuthStore.getState().setAuth(userA, 'tok');
+      listener.mockClear();
+      useAuthStore.getState().setAuth(userB, 'tok2');
+      expect(listener).toHaveBeenCalledTimes(1);
+      expect(localStorage.getItem('token')).toBe('tok2');
+    });
+
+    it('does not fire on a same-user refresh', () => {
+      useAuthStore.getState().setAuth(userA, 'tok');
+      listener.mockClear();
+      useAuthStore.getState().setAuth(userA, 'tok-refreshed');
+      expect(listener).not.toHaveBeenCalled();
+    });
+  });
 });

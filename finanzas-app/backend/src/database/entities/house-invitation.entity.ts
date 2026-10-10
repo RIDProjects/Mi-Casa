@@ -1,10 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { House } from './house.entity';
 import { User } from './user.entity';
 
 export type HouseInvitationStatus = 'pending' | 'accepted' | 'expired';
 
 @Entity('house_invitations')
+@Index('IDX_house_invitations_house_id', ['houseId'])
+@Index('IDX_house_invitations_email_house_status', ['email', 'houseId', 'status'])
 export class HouseInvitation {
   @PrimaryGeneratedColumn('uuid') id: string;
 
