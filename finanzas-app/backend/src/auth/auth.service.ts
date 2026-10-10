@@ -13,6 +13,7 @@ import { CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { toSafeUser } from '../users/safe-user';
 
 @Injectable()
 export class AuthService {
@@ -186,13 +187,13 @@ export class AuthService {
     if (!user) throw new NotFoundException('Usuario no encontrado');
 
     const isAdmin = user.roles?.some(r => r.name === 'admin');
-    if (isAdmin) return { ...user, house: null, houses: [] };
+    if (isAdmin) return { ...toSafeUser(user), house: null, houses: [] };
 
     const activeHouse =
       user.houses?.find(h => h.id === user.activeHouseId) || user.houses?.[0] || null;
 
     return {
-      ...user,
+      ...toSafeUser(user),
       house: activeHouse ? { id: activeHouse.id, name: activeHouse.name } : null,
       houses: user.houses?.map(h => ({ id: h.id, name: h.name })) || [],
     };
@@ -218,7 +219,9 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const user = await this.userRepo.findOne({ where: { resetToken: token } });
+    const user = await this.userRepo.findOne({ where: { resetToken: token },
+      select: ['id', 'resetToken', 'resetTokenExpiry'],
+    });
 
     if (!user || !user.resetTokenExpiry || new Date() > user.resetTokenExpiry) {
       throw new BadRequestException('Token inválido o expirado');

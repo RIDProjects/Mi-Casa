@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
+import { toSafeUser } from './safe-user';
 import { CreateUserDto, UpdateUserDto } from './dto/create-user.dto';
 
 @Injectable()
@@ -14,7 +15,8 @@ export class UsersService {
   ) {}
 
   async findAll() {
-    return this.userRepo.find({ relations: ['roles', 'roles.permissions'] });
+    const users = await this.userRepo.find({ relations: ['roles', 'roles.permissions'] });
+    return users.map(u => toSafeUser(u));
   }
 
   async getAdminStats() {
@@ -42,10 +44,14 @@ export class UsersService {
     return { total, activeUsers, inactiveUsers, newLast30, activeLast30, activeLast7, churnRisk, neverLogged, planDist };
   }
 
-  async findOne(id: string) {
+  private async loadUser(id: string) {
     const user = await this.userRepo.findOne({ where: { id }, relations: ['roles', 'roles.permissions'] });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
+  }
+
+  async findOne(id: string) {
+    return toSafeUser(await this.loadUser(id));
   }
 
   async create(dto: CreateUserDto) {
@@ -56,22 +62,22 @@ export class UsersService {
     const roles = dto.roleIds ? await this.roleRepo.findBy({ id: In(dto.roleIds) }) : [];
 
     const user = this.userRepo.create({ ...dto, password: hashed, roles });
-    return this.userRepo.save(user);
+    return toSafeUser(await this.userRepo.save(user));
   }
 
   async update(id: string, dto: UpdateUserDto) {
-    const user = await this.findOne(id);
+    const user = await this.loadUser(id);
     if (dto.password) dto.password = await bcrypt.hash(dto.password, 12);
     if (dto.roleIds) {
       user.roles = await this.roleRepo.findBy({ id: In(dto.roleIds) });
       delete dto.roleIds;
     }
     Object.assign(user, dto);
-    return this.userRepo.save(user);
+    return toSafeUser(await this.userRepo.save(user));
   }
 
   async remove(id: string) {
-    const user = await this.findOne(id);
+    const user = await this.loadUser(id);
     await this.userRepo.remove(user);
     return { message: 'Usuario eliminado' };
   }

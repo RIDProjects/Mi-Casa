@@ -14,8 +14,8 @@ export class User {
   @Column({ nullable: true, name: 'active_house_id' }) activeHouseId: string | null;
   @Column({ default: 'free' }) plan: UserPlan;
   @Column({ nullable: true, type: 'timestamp', name: 'last_login_at' }) lastLoginAt: Date | null;
-  @Column({ nullable: true, name: 'reset_token' }) resetToken: string | null;
-  @Column({ nullable: true, type: 'timestamp', name: 'reset_token_expiry' }) resetTokenExpiry: Date | null;
+  @Column({ nullable: true, name: 'reset_token', select: false }) resetToken: string | null;
+  @Column({ nullable: true, type: 'timestamp', name: 'reset_token_expiry', select: false }) resetTokenExpiry: Date | null;
   @ManyToMany(() => Role, { eager: true }) @JoinTable({ name: 'user_roles' }) roles: Role[];
   @ManyToMany(() => House, house => house.members)
   @JoinTable({

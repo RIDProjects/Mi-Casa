@@ -9,6 +9,7 @@ import { Role } from '../database/entities/role.entity';
 import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { HouseCurrenciesService, CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { toSafeUser } from '../users/safe-user';
 
 @Injectable()
 export class HousesService {
@@ -52,7 +53,8 @@ export class HousesService {
   }
 
   async findAll() {
-    return this.houseRepo.find({ order: { createdAt: 'DESC' }, relations: ['members'] });
+    const houses = await this.houseRepo.find({ order: { createdAt: 'DESC' }, relations: ['members'] });
+    return houses.map(h => this.withSafeMembers(h));
   }
 
   async findOne(id: string, requestingUserId?: string) {
@@ -68,13 +70,17 @@ export class HousesService {
       }
     }
 
-    return house;
+    return this.withSafeMembers(house);
+  }
+
+  private withSafeMembers(house: House) {
+    return { ...house, members: house.members?.map(m => toSafeUser(m)) };
   }
 
   async getHouseMembers(houseId: string) {
     const house = await this.houseRepo.findOne({ where: { id: houseId }, relations: ['members'] });
     if (!house) throw new NotFoundException('Casa no encontrada');
-    return house.members || [];
+    return (house.members || []).map(m => toSafeUser(m));
   }
 
   // Switch user's active house — regular users must already belong to it; global admins get added automatically
@@ -101,7 +107,7 @@ export class HousesService {
     }
 
     user.activeHouseId = houseId;
-    return this.userRepo.save(user);
+    return toSafeUser(await this.userRepo.save(user));
   }
 
   async updateHouse(id: string, name: string) {
@@ -139,7 +145,7 @@ export class HousesService {
     if (!isMember) throw new UnauthorizedException('El usuario no pertenece a esta casa');
 
     user.isActive = !user.isActive;
-    return this.userRepo.save(user);
+    return toSafeUser(await this.userRepo.save(user));
   }
 
   async removeUserFromHouse(houseId: string, userId: string, requestingUserId: string) {
@@ -263,7 +269,6 @@ export class HousesService {
     });
     const saved = await this.userRepo.save(user);
 
-    const { password, ...result } = saved;
-    return { status: 'created', user: result };
+    return { status: 'created', user: toSafeUser(saved) };
   }
 }
