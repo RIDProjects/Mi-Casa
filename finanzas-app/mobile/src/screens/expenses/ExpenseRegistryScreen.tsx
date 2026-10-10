@@ -194,9 +194,10 @@ export default function ExpenseRegistryScreen() {
   const totalCompras = data?.totalCompras ?? 0;
   const totalSalidas = data?.totalSalidas ?? 0;
   const total = data?.total ?? 0;
+  const unconvertedItems = data?.unconvertedItems ?? 0;
   // House base currency — salidas (manual expenses) are already snapshotted
   // in this currency at write time. Market purchases (comprasMercado /
-  // totalCompras) come from the API as `totalCUP` but are labelled with the local code.
+  // totalCompras) are converted to it by the backend (`totalLocal`, legacy `totalCUP`).
   const monedaLocal = data?.monedaLocal ?? '';
 
   const deleteMut = useMutation({
@@ -229,7 +230,7 @@ export default function ExpenseRegistryScreen() {
       categoria: c.categoria,
       fecha: c.fecha,
       lugar: c.lugar,
-      monto: c.totalCUP,
+      monto: c.totalLocal ?? c.totalCUP,
       currency: monedaLocal,
       deletable: false,
     }));
@@ -289,6 +290,11 @@ export default function ExpenseRegistryScreen() {
           <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
           <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, monedaLocal)}</Text>
         </View>
+        {unconvertedItems > 0 && (
+          <Text style={styles.summaryHint}>
+            Algunos artículos no tienen tasa de cambio y no se incluyen en el total
+          </Text>
+        )}
         <View style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
           <Text style={styles.summaryRowValue}>{formatMoney(totalSalidas, monedaLocal)}</Text>
@@ -425,6 +431,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   summaryRowLabel: { color: Colors.textSecondary, fontSize: 13 },
+  summaryHint: { color: Colors.textMuted, fontSize: 12, marginTop: 4 },
   summaryRowValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
   categoriesCard: {
     backgroundColor: Colors.card,

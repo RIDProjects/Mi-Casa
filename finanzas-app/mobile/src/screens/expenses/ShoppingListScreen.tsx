@@ -21,7 +21,7 @@ import { Colors } from '../../theme/colors';
 import { purchasesService } from '../../services/purchases.service';
 import { householdExpensesService } from '../../services/household-expenses.service';
 import { PurchaseItem, CreatePurchaseItemDto, HouseholdExpensesMonth } from '../../types';
-import { formatMoney } from '../../utils/currency';
+import { formatMoney, formatCurrencyTotals } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 
@@ -77,10 +77,9 @@ export default function ShoppingListScreen() {
   const precioRef = useRef<TextInput>(null);
   const tiendaRef = useRef<TextInput>(null);
 
-  const total = items.reduce(
-    (s, i) => s + Number(i.quantity || 0) * Number(i.unitPrice || 0),
-    0,
-  );
+  // Items can be in different currencies and mobile has no rates: show
+  // per-currency subtotals rather than one mislabeled total.
+  const totalText = formatCurrencyTotals(items, monedaLocal);
 
   const addItemMut = useMutation({
     mutationFn: async (dto: CreatePurchaseItemDto) => {
@@ -215,7 +214,7 @@ export default function ShoppingListScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.totalLabel}>Total de la compra</Text>
-            <Text style={styles.totalAmount}>{fmt(total)}</Text>
+            <Text style={styles.totalAmount}>{totalText}</Text>
             <Text style={styles.itemCount}>{items.length} ítem{items.length !== 1 ? 's' : ''}</Text>
           </View>
           <View style={styles.headerActions}>
@@ -253,16 +252,13 @@ export default function ShoppingListScreen() {
             </View>
           ) : (
             Object.entries(grouped).map(([lugar, storeItems]) => {
-              const storeTot = storeItems.reduce(
-                (s, i) => s + Number(i.quantity || 0) * Number(i.unitPrice || 0),
-                0,
-              );
+              const storeTotText = formatCurrencyTotals(storeItems, monedaLocal);
               return (
                 <View key={lugar} style={styles.storeGroup}>
                   <View style={styles.storeHeader}>
                     <Ionicons name="storefront-outline" size={15} color={Colors.textSecondary} />
                     <Text style={styles.storeTitle}>{lugar}</Text>
-                    <Text style={styles.storeTotal}>{fmt(storeTot)}</Text>
+                    <Text style={styles.storeTotal}>{storeTotText}</Text>
                   </View>
                   {storeItems.map((item) => (
                     <TouchableOpacity

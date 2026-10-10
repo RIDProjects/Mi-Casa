@@ -72,6 +72,7 @@ export default function RegistroGastosPage() {
   const totalCompras: number    = data?.totalCompras     ?? 0;
   const totalSalidas: number    = data?.totalSalidas     ?? 0;
   const total: number           = data?.total            ?? 0;
+  const unconvertedItems: number = data?.unconvertedItems ?? 0;
 
   const createMut = useMutation((d: any) => householdExpensesAPI.create(d), {
     onSuccess: () => { toast.success('Gasto registrado'); setShowModal(false); setForm(buildDefaultForm(monedaLocal)); qc.invalidateQueries(qKey); },
@@ -191,7 +192,7 @@ export default function RegistroGastosPage() {
                           </span>
                         </td>
                         <td className="px-3 py-2 text-right font-semibold text-on-surface">
-                          {fmt(c.totalCUP)} {monedaLocal}
+                          {fmt(c.totalLocal ?? c.totalCUP)} {monedaLocal}
                         </td>
                       </tr>
                     ))
@@ -307,6 +308,11 @@ export default function RegistroGastosPage() {
                 <span>Subtotal Compras</span>
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">{fmt(totalCompras)} {monedaLocal}</span>
               </div>
+              {unconvertedItems > 0 && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Algunos artículos no tienen tasa de cambio y no se incluyen en el total
+                </p>
+              )}
               <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Salidas</span>
                 <span className="font-medium text-orange-600 dark:text-orange-400">{fmtLocal(totalSalidas)}</span>

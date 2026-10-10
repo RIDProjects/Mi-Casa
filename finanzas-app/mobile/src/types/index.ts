@@ -147,7 +147,11 @@ export interface HouseholdComprasPorLugar {
   descripcion: string;
   categoria: string;
   lugar: string;
+  /** Converted to the house local currency. Absent on older backends. */
+  totalLocal?: number;
+  /** @deprecated legacy alias of totalLocal. */
   totalCUP: number;
+  unconvertedItems?: number;
 }
 
 export interface HouseholdResumenCategoria {
@@ -163,6 +167,8 @@ export interface HouseholdExpensesMonth {
   totalCompras: number;
   totalSalidas: number;
   total: number;
+  /** Market purchase items excluded from totals for lack of an exchange rate. */
+  unconvertedItems?: number;
   /** House's local currency code (e.g. 'CUP'). Absent on responses from
    * backend builds predating this change. */
   monedaLocal?: string;
