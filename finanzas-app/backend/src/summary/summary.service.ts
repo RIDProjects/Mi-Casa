@@ -12,7 +12,7 @@ import { InvestmentsService } from '../investments/investments.service';
 import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 import { HouseholdExpensesService } from '../household-expenses/household-expenses.service';
 import { TransactionType } from '../database/entities/transaction.entity';
-import { currentMonthInAppTimezone, todayInAppTimezone } from '../common/dates';
+import { clampDay, currentMonthInAppTimezone, daysBetween, todayInAppTimezone } from '../common/dates';
 
 export interface UpcomingBill {
   type: string;
@@ -39,66 +39,52 @@ export class SummaryService {
     private readonly householdExpensesService: HouseholdExpensesService,
   ) {}
 
+  // Next occurrence (today included) of a monthly due day, as YYYY-MM-DD.
+  // Days 29-31 are clamped to the end of short months.
+  private nextMonthlyDueDate(today: string, day: number): string {
+    const [year, month] = today.split('-').map(Number);
+    const candidate = clampDay(year, month, day);
+    if (candidate >= today) return candidate;
+    const nextMonth = month === 12 ? 1 : month + 1;
+    return clampDay(month === 12 ? year + 1 : year, nextMonth, day);
+  }
+
   async getUpcomingBills(houseId: string, days = 30): Promise<UpcomingBill[]> {
-    const now = new Date();
-    const cutoff = new Date(now);
-    cutoff.setDate(cutoff.getDate() + days);
+    const today = todayInAppTimezone();
 
     const bills: UpcomingBill[] = [];
+    const pushIfInWindow = (type: string, name: string, amount: number, dueDate: string) => {
+      const daysUntilDue = daysBetween(today, dueDate);
+      if (daysUntilDue < 0 || daysUntilDue > days) return;
+      bills.push({ type, name, amount, dueDate, daysUntilDue });
+    };
 
     const cards: any[] = await this.creditCardsService.findByHouse(houseId);
     for (const card of cards) {
       const day = parseInt(card.fechaPago, 10);
       if (!day || isNaN(day)) continue;
-
-      const candidate = new Date(now.getFullYear(), now.getMonth(), day);
-      if (candidate < now) candidate.setMonth(candidate.getMonth() + 1);
-
-      if (candidate <= cutoff) {
-        const dueStr = candidate.toISOString().slice(0, 10);
-        const diff = Math.round((candidate.getTime() - now.getTime()) / 86400000);
-        bills.push({
-          type: 'credit_card',
-          name: `${card.banco} - ${card.nombreTarjeta}`,
-          amount: Number(card.saldoActual ?? 0),
-          dueDate: dueStr,
-          daysUntilDue: diff,
-        });
-      }
+      pushIfInWindow(
+        'credit_card',
+        `${card.banco} - ${card.nombreTarjeta}`,
+        Number(card.saldoActual ?? 0),
+        this.nextMonthlyDueDate(today, day),
+      );
     }
 
     const loans: any[] = await this.loansService.findByHouse(houseId);
     for (const loan of loans) {
       if (!loan.cuotaMensual) continue;
-      const payDay = loan.diaPago ?? 1;
-      const candidate = new Date(now.getFullYear(), now.getMonth(), payDay);
-      if (candidate < now) candidate.setMonth(candidate.getMonth() + 1);
-      if (candidate <= cutoff) {
-        const dueStr = candidate.toISOString().slice(0, 10);
-        const diff = Math.round((candidate.getTime() - now.getTime()) / 86400000);
-        bills.push({
-          type: 'loan',
-          name: `${loan.tipo} - ${loan.institucion}`,
-          amount: Number(loan.cuotaMensual),
-          dueDate: dueStr,
-          daysUntilDue: diff,
-        });
-      }
+      pushIfInWindow(
+        'loan',
+        `${loan.tipo} - ${loan.institucion}`,
+        Number(loan.cuotaMensual),
+        this.nextMonthlyDueDate(today, loan.diaPago ?? 1),
+      );
     }
 
     const cuotas = await this.cuotasService.getActiveCuotas(houseId);
     for (const cuota of cuotas) {
-      const dueDate = new Date(cuota.nextPaymentDate);
-      if (dueDate >= now && dueDate <= cutoff) {
-        const diff = Math.round((dueDate.getTime() - now.getTime()) / 86400000);
-        bills.push({
-          type: 'cuota',
-          name: cuota.description,
-          amount: Number(cuota.installmentAmount),
-          dueDate: cuota.nextPaymentDate,
-          daysUntilDue: diff,
-        });
-      }
+      pushIfInWindow('cuota', cuota.description, Number(cuota.installmentAmount), cuota.nextPaymentDate);
     }
 
     return bills.sort((a, b) => a.dueDate.localeCompare(b.dueDate));

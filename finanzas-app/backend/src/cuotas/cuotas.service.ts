@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cuota } from '../database/entities/cuota.entity';
 import { CreateCuotaDto } from './dto/create-cuota.dto';
+import { addMonthsClamped } from '../common/dates';
 
 @Injectable()
 export class CuotasService {
@@ -12,15 +13,15 @@ export class CuotasService {
 
   private computeFields(c: Cuota) {
     const remaining = c.totalInstallments - c.paidInstallments;
-    const startDate = new Date(c.startDate);
-    const nextPayment = new Date(startDate);
-    nextPayment.setMonth(nextPayment.getMonth() + c.paidInstallments);
+    // Always offset from the stored start date so the original day is kept
+    // (31st -> Feb 28 -> Mar 31) instead of drifting after a clamp.
+    const nextPaymentDate = addMonthsClamped(String(c.startDate), c.paidInstallments);
 
     return {
       ...c,
       remainingInstallments: remaining,
       remainingAmount: Math.round(remaining * Number(c.installmentAmount) * 100) / 100,
-      nextPaymentDate: nextPayment.toISOString().slice(0, 10),
+      nextPaymentDate,
       isCompleted: c.paidInstallments >= c.totalInstallments,
     };
   }

@@ -72,3 +72,60 @@ describe('SummaryService.getSummary — household expenses via local snapshot', 
     expect(result.householdExpenses).toEqual({ month: currentMonth, total: 4300 });
   });
 });
+
+describe('SummaryService.getUpcomingBills — app timezone calendar days', () => {
+  function build(opts: { cards?: any[]; loans?: any[]; cuotas?: any[] }) {
+    const none = {} as any;
+    return new SummaryService(
+      none,
+      none,
+      { findByHouse: jest.fn().mockResolvedValue(opts.cards ?? []) } as any,
+      { findByHouse: jest.fn().mockResolvedValue(opts.loans ?? []) } as any,
+      none,
+      none,
+      none,
+      { getActiveCuotas: jest.fn().mockResolvedValue(opts.cuotas ?? []) } as any,
+      none,
+      none,
+      none,
+      none,
+    );
+  }
+
+  afterEach(() => jest.useRealTimers());
+
+  // 2026-11-01T02:00Z is Oct 31 22:00 in Havana.
+  it('includes a bill due on the Havana "today" with daysUntilDue 0', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-01T02:00:00Z'));
+    const service = build({
+      cards: [{ fechaPago: '31', banco: 'B', nombreTarjeta: 'C', saldoActual: 10 }],
+      cuotas: [{ nextPaymentDate: '2026-10-31', description: 'TV', installmentAmount: 5 }],
+    });
+    const bills = await service.getUpcomingBills('h', 3);
+    expect(bills.map(b => [b.type, b.dueDate, b.daysUntilDue])).toEqual([
+      ['credit_card', '2026-10-31', 0],
+      ['cuota', '2026-10-31', 0],
+    ]);
+  });
+
+  it('clamps loan diaPago 31 to the end of February', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2027-02-10T15:00:00Z'));
+    const service = build({
+      loans: [{ diaPago: 31, cuotaMensual: 50, tipo: 'Auto', institucion: 'X' }],
+    });
+    const bills = await service.getUpcomingBills('h', 30);
+    expect(bills).toHaveLength(1);
+    expect(bills[0].dueDate).toBe('2027-02-28');
+    expect(bills[0].daysUntilDue).toBe(18);
+  });
+
+  it('rolls a passed day to next month and counts calendar days', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-12-20T15:00:00Z'));
+    const service = build({
+      cards: [{ fechaPago: '5', banco: 'B', nombreTarjeta: 'C', saldoActual: 1 }],
+    });
+    const bills = await service.getUpcomingBills('h', 30);
+    expect(bills[0].dueDate).toBe('2027-01-05');
+    expect(bills[0].daysUntilDue).toBe(16);
+  });
+});
