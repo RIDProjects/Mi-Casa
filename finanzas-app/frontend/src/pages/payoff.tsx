@@ -57,8 +57,14 @@ export default function PayoffPage() {
   );
 
   const strategies = data?.strategies ?? {};
+  // feasible === false: the payments never cover the interest, so months
+  // and interest are not a real payoff and savings against them are meaningless.
+  const minimumFeasible = strategies.minimum?.feasible !== false;
   const minimumMonths: number = strategies.minimum?.totalMonths ?? 0;
-  const avalancheInterestSaved: number = strategies.avalanche?.interestSaved ?? 0;
+  const avalancheInterestSaved: number =
+    minimumFeasible && strategies.avalanche?.feasible !== false
+      ? strategies.avalanche?.interestSaved ?? 0
+      : 0;
 
   return (
     <Layout>
@@ -116,8 +122,10 @@ export default function PayoffPage() {
               const isRecommended = key === 'avalanche' && avalancheInterestSaved > 0;
               if (!s) return null;
 
-              const monthsSaved = minimumMonths - (s.totalMonths ?? 0);
-              const interestSaved = s.interestSaved ?? 0;
+              const feasible = s.feasible !== false;
+              const comparable = feasible && minimumFeasible;
+              const monthsSaved = comparable ? minimumMonths - (s.totalMonths ?? 0) : 0;
+              const interestSaved = comparable ? s.interestSaved ?? 0 : 0;
 
               return (
                 <div
@@ -135,7 +143,12 @@ export default function PayoffPage() {
                   <h3 className="font-bold text-on-surface">{meta.label}</h3>
                   <p className="text-xs text-on-surface-variant mb-4">{meta.subtitle}</p>
 
-                  <div className="space-y-2">
+                  {!feasible && (
+                    <p className="text-xs text-danger font-medium mb-3">
+                      Con estos pagos la deuda no se termina de pagar: no alcanzan a cubrir los intereses.
+                    </p>
+                  )}
+                  <div className={`space-y-2 ${feasible ? '' : 'hidden'}`}>
                     <div>
                       <p className="text-xs text-on-surface-variant">Tiempo total</p>
                       <p className="font-semibold text-on-surface text-sm">{fmtMonth(s.totalMonths ?? 0)}</p>
@@ -197,7 +210,9 @@ export default function PayoffPage() {
                             {d.rate != null ? `${d.rate}%` : '—'}
                           </td>
                           <td className="px-4 py-3 text-right text-on-surface-variant">
-                            {d.payoffDate
+                            {s.feasible === false
+                              ? '—'
+                              : d.payoffDate
                               ? parseLocalDate(d.payoffDate).toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })
                               : d.payoffMonths != null ? fmtMonth(d.payoffMonths) : '—'}
                           </td>
