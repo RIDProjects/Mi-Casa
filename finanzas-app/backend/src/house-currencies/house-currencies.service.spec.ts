@@ -80,8 +80,19 @@ describe('HouseCurrenciesService.resolveRateToLocal', () => {
 
     expect(result).toEqual({ localCode: 'CUP', rate: 400 });
     expect(ratesRepo.findOne).toHaveBeenCalledWith({
-      where: { fromCurrency: 'USD', toCurrency: 'CUP' },
+      where: { house: { id: HOUSE_ID }, fromCurrency: 'USD', toCurrency: 'CUP' },
       order: { date: 'DESC' },
+    });
+  });
+
+  it('scopes the dated rate query by house', async () => {
+    repo.findOne.mockResolvedValue(USD_CURRENCY as any);
+    queryBuilder.getOne.mockResolvedValue({ rate: 380 });
+
+    await service.resolveRateToLocal(HOUSE_ID, 'USD', '2026-01-15');
+
+    expect(queryBuilder.where).toHaveBeenCalledWith('er.house_id = :houseId', {
+      houseId: HOUSE_ID,
     });
   });
 
@@ -110,5 +121,63 @@ describe('HouseCurrenciesService.resolveRateToLocal', () => {
     await expect(
       service.resolveRateToLocal(HOUSE_ID, 'USD', '2026-01-15'),
     ).rejects.toThrow(BadRequestException);
+  });
+});
+
+describe('HouseCurrenciesService rate scoping by house', () => {
+  let service: HouseCurrenciesService;
+  let repo: jest.Mocked<Repository<HouseCurrency>>;
+  let ratesRepo: jest.Mocked<Repository<ExchangeRate>>;
+
+  const HOUSE_ID = 'house-1';
+
+  beforeEach(() => {
+    repo = { find: jest.fn() } as unknown as jest.Mocked<Repository<HouseCurrency>>;
+    ratesRepo = {
+      findOne: jest.fn(),
+      create: jest.fn((x) => x),
+      save: jest.fn((x) => Promise.resolve(x)),
+    } as unknown as jest.Mocked<Repository<ExchangeRate>>;
+    service = new HouseCurrenciesService(repo, ratesRepo);
+  });
+
+  it('getRates only reads rates belonging to the house', async () => {
+    repo.find.mockResolvedValue([
+      { currencyCode: 'CUP', isLocal: true },
+      { currencyCode: 'USD', isLocal: false },
+    ] as any);
+    ratesRepo.findOne.mockResolvedValue({ rate: 380 } as any);
+
+    const rates = await service.getRates(HOUSE_ID);
+
+    expect(rates).toEqual({ CUP: 1, USD: 380 });
+    expect(ratesRepo.findOne).toHaveBeenCalledWith({
+      where: { house: { id: HOUSE_ID }, fromCurrency: 'USD', toCurrency: 'CUP' },
+      order: { date: 'DESC' },
+    });
+  });
+
+  it('upsertRate looks up today\'s row within the house only', async () => {
+    ratesRepo.findOne.mockResolvedValue(null);
+
+    await service.upsertRate(HOUSE_ID, { fromCurrency: 'USD', toCurrency: 'CUP', rate: 400 });
+
+    expect(ratesRepo.findOne).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        house: { id: HOUSE_ID },
+        fromCurrency: 'USD',
+        toCurrency: 'CUP',
+      }),
+    });
+  });
+
+  it('upsertRate saves new rows attached to the house', async () => {
+    ratesRepo.findOne.mockResolvedValue(null);
+
+    await service.upsertRate(HOUSE_ID, { fromCurrency: 'USD', toCurrency: 'CUP', rate: 400 });
+
+    expect(ratesRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ house: { id: HOUSE_ID }, rate: 400 }),
+    );
   });
 });

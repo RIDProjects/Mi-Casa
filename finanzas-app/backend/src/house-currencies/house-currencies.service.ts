@@ -99,6 +99,7 @@ export class HouseCurrenciesService {
     for (const c of currencies.filter((x) => !x.isLocal)) {
       const rate = await this.ratesRepo.findOne({
         where: {
+          house: { id: houseId },
           fromCurrency: c.currencyCode,
           toCurrency: local.currencyCode,
         },
@@ -145,7 +146,8 @@ export class HouseCurrenciesService {
 
     const dated = await this.ratesRepo
       .createQueryBuilder('er')
-      .where('er.fromCurrency = :from', { from: code })
+      .where('er.house_id = :houseId', { houseId })
+      .andWhere('er.fromCurrency = :from', { from: code })
       .andWhere('er.toCurrency = :to', { to: local.currencyCode })
       .andWhere('er.date <= :onDate', { onDate })
       .orderBy('er.date', 'DESC')
@@ -154,7 +156,11 @@ export class HouseCurrenciesService {
     const rateRow =
       dated ??
       (await this.ratesRepo.findOne({
-        where: { fromCurrency: code, toCurrency: local.currencyCode },
+        where: {
+          house: { id: houseId },
+          fromCurrency: code,
+          toCurrency: local.currencyCode,
+        },
         order: { date: 'DESC' },
       }));
 
@@ -180,6 +186,7 @@ export class HouseCurrenciesService {
 
     const existing = await this.ratesRepo.findOne({
       where: {
+        house: { id: houseId },
         fromCurrency: dto.fromCurrency,
         toCurrency: dto.toCurrency,
         date: today,
@@ -194,6 +201,7 @@ export class HouseCurrenciesService {
 
     const newRate = this.ratesRepo.create({
       ...dto,
+      house: { id: houseId },
       date: today,
     });
     return this.ratesRepo.save(newRate);
