@@ -13,14 +13,14 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @Throttle({ medium: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Registrarse como nuevo usuario' })
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
-  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @Throttle({ medium: { ttl: 60000, limit: 5 } })
   @ApiOperation({ summary: 'Iniciar sesión' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -28,7 +28,7 @@ export class AuthController {
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { ttl: 60000, limit: 3 } })
+  @Throttle({ medium: { ttl: 60000, limit: 3 } })
   @ApiOperation({ summary: 'Solicitar reset de contraseña' })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     await this.authService.forgotPassword(dto.email);
@@ -37,6 +37,7 @@ export class AuthController {
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ medium: { ttl: 60000, limit: 3 } })
   @ApiOperation({ summary: 'Restablecer contraseña con token' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto.token, dto.password);

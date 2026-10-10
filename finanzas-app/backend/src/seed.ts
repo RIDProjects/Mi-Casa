@@ -5,6 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { User } from './database/entities/user.entity';
 import { Role } from './database/entities/role.entity';
 import { Permission, PermissionModule, PermissionAction } from './database/entities/permission.entity';
+import { MEMBER_ROLE_MODULES, MEMBER_ROLE_ACTIONS, VIEWER_ROLE_ACTIONS } from './common/role-permissions';
 
 export async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -41,31 +42,25 @@ export async function seed() {
   // Create viewer role
   let viewerRole = await roleRepo.findOne({ where: { name: 'viewer' } });
   if (!viewerRole) {
-    const viewPerms = permissions.filter(p => p.action === PermissionAction.VIEW);
+    const viewPerms = permissions.filter(p => VIEWER_ROLE_ACTIONS.includes(p.action as PermissionAction));
     viewerRole = roleRepo.create({ name: 'viewer', description: 'Solo lectura', permissions: viewPerms });
     viewerRole = await roleRepo.save(viewerRole);
     console.log('✅ Viewer role created');
   }
 
-  // Create user role with limited permissions (view + create only for: debts, purchases, emergency_fund)
+  // Create user (member) role with full CRUD on the permission-guarded modules
   let userRole = await roleRepo.findOne({ where: { name: 'user' }, relations: ['permissions'] });
   if (!userRole) {
-    const userModules = [
-      PermissionModule.DEBTS,
-      PermissionModule.PURCHASES,
-      PermissionModule.EMERGENCY_FUND,
-    ];
-    const userActions = [PermissionAction.VIEW, PermissionAction.CREATE];
     const userPerms = permissions.filter(
-      p => userModules.includes(p.module as PermissionModule) && userActions.includes(p.action as PermissionAction)
+      p => MEMBER_ROLE_MODULES.includes(p.module as PermissionModule) && MEMBER_ROLE_ACTIONS.includes(p.action as PermissionAction)
     );
     userRole = roleRepo.create({
       name: 'user',
-      description: 'Usuario regular: puede ver y crear en deudas, compras y fondo de emergencia',
+      description: 'Usuario regular: puede ver, crear, editar y eliminar en deudas, compras y fondo de emergencia',
       permissions: userPerms
     });
     userRole = await roleRepo.save(userRole);
-    console.log('✅ User role created (limited permissions)');
+    console.log('✅ User role created');
   }
 
   // Create house_admin role (full permissions within their house)

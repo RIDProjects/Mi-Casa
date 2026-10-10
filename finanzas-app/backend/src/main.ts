@@ -6,9 +6,11 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { seed } from './seed';
+import { configureTrustProxy } from './common/trust-proxy';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  configureTrustProxy(app);
 
   // Tune HTTP server for concurrency
   const httpServer = app.getHttpServer();
