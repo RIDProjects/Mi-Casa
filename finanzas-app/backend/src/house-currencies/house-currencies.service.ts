@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
 import { ExchangeRate } from '../database/entities/exchange-rate.entity';
+import { House } from '../database/entities/house.entity';
 import { todayInAppTimezone } from '../common/dates';
 
 export const CURRENCY_META: Record<
@@ -91,6 +92,15 @@ export class HouseCurrenciesService {
    */
   async setLocal(houseId: string, currencyId: string): Promise<HouseCurrency> {
     return this.dataSource.transaction(async (manager) => {
+      // Serialize concurrent switches on the same house: the second caller
+      // blocks here until the first commits, then re-reads the (already
+      // switched) local currency below and takes the "already local" no-op.
+      const house = await manager.findOne(House, {
+        where: { id: houseId },
+        lock: { mode: 'pessimistic_write' },
+      });
+      if (!house) throw new NotFoundException('Casa no encontrada');
+
       const target = await manager.findOne(HouseCurrency, {
         where: { id: currencyId, house: { id: houseId } },
       });
