@@ -50,7 +50,7 @@ export class UpcomingBillsNotifierService {
     const bills = await this.summaryService.getUpcomingBills(houseId, REMINDER_WINDOW_DAYS);
     if (bills.length === 0) return;
 
-    const to = process.env.SMTP_USER || 'ridgomez99@gmail.com';
+    let recipients: string[] | null = null;
 
     for (const bill of bills) {
       const dueLabel = bill.daysUntilDue <= 0 ? 'hoy' : `en ${bill.daysUntilDue} día${bill.daysUntilDue === 1 ? '' : 's'}`;
@@ -67,7 +67,14 @@ export class UpcomingBillsNotifierService {
       // Solo mandar el email la primera vez que se crea la notificación
       // in-app (created !== null) — si ya está deduplicada, ya se avisó.
       if (created) {
-        await this.notificationsService.sendBudgetAlert(to, title, message);
+        recipients ??= await this.housesService.getHouseAdminEmails(houseId);
+        if (recipients.length === 0) {
+          this.logger.warn(`La casa ${houseId} no tiene admins con email; se omite el email de vencimiento`);
+          continue;
+        }
+        for (const to of recipients) {
+          await this.notificationsService.sendBudgetAlert(to, title, message);
+        }
       }
     }
   }

@@ -13,15 +13,27 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password'];
+
+const isAuthEndpoint = (url?: string): boolean =>
+  !!url && AUTH_ENDPOINTS.some(endpoint => url.includes(endpoint));
+
+export const sessionRedirect = {
+  toLogin: () => {
+    window.location.href = '/login';
+  },
+};
+
 api.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (typeof window !== 'undefined') {
+    if (err.response?.status === 401 && typeof window !== 'undefined') {
+      const hadToken = !!localStorage.getItem('token');
+      if (hadToken && !isAuthEndpoint(err.config?.url)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         window.dispatchEvent(new CustomEvent('auth:logout'));
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') sessionRedirect.toLogin();
       }
     }
     return Promise.reject(err);

@@ -11,6 +11,7 @@ import {
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
+import { HousesService } from '../houses/houses.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
 
@@ -109,6 +110,7 @@ export class BudgetService {
 
     private readonly notificationsService: NotificationsService,
     private readonly inAppNotificationsService: InAppNotificationsService,
+    private readonly housesService: HousesService,
   ) {}
 
   private computeMonthlyAmount(
@@ -182,30 +184,38 @@ export class BudgetService {
 
   private async notifyBudgetAlerts(houseId: string, summary: any): Promise<void> {
     try {
-      const to = process.env.SMTP_USER || 'ridgomez99@gmail.com';
+      const alerts: Array<{ type: string; title: string; message: string }> = [];
       if (summary.alerts?.overBudget) {
-        await this.notificationsService.sendBudgetAlert(
-          to,
-          'Gastos superan ingresos',
-          'Tus gastos del mes superan tus ingresos. Revisa tu presupuesto.',
-        );
-        await this.inAppNotificationsService.createIfNotRecent(houseId, {
+        alerts.push({
           type: 'budget_over',
           title: 'Gastos superan ingresos',
           message: 'Tus gastos del mes superan tus ingresos. Revisa tu presupuesto.',
         });
       }
       if (summary.alerts?.antExpensesWarning) {
-        await this.notificationsService.sendBudgetAlert(
-          to,
-          'Alerta gastos hormiga',
-          'Los gastos hormiga superan el 15% de tus ingresos.',
-        );
-        await this.inAppNotificationsService.createIfNotRecent(houseId, {
+        alerts.push({
           type: 'ant_expenses',
           title: 'Alerta gastos hormiga',
           message: 'Los gastos hormiga superan el 15% de tus ingresos.',
         });
+      }
+      if (alerts.length === 0) return;
+
+      let recipients: string[] | null = null;
+      for (const alert of alerts) {
+        const created = await this.inAppNotificationsService.createIfNotRecent(houseId, alert);
+        // Email only when the in-app notification was actually created; a
+        // deduplicated one means the admins were already notified.
+        if (!created) continue;
+
+        recipients ??= await this.housesService.getHouseAdminEmails(houseId);
+        if (recipients.length === 0) {
+          this.logger.warn(`No house admin recipients for budget alert in house ${houseId}; email skipped`);
+          continue;
+        }
+        for (const to of recipients) {
+          await this.notificationsService.sendBudgetAlert(to, alert.title, alert.message);
+        }
       }
     } catch (e) {
       // No relanzar — nunca debe fallar la request principal por un error de
