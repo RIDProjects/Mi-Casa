@@ -13,7 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { BudgetService } from './budget.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { resolveHouseId } from '../common/utils/resolve-house-id';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { AddIncomeDto } from './dto/add-income.dto';
@@ -34,37 +34,37 @@ export class BudgetController {
 
   @Get()
   findAll(@Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.findByHouse(houseId);
   }
 
   @Get(':id')
   findOne(@Param('id') id: string, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.findOne(id, houseId);
   }
 
   @Post()
   create(@Body() dto: CreateBudgetDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.create(dto, houseId);
   }
 
   @Post(':id/sync-fi-goal')
   syncFiGoal(@Param('id') id: string, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.syncFiGoalForBudget(id, houseId);
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateBudgetDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.update(id, houseId, dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.remove(id, houseId);
   }
 
@@ -74,19 +74,19 @@ export class BudgetController {
 
   @Post(':id/income')
   addIncome(@Param('id') id: string, @Body() dto: AddIncomeDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.addIncome(id, houseId, dto);
   }
 
   @Put('income/:id')
   updateIncome(@Param('id') id: string, @Body() dto: UpdateIncomeDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.updateIncome(id, houseId, dto);
   }
 
   @Delete('income/:id')
   removeIncome(@Param('id') id: string, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.removeIncome(id, houseId);
   }
 
@@ -94,18 +94,18 @@ export class BudgetController {
 
   @Post(':id/categories')
   addCategory(@Param('id') id: string, @Body() dto: AddCategoryDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.addCategory(id, houseId, dto);
   }
 
   @Patch('categories/:id')
   updateCategory(@Param('id') id: string, @Body() dto: UpdateCategoryDto, @Request() req) {
-    return this.budgetService.updateCategory(id, resolveHouseId(req.user), dto);
+    return this.budgetService.updateCategory(id, requireHouseId(req.user), dto);
   }
 
   @Delete('categories/:id')
   removeCategory(@Param('id') id: string, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.removeCategory(id, houseId);
   }
 
@@ -113,19 +113,19 @@ export class BudgetController {
 
   @Post('categories/:id/expenses')
   addExpense(@Param('id') id: string, @Body() dto: AddExpenseDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.addExpense(id, houseId, dto);
   }
 
   @Put('expenses/:id')
   updateExpense(@Param('id') id: string, @Body() dto: UpdateExpenseDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.updateExpense(id, houseId, dto);
   }
 
   @Delete('expenses/:id')
   removeExpense(@Param('id') id: string, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.budgetService.removeExpense(id, houseId);
   }
 }

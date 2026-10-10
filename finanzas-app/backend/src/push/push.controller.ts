@@ -10,19 +10,11 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PushService } from './push.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { Request as ExpressRequest } from 'express';
 
 interface AuthRequest extends ExpressRequest {
   user: User;
-}
-
-function resolveHouseId(user: User): string {
-  return (
-    (user as any).house?.id ??
-    user.activeHouseId ??
-    ((user as any).houses?.[0]?.id) ??
-    ''
-  );
 }
 
 @ApiTags('Push Notifications')
@@ -42,6 +34,6 @@ export class PushController {
     @Body() dto: { endpoint: string; keys: { p256dh: string; auth: string } },
     @Request() req: AuthRequest,
   ) {
-    return this.svc.subscribe(resolveHouseId(req.user), dto);
+    return this.svc.subscribe(requireHouseId(req.user), dto);
   }
 }

@@ -19,7 +19,7 @@ import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Request as ExpressRequest, Response } from 'express';
 import { TransactionsService } from './transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { resolveHouseId } from '../common/utils/resolve-house-id';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { parsePeriod } from './period.util';
 import { toCsvLine } from './csv.util';
@@ -45,7 +45,7 @@ export class TransactionsController {
     @Request() req: AuthRequest,
     @Res() res: Response,
   ) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     const period = parsePeriod(year, month);
     const result = await this.txService.findByHouseAndMonth(houseId, period.year, period.month, 1, 10000);
     const rows = result.data.map(t => toCsvLine([t.fecha, t.concepto, t.monto, t.categoria ?? '']));
@@ -70,7 +70,7 @@ export class TransactionsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     const period = parsePeriod(year, month);
     if (page !== undefined || limit !== undefined) {
       return this.txService.findByHouseAndMonth(
@@ -96,7 +96,7 @@ export class TransactionsController {
     @Query('expectedIncome') expectedIncome?: string,
     @Query('expectedExpenses') expectedExpenses?: string,
   ) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     const period = parsePeriod(year, month);
     return this.txService.getMonthSummary(
       houseId,
@@ -111,25 +111,25 @@ export class TransactionsController {
   @UseInterceptors(FileInterceptor('file'))
   importCsv(@UploadedFile() file: Express.Multer.File, @Request() req: AuthRequest) {
     if (!file?.buffer) throw new BadRequestException('Archivo requerido');
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.txService.importFromCsv(file.buffer, houseId);
   }
 
   @Post()
   create(@Body() dto: CreateTransactionDto, @Request() req: AuthRequest) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.txService.create(dto, houseId);
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: CreateTransactionDto, @Request() req: AuthRequest) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.txService.update(id, houseId, dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: AuthRequest) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.txService.remove(id, houseId);
   }
 }

@@ -4,18 +4,10 @@ import { SummaryService } from './summary.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
 import { Request as ExpressRequest } from 'express';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 
 interface AuthRequest extends ExpressRequest {
   user: User;
-}
-
-function resolveHouseId(user: User): string {
-  return (
-    (user as any).house?.id ??
-    user.activeHouseId ??
-    ((user as any).houses?.[0]?.id) ??
-    ''
-  );
 }
 
 @ApiTags('Resumen')
@@ -27,7 +19,7 @@ export class SummaryController {
 
   @Get()
   getSummary(@Request() req: AuthRequest) {
-    return this.summaryService.getSummary(resolveHouseId(req.user));
+    return this.summaryService.getSummary(requireHouseId(req.user));
   }
 
   @Get('upcoming-bills')
@@ -35,16 +27,16 @@ export class SummaryController {
     @Request() req: AuthRequest,
     @Query('days', new DefaultValuePipe(30), ParseIntPipe) days: number,
   ) {
-    return this.summaryService.getUpcomingBills(resolveHouseId(req.user), days);
+    return this.summaryService.getUpcomingBills(requireHouseId(req.user), days);
   }
 
   @Get('insights')
   getSpendingInsights(@Request() req: AuthRequest) {
-    return this.summaryService.getSpendingInsights(resolveHouseId(req.user));
+    return this.summaryService.getSpendingInsights(requireHouseId(req.user));
   }
 
   @Get('health-score')
   getHealthScore(@Request() req: AuthRequest) {
-    return this.summaryService.getHealthScore(resolveHouseId(req.user));
+    return this.summaryService.getHealthScore(requireHouseId(req.user));
   }
 }

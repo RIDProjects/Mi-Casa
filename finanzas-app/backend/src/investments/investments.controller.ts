@@ -16,18 +16,10 @@ import { CreateInvestmentDto } from './dto/create-investment.dto';
 import { UpdateInvestmentDto } from './dto/update-investment.dto';
 import { User } from '../database/entities/user.entity';
 import { Request as ExpressRequest } from 'express';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 
 interface AuthRequest extends ExpressRequest {
   user: User;
-}
-
-function resolveHouseId(user: User): string {
-  return (
-    (user as any).house?.id ??
-    user.activeHouseId ??
-    ((user as any).houses?.[0]?.id) ??
-    ''
-  );
 }
 
 @ApiTags('Inversiones')
@@ -45,21 +37,21 @@ export class InvestmentsController {
     // getSummary() nunca lo consume nadie, y hacía que Array.isArray(data)
     // diera false, dejando la lista vacía siempre (aunque hubiera
     // inversiones creadas).
-    return this.svc.findAll(resolveHouseId(req.user));
+    return this.svc.findAll(requireHouseId(req.user));
   }
 
   @Post()
   create(@Body() dto: CreateInvestmentDto, @Request() req: AuthRequest) {
-    return this.svc.create(dto, resolveHouseId(req.user));
+    return this.svc.create(dto, requireHouseId(req.user));
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateInvestmentDto, @Request() req: AuthRequest) {
-    return this.svc.update(id, resolveHouseId(req.user), dto);
+    return this.svc.update(id, requireHouseId(req.user), dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: AuthRequest) {
-    return this.svc.remove(id, resolveHouseId(req.user));
+    return this.svc.remove(id, requireHouseId(req.user));
   }
 }

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGua
 import { ApiTags, ApiBearerAuth, ApiQuery, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { HouseholdExpensesService } from './household-expenses.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { resolveHouseId } from '../common/utils/resolve-house-id';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { CreateHouseholdExpenseDto } from './dto/create-household-expense.dto';
 import { UpdateHouseholdExpenseDto } from './dto/update-household-expense.dto';
 import { currentMonthInAppTimezone } from '../common/dates';
@@ -19,7 +19,7 @@ export class HouseholdExpensesController {
   @ApiQuery({ name: 'month', required: false, description: 'YYYY-MM' })
   getMonth(@Request() req, @Query('month') month?: string) {
     const m = month || currentMonthInAppTimezone();
-    return this.service.getMonthData(resolveHouseId(req.user), m);
+    return this.service.getMonthData(requireHouseId(req.user), m);
   }
 
   @Post()
@@ -32,7 +32,7 @@ export class HouseholdExpensesController {
       'Datos inválidos, o no hay tasa de cambio configurada para la moneda→base de la casa',
   })
   create(@Body() dto: CreateHouseholdExpenseDto, @Request() req) {
-    return this.service.create(dto, resolveHouseId(req.user));
+    return this.service.create(dto, requireHouseId(req.user));
   }
 
   @Put(':id')
@@ -45,12 +45,12 @@ export class HouseholdExpensesController {
       'Datos inválidos, o no hay tasa de cambio configurada para la moneda→base de la casa',
   })
   update(@Param('id') id: string, @Body() dto: UpdateHouseholdExpenseDto, @Request() req) {
-    return this.service.update(id, resolveHouseId(req.user), dto);
+    return this.service.update(id, requireHouseId(req.user), dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Elimina un gasto' })
   remove(@Param('id') id: string, @Request() req) {
-    return this.service.remove(id, resolveHouseId(req.user));
+    return this.service.remove(id, requireHouseId(req.user));
   }
 }

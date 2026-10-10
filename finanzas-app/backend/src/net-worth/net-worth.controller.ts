@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, Request, UseGua
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NetWorthService } from './net-worth.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { resolveHouseId } from '../common/utils/resolve-house-id';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { CreateAssetDto } from './dto/create-asset.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
 
@@ -23,7 +23,7 @@ export class NetWorthController {
     @Query('totalLoanDebt') loanDebt?: string,
   ) {
     return this.service.getNetWorthSummary(
-      resolveHouseId(req.user),
+      requireHouseId(req.user),
       cardBalances ? parseFloat(cardBalances) : 0,
       loanDebt ? parseFloat(loanDebt) : 0,
     );
@@ -36,13 +36,13 @@ export class NetWorthController {
     @Request() req,
     @Query('months', new DefaultValuePipe(12), ParseIntPipe) months: number,
   ) {
-    return this.service.getHistory(resolveHouseId(req.user), months);
+    return this.service.getHistory(requireHouseId(req.user), months);
   }
 
   @Post()
   @ApiOperation({ summary: 'Registrar activo' })
   create(@Body() dto: CreateAssetDto, @Request() req) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     if (!houseId) throw new BadRequestException('Usuario no pertenece a una casa');
     return this.service.create(dto, houseId);
   }
@@ -50,12 +50,12 @@ export class NetWorthController {
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar activo' })
   update(@Param('id') id: string, @Body() dto: UpdateAssetDto, @Request() req) {
-    return this.service.update(id, resolveHouseId(req.user), dto);
+    return this.service.update(id, requireHouseId(req.user), dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar activo' })
   remove(@Param('id') id: string, @Request() req) {
-    return this.service.remove(id, resolveHouseId(req.user));
+    return this.service.remove(id, requireHouseId(req.user));
   }
 }

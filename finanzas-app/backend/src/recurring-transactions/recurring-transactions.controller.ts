@@ -13,7 +13,7 @@ import {
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RecurringTransactionsService } from './recurring-transactions.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { resolveHouseId } from '../common/utils/resolve-house-id';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { CreateRecurringTransactionDto } from './dto/create-recurring-transaction.dto';
 import { UpdateRecurringTransactionDto } from './dto/update-recurring-transaction.dto';
 import { User } from '../database/entities/user.entity';
@@ -32,22 +32,22 @@ export class RecurringTransactionsController {
 
   @Get()
   findAll(@Request() req: AuthRequest) {
-    return this.service.findByHouse(resolveHouseId(req.user));
+    return this.service.findByHouse(requireHouseId(req.user));
   }
 
   @Post()
   create(@Body() dto: CreateRecurringTransactionDto, @Request() req: AuthRequest) {
-    return this.service.create(dto, resolveHouseId(req.user));
+    return this.service.create(dto, requireHouseId(req.user));
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateRecurringTransactionDto, @Request() req: AuthRequest) {
-    return this.service.update(id, resolveHouseId(req.user), dto);
+    return this.service.update(id, requireHouseId(req.user), dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req: AuthRequest) {
-    return this.service.remove(id, resolveHouseId(req.user));
+    return this.service.remove(id, requireHouseId(req.user));
   }
 
   @Post('generate')
@@ -59,7 +59,7 @@ export class RecurringTransactionsController {
     @Query('month') month?: string,
   ) {
     return this.service.generateForMonth(
-      resolveHouseId(req.user),
+      requireHouseId(req.user),
       parseInt(year) || new Date().getFullYear(),
       parseInt(month) || new Date().getMonth() + 1,
     );

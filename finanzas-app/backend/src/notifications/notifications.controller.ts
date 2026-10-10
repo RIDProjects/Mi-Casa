@@ -9,19 +9,11 @@ import {
 import { Request as ExpressRequest } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
+import { requireHouseId, resolveHouseId } from '../common/utils/resolve-house-id';
 import { InAppNotificationsService } from './in-app-notifications.service';
 
 interface AuthRequest extends ExpressRequest {
   user: User;
-}
-
-function resolveHouseId(user: User): string {
-  return (
-    (user as any).house?.id ??
-    user.activeHouseId ??
-    ((user as any).houses?.[0]?.id) ??
-    ''
-  );
 }
 
 @UseGuards(JwtAuthGuard)
@@ -31,20 +23,23 @@ export class NotificationsController {
 
   @Get()
   getAll(@Request() req: AuthRequest) {
+    // Polled from the header on every page: a user without a house just has
+    // no notifications (a 403 here would surface as an error everywhere).
     const houseId = resolveHouseId(req.user);
+    if (!houseId) return [];
     return this.inAppSvc.findAllByHouse(houseId);
   }
 
   // read-all MUST come before :id to avoid route collision
   @Patch('read-all')
   markAllRead(@Request() req: AuthRequest) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.inAppSvc.markAllRead(houseId);
   }
 
   @Patch(':id/read')
   markRead(@Param('id') id: string, @Request() req: AuthRequest) {
-    const houseId = resolveHouseId(req.user);
+    const houseId = requireHouseId(req.user);
     return this.inAppSvc.markRead(id, houseId);
   }
 }
