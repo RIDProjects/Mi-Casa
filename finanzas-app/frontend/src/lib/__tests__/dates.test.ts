@@ -1,9 +1,6 @@
 import { parseLocalDate, todayLocalISO, currentMonthLocal } from '../dates';
 
 describe('dates (TZ=America/Havana)', () => {
-  beforeAll(() => {
-    process.env.TZ = 'America/Havana';
-  });
   afterEach(() => {
     jest.useRealTimers();
   });
