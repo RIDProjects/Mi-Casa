@@ -1,3 +1,4 @@
+import { normalizeEmail, emailMatch } from '../common/utils/normalize-email';
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -55,13 +56,14 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto) {
-    const exists = await this.userRepo.findOne({ where: { email: dto.email } });
+    const email = normalizeEmail(dto.email);
+    const exists = await this.userRepo.findOne({ where: { email: emailMatch(email) } });
     if (exists) throw new ConflictException('Email ya registrado');
 
     const hashed = await bcrypt.hash(dto.password, 12);
     const roles = dto.roleIds ? await this.roleRepo.findBy({ id: In(dto.roleIds) }) : [];
 
-    const user = this.userRepo.create({ ...dto, password: hashed, roles });
+    const user = this.userRepo.create({ ...dto, email, password: hashed, roles });
     return toSafeUser(await this.userRepo.save(user));
   }
 

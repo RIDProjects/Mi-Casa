@@ -1,4 +1,6 @@
-import { IsEmail, IsString, MinLength, MaxLength, IsOptional, ValidateIf } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional, ValidateIf, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { trimLowerCase } from '../../common/utils/normalize-email';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class RegisterDto {
@@ -9,6 +11,7 @@ export class RegisterDto {
   name: string;
 
   @ApiProperty({ example: 'juan@email.com' })
+  @Transform(trimLowerCase)
   @IsEmail()
   email: string;
 
@@ -38,4 +41,10 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   invitationToken?: string;
+
+  // ISO-style 3-letter uppercase code (e.g. CUP, USD); only used when a new house is created.
+  @ApiPropertyOptional({ example: 'CUP' })
+  @IsOptional()
+  @Matches(/^[A-Z]{3}$/, { message: 'localCurrencyCode must be a 3-letter uppercase currency code' })
+  localCurrencyCode?: string;
 }

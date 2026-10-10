@@ -14,6 +14,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { toSafeUser } from '../users/safe-user';
+import { normalizeEmail, emailMatch } from '../common/utils/normalize-email';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +34,8 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     // Check if email already exists
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    const email = normalizeEmail(dto.email);
+    const existing = await this.userRepo.findOne({ where: { email: emailMatch(email) } });
     if (existing) throw new ConflictException('El email ya está registrado');
 
     // Hash password
@@ -57,7 +59,7 @@ export class AuthService {
       if (new Date() > invitation.expiresAt) {
         throw new BadRequestException('La invitación expiró');
       }
-      if (invitation.email.toLowerCase() !== dto.email.toLowerCase()) {
+      if (normalizeEmail(invitation.email) !== email) {
         throw new BadRequestException('El email no coincide con la invitación');
       }
       house = invitation.house;
@@ -83,7 +85,7 @@ export class AuthService {
         house.members = [];
 
         // Seed default local currency for the new house
-        const localCurrencyCode = (dto as any).localCurrencyCode ?? 'CUP';
+        const localCurrencyCode = dto.localCurrencyCode ?? 'CUP';
         const meta = CURRENCY_META[localCurrencyCode] ?? CURRENCY_META['CUP'];
         await this.houseCurrencyRepo.save(
           this.houseCurrencyRepo.create({
@@ -111,7 +113,7 @@ export class AuthService {
 
     const newUser = this.userRepo.create({
       name: dto.name,
-      email: dto.email,
+      email,
       password: hashedPassword,
       roles: [roleToAssign],
       houses: [house],
@@ -146,7 +148,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.userRepo.findOne({
-      where: { email: dto.email, isActive: true },
+      where: { email: emailMatch(dto.email), isActive: true },
       select: ['id', 'email', 'name', 'password', 'isActive', 'activeHouseId', 'plan'],
       relations: ['roles', 'roles.permissions', 'houses'],
     });
@@ -200,7 +202,7 @@ export class AuthService {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    const user = await this.userRepo.findOne({ where: { email } });
+    const user = await this.userRepo.findOne({ where: { email: emailMatch(email) } });
     // No revelar si el email existe o no (seguridad)
     if (!user || !user.isActive) return;
 

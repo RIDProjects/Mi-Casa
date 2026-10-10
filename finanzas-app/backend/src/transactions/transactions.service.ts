@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { parseCsv } from './csv.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Transaction, TransactionType, PaymentMethod } from '../database/entities/transaction.entity';
@@ -110,14 +111,13 @@ export class TransactionsService {
 
   async importFromCsv(buffer: Buffer, houseId: string): Promise<{ imported: number; errors: string[] }> {
     const text = buffer.toString('utf-8');
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-    const [, ...rows] = lines; // skip header row (Fecha,Concepto,Monto,Categoria)
+    const [, ...rows] = parseCsv(text); // skip header row (Fecha,Concepto,Monto,Categoria)
 
     const errors: string[] = [];
     let imported = 0;
 
     for (let i = 0; i < rows.length; i++) {
-      const parts = rows[i].split(',');
+      const parts = rows[i];
       if (parts.length < 3) {
         errors.push(`Fila ${i + 2}: columnas insuficientes`);
         continue;

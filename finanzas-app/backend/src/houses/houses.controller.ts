@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Fo
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { HousesService } from './houses.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { InviteUserDto, CreateMemberDto } from './dto/invite-user.dto';
 
 @ApiTags('Casas')
 @ApiBearerAuth()
@@ -66,15 +67,13 @@ export class HousesController {
   }
 
   @Post(':id/invite')
-  @ApiOperation({ summary: 'Invitar un usuario al hogar por email (requiere dominio verificado en Resend)' })
+  @ApiOperation({ summary: 'Invitar un usuario al hogar por email (solo house_admin; requiere dominio verificado en Resend)' })
   async inviteUser(
     @Param('id') houseId: string,
-    @Body() dto: { email: string; role?: string },
+    @Body() dto: InviteUserDto,
     @Request() req,
   ) {
-    // Only members of the house (or a global admin) can invite new members —
-    // previously any authenticated user could add someone to any house by ID.
-    await this.housesService.findOne(houseId, req.user.id);
+    // Only house admins (or a global admin) manage members; the service enforces it.
     return this.housesService.inviteUser(houseId, dto.email, dto.role || 'user', req.user.id);
   }
 
@@ -82,7 +81,7 @@ export class HousesController {
   @ApiOperation({ summary: 'Crear un usuario directo dentro de la casa (solo house_admin)' })
   createMember(
     @Param('id') houseId: string,
-    @Body() dto: { name: string; email: string; password: string; role?: string },
+    @Body() dto: CreateMemberDto,
     @Request() req,
   ) {
     return this.housesService.createHouseMember(houseId, dto, req.user.id);
