@@ -1,8 +1,9 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { HouseCurrenciesService } from './house-currencies.service';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
 import { ExchangeRate } from '../database/entities/exchange-rate.entity';
+import { House } from '../database/entities/house.entity';
 
 /**
  * Unit tests for `resolveRateToLocal`, the strict rate lookup used by the
@@ -267,6 +268,7 @@ describe('HouseCurrenciesService.setLocal', () => {
     manager = {
       findOne: jest.fn(async (entity: any, opts: any) => {
         const w = opts.where;
+        if (entity === House) return { id: w.id };
         if (entity === HouseCurrency) {
           if (w.isLocal) return USD;
           return currencies.find((c) => c.id === w.id) ?? null;
@@ -360,12 +362,54 @@ describe('HouseCurrenciesService.setLocal', () => {
 
   it('is a no-op when the target is already the local currency', async () => {
     manager.findOne.mockImplementation(async (entity: any, opts: any) =>
-      entity === HouseCurrency ? USD : null,
+      entity === House ? { id: HOUSE_ID } : entity === HouseCurrency ? USD : null,
     );
 
     const result = await service.setLocal(HOUSE_ID, 'u');
 
     expect(result).toBe(USD);
+    expect(manager.update).not.toHaveBeenCalled();
+    expect(manager.query).not.toHaveBeenCalled();
+  });
+
+  it('locks the house row (pessimistic_write) before reading the current local currency', async () => {
+    rates.push({ fromCurrency: 'CUP', toCurrency: 'USD', rate: 0.0025, date: '2026-01-01' });
+
+    await service.setLocal(HOUSE_ID, 'c');
+
+    const calls = manager.findOne.mock.calls;
+    const lockIdx = calls.findIndex(([entity]) => entity === House);
+    const localIdx = calls.findIndex(([entity, opts]) => entity === HouseCurrency && opts.where.isLocal);
+    expect(lockIdx).toBeGreaterThanOrEqual(0);
+    expect(calls[lockIdx][1]).toEqual({
+      where: { id: HOUSE_ID },
+      lock: { mode: 'pessimistic_write' },
+    });
+    expect(localIdx).toBeGreaterThan(lockIdx);
+  });
+
+  it('does not rebase when the re-read after the lock shows the target is already local (concurrent caller)', async () => {
+    const CUP_LOCAL = { ...CUP, isLocal: true };
+    rates.push({ fromCurrency: 'CUP', toCurrency: 'USD', rate: 0.0025, date: '2026-01-01' });
+    // The first caller switched the house to CUP while this one waited on the lock.
+    manager.findOne.mockImplementation(async (entity: any, opts: any) => {
+      if (entity === House) return { id: HOUSE_ID };
+      if (entity === HouseCurrency) return opts.where.isLocal ? CUP_LOCAL : CUP;
+      return null;
+    });
+
+    const result = await service.setLocal(HOUSE_ID, 'c');
+
+    expect(result).toBe(CUP);
+    expect(manager.query).not.toHaveBeenCalled();
+    expect(manager.update).not.toHaveBeenCalled();
+    expect(manager.save).not.toHaveBeenCalled();
+  });
+
+  it('throws NotFound when the house does not exist', async () => {
+    manager.findOne.mockImplementation(async () => null);
+
+    await expect(service.setLocal(HOUSE_ID, 'c')).rejects.toThrow(NotFoundException);
     expect(manager.update).not.toHaveBeenCalled();
     expect(manager.query).not.toHaveBeenCalled();
   });
