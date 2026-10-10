@@ -7,18 +7,24 @@ export function useCurrencyFormatter() {
   const activeCurrency =
     currencies.find(c => c.currencyCode === activeCurrencyCode) ?? localCurrency;
 
+  // A missing/zero rate means we cannot convert: fall back to showing the
+  // amount in the local currency rather than a wrong conversion.
+  const activeRate =
+    activeCurrency && localCurrency && activeCurrency.currencyCode !== localCurrency.currencyCode
+      ? rates[activeCurrency.currencyCode]
+      : 1;
+  const canConvert = !!activeRate;
+  const displayCurrency = canConvert ? activeCurrency : localCurrency ?? activeCurrency;
+
   const convert = (amountInLocal: number): number => {
-    if (!activeCurrency || !localCurrency) return amountInLocal;
-    if (activeCurrency.currencyCode === localCurrency.currencyCode) return amountInLocal;
-    const rate = rates[activeCurrency.currencyCode];
-    if (!rate || rate === 0) return amountInLocal;
-    return amountInLocal / rate;
+    if (!canConvert || !activeRate) return amountInLocal;
+    return amountInLocal / activeRate;
   };
 
   const fmt = (amountInLocal: number): string => {
     const converted = convert(amountInLocal);
-    const symbol = activeCurrency?.symbol ?? '$';
-    const locale = activeCurrency?.locale ?? 'es-CU';
+    const symbol = displayCurrency?.symbol ?? '$';
+    const locale = displayCurrency?.locale ?? 'es-CU';
     return `${symbol}${new Intl.NumberFormat(locale, {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
@@ -26,7 +32,7 @@ export function useCurrencyFormatter() {
   };
 
   const fmtWithCode = (amountInLocal: number): string => {
-    return `${fmt(amountInLocal)} ${activeCurrency?.currencyCode ?? ''}`.trim();
+    return `${fmt(amountInLocal)} ${displayCurrency?.currencyCode ?? ''}`.trim();
   };
 
   return {
@@ -35,6 +41,6 @@ export function useCurrencyFormatter() {
     convert,
     activeCurrency,
     localCurrency,
-    symbol: activeCurrency?.symbol ?? '$',
+    symbol: displayCurrency?.symbol ?? '$',
   };
 }

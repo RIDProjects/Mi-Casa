@@ -10,6 +10,10 @@ import {
 import { House } from './house.entity';
 
 @Entity('house_currencies')
+@Index('UQ_house_currencies_one_local_per_house', ['house'], {
+  unique: true,
+  where: '"isLocal" = true',
+})
 export class HouseCurrency {
   @PrimaryGeneratedColumn('uuid') id: string;
 

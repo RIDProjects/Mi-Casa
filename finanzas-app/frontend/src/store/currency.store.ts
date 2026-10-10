@@ -13,10 +13,10 @@ export interface HouseCurrency {
 
 interface CurrencyState {
   currencies: HouseCurrency[];
-  rates: Record<string, number>; // { USD: 125 } — units of local currency per 1 unit of foreign
+  rates: Record<string, number | null>; // { USD: 125 } — units of local per 1 foreign; null = no rate configured
   activeCurrencyCode: string;
   setCurrencies: (currencies: HouseCurrency[]) => void;
-  setRates: (rates: Record<string, number>) => void;
+  setRates: (rates: Record<string, number | null>) => void;
   setActiveCurrency: (code: string) => void;
 }
 
