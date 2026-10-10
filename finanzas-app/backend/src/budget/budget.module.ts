@@ -11,12 +11,14 @@ import {
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { HousesModule } from '../houses/houses.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Budget, BudgetCategory, BudgetExpense, IncomeSource, SavingsGoal]),
     AuthModule,
     NotificationsModule,
+    HousesModule,
   ],
   controllers: [BudgetController],
   providers: [BudgetService],

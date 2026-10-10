@@ -10,6 +10,7 @@ import {
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
+import { HousesService } from '../houses/houses.service';
 
 /**
  * Regression test for the IDOR fix on BudgetService.findOne.
@@ -48,6 +49,7 @@ describe('BudgetService.findOne (IDOR regression)', () => {
       noop as Repository<SavingsGoal>,
       notificationsService,
       inAppNotificationsService,
+      { getHouseAdminEmails: jest.fn().mockResolvedValue([]) } as unknown as HousesService,
     );
   });
 
@@ -96,5 +98,82 @@ describe('BudgetService.findOne (IDOR regression)', () => {
 
     expect(result.id).toBe(BUDGET_ID);
     expect(result.summary).toBeDefined();
+  });
+});
+
+describe('BudgetService.findByHouse alert emails', () => {
+  const HOUSE_ID = 'house-1';
+  const overBudget = {
+    id: 'b1',
+    savingsTargetPercent: 20,
+    incomeSources: [{ amount: 100 }],
+    categories: [{ expenses: [{ amount: 500, periodicity: 'monthly', isAntExpense: false }] }],
+  };
+
+  function build(adminEmails: string[], createResults: Array<object | null>) {
+    const budgetRepo = { find: jest.fn().mockResolvedValue([overBudget]) } as any;
+    const sendBudgetAlert = jest.fn().mockResolvedValue(true);
+    const createIfNotRecent = jest.fn();
+    createResults.forEach((r) => createIfNotRecent.mockResolvedValueOnce(r));
+    const getHouseAdminEmails = jest.fn().mockResolvedValue(adminEmails);
+    const noop = {} as any;
+    const service = new BudgetService(
+      budgetRepo, noop, noop, noop, noop,
+      { sendBudgetAlert } as any,
+      { createIfNotRecent } as any,
+      { getHouseAdminEmails } as any,
+    );
+    return { service, sendBudgetAlert, createIfNotRecent, getHouseAdminEmails };
+  }
+
+  const flush = () => new Promise((r) => setImmediate(r));
+
+  beforeEach(() => {
+    process.env.SMTP_USER = 'smtp-user@example.com';
+  });
+
+  it('emails each house admin and never SMTP_USER', async () => {
+    const { service, sendBudgetAlert, getHouseAdminEmails } = build(
+      ['a1@x.com', 'a2@x.com'], [{ id: 'n1' }],
+    );
+    await service.findByHouse(HOUSE_ID);
+    await flush();
+    expect(getHouseAdminEmails).toHaveBeenCalledWith(HOUSE_ID);
+    const recipients = sendBudgetAlert.mock.calls.map((c) => c[0]);
+    expect(recipients).toEqual(['a1@x.com', 'a2@x.com']);
+    expect(recipients).not.toContain('smtp-user@example.com');
+  });
+
+  it('sends nothing when the house has no admins (no fallback address)', async () => {
+    const { service, sendBudgetAlert } = build([], [{ id: 'n1' }]);
+    await service.findByHouse(HOUSE_ID);
+    await flush();
+    expect(sendBudgetAlert).not.toHaveBeenCalled();
+  });
+
+  it('sends no email when the in-app notification was deduplicated', async () => {
+    const { service, sendBudgetAlert, createIfNotRecent } = build(['a1@x.com'], [null]);
+    await service.findByHouse(HOUSE_ID);
+    await flush();
+    expect(createIfNotRecent).toHaveBeenCalled();
+    expect(sendBudgetAlert).not.toHaveBeenCalled();
+  });
+
+  it('a second GET inside the dedup window sends no additional email', async () => {
+    const { service, sendBudgetAlert } = build(['a1@x.com'], [{ id: 'n1' }, null]);
+    await service.findByHouse(HOUSE_ID);
+    await flush();
+    const afterFirst = sendBudgetAlert.mock.calls.length;
+    expect(afterFirst).toBe(1);
+    await service.findByHouse(HOUSE_ID);
+    await flush();
+    expect(sendBudgetAlert.mock.calls.length).toBe(afterFirst);
+  });
+
+  it('does not throw to the caller when email sending fails', async () => {
+    const { service, sendBudgetAlert } = build(['a1@x.com'], [{ id: 'n1' }]);
+    sendBudgetAlert.mockRejectedValue(new Error('smtp down'));
+    await expect(service.findByHouse(HOUSE_ID)).resolves.toHaveLength(1);
+    await flush();
   });
 });

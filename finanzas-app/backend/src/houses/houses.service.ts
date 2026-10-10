@@ -132,6 +132,17 @@ export class HousesService {
     }
   }
 
+  // Same definition of "admin of this house" as assertCanManageHouse (minus the
+  // global `admin` role): a house_admin who is a member of the house. Only
+  // active users with an email are returned.
+  async getHouseAdminEmails(houseId: string): Promise<string[]> {
+    const admins = await this.userRepo.find({
+      where: { isActive: true, houses: { id: houseId }, roles: { name: 'house_admin' } },
+      select: { id: true, email: true },
+    });
+    return admins.map((u) => u.email).filter((email): email is string => !!email);
+  }
+
   async toggleUserActive(houseId: string, userId: string, requestingUserId: string) {
     await this.assertCanManageHouse(houseId, requestingUserId);
 

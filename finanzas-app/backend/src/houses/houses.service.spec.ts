@@ -61,3 +61,31 @@ describe('HousesService member output', () => {
     expectNoSecrets(await service.switchUserHouse('u1', 'h1'));
   });
 });
+
+describe('HousesService.getHouseAdminEmails', () => {
+  it('queries active house_admin members of the house and returns their emails', async () => {
+    const userRepo: any = {
+      find: jest.fn().mockResolvedValue([
+        { id: 'a1', email: 'a1@x.com' },
+        { id: 'a2', email: 'a2@x.com' },
+        { id: 'a3', email: null },
+      ]),
+    };
+    const service = new HousesService({} as any, userRepo, {} as any, {} as any, {} as any, {} as any);
+
+    const emails = await service.getHouseAdminEmails('h1');
+
+    expect(emails).toEqual(['a1@x.com', 'a2@x.com']);
+    expect(userRepo.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { isActive: true, houses: { id: 'h1' }, roles: { name: 'house_admin' } },
+      }),
+    );
+  });
+
+  it('returns an empty list when the house has no admins', async () => {
+    const userRepo: any = { find: jest.fn().mockResolvedValue([]) };
+    const service = new HousesService({} as any, userRepo, {} as any, {} as any, {} as any, {} as any);
+    await expect(service.getHouseAdminEmails('h1')).resolves.toEqual([]);
+  });
+});
