@@ -177,3 +177,29 @@ describe('BudgetService.findByHouse alert emails', () => {
     await flush();
   });
 });
+
+describe('BudgetService.create defaults', () => {
+  const build = () => {
+    const budgetRepo: any = {
+      create: jest.fn((d) => d),
+      save: jest.fn(async (b) => ({ id: 'b1', ...b })),
+      findOne: jest.fn().mockResolvedValue({ id: 'b1', incomeSources: [], categories: [] }),
+    };
+    const noop = {} as any;
+    const service = new BudgetService(budgetRepo, noop, noop, noop, noop, noop, noop, noop);
+    jest.spyOn(service, 'findOne').mockResolvedValue({} as any);
+    return { service, budgetRepo };
+  };
+
+  it('keeps an intentional savingsTargetPercent of 0', async () => {
+    const { service, budgetRepo } = build();
+    await service.create({ savingsTargetPercent: 0 } as any, 'h1');
+    expect(budgetRepo.create).toHaveBeenCalledWith(expect.objectContaining({ savingsTargetPercent: 0 }));
+  });
+
+  it('defaults savingsTargetPercent to 20 when omitted', async () => {
+    const { service, budgetRepo } = build();
+    await service.create({} as any, 'h1');
+    expect(budgetRepo.create).toHaveBeenCalledWith(expect.objectContaining({ savingsTargetPercent: 20 }));
+  });
+});

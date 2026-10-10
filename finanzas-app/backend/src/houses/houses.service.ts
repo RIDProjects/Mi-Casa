@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, UnauthorizedException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException, ForbiddenException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -10,6 +10,7 @@ import { HouseInvitation } from '../database/entities/house-invitation.entity';
 import { HouseCurrenciesService, CURRENCY_META } from '../house-currencies/house-currencies.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { toSafeUser } from '../users/safe-user';
+import { normalizeEmail, emailMatch } from '../common/utils/normalize-email';
 
 @Injectable()
 export class HousesService {
@@ -118,7 +119,7 @@ export class HousesService {
   }
 
   // Global admin, o house_admin de esa casa puntual, puede gestionar sus propios miembros.
-  private async assertCanManageHouse(houseId: string, requestingUserId: string): Promise<void> {
+  async assertCanManageHouse(houseId: string, requestingUserId: string): Promise<void> {
     const requester = await this.userRepo.findOne({
       where: { id: requestingUserId },
       relations: ['roles', 'houses'],
@@ -182,13 +183,18 @@ export class HousesService {
 
   // Invite a user by email — if they already have an account, add them directly;
   // otherwise create/refresh a pending HouseInvitation and email them a signup link.
-  async inviteUser(houseId: string, email: string, role: string, invitedById: string) {
+  async inviteUser(houseId: string, rawEmail: string, role: string, invitedById: string) {
+    const email = normalizeEmail(rawEmail);
+    if (!email) throw new BadRequestException('Email requerido');
+
+    await this.assertCanManageHouse(houseId, invitedById);
+
     const house = await this.houseRepo.findOne({ where: { id: houseId } });
     if (!house) throw new NotFoundException('Casa no encontrada');
 
     const roleToUse = role === 'house_admin' ? 'house_admin' : 'user';
 
-    const user = await this.userRepo.findOne({ where: { email }, relations: ['houses'] });
+    const user = await this.userRepo.findOne({ where: { email: emailMatch(email) }, relations: ['houses'] });
     if (user) {
       const alreadyMember = user.houses?.some(h => h.id === houseId);
       if (alreadyMember) throw new ConflictException('Ya es miembro de este hogar');
@@ -254,12 +260,17 @@ export class HousesService {
     dto: { name: string; email: string; password: string; role?: string },
     requestingUserId: string,
   ) {
+    const email = normalizeEmail(dto.email);
+    if (!email) throw new BadRequestException('Email requerido');
+    if (!dto.password) throw new BadRequestException('Contraseña requerida');
+    if (!dto.name?.trim()) throw new BadRequestException('Nombre requerido');
+
     const house = await this.houseRepo.findOne({ where: { id: houseId } });
     if (!house) throw new NotFoundException('Casa no encontrada');
 
     await this.assertCanManageHouse(houseId, requestingUserId);
 
-    const existing = await this.userRepo.findOne({ where: { email: dto.email } });
+    const existing = await this.userRepo.findOne({ where: { email: emailMatch(email) } });
     if (existing) throw new ConflictException('El email ya está registrado');
 
     const roleName = dto.role === 'house_admin' ? 'house_admin' : 'user';
@@ -271,7 +282,7 @@ export class HousesService {
     const hashedPassword = await bcrypt.hash(dto.password, 12);
     const user = this.userRepo.create({
       name: dto.name,
-      email: dto.email,
+      email,
       password: hashedPassword,
       roles: [roleToAssign],
       houses: [house],

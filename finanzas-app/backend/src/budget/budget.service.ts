@@ -259,7 +259,7 @@ export class BudgetService {
     const budget = this.budgetRepo.create({
       name: dto.name || 'Mi Presupuesto',
       year: dto.year || new Date().getFullYear(),
-      savingsTargetPercent: dto.savingsTargetPercent || 20,
+      savingsTargetPercent: dto.savingsTargetPercent ?? 20,
       rule: dto.rule ?? '50-30-20',
       house: { id: houseId } as any,
       incomeSources: [],

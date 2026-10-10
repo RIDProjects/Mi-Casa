@@ -6,11 +6,11 @@ export class CreateLoanDto {
 
   @IsOptional() @IsString() institucion?: string;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) deudaInicial?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) deudaInicial?: number;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) deudaActual?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) deudaActual?: number;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) cuotaMensual?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) cuotaMensual?: number;
 
   @IsOptional() @IsString() notas?: string;
 

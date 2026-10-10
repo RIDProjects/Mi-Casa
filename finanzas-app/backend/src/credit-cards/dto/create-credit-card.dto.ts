@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CardPaymentType } from '../../database/entities/credit-card.entity';
 
@@ -18,11 +18,11 @@ export class CreateCreditCardDto {
 
   @IsOptional() @IsString() nombreTarjeta?: string;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) tasaAnual?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9.9999, { message: 'tasaAnual must be at most 9.9999 (stored as numeric(5,4))' }) tasaAnual?: number;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) saldoActual?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) saldoActual?: number;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) lineaCredito?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) lineaCredito?: number;
 
   @IsOptional() @IsString() fechaCorte?: string;
 
