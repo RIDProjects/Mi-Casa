@@ -12,7 +12,7 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CuotasService } from './cuotas.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { resolveHouseId } from '../common/utils/resolve-house-id';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { CreateCuotaDto } from './dto/create-cuota.dto';
 import { UpdateCuotaDto } from './dto/update-cuota.dto';
 
@@ -25,31 +25,31 @@ export class CuotasController {
 
   @Get('summary')
   getSummary(@Request() req) {
-    return this.cuotasService.getMonthlyCommitment(resolveHouseId(req.user));
+    return this.cuotasService.getMonthlyCommitment(requireHouseId(req.user));
   }
 
   @Get()
   findAll(@Request() req) {
-    return this.cuotasService.findByHouse(resolveHouseId(req.user));
+    return this.cuotasService.findByHouse(requireHouseId(req.user));
   }
 
   @Post()
   create(@Body() dto: CreateCuotaDto, @Request() req) {
-    return this.cuotasService.create(dto, resolveHouseId(req.user));
+    return this.cuotasService.create(dto, requireHouseId(req.user));
   }
 
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateCuotaDto, @Request() req) {
-    return this.cuotasService.update(id, resolveHouseId(req.user), dto);
+    return this.cuotasService.update(id, requireHouseId(req.user), dto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
-    return this.cuotasService.remove(id, resolveHouseId(req.user));
+    return this.cuotasService.remove(id, requireHouseId(req.user));
   }
 
   @Post(':id/pay')
   payInstallment(@Param('id') id: string, @Request() req) {
-    return this.cuotasService.payInstallment(id, resolveHouseId(req.user));
+    return this.cuotasService.payInstallment(id, requireHouseId(req.user));
   }
 }

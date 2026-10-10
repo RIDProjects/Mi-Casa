@@ -18,7 +18,7 @@ export class CreateCreditCardDto {
 
   @IsOptional() @IsString() nombreTarjeta?: string;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9.9999, { message: 'tasaAnual must be at most 9.9999 (stored as numeric(5,4))' }) tasaAnual?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0, { message: 'La tasa anual debe estar entre 0 y 100 (%)' }) @Max(100, { message: 'La tasa anual debe estar entre 0 y 100 (%)' }) tasaAnual?: number;
 
   @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) saldoActual?: number;
 

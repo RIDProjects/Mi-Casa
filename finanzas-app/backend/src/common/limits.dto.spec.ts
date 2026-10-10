@@ -10,18 +10,16 @@ const failed = async (cls: any, body: object) =>
   (await validate(plainToInstance(cls, body))).map((e) => e.property);
 
 describe('numeric column limits', () => {
-  it('rejects tasaAnual 24 (numeric(5,4) overflow) with a clear message', async () => {
-    const [error] = await validate(plainToInstance(CreateCreditCardDto, { tasaAnual: '24' }));
+  it('accepts tasaAnual 24 and rejects 150 with a clear message', async () => {
+    expect(await failed(CreateCreditCardDto, { tasaAnual: '24' })).toHaveLength(0);
+    const [error] = await validate(plainToInstance(CreateCreditCardDto, { tasaAnual: 150 }));
     expect(error.property).toBe('tasaAnual');
-    expect(Object.values(error.constraints)[0]).toContain('9.9999');
+    expect(Object.values(error.constraints)[0]).toContain('100');
   });
 
-  it('accepts tasaAnual at the column max', async () => {
-    expect(await failed(CreateCreditCardDto, { tasaAnual: 9.9999 })).toHaveLength(0);
-  });
-
-  it('rejects tasaInteres 24 on savings goals', async () => {
-    expect(await failed(CreateSavingsGoalDto, { tasaInteres: 24 })).toContain('tasaInteres');
+  it('accepts tasaInteres 24 and rejects 150 on savings goals', async () => {
+    expect(await failed(CreateSavingsGoalDto, { tasaInteres: 24 })).toHaveLength(0);
+    expect(await failed(CreateSavingsGoalDto, { tasaInteres: 150 })).toContain('tasaInteres');
   });
 
   it('rejects money amounts above numeric(12,2)', async () => {

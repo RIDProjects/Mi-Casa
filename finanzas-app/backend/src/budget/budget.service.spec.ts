@@ -203,3 +203,17 @@ describe('BudgetService.create defaults', () => {
     expect(budgetRepo.create).toHaveBeenCalledWith(expect.objectContaining({ savingsTargetPercent: 20 }));
   });
 });
+
+describe('BudgetService FI savings goal', () => {
+  it('creates the FI goal with a 7% annual rate stored as percent', async () => {
+    const savingsGoalRepo: any = {
+      findOne: jest.fn().mockResolvedValue(null),
+      create: jest.fn((d) => d),
+      save: jest.fn(async (g) => g),
+    };
+    const noop = {} as any;
+    const service = new BudgetService(noop, noop, noop, noop, savingsGoalRepo, noop, noop, noop);
+    await (service as any).syncFiGoal('h1', 1000);
+    expect(savingsGoalRepo.create).toHaveBeenCalledWith(expect.objectContaining({ annualInterestRate: 7 }));
+  });
+});

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request, Query, ParseFloatPipe, DefaultValuePipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { DebtsService } from './debts.service';
+import { requireHouseId } from '../common/utils/resolve-house-id';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionGuard } from '../common/guards/permission.guard';
 import { RequirePermission } from '../common/decorators/require-permission.decorator';
@@ -16,13 +17,13 @@ export class DebtsController {
 
   @Get() @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Listar todas las deudas' })
   findAll(@Request() req) {
-    const houseId = req.user.house?.id;
+    const houseId = requireHouseId(req.user);
     return this.debtsService.findAll(houseId);
   }
 
   @Get('summary') @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Resumen de deudas' })
   getSummary(@Request() req) {
-    const houseId = req.user.house?.id;
+    const houseId = requireHouseId(req.user);
     return this.debtsService.getSummary(houseId);
   }
 
@@ -31,32 +32,31 @@ export class DebtsController {
     @Request() req,
     @Query('extraPayment', new DefaultValuePipe(0), ParseFloatPipe) extraPayment: number,
   ) {
-    const houseId = req.user.house?.id ?? '';
+    const houseId = requireHouseId(req.user);
     return this.debtsService.getPayoffStrategies(houseId, extraPayment);
   }
 
   @Get(':id') @RequirePermission('debts', 'view')
   findOne(@Param('id') id: string, @Request() req) {
-    const houseId = req.user.house?.id ?? '';
+    const houseId = requireHouseId(req.user);
     return this.debtsService.findOne(id, houseId);
   }
 
   @Post() @RequirePermission('debts', 'create') @ApiOperation({ summary: 'Registrar deuda' })
   create(@Body() dto: CreateDebtDto, @Request() req) {
-    const houseId = req.user.house?.id;
-    if (!houseId) throw new Error('Usuario no pertenece a una casa');
+    const houseId = requireHouseId(req.user);
     return this.debtsService.create(dto, houseId);
   }
 
   @Put(':id') @RequirePermission('debts', 'edit')
   update(@Param('id') id: string, @Body() dto: UpdateDebtDto, @Request() req) {
-    const houseId = req.user.house?.id ?? '';
+    const houseId = requireHouseId(req.user);
     return this.debtsService.update(id, houseId, dto);
   }
 
   @Delete(':id') @RequirePermission('debts', 'delete')
   remove(@Param('id') id: string, @Request() req) {
-    const houseId = req.user.house?.id ?? '';
+    const houseId = requireHouseId(req.user);
     return this.debtsService.remove(id, houseId);
   }
 }
