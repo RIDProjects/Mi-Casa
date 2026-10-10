@@ -24,7 +24,6 @@ import { RecurringTransactionsModule } from './recurring-transactions/recurring-
 import { SummaryModule } from './summary/summary.module';
 import { CuotasModule } from './cuotas/cuotas.module';
 import { InvestmentsModule } from './investments/investments.module';
-import { ExchangeRatesModule } from './exchange-rates/exchange-rates.module';
 import { PushModule } from './push/push.module';
 import { HouseCurrenciesModule } from './house-currencies/house-currencies.module';
 import { HealthModule } from './health/health.module';
@@ -74,7 +73,7 @@ if (process.env.NODE_ENV === 'production') {
     BudgetModule, TransactionsModule, SavingsGoalsModule,
     CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
     RecurringTransactionsModule, SummaryModule, CuotasModule,
-    InvestmentsModule, ExchangeRatesModule, PushModule, HouseCurrenciesModule,
+    InvestmentsModule, PushModule, HouseCurrenciesModule,
     HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
