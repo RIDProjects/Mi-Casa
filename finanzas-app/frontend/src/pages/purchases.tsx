@@ -9,7 +9,7 @@ import { Plus, Trash2, Edit2, ShoppingCart, ChevronLeft, ChevronRight, AlertTria
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
-import { useCurrencyFormatter } from '../lib/currency';
+import { useCurrencyFormatter, toLocalAmount } from '../lib/currency';
 
 const defaultItemForm = { name: '', quantity: 1, unitPrice: 0, currency: '', lugar: '' };
 const defaultConfigForm = { budget: 0 };
@@ -42,13 +42,12 @@ export default function PurchasesPage() {
 
   const selectedList = (lists as any[]).find((l: any) => l.name === monthStr) ?? null;
   const items: any[] = selectedList?.items ?? [];
-  const budget = selectedList?.budget ?? configForm.budget;
+  const budget = Number(selectedList?.budget ?? configForm.budget) || 0;
 
-  const toLocal = (amount: number, currencyCode: string | null | undefined): number => {
-    if (!currencyCode || currencyCode === localCurrency?.currencyCode) return amount;
-    const rate = rates[currencyCode];
-    return rate ? amount * rate : amount;
-  };
+  const toLocal = (amount: number, currencyCode: string | null | undefined): number =>
+    toLocalAmount(amount, currencyCode, localCurrency?.currencyCode, rates);
+  const hasRate = (currencyCode: string | null | undefined): boolean =>
+    !!currencyCode && currencyCode !== localCurrency?.currencyCode && !!rates[currencyCode];
 
   const totalInLocal = items.reduce((s, i) => {
     return s + toLocal(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
@@ -192,7 +191,7 @@ export default function PurchasesPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => { setConfigForm({ budget: selectedList?.budget ?? 0 }); setShowConfigModal(true); }}
+            onClick={() => { setConfigForm({ budget: Number(selectedList?.budget) || 0 }); setShowConfigModal(true); }}
             className="btn-secondary flex items-center gap-2"
           >
             <Settings size={16} /> Configurar mes
@@ -270,7 +269,7 @@ export default function PurchasesPage() {
                     const lineTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
                     const sym = getCurrencySymbol(item.currency);
                     const localTotalLine = toLocal(lineTotal, item.currency);
-                    const showConverted = item.currency && item.currency !== localCurrency?.currencyCode;
+                    const showConverted = hasRate(item.currency);
                     return (
                       <tr key={item.id} className="hover:bg-surface-gray">
                         <td className="px-3 py-2 font-medium text-on-surface">{item.name}</td>
@@ -446,7 +445,7 @@ export default function PurchasesPage() {
                 <label className="label">Total</label>
                 <div className="input bg-surface-container-low text-on-surface font-semibold">
                   {getCurrencySymbol(itemForm.currency || localCurrency?.currencyCode)}{fmt(Number(itemForm.quantity) * Number(itemForm.unitPrice))}
-                  {itemForm.currency && itemForm.currency !== localCurrency?.currencyCode && (
+                  {hasRate(itemForm.currency) && (
                     <span className="ml-2 text-xs text-outline font-normal">
                       ≈ {cfmt(toLocal(Number(itemForm.quantity) * Number(itemForm.unitPrice), itemForm.currency))}
                     </span>

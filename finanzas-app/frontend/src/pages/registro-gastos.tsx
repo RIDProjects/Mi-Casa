@@ -53,7 +53,7 @@ export default function RegistroGastosPage() {
   const { currencies } = useCurrencyStore();
   const { fmt: fmtLocal } = useCurrencyFormatter();
   const localCurrency = currencies.find(c => c.isLocal);
-  const monedaLocal = localCurrency?.currencyCode ?? 'CUP';
+  const monedaLocal = localCurrency?.currencyCode ?? '';
 
   const [form, setForm] = useState<any>(() => buildDefaultForm(monedaLocal));
 
@@ -108,7 +108,9 @@ export default function RegistroGastosPage() {
     e.preventDefault();
     if (!form.descripcion.trim()) { toast.error('Ingresa una descripción'); return; }
     if (!form.monto || Number(form.monto) <= 0) { toast.error('Ingresa un monto válido'); return; }
-    const dto = { ...form, monto: Number(form.monto), mes: monthStr };
+    const moneda = form.moneda || monedaLocal;
+    if (!moneda) { toast.error('Selecciona una moneda'); return; }
+    const dto = { ...form, moneda, monto: Number(form.monto), mes: monthStr };
     editItem ? updateMut.mutate(dto) : createMut.mutate(dto);
   };
 
@@ -172,7 +174,7 @@ export default function RegistroGastosPage() {
                     <th className="px-3 py-2 text-left">Fecha</th>
                     <th className="px-3 py-2 text-left">Descripción</th>
                     <th className="px-3 py-2 text-left">Categoría</th>
-                    <th className="px-3 py-2 text-right">Total CUP</th>
+                    <th className="px-3 py-2 text-right">Total {monedaLocal}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
@@ -189,7 +191,7 @@ export default function RegistroGastosPage() {
                           </span>
                         </td>
                         <td className="px-3 py-2 text-right font-semibold text-on-surface">
-                          {fmt(c.totalCUP)} CUP
+                          {fmt(c.totalCUP)} {monedaLocal}
                         </td>
                       </tr>
                     ))
@@ -199,7 +201,7 @@ export default function RegistroGastosPage() {
                   <tfoot className="bg-emerald-50 dark:bg-emerald-900/20">
                     <tr>
                       <td colSpan={3} className="px-3 py-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">Subtotal Compras</td>
-                      <td className="px-3 py-2 text-right text-sm font-bold text-emerald-700 dark:text-emerald-300">{fmt(totalCompras)} CUP</td>
+                      <td className="px-3 py-2 text-right text-sm font-bold text-emerald-700 dark:text-emerald-300">{fmt(totalCompras)} {monedaLocal}</td>
                     </tr>
                   </tfoot>
                 )}
@@ -303,7 +305,7 @@ export default function RegistroGastosPage() {
             <div className="border-t border-outline-variant p-4 space-y-2">
               <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Compras</span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">{fmt(totalCompras)} CUP</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{fmt(totalCompras)} {monedaLocal}</span>
               </div>
               <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Salidas</span>

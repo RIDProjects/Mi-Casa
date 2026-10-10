@@ -1,4 +1,5 @@
 import React from 'react';
+import { useCurrencyFormatter } from '../../lib/currency';
 
 interface CurrencyInputProps {
   label?: string;
@@ -10,6 +11,7 @@ interface CurrencyInputProps {
 }
 
 export function CurrencyInput({ label, value, onChange, placeholder = '0.00', id, error }: CurrencyInputProps) {
+  const { symbol } = useCurrencyFormatter();
   return (
     <div className="space-y-1">
       {label && (
@@ -18,7 +20,7 @@ export function CurrencyInput({ label, value, onChange, placeholder = '0.00', id
         </label>
       )}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{symbol}</span>
         <input
           id={id}
           type="number"
@@ -27,7 +29,7 @@ export function CurrencyInput({ label, value, onChange, placeholder = '0.00', id
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full pl-7 pr-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors ${error ? 'border-red-500' : ''}`}
+          className={`w-full pl-10 pr-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors ${error ? 'border-red-500' : ''}`}
         />
       </div>
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
