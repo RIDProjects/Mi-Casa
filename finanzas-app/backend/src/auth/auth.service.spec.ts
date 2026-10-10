@@ -233,4 +233,57 @@ describe('AuthService', () => {
       );
     });
   });
+
+  describe('getProfile', () => {
+    it('does not expose password or reset token fields', async () => {
+      userRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        email: 'juan@example.com',
+        name: 'Juan',
+        isActive: true,
+        activeHouseId: 'house-1',
+        roles: [{ name: 'user' }],
+        houses: [{ id: 'house-1', name: 'Mi Casa' }],
+        password: 'hash',
+        resetToken: 'secret-token',
+        resetTokenExpiry: new Date(),
+      } as unknown as User);
+
+      const profile = await service.getProfile('user-1');
+      const json = JSON.stringify(profile);
+      expect(json).not.toContain('secret-token');
+      expect(json).not.toContain('resetToken');
+      expect(json).not.toContain('"password"');
+      expect(profile).toMatchObject({ id: 'user-1', email: 'juan@example.com', house: { id: 'house-1' } });
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('explicitly selects the non-selectable reset token columns', async () => {
+      userRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        resetToken: 'tok',
+        resetTokenExpiry: new Date(Date.now() + 60_000),
+      } as unknown as User);
+
+      await service.resetPassword('tok', 'NewPassword1');
+
+      const arg: any = userRepo.findOne.mock.calls[0][0];
+      expect(arg.where).toEqual({ resetToken: 'tok' });
+      expect(arg.select).toEqual(expect.arrayContaining(['id', 'resetToken', 'resetTokenExpiry']));
+      expect(userRepo.update).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({ resetToken: null, resetTokenExpiry: null }),
+      );
+    });
+
+    it('rejects an expired token', async () => {
+      userRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        resetToken: 'tok',
+        resetTokenExpiry: new Date(Date.now() - 1000),
+      } as unknown as User);
+      await expect(service.resetPassword('tok', 'NewPassword1')).rejects.toThrow('Token inválido o expirado');
+    });
+  });
 });
