@@ -1,7 +1,8 @@
-import { IsEmail, IsString, MinLength, MaxLength, IsOptional, ValidateIf, Matches } from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, IsOptional, ValidateIf, IsIn } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { trimLowerCase } from '../../common/utils/normalize-email';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CURRENCY_META } from '../../house-currencies/house-currencies.service';
 
 export class RegisterDto {
   @ApiProperty({ example: 'Juan Pérez' })
@@ -42,9 +43,11 @@ export class RegisterDto {
   @IsString()
   invitationToken?: string;
 
-  // ISO-style 3-letter uppercase code (e.g. CUP, USD); only used when a new house is created.
+  // Only used when a new house is created. Must be a currency the app knows
+  // (name, symbol and locale come from CURRENCY_META); an unknown code used to
+  // be accepted and silently get CUP's symbol and locale.
   @ApiPropertyOptional({ example: 'CUP' })
   @IsOptional()
-  @Matches(/^[A-Z]{3}$/, { message: 'localCurrencyCode must be a 3-letter uppercase currency code' })
+  @IsIn(Object.keys(CURRENCY_META), { message: 'localCurrencyCode must be a supported currency code' })
   localCurrencyCode?: string;
 }
