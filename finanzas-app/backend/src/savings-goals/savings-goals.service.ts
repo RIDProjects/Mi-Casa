@@ -20,7 +20,8 @@ export class SavingsGoalsService {
 
   private computePMT(goal: number, current: number, months: number, annualRate: number): number {
     if (months <= 0) return 0;
-    const r = annualRate / 12;
+    // annualRate is a percent (5 = 5%), as typed in the UI and stored in the DB
+    const r = Number(annualRate) / 100 / 12;
     if (r === 0) return Math.max(0, (goal - current) / months);
     const fvCurrent = current * Math.pow(1 + r, months);
     const needed = goal - fvCurrent;

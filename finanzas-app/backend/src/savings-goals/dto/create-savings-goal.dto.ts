@@ -10,7 +10,7 @@ export class CreateSavingsGoalDto {
 
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) mesesParaAhorrarla?: number;
 
-  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(9.9999, { message: 'tasaInteres must be at most 9.9999 (stored as numeric(5,4))' }) tasaInteres?: number;
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0, { message: 'La tasa de interés anual debe estar entre 0 y 100 (%)' }) @Max(100, { message: 'La tasa de interés anual debe estar entre 0 y 100 (%)' }) tasaInteres?: number;
 
   @IsOptional() @IsString() emoji?: string;
 }

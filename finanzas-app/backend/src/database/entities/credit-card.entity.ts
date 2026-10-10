@@ -13,7 +13,7 @@ export class CreditCard {
   @PrimaryGeneratedColumn('uuid') id: string;
   @Column() bankName: string;
   @Column() cardName: string;
-  @Column('decimal', { precision: 5, scale: 4, default: 0 }) annualRate: number;
+  @Column('decimal', { precision: 7, scale: 4, default: 0 }) annualRate: number;
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) currentBalance: number;
   @Column('decimal', { precision: 12, scale: 2, default: 0 }) creditLimit: number;
   @Column({ nullable: true }) cutDate: string | null;

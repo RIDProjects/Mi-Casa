@@ -421,7 +421,7 @@ export class BudgetService {
       goalAmount: fiTarget,
       currentSavings: 0,
       months: 240,
-      annualInterestRate: 0.07,
+      annualInterestRate: 7, // percent, same unit as the savings goals form
       emoji: '🏠',
       house: { id: houseId } as any,
     });
