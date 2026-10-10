@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from 'react-query';
 import Layout from '../../components/layout/Layout';
 import PageHeader from '../../components/ui/PageHeader';
 import Modal from '../../components/ui/Modal';
@@ -34,7 +35,8 @@ const defaultAddForm = {
 
 export default function MonedasPage() {
   const user = useAuthStore(s => s.user);
-  const { currencies, rates, setCurrencies, setRates } = useCurrencyStore();
+  const { currencies, rates, setCurrencies, setRates, setActiveCurrency } = useCurrencyStore();
+  const queryClient = useQueryClient();
   const houseId = user?.house?.id ?? '';
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -94,7 +96,11 @@ export default function MonedasPage() {
     try {
       await houseCurrenciesAPI.setLocal(houseId, currency.id);
       toast.success(`${currency.currencyCode} es ahora la moneda local`);
+      // Rates and expense snapshots were re-based server-side: drop the
+      // persisted display currency and refetch everything that depends on it.
+      setActiveCurrency(currency.currencyCode);
       await reload();
+      await queryClient.invalidateQueries();
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Error al cambiar la moneda local');
     } finally {
