@@ -196,8 +196,8 @@ export default function ExpenseRegistryScreen() {
   const total = data?.total ?? 0;
   // House base currency — salidas (manual expenses) are already snapshotted
   // in this currency at write time. Market purchases (comprasMercado /
-  // totalCompras) stay CUP-only, out of scope for this change.
-  const monedaLocal = data?.monedaLocal ?? 'CUP';
+  // totalCompras) come from the API as `totalCUP` but are labelled with the local code.
+  const monedaLocal = data?.monedaLocal ?? '';
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => householdExpensesService.delete(id),
@@ -230,7 +230,7 @@ export default function ExpenseRegistryScreen() {
       fecha: c.fecha,
       lugar: c.lugar,
       monto: c.totalCUP,
-      currency: 'CUP',
+      currency: monedaLocal,
       deletable: false,
     }));
     const salidaRows: ExpenseRow[] = salidas.map((s) => ({
@@ -287,7 +287,7 @@ export default function ExpenseRegistryScreen() {
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
-          <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, 'CUP')}</Text>
+          <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, monedaLocal)}</Text>
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>

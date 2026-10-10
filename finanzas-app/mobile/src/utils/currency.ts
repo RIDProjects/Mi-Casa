@@ -21,6 +21,19 @@ const formatter = new Intl.NumberFormat('en-US', {
  */
 export function formatMoney(amount: number, currency: Currency = 'USD'): string {
   const value = formatter.format(Number(amount) || 0);
+  if (!currency) return value;
   if (currency === 'USD') return `US$ ${value}`;
   return `${value} ${currency}`;
+}
+
+/**
+ * Resolves the currency to use for a form: the user's pick wins, otherwise the
+ * house's local currency. Returns '' while neither is known — callers must
+ * block saving instead of guessing a code the house may not have active.
+ */
+export function resolveCurrency(
+  picked: string | null | undefined,
+  monedaLocal: string | null | undefined,
+): Currency {
+  return picked || monedaLocal || '';
 }

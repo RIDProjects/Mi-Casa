@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import {
 } from '../../types';
 import { GastosStackParamList } from '../../navigation/types';
 import { currentMonthLocal, todayLocalISO } from '../../utils/dates';
+import { resolveCurrency } from '../../utils/currency';
 
 type RouteT = RouteProp<GastosStackParamList, 'AddHouseholdExpense'>;
 
@@ -50,25 +51,21 @@ export default function AddHouseholdExpenseScreen() {
     queryKey: ['household-expenses', monthStr],
     queryFn: () => householdExpensesService.getMonth(monthStr),
   });
-  const monedaLocal = monthData?.monedaLocal ?? 'CUP';
+  const monedaLocal = monthData?.monedaLocal ?? '';
   const monedas = monthData?.monedas ?? [];
 
   const [descripcion, setDescripcion] = useState(existingExpense?.descripcion ?? '');
   const [monto, setMonto] = useState(
     existingExpense ? String(existingExpense.monto ?? existingExpense.montoCUP) : '',
   );
-  const [moneda, setMoneda] = useState(existingExpense?.moneda ?? monedaLocal);
+  const [moneda, setMoneda] = useState(existingExpense?.moneda ?? '');
   const [categoria, setCategoria] = useState<TransactionCategory>(existingExpense?.categoria ?? 'Otros');
   const [lugar, setLugar] = useState(existingExpense?.lugar ?? '');
   const [fecha] = useState(existingExpense?.fecha ?? todayLocalISO());
 
-  // Once the month data resolves, default the currency to the house base if
-  // the user has not touched the picker yet (new expense only).
-  useEffect(() => {
-    if (!isEditing && monthData?.monedaLocal) {
-      setMoneda((prev) => prev || monthData.monedaLocal!);
-    }
-  }, [monthData?.monedaLocal, isEditing]);
+  // The picked currency wins; until the user picks one, the house's local
+  // currency applies (resolved once the month data loads).
+  const effectiveMoneda = resolveCurrency(moneda, monedaLocal);
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['household-expenses'] });
@@ -81,7 +78,7 @@ export default function AddHouseholdExpenseScreen() {
         descripcion: descripcion.trim(),
         categoria,
         monto: parseFloat(monto.replace(',', '.')),
-        moneda,
+        moneda: effectiveMoneda,
         lugar: lugar.trim() || undefined,
         mes: monthStr,
       }),
@@ -102,7 +99,7 @@ export default function AddHouseholdExpenseScreen() {
         descripcion: descripcion.trim(),
         categoria,
         monto: parseFloat(monto.replace(',', '.')),
-        moneda,
+        moneda: effectiveMoneda,
         lugar: lugar.trim() || undefined,
         mes: monthStr,
       }),
@@ -119,6 +116,10 @@ export default function AddHouseholdExpenseScreen() {
   const isPending = createMut.isPending || updateMut.isPending;
 
   const handleSubmit = () => {
+    if (!effectiveMoneda) {
+      Alert.alert('Moneda no disponible', 'Espera a que cargue la moneda de la casa.');
+      return;
+    }
     if (!descripcion.trim()) {
       Alert.alert('Falta la descripción', 'Ingresa una descripción del gasto.');
       return;
@@ -181,8 +182,8 @@ export default function AddHouseholdExpenseScreen() {
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Moneda</Text>
           <View style={styles.catRow}>
-            {(monedas.length > 0 ? monedas.map((m) => m.code) : [monedaLocal]).map((code) => {
-              const active = moneda === code;
+            {(monedas.length > 0 ? monedas.map((m) => m.code) : monedaLocal ? [monedaLocal] : []).map((code) => {
+              const active = effectiveMoneda === code;
               return (
                 <TouchableOpacity
                   key={code}
@@ -246,9 +247,9 @@ export default function AddHouseholdExpenseScreen() {
             <Text style={styles.cancelBtnText}>Cancelar</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.saveBtn, isPending && styles.disabled]}
+            style={[styles.saveBtn, (isPending || !effectiveMoneda) && styles.disabled]}
             onPress={handleSubmit}
-            disabled={isPending}
+            disabled={isPending || !effectiveMoneda}
             activeOpacity={0.85}
           >
             {isPending ? (

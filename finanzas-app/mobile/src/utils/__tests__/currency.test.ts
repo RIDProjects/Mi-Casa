@@ -1,4 +1,4 @@
-import { formatMoney } from '../currency';
+import { formatMoney, resolveCurrency } from '../currency';
 
 describe('formatMoney', () => {
   describe('USD (default currency)', () => {
@@ -90,5 +90,18 @@ describe('formatMoney', () => {
       const result = formatMoney('not-a-number' as unknown as number);
       expect(result).not.toContain('NaN');
     });
+  });
+});
+
+describe('resolveCurrency', () => {
+  it('prefers the user-picked currency', () => {
+    expect(resolveCurrency('EUR', 'USD')).toBe('EUR');
+  });
+  it('falls back to the house local currency when nothing is picked', () => {
+    expect(resolveCurrency('', 'USD')).toBe('USD');
+    expect(resolveCurrency(undefined, 'EUR')).toBe('EUR');
+  });
+  it('returns an empty string (not CUP) while the local currency is unknown', () => {
+    expect(resolveCurrency('', undefined)).toBe('');
   });
 });

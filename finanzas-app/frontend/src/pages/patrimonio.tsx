@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, TrendingUp, Download, Printer } from 'lucide-react';
 import { useCurrencyStore } from '../store/currency.store';
+import { resolveRate } from '../lib/currency';
 import { CurrencyToggle } from '../components/ui/CurrencyToggle';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -49,7 +50,8 @@ export default function PatrimonioPage() {
   const { activeCurrencyCode, rates, currencies } = useCurrencyStore();
   const localCurrency = currencies.find(c => c.isLocal);
   const activeCurrency = currencies.find(c => c.currencyCode === activeCurrencyCode) ?? localCurrency;
-  const [usdRate, setUsdRate] = useState<number>(1200);
+  // Manual USD quote override; empty = use the configured house rate.
+  const [usdRate, setUsdRate] = useState<number | null>(null);
   const [historyMonths, setHistoryMonths] = useState(12);
 
   const { data: cards = [], isLoading: loadingCards, isError: isErrorCards } = useQuery(
@@ -87,18 +89,22 @@ export default function PatrimonioPage() {
   const rawNetWorth: number = assetsData?.netWorth ?? 0;
   const totalDebts = totalCardBalances + totalLoanDebt;
 
-  // Base currency is always 1. For non-base, divide by the exchange rate.
-  const activeCode = activeCurrency?.currencyCode ?? localCurrency?.currencyCode ?? '';
+  // Base currency is always 1. For non-base, divide by the exchange rate; with
+  // no usable rate, show the amounts unconverted in the local currency.
+  const requestedCode = activeCurrency?.currencyCode ?? localCurrency?.currencyCode ?? '';
   const localCode = localCurrency?.currencyCode ?? '';
-  const rawDivider =
-    activeCode === localCode || !activeCode
-      ? 1
-      : activeCode === 'USD'
-        ? (usdRate || rates['USD'] || 125)
-        : (rates[activeCode] || 1);
-  const divider = Number.isFinite(rawDivider) && rawDivider > 0 ? rawDivider : 1;
+  const resolvedRate = resolveRate(
+    requestedCode,
+    localCode,
+    rates,
+    requestedCode === 'USD' ? usdRate : null,
+  );
+  const canConvert = resolvedRate !== null;
+  const divider = resolvedRate ?? 1;
+  const displayCurrency = canConvert ? activeCurrency : localCurrency ?? activeCurrency;
+  const activeCode = displayCurrency?.currencyCode ?? '';
   const netWorth = rawNetWorth / divider;
-  const currencySymbol = activeCurrency?.symbol ?? '$';
+  const currencySymbol = displayCurrency?.symbol ?? '$';
 
   const physicalAssets = assets.filter((a: any) => a.assetType === 'physical');
   const cashAssets = assets.filter((a: any) => a.assetType === 'cash');
@@ -175,15 +181,16 @@ export default function PatrimonioPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencyToggle />
-          {activeCode === 'USD' && (
+          {requestedCode === 'USD' && requestedCode !== localCode && (
             <div className="flex items-center gap-1">
               <span className="text-xs text-gray-500 dark:text-gray-400">Cotización:</span>
               <input
                 type="number"
                 min="1"
                 className="input py-1.5 text-sm w-28"
-                value={usdRate}
-                onChange={e => setUsdRate(Number(e.target.value) || 1)}
+                value={usdRate ?? rates['USD'] ?? ''}
+                placeholder="Sin cotización"
+                onChange={e => setUsdRate(Number(e.target.value) || null)}
               />
             </div>
           )}

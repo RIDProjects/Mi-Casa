@@ -14,6 +14,7 @@ export interface HouseCurrency {
 interface CurrencyState {
   currencies: HouseCurrency[];
   rates: Record<string, number | null>; // { USD: 125 } — units of local per 1 foreign; null = no rate configured
+  /** Empty = follow the house's local currency (until the user picks another). */
   activeCurrencyCode: string;
   setCurrencies: (currencies: HouseCurrency[]) => void;
   setRates: (rates: Record<string, number | null>) => void;
@@ -25,7 +26,7 @@ export const useCurrencyStore = create<CurrencyState>()(
     (set, get) => ({
       currencies: [],
       rates: {},
-      activeCurrencyCode: 'CUP',
+      activeCurrencyCode: '',
       setCurrencies: (currencies) => set({ currencies }),
       setRates: (rates) => set({ rates }),
       setActiveCurrency: (code) => set({ activeCurrencyCode: code }),

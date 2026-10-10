@@ -19,14 +19,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { purchasesService } from '../../services/purchases.service';
-import { PurchaseItem, CreatePurchaseItemDto } from '../../types';
+import { householdExpensesService } from '../../services/household-expenses.service';
+import { PurchaseItem, CreatePurchaseItemDto, HouseholdExpensesMonth } from '../../types';
 import { formatMoney } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
-
-const fmt = (amount: number) => formatMoney(amount, 'CUP');
 
 // Los ítems agregados acá se registran directamente en la lista de compras
 // del mes (`purchases` module). Ese mismo dato alimenta automáticamente la
@@ -56,6 +55,16 @@ export default function ShoppingListScreen() {
     [lists, monthStr],
   );
   const items: PurchaseItem[] = selectedList?.items ?? [];
+
+  // The house's local currency comes from the month's household-expenses data
+  // (same query/key the expense screens use); the list's own code is a fallback.
+  const { data: monthData } = useQuery<HouseholdExpensesMonth>({
+    queryKey: ['household-expenses', monthStr],
+    queryFn: () => householdExpensesService.getMonth(monthStr),
+  });
+  const monedaLocal = monthData?.monedaLocal ?? selectedList?.localCurrencyCode ?? '';
+  const fmt = (amount: number, currency?: string | null) =>
+    formatMoney(amount, currency || monedaLocal);
 
   // Estado del formulario de entrada rápida — se reusa tanto para agregar
   // como para editar (editingItemId != null cambia el modo del formulario).
@@ -165,7 +174,7 @@ export default function ShoppingListScreen() {
       name: producto,
       quantity: cantidad,
       unitPrice: precio,
-      currency: 'CUP',
+      currency: monedaLocal || undefined,
       lugar: inputTienda.trim() || undefined,
     });
   };
@@ -265,11 +274,11 @@ export default function ShoppingListScreen() {
                       <View style={styles.itemInfo}>
                         <Text style={styles.itemName}>{item.name}</Text>
                         <Text style={styles.itemDetail}>
-                          {item.quantity} × {fmt(item.unitPrice)}
+                          {item.quantity} × {fmt(item.unitPrice, item.currency)}
                         </Text>
                       </View>
                       <Text style={styles.itemSubtotal}>
-                        {fmt(Number(item.quantity || 0) * Number(item.unitPrice || 0))}
+                        {fmt(Number(item.quantity || 0) * Number(item.unitPrice || 0), item.currency)}
                       </Text>
                       <TouchableOpacity
                         style={styles.removeBtn}
@@ -320,7 +329,7 @@ export default function ShoppingListScreen() {
               style={[styles.quickInput, { flex: 1 }]}
               value={inputPrecio}
               onChangeText={setInputPrecio}
-              placeholder="Precio CUP"
+              placeholder={monedaLocal ? `Precio ${monedaLocal}` : 'Precio'}
               placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
               returnKeyType="next"
