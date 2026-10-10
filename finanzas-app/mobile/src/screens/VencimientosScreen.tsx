@@ -11,6 +11,7 @@ import { formatMoney } from '../utils/currency';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import EmptyState from '../components/common/EmptyState';
 import { useManualRefresh } from '../hooks/useManualRefresh';
+import { parseLocalDate } from '../utils/dates';
 
 const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   credit_card: 'card-outline',
@@ -36,7 +37,7 @@ function BillRow({ bill }: { bill: UpcomingBill }) {
       <View style={styles.rowContent}>
         <Text style={styles.rowName} numberOfLines={1}>{bill.name}</Text>
         <Text style={styles.rowDate}>
-          Vence {new Date(bill.dueDate).toLocaleDateString('es-CU', {
+          Vence {parseLocalDate(bill.dueDate).toLocaleDateString('es-CU', {
             day: 'numeric',
             month: 'short',
           })}

@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { HouseCurrency } from '../database/entities/house-currency.entity';
 import { ExchangeRate } from '../database/entities/exchange-rate.entity';
+import { todayInAppTimezone } from '../common/dates';
 
 export const CURRENCY_META: Record<
   string,
@@ -135,7 +136,7 @@ export class HouseCurrenciesService {
       );
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayInAppTimezone();
 
     const others = (
       await manager.find(HouseCurrency, {
@@ -340,7 +341,7 @@ export class HouseCurrenciesService {
       rateType?: string;
     },
   ): Promise<ExchangeRate> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayInAppTimezone();
 
     const existing = await this.ratesRepo.findOne({
       where: {

@@ -1,3 +1,5 @@
+import { parseLocalDate } from './dates';
+
 const currencyFormatter = new Intl.NumberFormat('es-ES', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
@@ -23,4 +25,4 @@ export const MONTHS = MONTH_NAMES.map((label, i) => ({
 }));
 
 export const fmtDate = (d: string | Date): string =>
-  new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
+  parseLocalDate(d).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });

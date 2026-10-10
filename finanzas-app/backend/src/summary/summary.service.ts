@@ -12,6 +12,7 @@ import { InvestmentsService } from '../investments/investments.service';
 import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 import { HouseholdExpensesService } from '../household-expenses/household-expenses.service';
 import { TransactionType } from '../database/entities/transaction.entity';
+import { currentMonthInAppTimezone, todayInAppTimezone } from '../common/dates';
 
 export interface UpcomingBill {
   type: string;
@@ -157,7 +158,7 @@ export class SummaryService {
     // — no re-conversion here). Market purchases (totalCompras/totalCUP) are
     // explicitly out of scope for this change — see household-expenses
     // module's summary.service.ts comment near totalCompras.
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = currentMonthInAppTimezone();
     const householdExpensesTotal = await this.householdExpensesService.sumLocalForMonth(
       houseId,
       currentMonth,
@@ -215,8 +216,8 @@ export class SummaryService {
     const sixMonthsAgo = new Date(now);
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const startDate = sixMonthsAgo.toISOString().slice(0, 10);
-    const endDate = now.toISOString().slice(0, 10);
+    const startDate = todayInAppTimezone(sixMonthsAgo);
+    const endDate = todayInAppTimezone(now);
 
     const transactions = await this.transactionsService.findByRange(houseId, startDate, endDate);
 

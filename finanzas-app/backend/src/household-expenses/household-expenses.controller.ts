@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { CreateHouseholdExpenseDto } from './dto/create-household-expense.dto';
 import { UpdateHouseholdExpenseDto } from './dto/update-household-expense.dto';
+import { currentMonthInAppTimezone } from '../common/dates';
 
 @ApiTags('Registro de Gastos')
 @ApiBearerAuth()
@@ -17,7 +18,7 @@ export class HouseholdExpensesController {
   @ApiOperation({ summary: 'Obtiene el registro de gastos de un mes (compras + salidas)' })
   @ApiQuery({ name: 'month', required: false, description: 'YYYY-MM' })
   getMonth(@Request() req, @Query('month') month?: string) {
-    const m = month || new Date().toISOString().slice(0, 7);
+    const m = month || currentMonthInAppTimezone();
     return this.service.getMonthData(resolveHouseId(req.user), m);
   }
 

@@ -5,6 +5,7 @@ import { HouseholdExpense, HouseholdCategory } from '../database/entities/househ
 import { PurchaseList } from '../database/entities/purchase-list.entity';
 import { PurchaseItem } from '../database/entities/purchase-item.entity';
 import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
+import { todayInAppTimezone } from '../common/dates';
 
 const CATEGORIES = Object.values(HouseholdCategory);
 
@@ -188,7 +189,7 @@ export class HouseholdExpensesService {
       const lugar = item.lugar?.trim() || 'Sin especificar';
       map[lugar] = (map[lugar] ?? 0) + Number(item.unitPrice || 0) * Number(item.quantity || 0);
     });
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayInAppTimezone();
     return Object.entries(map).map(([lugar, totalCUP]) => ({
       fecha:    today,
       descripcion: `Compra en ${lugar}`,

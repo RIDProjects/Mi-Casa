@@ -6,12 +6,13 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, CreditCard, Edit2, Trash2, CheckCircle, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
+import { parseLocalDate } from '../lib/dates';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
 
 const fmtDate = (d: string) =>
-  d ? new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  d ? parseLocalDate(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const defaultForm = {
   description: '',

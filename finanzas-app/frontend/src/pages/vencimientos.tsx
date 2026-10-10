@@ -5,6 +5,7 @@ import { upcomingBillsAPI } from '../services/api';
 import { Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 
 import { useCurrencyFormatter } from '../lib/currency';
+import { parseLocalDate } from '../lib/dates';
 
 const FILTER_OPTIONS = [
   { label: '7 días', value: 7 },
@@ -22,7 +23,7 @@ const TYPE_ICONS: Record<string, string> = {
 function daysUntil(dateStr: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
+  const target = parseLocalDate(dateStr);
   target.setHours(0, 0, 0, 0);
   return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 }
@@ -44,7 +45,7 @@ export default function VencimientosPage() {
   );
 
   const bills: any[] = Array.isArray(data?.bills ?? data) ? (data?.bills ?? data) : [];
-  const sorted = [...bills].sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const sorted = [...bills].sort((a, b) => parseLocalDate(a.dueDate).getTime() - parseLocalDate(b.dueDate).getTime());
   const totalDue = sorted.reduce((s, b) => s + Number(b.amount || 0), 0);
 
   return (
@@ -111,7 +112,7 @@ export default function VencimientosPage() {
               const d = daysUntil(bill.dueDate);
               const { badge, border, dot } = urgencyClasses(d);
               const icon = TYPE_ICONS[bill.type] ?? '📋';
-              const dateLabel = new Date(bill.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+              const dateLabel = parseLocalDate(bill.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
               return (
                 <div key={bill.id ?? idx} className={`bg-surface-container-lowest rounded-xl border ${border} shadow-sm p-4 flex items-center gap-4`}>
