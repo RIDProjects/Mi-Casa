@@ -129,11 +129,11 @@ export class AuthService {
 
     const isAdmin = roleToAssign.name === 'admin' || roleToAssign.name === 'house_admin';
     const token = this.jwtService.sign(
-      { sub: savedUser.id, email: savedUser.email },
+      { sub: savedUser.id, email: savedUser.email, tv: savedUser.tokenVersion ?? 0 },
       { expiresIn: isAdmin ? '24h' : '8h' },
     );
 
-    const { password, ...result } = savedUser;
+    const { password, tokenVersion, ...result } = savedUser;
     return {
       access_token: token,
       user: {
@@ -149,7 +149,7 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.userRepo.findOne({
       where: { email: emailMatch(dto.email), isActive: true },
-      select: ['id', 'email', 'name', 'password', 'isActive', 'activeHouseId', 'plan'],
+      select: ['id', 'email', 'name', 'password', 'isActive', 'tokenVersion', 'activeHouseId', 'plan'],
       relations: ['roles', 'roles.permissions', 'houses'],
     });
     if (!user) throw new UnauthorizedException('Credenciales inválidas');
@@ -160,9 +160,9 @@ export class AuthService {
     await this.userRepo.update(user.id, { lastLoginAt: new Date() });
 
     const isAdmin = user.roles?.some(r => r.name === 'admin');
-    const { password, ...result } = user;
+    const { password, tokenVersion, ...result } = user;
     const token = this.jwtService.sign(
-      { sub: user.id, email: user.email },
+      { sub: user.id, email: user.email, tv: user.tokenVersion ?? 0 },
       { expiresIn: isAdmin ? '24h' : '8h' },
     );
 
@@ -234,6 +234,12 @@ export class AuthService {
       password: hashed,
       resetToken: null,
       resetTokenExpiry: null,
+      // Invalidates every token issued before the reset.
+      tokenVersion: () => '"token_version" + 1',
     });
+  }
+
+  async logoutAll(userId: string): Promise<void> {
+    await this.userRepo.update(userId, { tokenVersion: () => '"token_version" + 1' });
   }
 }

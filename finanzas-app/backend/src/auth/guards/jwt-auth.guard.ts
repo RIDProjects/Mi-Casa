@@ -22,7 +22,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = authHeader.substring(7);
 
     try {
-      const payload = this.jwtService.verify(token) as { sub: string; email: string };
+      const payload = this.jwtService.verify(token) as { sub: string; email: string; tv?: number };
 
       const user = await this.userRepo.findOne({
         where: { id: payload.sub, isActive: true },
@@ -31,6 +31,11 @@ export class JwtAuthGuard implements CanActivate {
 
       if (!user) {
         throw new UnauthorizedException('Usuario no encontrado o inactivo');
+      }
+
+      // Legacy tokens (issued before token versioning) carry no `tv` and count as 0.
+      if ((payload.tv ?? 0) !== user.tokenVersion) {
+        throw new UnauthorizedException('Sesión revocada');
       }
 
       // Resolver casa activa y exponerla como user.house para todos los controllers
@@ -46,6 +51,7 @@ export class JwtAuthGuard implements CanActivate {
       request.user = user;
       return true;
     } catch (err) {
+      if (err instanceof UnauthorizedException) throw err;
       throw new UnauthorizedException('Token inválido o expirado');
     }
   }

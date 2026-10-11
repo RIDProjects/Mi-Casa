@@ -12,6 +12,7 @@ import {
 import { useAuthStore } from '../../store/auth.store';
 import { useThemeStore } from '../../store/theme.store';
 import { notificationsAPI } from '../../services/api';
+import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import MiCasaProLogo from '../ui/MiCasaProLogo';
 
@@ -55,8 +56,13 @@ interface SidebarProps { isOpen?: boolean; onClose?: () => void; }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const router = useRouter();
-  const { logout, hasPermission } = useAuthStore();
+  const { logout, logoutAll, hasPermission } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+
+  const handleLogoutAll = async () => {
+    const revoked = await logoutAll();
+    if (!revoked) toast.error('No se pudieron cerrar las demás sesiones. Intenta de nuevo.');
+  };
 
   const isAdminRoute = router.pathname.startsWith('/admin');
   const navItems     = isAdminRoute ? adminNavItems : houseNavItems;
@@ -176,6 +182,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         >
           <LogOut size={16} />
           Cerrar Sesión
+        </button>
+
+        <button
+          onClick={handleLogoutAll}
+          className="flex items-center gap-3 w-full px-3 py-2 text-label-upper font-label-upper text-on-surface-variant hover:text-danger hover:bg-surface-variant rounded-lg transition-all duration-150"
+        >
+          <LogOut size={16} />
+          Cerrar sesión en todos los dispositivos
         </button>
       </div>
     </aside>

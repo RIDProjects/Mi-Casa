@@ -23,10 +23,12 @@ describe('toSafeUser', () => {
       password: 'hash',
       resetToken: 'tok',
       resetTokenExpiry: new Date(),
+      tokenVersion: 4,
       futureSecret: 'x',
     } as any);
 
     expect(safe).toMatchObject({ id: 'u1', email: 'a@b.c', name: 'A', isActive: true, roles: [{ name: 'user' }] });
+    expect(safe).not.toHaveProperty('tokenVersion');
     expect(safe).not.toHaveProperty('password');
     expect(safe).not.toHaveProperty('resetToken');
     expect(safe).not.toHaveProperty('resetTokenExpiry');

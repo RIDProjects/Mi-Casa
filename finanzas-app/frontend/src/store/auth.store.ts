@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { resetSessionState } from '../lib/session';
+import { authAPI } from '../services/api';
 
 interface House { id: string; name: string; }
 
@@ -15,6 +16,8 @@ interface AuthStore {
   user: User | null; token: string | null; isAuthenticated: boolean;
   setAuth: (user: User, token: string) => void;
   logout: () => void;
+  /** Revokes every session server-side, then logs out locally. Resolves false if the server call failed. */
+  logoutAll: () => Promise<boolean>;
   hasPermission: (module: string, action: string) => boolean;
   isAdminGlobal: () => boolean;
 }
@@ -48,6 +51,16 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       window.dispatchEvent(new CustomEvent('auth:logout'));
     }
     set({ user: null, token: null, isAuthenticated: false });
+  },
+  logoutAll: async () => {
+    let revoked = true;
+    try {
+      await authAPI.logoutAll();
+    } catch {
+      revoked = false;
+    }
+    get().logout();
+    return revoked;
   },
   hasPermission: (module, action) => {
     const { user } = get();

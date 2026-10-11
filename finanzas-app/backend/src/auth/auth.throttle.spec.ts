@@ -12,6 +12,7 @@ describe('AuthController throttling', () => {
     ['login', 5],
     ['forgotPassword', 3],
     ['resetPassword', 3],
+    ['logoutAll', 5],
   ];
 
   it.each(cases)('%s overrides a configured throttler with limit %d/min', (method, limit) => {
