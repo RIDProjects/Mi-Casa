@@ -695,6 +695,9 @@
           <li><strong>Estrategia de Pago:</strong> avalancha y bola de nieve reutilizan el pago mínimo de cada deuda saldada.</li>
           <li><strong>Permisos:</strong> los miembros pueden ver, crear, editar y eliminar en todos los módulos; solo los administradores gestionan miembros y monedas.</li>
           <li><strong>Cuenta:</strong> el email no distingue mayúsculas de minúsculas; al cerrar sesión, el siguiente usuario del dispositivo no ve datos del anterior.</li>
+          <li><strong>Presupuesto:</strong> el equivalente mensual usa 52 semanas al año para «Semanal» (≈ 4,33 veces al mes) y un pago cada 15 días para «Quincenal» (≈ 2,03 veces al mes); los totales mensuales de estos ítems son ligeramente mayores que antes.</li>
+          <li><strong>Inversiones:</strong> la moneda de una inversión puede ser cualquiera de las monedas activas de la casa (configuradas en Monedas); por defecto, la moneda local.</li>
+          <li><strong>Sesiones:</strong> el botón «Cerrar sesión en todos los dispositivos» del menú lateral cierra de inmediato todas las sesiones abiertas (web y móvil). Restablecer la contraseña también cierra las demás sesiones.</li>
         </ul>
       </div>
     </div>
@@ -898,8 +901,8 @@
           <thead><tr><th>Periodicidad</th><th>Factor mensual</th></tr></thead>
           <tbody>
             <tr><td>Diario</td><td>× 30</td></tr>
-            <tr><td>Semanal</td><td>× 4</td></tr>
-            <tr><td>Quincenal</td><td>× 2</td></tr>
+            <tr><td>Semanal</td><td>× 4,33 (52 ÷ 12)</td></tr>
+            <tr><td>Quincenal</td><td>× 2,03 (365 ÷ 15 ÷ 12)</td></tr>
             <tr><td>Mensual</td><td>× 1</td></tr>
             <tr><td>Bimestral</td><td>÷ 2</td></tr>
             <tr><td>Trimestral</td><td>÷ 3</td></tr>
@@ -1991,19 +1994,26 @@
           <div class="step">
             <div class="step-num num-teal">2</div>
             <div class="step-content">
-              <div class="step-title">Monto invertido</div>
-              <div class="step-desc">Capital inicial que pusiste en esa inversión.</div>
+              <div class="step-title">Moneda</div>
+              <div class="step-desc">Cualquier moneda activa en la casa (configurada en Monedas). Por defecto, la moneda local.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-teal">3</div>
             <div class="step-content">
-              <div class="step-title">Valor actual</div>
-              <div class="step-desc">Lo que vale hoy. Actualizalo periódicamente para ver el rendimiento real.</div>
+              <div class="step-title">Monto invertido</div>
+              <div class="step-desc">Capital inicial que pusiste en esa inversión.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-teal">4</div>
+            <div class="step-content">
+              <div class="step-title">Valor actual</div>
+              <div class="step-desc">Lo que vale hoy. Actualízalo periódicamente para ver el rendimiento real.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">5</div>
             <div class="step-content">
               <div class="step-title">Fecha de inicio y vencimiento</div>
               <div class="step-desc">Para plazos fijos o bonos con vencimiento definido.</div>
