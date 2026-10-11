@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 import { Investment, InvestmentType } from '../database/entities/investment.entity';
 
 interface InvestmentFrontendDto {
@@ -19,6 +20,7 @@ interface InvestmentFrontendDto {
 export class InvestmentsService {
   constructor(
     @InjectRepository(Investment) private repo: Repository<Investment>,
+    private houseCurrencies: HouseCurrenciesService,
   ) {}
 
   private toFrontend(inv: Investment) {
@@ -43,13 +45,27 @@ export class InvestmentsService {
     if (dto.nombre !== undefined) entity.name = dto.nombre;
     if (dto.tipo !== undefined) entity.type = dto.tipo;
     if (dto.monto !== undefined) entity.amount = dto.monto;
-    if (dto.moneda !== undefined) entity.currency = dto.moneda as Investment['currency'];
+    if (dto.moneda !== undefined) entity.currency = dto.moneda;
     if (dto.tna !== undefined) entity.annualRate = dto.tna;
     if (dto.fechaInicio !== undefined) entity.startDate = dto.fechaInicio;
     if (dto.fechaFin !== undefined) entity.endDate = dto.fechaFin;
     if (dto.notas !== undefined) entity.notes = dto.notas;
     if (dto.activo !== undefined) entity.isActive = dto.activo;
     return entity;
+  }
+
+  /** Resolves the currency to persist: must be active in the house; defaults to the local one. */
+  private async resolveCurrency(houseId: string, code?: string): Promise<string> {
+    if (!code) {
+      const local = await this.houseCurrencies.getLocalCurrency(houseId);
+      if (!local) throw new BadRequestException('La casa no tiene una moneda local configurada');
+      return local.currencyCode;
+    }
+    const active = await this.houseCurrencies.findByHouse(houseId);
+    if (!active.some(c => c.currencyCode === code)) {
+      throw new BadRequestException(`La moneda ${code} no está activa en esta casa`);
+    }
+    return code;
   }
 
   async findAll(houseId: string) {
@@ -61,13 +77,15 @@ export class InvestmentsService {
   }
 
   async create(dto: InvestmentFrontendDto, houseId: string) {
-    const inv = this.repo.create({ ...this.fromFrontend(dto), house: { id: houseId } as any });
+    const currency = await this.resolveCurrency(houseId, dto.moneda);
+    const inv = this.repo.create({ ...this.fromFrontend(dto), currency, house: { id: houseId } as any });
     return this.toFrontend(await this.repo.save(inv));
   }
 
   async update(id: string, houseId: string, dto: InvestmentFrontendDto) {
     const inv = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!inv) throw new NotFoundException('Inversión no encontrada');
+    if (dto.moneda !== undefined) await this.resolveCurrency(houseId, dto.moneda);
     Object.assign(inv, this.fromFrontend(dto));
     return this.toFrontend(await this.repo.save(inv));
   }
