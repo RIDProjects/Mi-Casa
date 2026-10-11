@@ -1,3 +1,4 @@
+import { todayInAppTimezone } from '../common/dates';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { HouseCurrenciesService } from './house-currencies.service';
@@ -253,7 +254,9 @@ describe('HouseCurrenciesService.setLocal', () => {
   const USD = { id: 'u', currencyCode: 'USD', isLocal: true, isActive: true };
   const CUP = { id: 'c', currencyCode: 'CUP', isLocal: false, isActive: true };
   const EUR = { id: 'e', currencyCode: 'EUR', isLocal: false, isActive: true };
-  const TODAY = new Date().toISOString().split('T')[0];
+  // Same 'today' as the service (APP_TIMEZONE), not UTC: otherwise the spec
+  // fails every evening in Havana once UTC has rolled over to tomorrow.
+  const TODAY = todayInAppTimezone();
 
   let service: HouseCurrenciesService;
   let repo: jest.Mocked<Repository<HouseCurrency>>;

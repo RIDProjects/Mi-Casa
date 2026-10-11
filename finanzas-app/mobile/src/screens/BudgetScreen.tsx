@@ -23,8 +23,8 @@ const fmt = formatMoney;
 // Mirrors backend PERIODICITY_FACTOR (backend/src/budget/budget.service.ts)
 const PERIODICITY_FACTOR: Record<Periodicity, number> = {
   daily: 1 / 30,
-  weekly: 1 / 4,
-  biweekly: 1 / 2,
+  weekly: 12 / 52,
+  biweekly: (12 * 15) / 365,
   monthly: 1,
   bimonthly: 2,
   quarterly: 3,

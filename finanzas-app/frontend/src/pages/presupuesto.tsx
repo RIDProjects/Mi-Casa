@@ -48,7 +48,7 @@ const PERIODICITY_LABELS: Record<Periodicity, string> = {
 };
 
 const PERIOD_DIVISOR: Record<Periodicity, number> = {
-  daily: 1/30, weekly: 1/4, biweekly: 1/2,
+  daily: 1/30, weekly: 12/52, biweekly: (12*15)/365,
   monthly: 1, bimonthly: 2, quarterly: 3,
   fourmonthly: 4, semiannual: 6, annual: 12,
 };

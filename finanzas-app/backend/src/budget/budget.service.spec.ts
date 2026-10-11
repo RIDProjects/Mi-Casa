@@ -217,3 +217,22 @@ describe('BudgetService FI savings goal', () => {
     expect(savingsGoalRepo.create).toHaveBeenCalledWith(expect.objectContaining({ annualInterestRate: 7 }));
   });
 });
+
+describe('BudgetService monthly normalization', () => {
+  const { Periodicity } = jest.requireActual('../database/entities/budget.entity');
+  const noop = {} as any;
+  const service = new BudgetService(noop, noop, noop, noop, noop, noop, noop, noop);
+  const monthly = (amount: number, p: any) => (service as any).computeMonthlyAmount(amount, p);
+
+  it('weekly uses 52 weeks / 12 months', () => {
+    expect(monthly(1000, Periodicity.WEEKLY)).toBeCloseTo((1000 * 52) / 12, 2);
+  });
+
+  it('biweekly means every 15 days: 365 / 15 / 12 payments per month', () => {
+    expect(monthly(1000, Periodicity.BIWEEKLY)).toBeCloseTo((1000 * 365) / 15 / 12, 2);
+  });
+
+  it('monthly is unchanged', () => {
+    expect(monthly(1000, Periodicity.MONTHLY)).toBe(1000);
+  });
+});
