@@ -85,7 +85,11 @@ export class InvestmentsService {
   async update(id: string, houseId: string, dto: InvestmentFrontendDto) {
     const inv = await this.repo.findOne({ where: { id, house: { id: houseId } } });
     if (!inv) throw new NotFoundException('Inversión no encontrada');
-    if (dto.moneda !== undefined) await this.resolveCurrency(houseId, dto.moneda);
+    // Only validate a currency change: an investment created before currencies
+    // were per house (e.g. the old ARS default) must stay editable.
+    if (dto.moneda !== undefined && dto.moneda !== inv.currency) {
+      await this.resolveCurrency(houseId, dto.moneda);
+    }
     Object.assign(inv, this.fromFrontend(dto));
     return this.toFrontend(await this.repo.save(inv));
   }

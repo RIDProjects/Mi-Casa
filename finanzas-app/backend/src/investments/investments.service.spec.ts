@@ -56,4 +56,11 @@ describe('InvestmentsService currencies', () => {
     const res = await service.update('i1', HOUSE_ID, { moneda: 'EUR' });
     expect(res.moneda).toBe('EUR');
   });
+
+  it('keeps a legacy currency that is no longer active when it is not changed', async () => {
+    repo.findOne.mockResolvedValue({ id: 'i1', currency: 'ARS' } as Investment);
+    const res = await service.update('i1', HOUSE_ID, { nombre: 'Plazo fijo', moneda: 'ARS' });
+    expect(res.moneda).toBe('ARS');
+    expect(currencies.findByHouse).not.toHaveBeenCalled();
+  });
 });
