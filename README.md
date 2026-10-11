@@ -254,6 +254,12 @@ Los permisos se definen por módulo: `view`, `create`, `edit`, `delete`. Solo lo
 
 Las tasas de cambio son **por casa** (no se comparten entre casas), deben ser mayores que 0 y cada casa tiene una única moneda local. Para usar "Hacer local" debe existir antes la tasa entre la moneda nueva y la local actual; al cambiarla se recalculan todas las tasas y los montos convertidos de los gastos existentes.
 
+La moneda de una inversión puede ser cualquiera de las monedas activas de la casa (módulo Monedas); por defecto es la moneda local.
+
+### Sesiones
+
+La autenticación usa JWT con un `token_version` por usuario. El botón "Cerrar sesión en todos los dispositivos" incrementa esa versión e invalida de inmediato todas las sesiones abiertas (web y móvil). Restablecer la contraseña también incrementa `token_version`, por lo que cierra las demás sesiones. Los usuarios desactivados pierden el acceso de inmediato.
+
 ---
 
 ## Fórmulas financieras implementadas
@@ -267,7 +273,7 @@ r = tasa% / 100      (la tasa anual se ingresa como porcentaje, de 0 a 100)
 **Normalización de periodicidad** (Presupuesto):
 ```
 Mensual = monto × factor
-Diario×30 | Semanal×4 | Quincenal×2 | Mensual×1
+Diario×30 | Semanal×(52/12 ≈ 4,33) | Quincenal×(365/15/12 ≈ 2,03) | Mensual×1
 Bimestral÷2 | Trimestral÷3 | Cuatrimestral÷4 | Semestral÷6 | Anual÷12
 ```
 
