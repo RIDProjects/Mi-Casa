@@ -11,6 +11,7 @@ export class User {
   @Column() name: string;
   @Column({ select: false }) password: string;
   @Column({ default: true }) isActive: boolean;
+  @Column({ type: 'int', default: 0, name: 'token_version' }) tokenVersion: number;
   @Column({ nullable: true, name: 'active_house_id' }) activeHouseId: string | null;
   @Column({ default: 'free' }) plan: UserPlan;
   @Column({ nullable: true, type: 'timestamp', name: 'last_login_at' }) lastLoginAt: Date | null;

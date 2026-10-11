@@ -98,15 +98,16 @@ describe('AuthService', () => {
         name: 'house_admin',
         permissions: [],
       } as unknown as Role);
-      userRepo.save.mockImplementation(async (u: any) => ({ ...u, id: 'user-1' }));
+      userRepo.save.mockImplementation(async (u: any) => ({ ...u, id: 'user-1', tokenVersion: 0 }));
 
       const result = await service.register(registerDto);
 
+      expect(result.user).not.toHaveProperty('tokenVersion');
       expect(result.isHouseAdmin).toBe(true);
       expect(result.access_token).toBe('signed.jwt.token');
       expect(result.user.email).toBe(registerDto.email);
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: 'user-1', email: registerDto.email },
+        { sub: 'user-1', email: registerDto.email, tv: 0 },
         { expiresIn: '24h' },
       );
     });
@@ -150,7 +151,7 @@ describe('AuthService', () => {
 
       expect(result.isHouseAdmin).toBe(false);
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: 'user-2', email: registerDto.email },
+        { sub: 'user-2', email: registerDto.email, tv: 0 },
         { expiresIn: '8h' },
       );
     });
@@ -194,6 +195,7 @@ describe('AuthService', () => {
         email: loginDto.email,
         password: hashedPassword,
         isActive: true,
+        tokenVersion: 3,
         activeHouseId: 'house-1',
         roles: [{ name: 'user' }],
         houses: [{ id: 'house-1', name: 'Mi Casa' }],
@@ -204,9 +206,10 @@ describe('AuthService', () => {
       expect(result.access_token).toBe('signed.jwt.token');
       expect(result.user.house).toEqual({ id: 'house-1', name: 'Mi Casa' });
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: 'user-1', email: loginDto.email },
+        { sub: 'user-1', email: loginDto.email, tv: 3 },
         { expiresIn: '8h' },
       );
+      expect(result.user).not.toHaveProperty('tokenVersion');
       expect(userRepo.update).toHaveBeenCalledWith(
         'user-1',
         expect.objectContaining({ lastLoginAt: expect.any(Date) }),
@@ -228,7 +231,7 @@ describe('AuthService', () => {
       await service.login(loginDto);
 
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { sub: 'admin-1', email: loginDto.email },
+        { sub: 'admin-1', email: loginDto.email, tv: 0 },
         { expiresIn: '24h' },
       );
     });
@@ -277,6 +280,21 @@ describe('AuthService', () => {
       );
     });
 
+    it('bumps tokenVersion in the same update that sets the new password', async () => {
+      userRepo.findOne.mockResolvedValue({
+        id: 'user-1',
+        resetToken: 'tok',
+        resetTokenExpiry: new Date(Date.now() + 60_000),
+      } as unknown as User);
+
+      await service.resetPassword('tok', 'NewPassword1');
+
+      const [, patch]: any = userRepo.update.mock.calls[0];
+      expect(patch.password).toEqual(expect.any(String));
+      expect(typeof patch.tokenVersion).toBe('function');
+      expect(patch.tokenVersion()).toBe('"token_version" + 1');
+    });
+
     it('rejects an expired token', async () => {
       userRepo.findOne.mockResolvedValue({
         id: 'user-1',
@@ -284,6 +302,16 @@ describe('AuthService', () => {
         resetTokenExpiry: new Date(Date.now() - 1000),
       } as unknown as User);
       await expect(service.resetPassword('tok', 'NewPassword1')).rejects.toThrow('Token inválido o expirado');
+    });
+  });
+
+  describe('logoutAll', () => {
+    it('increments the caller tokenVersion atomically', async () => {
+      await service.logoutAll('user-1');
+
+      const [id, patch]: any = userRepo.update.mock.calls[0];
+      expect(id).toBe('user-1');
+      expect(patch.tokenVersion()).toBe('"token_version" + 1');
     });
   });
 });

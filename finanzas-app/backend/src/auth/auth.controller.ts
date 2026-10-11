@@ -44,6 +44,17 @@ export class AuthController {
     return { message: 'Contraseña actualizada correctamente.' };
   }
 
+  @Post('logout-all')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ medium: { ttl: 60000, limit: 5 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Cerrar sesión en todos los dispositivos' })
+  async logoutAll(@Request() req) {
+    await this.authService.logoutAll(req.user.id);
+    return { message: 'Sesiones cerradas en todos los dispositivos.' };
+  }
+
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
