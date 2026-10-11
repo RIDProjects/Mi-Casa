@@ -1,6 +1,6 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsDateString, IsBoolean, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Matches, IsDateString, IsBoolean, Min } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { InvestmentType, Currency } from '../../database/entities/investment.entity';
+import { InvestmentType } from '../../database/entities/investment.entity';
 
 // El frontend (inversiones.tsx) manda "" en vez de omitir campos opcionales
 // vacíos (moneda/fechaFin) — @IsOptional() de class-validator solo salta la
@@ -16,7 +16,7 @@ export class CreateInvestmentDto {
 
   @Type(() => Number) @IsNumber() @Min(0) monto: number;
 
-  @IsOptional() @Transform(emptyToUndefined) @IsEnum(Currency) moneda?: Currency;
+  @IsOptional() @Transform(emptyToUndefined) @IsString() @Matches(/^[A-Z]{3}$/) moneda?: string;
 
   @IsOptional() @Type(() => Number) @IsNumber() @Min(0) tna?: number;
 
