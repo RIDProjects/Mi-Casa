@@ -25,7 +25,7 @@ Sistema de gestión financiera del hogar. SaaS web + app móvil (Android/iOS) qu
 - 🆘 **Fondo de emergencia** con calculadora por categoría de gasto
 - 🧮 **Simulador de préstamos** sin necesidad de API
 - 📦 **Inventario y lista de compras** del hogar
-- 🔐 **RBAC multi-hogar**: roles y permisos por módulo (admin, house_admin, member)
+- 🔐 **RBAC multi-hogar**: roles y permisos por módulo (admin, house_admin, user, viewer)
 - 📱 **App móvil** (Android/iOS) con las pantallas core: login, deudas, compras, gastos
 
 ---
@@ -69,14 +69,14 @@ Mi Casa Pro
 | Fondo Emergencia | `/emergency-fund` | Calculadora con categorías de gasto |
 | Simulador | `/simulador` | Tabla de amortización sin API |
 | Inventario | `/inventory` | Stock del hogar |
-| Compras | `/purchases` | Listas de compras en CUP |
+| Compras | `/purchases` | Listas de compras multimoneda (totales convertidos a la moneda local) |
 
 ### Mobile (Android + iOS)
 | Pantalla | Descripción |
 |----------|-------------|
 | Login | Autenticación JWT |
 | Deudas | SectionList con swipe + FAB |
-| Lista de compras | Agregar productos con precio CUP antes de ir al mercado |
+| Lista de compras | Agregar productos multimoneda antes de ir al mercado (subtotales por moneda) |
 | Registro de gastos | Historial mensual por categoría |
 
 ---
@@ -97,7 +97,7 @@ Mi Casa Pro
 ```bash
 cd finanzas-app/backend
 npm install
-cp .env.example .env        # configurar DB_HOST, DB_PORT, JWT_SECRET, etc.
+cp .env.example .env        # configurar DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME, JWT_SECRET, etc.
 npm run start:dev
 # → http://localhost:3001/api/v1
 ```
@@ -115,16 +115,16 @@ npm run dev
 
 ### 3. Mobile — preview rápido con Expo Go
 
-**Sin compilar nada.** Instalá [Expo Go](https://expo.dev/go) en tu celular y:
+**Sin compilar nada.** Instala [Expo Go](https://expo.dev/go) en tu celular y:
 
 ```bash
 cd finanzas-app/mobile
 npm install
 npx expo start
-# Escaneá el QR con Expo Go
+# Escanea el QR con Expo Go
 ```
 
-> Para conectar al backend desde el celular físico cambiá `API_BASE_URL` en `src/config/api.ts` por la IP local de tu PC (ej: `http://192.168.1.10:3001/api/v1`). Para emulador Android usá `http://10.0.2.2:3001/api/v1`.
+> `API_BASE_URL` (`src/config/api.ts`) se lee de `EXPO_PUBLIC_API_URL`. Para conectar desde un celular físico define esa variable con la IP local de tu PC (ej: `http://192.168.1.10:3001/api/v1`). Sin ella se usa `http://10.0.2.2:3001/api/v1` (emulador Android).
 
 ---
 
@@ -144,7 +144,7 @@ cd finanzas-app/mobile
 eas build --platform android --profile preview
 ```
 
-EAS compila en la nube y te devuelve un link para descargar el `.apk`. Sin necesidad de Android Studio ni SDK local.
+EAS compila en la nube y devuelve un link para descargar el `.apk`. Sin necesidad de Android Studio ni SDK local.
 
 ### IPA iOS (para TestFlight o App Store)
 
@@ -184,12 +184,35 @@ eas build --platform ios --profile production
 ```env
 DB_HOST=localhost
 DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=tu_password
-DB_DATABASE=micasapro
+DB_USER=postgres
+DB_PASS=tu_password
+DB_NAME=micasapro
 JWT_SECRET=tu_jwt_secret_largo_y_seguro
 PORT=3001
+FRONTEND_URL=http://localhost:3000
+NODE_ENV=development
+APP_TIMEZONE=America/Havana
+TRUST_PROXY_HOPS=1
+SEED=false
+RESEND_API_KEY=
+RESEND_FROM=Mi Casa Pro <onboarding@resend.dev>
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_EMAIL=mailto:admin@mi-casa.app
 ```
+
+| Variable | Descripción |
+|----------|-------------|
+| `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME` | Conexión a PostgreSQL. En producción `DB_USER`, `DB_PASS` y `DB_NAME` son obligatorias |
+| `JWT_SECRET` | Secreto de firma de los tokens JWT |
+| `PORT` | Puerto HTTP (default `3001`) |
+| `FRONTEND_URL` | Origen permitido por CORS y base de los enlaces de invitación. Obligatoria en producción |
+| `NODE_ENV` | `production` activa SSL en la DB, desactiva `synchronize` y Swagger |
+| `APP_TIMEZONE` | Zona horaria para calcular "hoy" y los límites de mes (default `America/Havana`) |
+| `TRUST_PROXY_HOPS` | Saltos de proxy confiables para obtener la IP real (default `1`; `0` lo desactiva) |
+| `SEED` | `true` solo para crear los roles y permisos base en una DB vacía. Sin roles, el registro falla. Déjala sin definir o en `false` después |
+| `RESEND_API_KEY`, `RESEND_FROM` | Envío de emails (invitaciones, alertas y recordatorios a los administradores de la casa) vía Resend |
+| `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL` | Notificaciones push web |
 
 ### Frontend (`.env.local`)
 
@@ -197,18 +220,16 @@ PORT=3001
 NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
 ```
 
-### Mobile (`src/config/api.ts`)
+### Mobile
 
-```ts
-// Emulador Android
-export const API_BASE_URL = 'http://10.0.2.2:3001/api/v1';
+`src/config/api.ts` no tiene la URL escrita a mano: lee `EXPO_PUBLIC_API_URL` en tiempo de compilación (fallback `http://10.0.2.2:3001/api/v1`).
 
-// Celular físico (reemplazá con tu IP local)
-export const API_BASE_URL = 'http://192.168.1.10:3001/api/v1';
-
-// Producción
-export const API_BASE_URL = 'https://api.micasapro.com/api/v1';
+```env
+# Desarrollo local: finanzas-app/mobile/.env
+EXPO_PUBLIC_API_URL=http://192.168.1.10:3001/api/v1
 ```
+
+Para builds y updates de EAS se define en el entorno de EAS (`--environment preview`), no en el código.
 
 ---
 
@@ -225,10 +246,13 @@ Cada usuario pertenece a una casa (`House`). Los roles controlan el acceso por m
 | Rol | Acceso |
 |-----|--------|
 | `admin` | Todo el sistema, panel de administración |
-| `house_admin` | Gestión de miembros de la casa |
-| `member` | Acceso según permisos asignados por módulo |
+| `house_admin` | Administrador de la casa: gestiona miembros (invitaciones y roles) y monedas/tasas |
+| `user` | Miembro: CRUD completo (`view`, `create`, `edit`, `delete`) en todos los módulos |
+| `viewer` | Solo lectura |
 
-Los permisos se definen por módulo: `view`, `create`, `edit`, `delete`.
+Los permisos se definen por módulo: `view`, `create`, `edit`, `delete`. Solo los administradores de la casa invitan o gestionan miembros (y eligen su rol: `user` o `house_admin`) y administran monedas y tasas. Las invitaciones requieren un email válido; los emails no distinguen mayúsculas.
+
+Las tasas de cambio son **por casa** (no se comparten entre casas), deben ser mayores que 0 y cada casa tiene una única moneda local. Para usar "Hacer local" debe existir antes la tasa entre la moneda nueva y la local actual; al cambiarla se recalculan todas las tasas y los montos convertidos de los gastos existentes.
 
 ---
 
@@ -237,6 +261,7 @@ Los permisos se definen por módulo: `view`, `create`, `edit`, `delete`.
 **PMT — Cuota mensual de ahorro** (Metas):
 ```
 PMT = ((meta - presente*(1+r/12)^n) * (r/12)) / ((1+r/12)^n - 1)
+r = tasa% / 100      (la tasa anual se ingresa como porcentaje, de 0 a 100)
 ```
 
 **Normalización de periodicidad** (Presupuesto):
@@ -244,6 +269,13 @@ PMT = ((meta - presente*(1+r/12)^n) * (r/12)) / ((1+r/12)^n - 1)
 Mensual = monto × factor
 Diario×30 | Semanal×4 | Quincenal×2 | Mensual×1
 Bimestral÷2 | Trimestral÷3 | Cuatrimestral÷4 | Semestral÷6 | Anual÷12
+```
+
+**Estrategias de pago de deudas** (Payoff: avalancha y bola de nieve):
+```
+Presupuesto mensual fijo = suma de pagos mínimos + extra
+Rollover: al saldar una deuda, su mínimo pasa a la siguiente
+feasible = false si los pagos no cubren los intereses (sin tiempo total)
 ```
 
 **Patrimonio neto**:
@@ -265,14 +297,15 @@ El sistema usa **dos plataformas** porque el backend NestJS requiere un proceso 
 ### 1. Railway — Backend + Base de datos
 
 ```bash
-# 1. Crear cuenta en railway.app con GitHub
-# 2. New Project → Deploy from GitHub repo
+# 1. Crear cuenta en railway.app
+# 2. New Project → Empty service (no vinculado a GitHub)
 # 3. + New → Database → PostgreSQL
-# 4. Configurar el servicio backend:
-#    Root Directory:   finanzas-app/backend
-#    Build Command:    npm run build
-#    Start Command:    node dist/main
+# 4. Desplegar el backend desde la carpeta del servicio:
+cd finanzas-app/backend
+railway up
 ```
+
+> El servicio de Railway **no está vinculado a GitHub**: hacer push no despliega el backend; hay que ejecutar `railway up`. El contenedor (Dockerfile) ejecuta las migraciones al iniciar (`typeorm migration:run` y luego `node dist/main`), por lo que conviene **respaldar la base de datos antes** de cada despliegue (ver [Backups](#backups)).
 
 Variables de entorno en Railway:
 
@@ -286,6 +319,10 @@ DB_PASS=${{Postgres.PGPASSWORD}}
 DB_NAME=${{Postgres.PGDATABASE}}
 JWT_SECRET=secret-largo-y-aleatorio
 FRONTEND_URL=https://tu-app.vercel.app
+APP_TIMEZONE=America/Havana
+TRUST_PROXY_HOPS=1
+RESEND_API_KEY=...
+# SEED=true solo en el primer arranque con la DB vacía (crea roles y permisos base)
 ```
 
 Railway genera automáticamente la URL pública del backend.
@@ -299,22 +336,50 @@ Railway genera automáticamente la URL pública del backend.
 #    Root Directory: finanzas-app/frontend
 ```
 
+Vercel despliega el frontend en cada push a `main`.
+
 Variable de entorno en Vercel:
 
 ```env
 NEXT_PUBLIC_API_URL=https://tu-backend.up.railway.app/api/v1
 ```
 
-Después del deploy, volvé a Railway y actualizá `FRONTEND_URL` con la URL de Vercel.
+Después del deploy, vuelve a Railway y actualiza `FRONTEND_URL` con la URL de Vercel.
 
 ### 3. Mobile — APK con backend en producción
 
+`EXPO_PUBLIC_API_URL` se define en el entorno de EAS (`preview`), no en el código:
+
 ```bash
 cd finanzas-app/mobile
-# Actualizar .env con la URL de Railway
-echo "EXPO_PUBLIC_API_URL=https://tu-backend.up.railway.app/api/v1" > .env
 eas build --platform android --profile preview
 ```
+
+Los cambios de JavaScript se publican por OTA (canal `preview`), sin generar un APK nuevo:
+
+```bash
+npx eas-cli update --branch preview --environment preview
+```
+
+### Backups
+
+Antes de desplegar cambios con migraciones, respalda la base de datos. Postgres no tiene URL pública: el dump se ejecuta dentro del servicio vía SSH y se descarga por stdout.
+
+```bash
+# 1. Llave SSH registrada en Railway (una sola vez)
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_railway -N ""
+railway ssh keys add --key ~/.ssh/id_ed25519_railway.pub --name backup
+
+# 2. Config SSH para el servicio Postgres y host key de Railway
+railway ssh config -s Postgres --path /tmp/rw_ssh_config --alias mcpg -i ~/.ssh/id_ed25519_railway
+ssh-keyscan -t ed25519 ssh.railway.com > /tmp/rw_known_hosts
+
+# 3. Dump en formato custom, guardado en tu máquina
+ssh -F /tmp/rw_ssh_config -o UserKnownHostsFile=/tmp/rw_known_hosts mcpg \
+  'pg_dump -U "$PGUSER" -d "$PGDATABASE" -Fc --no-owner' > prod-$(date +%Y%m%d-%H%M%S).dump
+```
+
+Restaurar en local para ensayar migraciones: `pg_restore -d <db> --no-owner prod-XXXX.dump` (usa la misma versión mayor de Postgres que producción, 18).
 
 ---
 

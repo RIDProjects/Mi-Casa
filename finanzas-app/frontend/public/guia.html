@@ -517,7 +517,7 @@
 <div class="index-page">
   <div class="section-label">Contenido</div>
   <h1 class="page-title">Índice de Módulos</h1>
-  <p class="page-subtitle">19 módulos integrados para el control total de las finanzas del hogar</p>
+  <p class="page-subtitle">20 módulos integrados para el control total de las finanzas del hogar</p>
 
   <div class="index-grid">
     <div class="index-item">
@@ -604,7 +604,7 @@
       <div class="index-icon c-rose">🛒</div>
       <div class="index-item-text">
         <div class="index-item-name">Lista de Compras</div>
-        <div class="index-item-desc">Plan de compra con precios en CUP</div>
+        <div class="index-item-desc">Plan de compra multimoneda</div>
       </div>
       <div class="index-page-num">13</div>
     </div>
@@ -671,6 +671,32 @@
         <div class="index-item-desc">Gestión de usuarios, roles e invitaciones</div>
       </div>
       <div class="index-page-num">21</div>
+    </div>
+    <div class="index-item">
+      <div class="index-icon c-teal">💱</div>
+      <div class="index-item-text">
+        <div class="index-item-name">Monedas</div>
+        <div class="index-item-desc">Moneda local y tasas de cambio de la casa</div>
+      </div>
+      <div class="index-page-num">22</div>
+    </div>
+  </div>
+
+  <div class="tip-box tip-blue" style="margin-top:20px">
+    <div class="tip-icon">🆕</div>
+    <div>
+      <div class="tip-title text-blue">Novedades</div>
+      <div class="tip-text" style="color:#1e40af">
+        <ul style="margin:4px 0 0 16px;line-height:1.55">
+          <li><strong>Monedas por casa:</strong> cada casa tiene sus propias tasas de cambio y una única moneda local (módulo Monedas).</li>
+          <li><strong>Gastos y compras:</strong> la moneda por defecto es la moneda local; los totales de mercado se convierten a ella.</li>
+          <li><strong>Vencimientos y alertas:</strong> fechas en tu calendario local, pagos de los días 29 al 31 ajustados y avisos por email solo a los administradores.</li>
+          <li><strong>Tasas de interés:</strong> en Metas y Tarjetas se ingresan como porcentaje (de 0 a 100).</li>
+          <li><strong>Estrategia de Pago:</strong> avalancha y bola de nieve reutilizan el pago mínimo de cada deuda saldada.</li>
+          <li><strong>Permisos:</strong> los miembros pueden ver, crear, editar y eliminar en todos los módulos; solo los administradores gestionan miembros y monedas.</li>
+          <li><strong>Cuenta:</strong> el email no distingue mayúsculas de minúsculas; al cerrar sesión, el siguiente usuario del dispositivo no ve datos del anterior.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
@@ -944,7 +970,7 @@
       <div class="card c-green">
         <span class="card-icon">⬆️</span>
         <div class="card-title">Ingresos</div>
-        <div class="card-text">Registrá cada ingreso real recibido en el mes</div>
+        <div class="card-text">Registra cada ingreso real recibido en el mes</div>
       </div>
       <div class="card c-red">
         <span class="card-icon">⬇️</span>
@@ -954,7 +980,7 @@
       <div class="card c-amber">
         <span class="card-icon">🗓️</span>
         <div class="card-title">Navegación mensual</div>
-        <div class="card-text">Navegá mes a mes para ver el historial completo</div>
+        <div class="card-text">Navega mes a mes para ver el historial completo</div>
       </div>
       <div class="card c-blue">
         <span class="card-icon">📊</span>
@@ -969,7 +995,7 @@
         <table class="feature-table">
           <thead><tr><th>Presupuesto</th><th>Transacciones</th></tr></thead>
           <tbody>
-            <tr><td>Lo que <strong>planificás</strong> gastar</td><td>Lo que <strong>realmente</strong> gastaste</td></tr>
+            <tr><td>Lo que <strong>planificas</strong> gastar</td><td>Lo que <strong>realmente</strong> gastaste</td></tr>
             <tr><td>Anual / mensual estimado</td><td>Día a día, real</td></tr>
             <tr><td>Categorías de planificación</td><td>Movimientos individuales</td></tr>
             <tr><td>Se configura una vez</td><td>Se actualiza todo el mes</td></tr>
@@ -980,7 +1006,15 @@
           <div class="tip-icon">📝</div>
           <div>
             <div class="tip-title text-amber">Registro diario</div>
-            <div class="tip-text" style="color:#92400e">Registrá cada transacción el mismo día que ocurre. Al final del mes, comparar el presupuesto vs las transacciones reales es la forma más poderosa de mejorar tus finanzas.</div>
+            <div class="tip-text" style="color:#92400e">Registra cada transacción el mismo día que ocurre. Al final del mes, comparar el presupuesto vs las transacciones reales es la forma más poderosa de mejorar tus finanzas.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-amber" style="margin-top:16px">
+          <div class="tip-icon">📄</div>
+          <div>
+            <div class="tip-title text-amber">Importar y exportar CSV</div>
+            <div class="tip-text" style="color:#92400e">Puedes exportar tus transacciones a un archivo CSV e importarlas desde uno. Para importar debes seleccionar un archivo. Los conceptos que contienen comas o comillas se exportan e importan correctamente.</div>
           </div>
         </div>
       </div>
@@ -992,28 +1026,28 @@
             <div class="step-num num-amber">1</div>
             <div class="step-content">
               <div class="step-title">Tipo: Ingreso o Egreso</div>
-              <div class="step-desc">Seleccioná si el movimiento es dinero que entra o sale.</div>
+              <div class="step-desc">Selecciona si el movimiento es dinero que entra o sale.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-amber">2</div>
             <div class="step-content">
               <div class="step-title">Monto y fecha</div>
-              <div class="step-desc">Ingresá el monto exacto y la fecha del movimiento.</div>
+              <div class="step-desc">Ingresa el monto exacto y la fecha del movimiento.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-amber">3</div>
             <div class="step-content">
               <div class="step-title">Categoría</div>
-              <div class="step-desc">Asignala a una categoría del presupuesto para comparar plan vs real.</div>
+              <div class="step-desc">Asígnala a una categoría del presupuesto para comparar plan vs real.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-amber">4</div>
             <div class="step-content">
               <div class="step-title">Descripción opcional</div>
-              <div class="step-desc">Agregá una nota para recordar el detalle del movimiento.</div>
+              <div class="step-desc">Agrega una nota para recordar el detalle del movimiento.</div>
             </div>
           </div>
         </div>
@@ -1067,28 +1101,28 @@
             <div class="step-num num-blue">2</div>
             <div class="step-content">
               <div class="step-title">Monto objetivo</div>
-              <div class="step-desc">¿Cuánto dinero necesitás alcanzar?</div>
+              <div class="step-desc">¿Cuánto dinero necesitas alcanzar?</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-blue">3</div>
             <div class="step-content">
               <div class="step-title">Monto actual ahorrado</div>
-              <div class="step-desc">Lo que ya tenés acumulado hacia esa meta.</div>
+              <div class="step-desc">Lo que ya tienes acumulado hacia esa meta.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-blue">4</div>
             <div class="step-content">
               <div class="step-title">Fecha objetivo</div>
-              <div class="step-desc">¿Para cuándo necesitás el dinero? El sistema calcula cuántos meses quedan.</div>
+              <div class="step-desc">¿Para cuándo necesitas el dinero? El sistema calcula cuántos meses quedan.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-blue">5</div>
             <div class="step-content">
-              <div class="step-title">Tasa de interés (opcional)</div>
-              <div class="step-desc">Si usás una cuenta de ahorro con rendimiento, el PMT lo considera.</div>
+              <div class="step-title">Tasa de interés anual (opcional)</div>
+              <div class="step-desc">Se ingresa como porcentaje, de 0 a 100 (ej: 24 = 24 % anual). Si usas una cuenta de ahorro con rendimiento, la cuota mensual lo considera.</div>
             </div>
           </div>
         </div>
@@ -1104,7 +1138,7 @@
           <span class="formula-comment">// Donde:</span><br>
           <span class="formula-value">meta</span>     = monto objetivo<br>
           <span class="formula-value">presente</span> = ahorro actual<br>
-          <span class="formula-value">r</span>        = tasa anual (ej: 0.05)<br>
+          <span class="formula-value">r</span>        = tasa anual en decimal (24 % → 0.24)<br>
           <span class="formula-value">n</span>        = meses restantes
         </div>
 
@@ -1112,7 +1146,7 @@
           <div class="tip-icon">📊</div>
           <div>
             <div class="tip-title text-blue">Barra de progreso</div>
-            <div class="tip-text" style="color:#1e40af">Cada meta muestra una barra de progreso visual. Actualizá el "monto actual" cada mes cuando deposites en tu cuenta de ahorro.</div>
+            <div class="tip-text" style="color:#1e40af">Cada meta muestra una barra de progreso visual. Actualiza el "monto actual" cada mes cuando deposites en tu cuenta de ahorro.</div>
           </div>
         </div>
       </div>
@@ -1254,12 +1288,12 @@
           <tbody>
             <tr>
               <td><span class="tag badge-green">✅ Completo</span></td>
-              <td>Pagás el saldo total</td>
+              <td>Pagas el saldo total</td>
               <td>Sin intereses</td>
             </tr>
             <tr>
               <td><span class="tag badge-blue">💡 Parcial</span></td>
-              <td>Pagás más del mínimo</td>
+              <td>Pagas más del mínimo</td>
               <td>Intereses parciales</td>
             </tr>
             <tr>
@@ -1282,29 +1316,29 @@
           <div class="step">
             <div class="step-num num-purple">1</div>
             <div class="step-content">
-              <div class="step-title">Registrá cada tarjeta</div>
+              <div class="step-title">Registra cada tarjeta</div>
               <div class="step-desc">Nombre del banco, límite total y fecha de corte.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-purple">2</div>
             <div class="step-content">
-              <div class="step-title">Actualizá el saldo mensual</div>
+              <div class="step-title">Actualiza el saldo mensual</div>
               <div class="step-desc">Al cerrar el mes, ingresá el saldo real de cada tarjeta.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-purple">3</div>
             <div class="step-content">
-              <div class="step-title">Marcá el estado de pago</div>
+              <div class="step-title">Marca el estado de pago</div>
               <div class="step-desc">¿Pagaste todo? ¿Solo el mínimo? El sistema te advierte el impacto.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-purple">4</div>
             <div class="step-content">
-              <div class="step-title">Monitoreá la utilización</div>
-              <div class="step-desc">Mantené la utilización por debajo del 30% para cuidar tu score crediticio.</div>
+              <div class="step-title">Monitorea la utilización</div>
+              <div class="step-desc">Mantén la utilización por debajo del 30% para cuidar tu score crediticio.</div>
             </div>
           </div>
         </div>
@@ -1314,6 +1348,14 @@
           <div>
             <div class="tip-title text-purple">Impacto en Patrimonio</div>
             <div class="tip-text" style="color:#5b21b6">Los saldos de tarjetas se suman a los pasivos del módulo Patrimonio Neto automáticamente.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-purple" style="margin-top:12px">
+          <div class="tip-icon">%</div>
+          <div>
+            <div class="tip-title text-purple">Tasa anual</div>
+            <div class="tip-text" style="color:#5b21b6">La tasa de interés anual se ingresa como porcentaje, de 0 a 100 (ej: 24 = 24 %).</div>
           </div>
         </div>
       </div>
@@ -1698,7 +1740,7 @@
       <span>🛒</span> Módulo 11
     </div>
     <h1 class="module-h1 text-rose">Lista de Compras</h1>
-    <p class="module-tagline">Planificación de compras del hogar con precios en CUP antes de ir al mercado</p>
+    <p class="module-tagline">Planificación de compras del hogar con precios en la moneda de cada producto antes de ir al mercado</p>
   </div>
 
   <div class="module-body">
@@ -1706,17 +1748,17 @@
       <div class="card c-rose">
         <span class="card-icon">📋</span>
         <div class="card-title">Listas por fecha</div>
-        <div class="card-text">Creá una lista por cada visita al mercado con fecha y descripción</div>
+        <div class="card-text">Crea una lista por cada visita al mercado con fecha y descripción</div>
       </div>
       <div class="card c-rose">
         <span class="card-icon">💰</span>
-        <div class="card-title">Precios en CUP</div>
-        <div class="card-text">Registrá el precio de cada producto para saber cuánto llevar antes de salir</div>
+        <div class="card-title">Precios multimoneda</div>
+        <div class="card-text">Registra el precio de cada producto para saber cuánto llevar antes de salir</div>
       </div>
       <div class="card c-rose">
         <span class="card-icon">✅</span>
         <div class="card-title">Marcar comprado</div>
-        <div class="card-text">Tachá cada ítem mientras comprás. El total se actualiza en tiempo real</div>
+        <div class="card-text">Tacha cada ítem mientras compras. El total se actualiza en tiempo real</div>
       </div>
     </div>
 
@@ -1735,35 +1777,35 @@
             <div class="step-num num-rose">2</div>
             <div class="step-content">
               <div class="step-title">Agregar productos</div>
-              <div class="step-desc">Nombre, cantidad, precio estimado en CUP. El total se calcula solo.</div>
+              <div class="step-desc">Nombre, cantidad, precio estimado y moneda (por defecto, la moneda local de la casa). El total se calcula solo.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-rose">3</div>
             <div class="step-content">
               <div class="step-title">Ir al mercado con el celular</div>
-              <div class="step-desc">Usá la app móvil para marcar cada ítem comprado mientras comprás.</div>
+              <div class="step-desc">Usa la app móvil para marcar cada ítem comprado mientras compras.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-rose">4</div>
             <div class="step-content">
               <div class="step-title">Actualizar precios reales</div>
-              <div class="step-desc">Modificá el precio si difiere del estimado. El historial queda guardado.</div>
+              <div class="step-desc">Modifica el precio si difiere del estimado. El historial queda guardado.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-rose">5</div>
             <div class="step-content">
               <div class="step-title">Historial de compras</div>
-              <div class="step-desc">Navegá mes a mes para ver en qué gastaste en el mercado.</div>
+              <div class="step-desc">Navega mes a mes para ver en qué gastaste en el mercado.</div>
             </div>
           </div>
         </div>
       </div>
 
       <div>
-        <div class="section-title"><span style="color:#e11d48">▶</span> Función especial: Plan CUP</div>
+        <div class="section-title"><span style="color:#e11d48">▶</span> Función especial: Plan de compra</div>
         <div class="cards-row cards-3" style="margin-top:0">
           <div class="card c-rose" style="padding:14px">
             <div class="card-title">Auto-precio</div>
@@ -1771,7 +1813,7 @@
           </div>
           <div class="card c-rose" style="padding:14px">
             <div class="card-title">Total en tiempo real</div>
-            <div class="card-text" style="font-size:8pt">Ves cuánto llevás gastado vs el presupuesto de la lista</div>
+            <div class="card-text" style="font-size:8pt">Ves cuánto llevas gastado vs el presupuesto de la lista</div>
           </div>
           <div class="card c-rose" style="padding:14px">
             <div class="card-title">Pendientes</div>
@@ -1783,7 +1825,15 @@
           <div class="tip-icon">📱</div>
           <div>
             <div class="tip-title text-rose">Disponible en la app móvil</div>
-            <div class="tip-text" style="color:#9f1239">Este módulo también está disponible en la app Android/iOS para usarlo en el supermercado sin necesidad de una computadora.</div>
+            <div class="tip-text" style="color:#9f1239">Este módulo también está disponible en la app Android/iOS para usarlo en el supermercado sin necesidad de una computadora. La lista móvil muestra subtotales por moneda.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-blue" style="margin-top:14px">
+          <div class="tip-icon">💱</div>
+          <div>
+            <div class="tip-title text-blue">Totales en moneda local</div>
+            <div class="tip-text" style="color:#1e40af">El total de las compras de mercado se convierte a la moneda local de la casa. Los ítems en una moneda sin tasa configurada se excluyen del total y la app lo indica con un aviso; configura la tasa en el módulo Monedas.</div>
           </div>
         </div>
       </div>
@@ -2008,12 +2058,12 @@
       <div class="card c-blue">
         <span class="card-icon">🍽️</span>
         <div class="card-title">Salidas y otros gastos</div>
-        <div class="card-text">Cargá manualmente cenas, transporte, salud y demás gastos diarios</div>
+        <div class="card-text">Carga manualmente cenas, transporte, salud y demás gastos diarios</div>
       </div>
       <div class="card c-blue">
         <span class="card-icon">📅</span>
         <div class="card-title">Navegador mensual</div>
-        <div class="card-text">Recorré cualquier mes con las flechas anterior/siguiente</div>
+        <div class="card-text">Recorre cualquier mes con las flechas anterior/siguiente</div>
       </div>
       <div class="card c-blue">
         <span class="card-icon">📊</span>
@@ -2038,21 +2088,21 @@
             <div class="step-num num-blue">2</div>
             <div class="step-content">
               <div class="step-title">Salidas y Otros Gastos</div>
-              <div class="step-desc">Con "Nueva salida" cargás cualquier otro gasto del día: fecha, descripción, categoría, monto en CUP y lugar (opcional).</div>
+              <div class="step-desc">Con "Nueva salida" cargas cualquier otro gasto del día: fecha, descripción, categoría, monto, moneda y lugar (opcional).</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-blue">3</div>
             <div class="step-content">
-              <div class="step-title">Editá o eliminá</div>
+              <div class="step-title">Edita o elimina</div>
               <div class="step-desc">Cada salida cargada manualmente se puede editar o borrar desde la misma tabla.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-blue">4</div>
             <div class="step-content">
-              <div class="step-title">Navegá por mes</div>
-              <div class="step-desc">Usá las flechas para moverte entre meses y ver el historial completo del hogar.</div>
+              <div class="step-title">Navega por mes</div>
+              <div class="step-desc">Usa las flechas para moverte entre meses y ver el historial completo del hogar.</div>
             </div>
           </div>
         </div>
@@ -2066,7 +2116,8 @@
             <tr><td>Fecha</td><td>Día en que ocurrió el gasto</td></tr>
             <tr><td>Descripción</td><td>Qué fue el gasto (obligatorio)</td></tr>
             <tr><td>Categoría</td><td>Comida, Transporte, Hogar, Salud, Ocio, Salidas, Shopper u Otros</td></tr>
-            <tr><td>Monto CUP</td><td>Valor del gasto en pesos cubanos (obligatorio)</td></tr>
+            <tr><td>Monto</td><td>Valor del gasto (obligatorio)</td></tr>
+            <tr><td>Moneda</td><td>Por defecto, la moneda local de la casa</td></tr>
             <tr><td>Lugar</td><td>Dónde fue, opcional</td></tr>
           </tbody>
         </table>
@@ -2075,7 +2126,15 @@
           <div class="tip-icon">💡</div>
           <div>
             <div class="tip-title text-blue">Compras vs. salidas</div>
-            <div class="tip-text" style="color:#1e40af">Las Compras de Mercado no se editan acá: si algo está mal, corregilo desde Lista de Compras. Este módulo solo permite cargar/editar las Salidas y Otros Gastos.</div>
+            <div class="tip-text" style="color:#1e40af">Las Compras de Mercado no se editan aquí: si algo está mal, corrígelo desde Lista de Compras. Este módulo solo permite cargar/editar las Salidas y Otros Gastos.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-teal" style="margin-top:14px">
+          <div class="tip-icon">💱</div>
+          <div>
+            <div class="tip-title text-teal">Totales y monedas</div>
+            <div class="tip-text" style="color:#115e59">Los totales se muestran en la moneda local. Si falta la tasa de cambio de una moneda, el monto se muestra en su moneda original en lugar de una conversión incorrecta, y los ítems de mercado sin tasa se excluyen del total con un aviso.</div>
           </div>
         </div>
       </div>
@@ -2188,7 +2247,7 @@
       <span>⛄</span> Módulo 16
     </div>
     <h1 class="module-h1 text-purple">Estrategia de Pago de Deudas</h1>
-    <p class="module-tagline">Compará tres estrategias de payoff y simulá el ahorro de intereses con pagos extra</p>
+    <p class="module-tagline">Compara tres estrategias de payoff y simulá el ahorro de intereses con pagos extra</p>
   </div>
 
   <div class="module-body">
@@ -2196,17 +2255,17 @@
       <div class="card c-purple">
         <span class="card-icon">📉</span>
         <div class="card-title">Solo mínimos</div>
-        <div class="card-text">Línea base: cuánto tiempo tardás y cuánto pagás de interés si solo abonás el mínimo</div>
+        <div class="card-text">Línea base: cuánto tiempo tardas y cuánto pagas de interés si solo abonas el mínimo</div>
       </div>
       <div class="card c-purple">
         <span class="card-icon">🧊</span>
         <div class="card-title">Avalancha</div>
-        <div class="card-text">Pagás primero la deuda con mayor tasa de interés. Minimiza el costo total de intereses</div>
+        <div class="card-text">Pagas primero la deuda con mayor tasa de interés. Minimiza el costo total de intereses</div>
       </div>
       <div class="card c-purple">
         <span class="card-icon">⛄</span>
         <div class="card-title">Bola de nieve</div>
-        <div class="card-text">Pagás primero la deuda con menor saldo. Genera momentum psicológico rápido</div>
+        <div class="card-text">Pagas primero la deuda con menor saldo. Genera momentum psicológico rápido</div>
       </div>
     </div>
 
@@ -2224,22 +2283,22 @@
           <div class="step">
             <div class="step-num num-purple">2</div>
             <div class="step-content">
-              <div class="step-title">Ingresá un pago extra mensual</div>
-              <div class="step-desc">Definí cuánto más podés pagar por mes sobre los mínimos obligatorios.</div>
+              <div class="step-title">Ingresa un pago extra mensual</div>
+              <div class="step-desc">Define cuánto más puedes pagar por mes sobre los mínimos obligatorios.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-purple">3</div>
             <div class="step-content">
-              <div class="step-title">Comparás las 3 estrategias</div>
+              <div class="step-title">Comparas las 3 estrategias</div>
               <div class="step-desc">Meses totales, interés pagado y ahorro vs solo mínimos para cada enfoque.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-purple">4</div>
             <div class="step-content">
-              <div class="step-title">Elegís la que mejor se adapta</div>
-              <div class="step-desc">Avalancha = mínimo interés. Bola de nieve = motivación rápida. Elegí según tu perfil.</div>
+              <div class="step-title">Eliges la que mejor se adapta</div>
+              <div class="step-desc">Avalancha = mínimo interés. Bola de nieve = motivación rápida. Elige según tu perfil.</div>
             </div>
           </div>
         </div>
@@ -2269,7 +2328,15 @@
           <div class="tip-icon">🎯</div>
           <div>
             <div class="tip-title text-purple">Recomendación</div>
-            <div class="tip-text" style="color:#5b21b6">Si tenés deudas con tasas muy distintas (ej. tarjeta al 80% y préstamo al 15%), la estrategia Avalancha te ahorra significativamente más interés. La Bola de nieve es mejor si necesitás victorias rápidas para mantener la motivación.</div>
+            <div class="tip-text" style="color:#5b21b6">Si tienes deudas con tasas muy distintas (ej. tarjeta al 80% y préstamo al 15%), la estrategia Avalancha te ahorra significativamente más interés. La Bola de nieve es mejor si necesitas victorias rápidas para mantener la motivación.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-purple" style="margin-top:14px">
+          <div class="tip-icon">🔁</div>
+          <div>
+            <div class="tip-title text-purple">Reutilización del pago mínimo</div>
+            <div class="tip-text" style="color:#5b21b6">En Avalancha y Bola de nieve, el pago mínimo de cada deuda saldada se suma al pago de la siguiente. Si los pagos no cubren los intereses, la estrategia muestra una advertencia en lugar de un tiempo total.</div>
           </div>
         </div>
       </div>
@@ -2324,7 +2391,7 @@
           <div class="tip-icon">🗓️</div>
           <div>
             <div class="tip-title text-red">Hábito semanal</div>
-            <div class="tip-text" style="color:#991b1b">Revisá los "próximos 7 días" cada lunes. Eso te da tiempo suficiente para mover fondos si lo necesitás antes de que venza un pago.</div>
+            <div class="tip-text" style="color:#991b1b">Revisa los "próximos 7 días" cada lunes. Eso te da tiempo suficiente para mover fondos si lo necesitas antes de que venza un pago.</div>
           </div>
         </div>
       </div>
@@ -2357,6 +2424,14 @@
           <div>
             <div class="tip-title text-blue">Vista consolidada</div>
             <div class="tip-text" style="color:#1e40af">A diferencia de ver cada módulo por separado (Tarjetas, Créditos, Cuotas), Próximos Vencimientos los une en un solo lugar ordenados por fecha. Es la mejor pantalla para la gestión diaria de pagos.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-amber" style="margin-top:14px">
+          <div class="tip-icon">📆</div>
+          <div>
+            <div class="tip-title text-amber">Fechas y recordatorios</div>
+            <div class="tip-text" style="color:#92400e">Las fechas se muestran en tu calendario local y los pagos que vencen hoy se incluyen en la lista. Si un pago cae los días 29, 30 o 31, en los meses más cortos se traslada al último día del mes. Los recordatorios se envían por email a los administradores de la casa.</div>
           </div>
         </div>
       </div>
@@ -2460,8 +2535,16 @@
         <div class="tip-box" style="background:#fff1f2;border:1.5px solid #fecdd3;margin-top:16px">
           <div class="tip-icon">🔔</div>
           <div>
-            <div class="tip-title text-rose">Activá el permiso del navegador</div>
+            <div class="tip-title text-rose">Activa el permiso del navegador</div>
             <div class="tip-text" style="color:#9f1239">Las notificaciones push necesitan que aceptes el permiso del navegador una sola vez. Después vas a recibir avisos de presupuesto y vencimientos aunque no tengas la app abierta.</div>
+          </div>
+        </div>
+
+        <div class="tip-box" style="background:#fff1f2;border:1.5px solid #fecdd3;margin-top:14px">
+          <div class="tip-icon">✉️</div>
+          <div>
+            <div class="tip-title text-rose">Alertas por email</div>
+            <div class="tip-text" style="color:#9f1239">Las alertas de presupuesto excedido y de vencimientos se envían por email únicamente a los administradores de la casa, una sola vez por alerta.</div>
           </div>
         </div>
       </div>
@@ -2485,22 +2568,22 @@
       <div class="card c-green">
         <span class="card-icon">✉️</span>
         <div class="card-title">Invitar por email</div>
-        <div class="card-text">Sumá un miembro nuevo indicando email y rol</div>
+        <div class="card-text">Suma un miembro nuevo indicando un email válido y su rol</div>
       </div>
       <div class="card c-green">
         <span class="card-icon">➕</span>
         <div class="card-title">Agregar usuario existente</div>
-        <div class="card-text">Buscá por email entre usuarios ya registrados en el sistema</div>
+        <div class="card-text">Busca por email entre usuarios ya registrados en el sistema</div>
       </div>
       <div class="card c-green">
         <span class="card-icon">🟢</span>
         <div class="card-title">Activar / Desactivar</div>
-        <div class="card-text">Suspendé el acceso de un miembro sin borrarlo del hogar</div>
+        <div class="card-text">Suspende el acceso de un miembro sin borrarlo del hogar</div>
       </div>
       <div class="card c-green">
         <span class="card-icon">🗑️</span>
         <div class="card-title">Eliminar del hogar</div>
-        <div class="card-text">Sacá definitivamente a un usuario del hogar</div>
+        <div class="card-text">Saca definitivamente a un usuario del hogar</div>
       </div>
     </div>
 
@@ -2513,14 +2596,14 @@
             <div class="step-num num-green">1</div>
             <div class="step-content">
               <div class="step-title">Invitar por email</div>
-              <div class="step-desc">Ingresá el email y elegí un rol (Miembro, Administrador o Solo lectura) para invitar a alguien nuevo.</div>
+              <div class="step-desc">Ingresa un email válido y elige un rol (Miembro o Administrador) para invitar a alguien nuevo. Solo los administradores pueden invitar.</div>
             </div>
           </div>
           <div class="step">
             <div class="step-num num-green">2</div>
             <div class="step-content">
               <div class="step-title">Agregar usuario</div>
-              <div class="step-desc">Buscá por email a un usuario que ya existe en el sistema y sumalo directamente al hogar.</div>
+              <div class="step-desc">Busca por email a un usuario que ya existe en el sistema y súmalo directamente al hogar.</div>
             </div>
           </div>
           <div class="step">
@@ -2545,9 +2628,8 @@
         <table class="feature-table">
           <thead><tr><th>Rol</th><th>Alcance</th></tr></thead>
           <tbody>
-            <tr><td>Miembro</td><td>Uso normal de los módulos del hogar</td></tr>
-            <tr><td>Administrador</td><td>Gestión completa, no puede ser desactivado por otros</td></tr>
-            <tr><td>Solo lectura</td><td>Consulta la información sin poder modificarla</td></tr>
+            <tr><td>Miembro</td><td>Ver, crear, editar y eliminar en todos los módulos del hogar</td></tr>
+            <tr><td>Administrador</td><td>Todo lo anterior, más gestión de miembros, roles y monedas; no puede ser desactivado por otros</td></tr>
           </tbody>
         </table>
 
@@ -2556,6 +2638,102 @@
           <div>
             <div class="tip-title text-green">Los admins están protegidos</div>
             <div class="tip-text" style="color:#166534">Los miembros con rol admin, owner o superadmin no muestran los botones de activar/desactivar ni eliminar, para evitar que el hogar se quede sin nadie a cargo.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-blue" style="margin-top:16px">
+          <div class="tip-icon">ℹ️</div>
+          <div>
+            <div class="tip-title text-blue">Sin casa activa</div>
+            <div class="tip-text" style="color:#1e40af">Si tu usuario no pertenece a ninguna casa activa, la app muestra el mensaje «No tienes una casa activa…». Pide a un administrador que te invite.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════ 20 MONEDAS -->
+<div class="module-page">
+  <div class="module-header">
+    <div class="module-badge badge-teal">
+      <span>💱</span> Módulo 20
+    </div>
+    <h1 class="module-h1 text-teal">Monedas</h1>
+    <p class="module-tagline">Moneda local y tasas de cambio propias de cada casa</p>
+  </div>
+
+  <div class="module-body">
+    <div class="cards-row cards-3" style="margin-bottom:20px">
+      <div class="card c-teal">
+        <span class="card-icon">🏠</span>
+        <div class="card-title">Tasas por casa</div>
+        <div class="card-text">Cada casa tiene sus propias tasas de cambio; no se comparten con otras casas</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">📍</span>
+        <div class="card-title">Una moneda local</div>
+        <div class="card-text">Solo puede haber una moneda local por casa; es la base de todos los totales</div>
+      </div>
+      <div class="card c-teal">
+        <span class="card-icon">🛡️</span>
+        <div class="card-title">Solo administradores</div>
+        <div class="card-text">Únicamente los administradores de la casa gestionan monedas y tasas</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="section-title"><span style="color:#0d9488">▶</span> Cómo configurarlo</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num num-teal">1</div>
+            <div class="step-content">
+              <div class="step-title">Abre Configuración → Monedas</div>
+              <div class="step-desc">Se encuentra en el menú lateral, junto a Configuración.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">2</div>
+            <div class="step-content">
+              <div class="step-title">Define la tasa de cada moneda</div>
+              <div class="step-desc">La tasa debe ser mayor que 0. Sin tasa, los montos de esa moneda no se convierten.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">3</div>
+            <div class="step-content">
+              <div class="step-title">Cambia la moneda local con «Hacer local»</div>
+              <div class="step-desc">Antes debe estar configurada la tasa entre la nueva moneda y la local actual; si no, la app muestra un mensaje que la solicita.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num num-teal">4</div>
+            <div class="step-content">
+              <div class="step-title">Recálculo automático</div>
+              <div class="step-desc">Al cambiar la moneda local, la app recalcula todas las tasas y los montos convertidos de los gastos existentes del hogar.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title"><span style="color:#0d9488">▶</span> Qué ocurre sin tasa</div>
+        <table class="feature-table">
+          <thead><tr><th>Situación</th><th>Resultado</th></tr></thead>
+          <tbody>
+            <tr><td>Falta la tasa de una moneda</td><td>El monto se muestra en su moneda original, sin conversión incorrecta</td></tr>
+            <tr><td>Compra de mercado en moneda sin tasa</td><td>Se excluye del total, con un aviso</td></tr>
+            <tr><td>Gasto nuevo</td><td>Usa la moneda local de la casa por defecto</td></tr>
+          </tbody>
+        </table>
+
+        <div class="tip-box tip-teal" style="margin-top:14px">
+          <div class="tip-icon">💡</div>
+          <div>
+            <div class="tip-title text-teal">Moneda al registrarte</div>
+            <div class="tip-text" style="color:#115e59">La moneda local que eliges al crear tu cuenta se conserva y debe ser una de las monedas soportadas.</div>
           </div>
         </div>
       </div>
@@ -2572,7 +2750,7 @@
 
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;max-width:500px;margin:0 auto 40px">
     <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px">
-      <div style="font-size:20pt;margin-bottom:8px">19</div>
+      <div style="font-size:20pt;margin-bottom:8px">20</div>
       <div style="font-size:8.5pt;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.5px;text-transform:uppercase">Módulos</div>
     </div>
     <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:16px">
@@ -2592,7 +2770,7 @@
 // Auto-print hint
 window.addEventListener('load', () => {
   const hint = document.createElement('div');
-  hint.innerHTML = '📄 Presioná <strong>Ctrl+P</strong> (o Cmd+P en Mac) → Guardar como PDF para exportar esta guía';
+  hint.innerHTML = '📄 Presiona <strong>Ctrl+P</strong> (o Cmd+P en Mac) → Guardar como PDF para exportar esta guía';
   hint.style.cssText = `
     position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
     background:#1e293b;color:#f1f5f9;padding:12px 24px;border-radius:10px;
