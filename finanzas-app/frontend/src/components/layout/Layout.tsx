@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useRef } from 'react';
 import Sidebar from './Sidebar';
 import { useAuthStore } from '../../store/auth.store';
 import { useRouter } from 'next/router';
@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { enhanceTables } from '../../lib/tableEnhancer';
+import { revealOnScroll } from '../../lib/scrollReveal';
 
 /**
  * The shell (sidebar + top bar + auth guard) lives once in _app, so it persists across navigations:
@@ -25,6 +26,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAdminRoute = router.pathname.startsWith('/admin');
   const isAdmin = isAdminGlobal();
+  const pageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isAuthenticated) router.replace('/login');
@@ -36,6 +38,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       router.replace('/dashboard');
     }
   }, [isAuthenticated, isAdminRoute, isAdmin, router]);
+
+  // Blocks below the fold ease in the first time they scroll into view
+  useEffect(() => revealOnScroll(pageRef.current), [router.pathname]);
 
   // Tables are rendered by many pages (and re-rendered after data loads): enhance them centrally.
   useEffect(() => {
@@ -82,7 +87,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <main className="flex-1 overflow-auto">
           {/* Keyed by route so the entrance animation replays on every navigation */}
-          <div key={router.pathname} className="page-enter mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">
+          <div ref={pageRef} key={router.pathname} className="page-enter mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">
             <ShellContext.Provider value>{children}</ShellContext.Provider>
           </div>
         </main>
