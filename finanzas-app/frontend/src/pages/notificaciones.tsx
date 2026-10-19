@@ -70,7 +70,7 @@ export default function NotificacionesPage() {
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <Bell size={24} /> Notificaciones
@@ -86,7 +86,7 @@ export default function NotificacionesPage() {
           <button
             onClick={() => markAllReadMut.mutate()}
             disabled={markAllReadMut.isLoading}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-variant rounded-lg transition-colors"
+            className="btn-secondary"
           >
             <CheckCheck size={16} /> Marcar todas como leídas
           </button>

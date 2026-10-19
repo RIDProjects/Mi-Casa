@@ -146,19 +146,19 @@ export default function DebtsPage() {
 
       {/* Summary Banner */}
       <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-4 mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <span className="text-lg font-semibold text-on-surface">Saldo:</span>
             <span className={`text-2xl font-bold fin-number ${balance >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
               <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg mr-2 align-middle ${balance >= 0 ? 'icon-emerald !p-0' : 'icon-red !p-0'}`}>{balance >= 0 ? <Scale size={18} /> : <AlertTriangle size={18} />}</span>{balance >= 0 ? '+' : ''}{cfmt(balance)}
             </span>
           </div>
-          <div className="flex gap-8">
-            <div className="text-center">
+          <div className="flex flex-wrap gap-x-8 gap-y-3 sm:justify-end">
+            <div className="sm:text-center">
               <p className="text-sm text-on-surface-variant">Total que me adeudan</p>
               <p className="text-xl font-bold text-ok-ink">+{cfmt(totalTheyOweMe)}</p>
             </div>
-            <div className="text-center">
+            <div className="sm:text-center">
               <p className="text-sm text-on-surface-variant">Total adeudado por mí</p>
               <p className="text-xl font-bold text-danger-ink">-{cfmt(totalIOwe)}</p>
             </div>
@@ -185,7 +185,7 @@ export default function DebtsPage() {
       {/* Main Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Me deben */}
-        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-x-auto">
           <div className="bg-primary-container/10 px-4 py-3 border-b border-primary-container/15">
             <h2 className="text-sm font-bold text-info-ink flex items-center gap-2"><ArrowDownLeft size={16} /> Me deben</h2>
           </div>
@@ -239,7 +239,7 @@ export default function DebtsPage() {
         </div>
 
         {/* Les debo */}
-        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-x-auto">
           <div className="bg-danger/10 px-4 py-3 border-b border-danger/25">
             <h2 className="text-sm font-bold text-danger-ink flex items-center gap-2"><ArrowUpRight size={16} /> Les debo</h2>
           </div>
@@ -295,7 +295,7 @@ export default function DebtsPage() {
 
       {/* Paid Debts History */}
       {paidDebts.length > 0 && (
-        <div className="mt-8 bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+        <div className="mt-8 bg-panel rounded-2xl shadow-soft border border-border-light overflow-x-auto">
           <div className="bg-surface-gray px-4 py-3 border-b border-border-light">
             <h2 className="text-sm font-bold text-on-surface flex items-center gap-2"><CheckCircle size={16} className="text-ok-ink" /> Deudas pagadas ({paidDebts.length})</h2>
           </div>
@@ -351,7 +351,7 @@ export default function DebtsPage() {
             <label className="label">Nota (opcional)</label>
             <input className="input" value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} placeholder="Descripción adicional" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 items-end gap-3">
             <div>
               <label className="label">Tasa de interés anual (%)</label>
               <input type="number" step="0.01" min="0" className="input" value={form.interestRate} onChange={e => setForm({ ...form, interestRate: e.target.value })} placeholder="0.00" />

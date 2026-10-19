@@ -140,7 +140,7 @@ export default function RolesPage() {
           </div>
           <div>
             <label className="label">Permisos por módulo</label>
-            <div className="border border-border-light rounded-xl overflow-hidden">
+            <div className="border border-border-light rounded-xl overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr>

@@ -209,7 +209,7 @@ export default function Dashboard() {
 
       {/* ── Debts row ── */}
       {hasPermission('debts', 'view') && debtsSummary && (
-        <div className="grid grid-cols-3 gap-3 mb-6 animate-stagger-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 animate-stagger-2">
           <StatCard title="Me deben" value={cfmt(debtsSummary.totalTheyOweMe)} icon={<ArrowDownLeft size={20} />} color="green" />
           <StatCard title="Debo" value={cfmt(debtsSummary.totalIOwe)}       icon={<ArrowUpRight size={20} />} color="red" />
           <StatCard title="Balance" value={cfmt(balance)} icon={balance >= 0 ? <Scale size={20} /> : <AlertTriangle size={20} />} color={balance >= 0 ? 'green' : 'red'} />

@@ -289,7 +289,7 @@ export default function EmergencyFundPage() {
                   )}
 
                   {/* Categories Table - Like Excel */}
-                  <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+                  <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-x-auto">
                     <div className="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
                       <h3 className="font-semibold text-on-surface">Tus gastos mensuales por categoría</h3>
                     </div>

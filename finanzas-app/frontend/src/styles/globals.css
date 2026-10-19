@@ -232,7 +232,7 @@
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
     font-weight: 800;
-    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-size: clamp(1.6rem, 6.4vw, 3.25rem);
     line-height: 1;
     letter-spacing: -0.02em;
   }
@@ -292,6 +292,9 @@
   table tfoot td { font-weight: 700; padding: 12px 16px; background: var(--ds-surface-gray); border-top: 1px solid var(--ds-border-light); }
   .dark table thead th { background: var(--ds-surface-container); border-bottom-color: var(--ds-surface-highest); }
   .dark table tbody td { border-bottom-color: var(--ds-surface-container); }
+  @media (max-width: 639px) {
+    table thead th, table tbody td { white-space: nowrap; }
+  }
   .table-compact tbody td { padding-top: 9px; padding-bottom: 9px; }
   .dark table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   .dark table tbody tr:hover td { background: var(--ds-surface-container); }

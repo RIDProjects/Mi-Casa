@@ -127,7 +127,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const sidebarContent = (
     <aside className={clsx(
-      'w-64 flex flex-col h-full border-r border-border-light',
+      'w-64 flex flex-col h-full border-r border-border-light overflow-y-auto md:overflow-visible',
       'bg-surface-container-lowest dark:bg-surface-container-low',
     )}>
       {/* Logo */}
@@ -141,7 +141,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="px-3 py-4 overflow-y-auto flex-1 space-y-5" aria-label="Principal">
+      <nav className="px-3 py-4 md:overflow-y-auto md:flex-1 space-y-5" aria-label="Principal">
         {groupedNav.map(([group, items]) => (
           <div key={group}>
             <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-outline">{group}</p>
@@ -216,7 +216,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop */}
-      <div className="hidden md:flex relative z-[1] w-64 min-h-screen flex-shrink-0">
+      <div className="hidden md:flex md:sticky md:top-0 md:self-start z-[1] w-64 h-screen flex-shrink-0">
         {sidebarContent}
       </div>
 

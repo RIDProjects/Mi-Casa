@@ -451,7 +451,7 @@ export default function MetasPage() {
 
           {/* ── Últimos aportes table ── */}
           {!isLoading && goals.length > 0 && (
-            <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden">
+            <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-x-auto">
               <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
                 <h3 className="font-section-title text-section-title text-on-surface">Últimos Aportes</h3>
                 <ChevronRight size={16} className="text-on-surface-variant" />
