@@ -292,8 +292,59 @@
   table tfoot td { font-weight: 700; padding: 12px 16px; background: var(--ds-surface-gray); border-top: 1px solid var(--ds-border-light); }
   .dark table thead th { background: var(--ds-surface-container); border-bottom-color: var(--ds-surface-highest); }
   .dark table tbody td { border-bottom-color: var(--ds-surface-container); }
+  /* Numeric columns (flagged by lib/tableEnhancer): right-aligned, tabular figures */
+  table th[data-num], table td[data-num] {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "zero";
+    white-space: nowrap;
+  }
+
   @media (max-width: 639px) {
-    table thead th, table tbody td { white-space: nowrap; }
+    table:not(.dt-stack) thead th, table:not(.dt-stack) tbody td { white-space: nowrap; }
+    /* Tighter cells so compact tables fit a phone without needing to stack */
+    table:not(.dt-stack) th, table:not(.dt-stack) td { padding-left: 10px !important; padding-right: 10px !important; }
+
+    /* Phones: every enhanced table turns into a list of cards (label + value per line) */
+    table.dt-stack, table.dt-stack tbody, table.dt-stack tfoot { display: block; width: 100%; }
+    table.dt-stack thead {
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    table.dt-stack tr { display: block; padding: 12px 16px; border-bottom: 1px solid var(--ds-border-light); }
+    table.dt-stack tbody tr:last-child { border-bottom: 0; }
+    table.dt-stack tfoot tr { background: var(--ds-surface-gray); }
+    table.dt-stack td {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      min-height: 28px; padding: 5px 0 !important; border: 0 !important;
+      background: transparent !important; text-align: right !important; white-space: normal;
+    }
+    table.dt-stack td[data-num] { white-space: nowrap; }
+    table.dt-stack td::before {
+      content: attr(data-label); flex-shrink: 0; max-width: 45%;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--ds-on-surface-variant); text-align: left;
+    }
+    /* First text column acts as the card title */
+    table.dt-stack td:first-child:not([data-num]) {
+      justify-content: flex-start; font-size: 15px; font-weight: 600; padding-bottom: 8px !important;
+    }
+    table.dt-stack td:first-child:not([data-num])::before,
+    table.dt-stack td[data-label=""]::before { display: none; }
+    table.dt-stack td[data-label=""] { justify-content: flex-end; }
+    /* Rows with fewer cells than columns are not data rows: empty states and totals */
+    table.dt-stack tr[data-span] td::before { display: none; }
+    table.dt-stack tr[data-span='empty'], table.dt-stack tr[data-span='empty'] td { display: block; }
+    table.dt-stack tr[data-span='empty'] td { text-align: center !important; padding: 24px 16px !important; }
+    table.dt-stack tr[data-span='total'] {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 16px; background: var(--ds-surface-gray);
+    }
+    table.dt-stack tr[data-span='total'] td {
+      display: block; min-height: 0; padding: 0 !important; font-size: 13px; font-weight: 700;
+      text-align: left !important;
+    }
+    table.dt-stack tr[data-span='total'] td:last-child { text-align: right !important; }
   }
   .table-compact tbody td { padding-top: 9px; padding-bottom: 9px; }
   .dark table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }

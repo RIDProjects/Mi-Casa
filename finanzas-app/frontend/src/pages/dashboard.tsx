@@ -19,6 +19,7 @@ import {
   ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
 } from 'lucide-react';
 import { Skeleton } from '../components/ui/Skeleton';
+import { ProgressBar } from '../components/ui/ProgressBar';
 import { MONTHS } from '../lib/format';
 import { CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
@@ -40,7 +41,6 @@ const ADVISORY: Record<AdvisoryStatus, { label: string; sub: string; bg: string;
   danger:  { label: 'Gastos superan ingresos',   sub: 'Revisa tu presupuesto — estás en déficit.',       bg: 'bg-danger/10 border border-danger/25 ',                   text: 'text-danger-ink ',       dot: 'bg-danger' },
 };
 
-function thermometerColor(pct: number) { return pct > 100 ? 'bg-danger' : pct > 80 ? 'bg-warning' : 'bg-success'; }
 function thermometerLabel(pct: number) { return pct > 100 ? '¡Superado!' : pct > 80 ? 'Cerca del límite' : 'Todo bajo control'; }
 
 const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#f97316'];
@@ -266,18 +266,7 @@ export default function Dashboard() {
                 <span className="font-bold text-danger-ink fin-number">{cfmt(txSummary.totalExpenses)}</span>
               </div>
               {txSummary.expectedExpenses > 0 && (
-                <div className="pt-1">
-                  <div className="flex justify-between text-xs text-outline mb-2">
-                    <span>{thermometerLabel(txPct)}</span>
-                    <span className="font-semibold">{txPct.toFixed(0)}%</span>
-                  </div>
-                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
-                    <div
-                      className={`h-2 rounded-full transition-all duration-700 ${thermometerColor(txPct)}`}
-                      style={{ width: `${Math.min(100, txPct)}%` }}
-                    />
-                  </div>
-                </div>
+                <ProgressBar className="pt-1" tone="spend" value={txPct} label={thermometerLabel(txPct)} />
               )}
             </div>
           </div>

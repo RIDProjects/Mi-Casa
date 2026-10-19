@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { enhanceTables } from '../../lib/tableEnhancer';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAdminGlobal } = useAuthStore();
@@ -23,6 +24,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       router.replace('/dashboard');
     }
   }, [isAuthenticated, isAdminRoute, isAdmin, router]);
+
+  // Tables are rendered by many pages (and re-rendered after data loads): enhance them centrally.
+  useEffect(() => {
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => enhanceTables(document));
+    };
+    schedule();
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
 
   if (!isAuthenticated || (isAdminRoute && !isAdmin)) {
     return (

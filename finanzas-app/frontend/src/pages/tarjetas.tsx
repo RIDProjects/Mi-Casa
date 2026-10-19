@@ -12,6 +12,7 @@ import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 
 import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
+import { ProgressBar } from '../components/ui/ProgressBar';
 
 const TIPO_PAGO_OPTIONS = [
   { v: 'full', l: 'Pago todo el saldo' },
@@ -42,12 +43,6 @@ function utilizationColor(pct: number) {
   if (pct < 30) return 'bg-success/15 text-ok-ink ';
   if (pct < 50) return 'bg-warning/15 text-warn-ink ';
   return 'bg-danger/15 text-danger-ink ';
-}
-
-function utilizationBarColor(pct: number) {
-  if (pct < 30) return 'bg-success';
-  if (pct < 50) return 'bg-warning';
-  return 'bg-danger';
 }
 
 export default function TarjetasPage() {
@@ -157,12 +152,7 @@ export default function TarjetasPage() {
             </div>
           </div>
           {totalLimite > 0 && (
-            <div className="mt-3 w-full bg-surface-container rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all duration-500 ${utilizationBarColor(totalUtilPct)}`}
-                style={{ width: `${Math.min(totalUtilPct, 100)}%` }}
-              />
-            </div>
+            <ProgressBar className="mt-3" tone={totalUtilPct < 30 ? 'green' : totalUtilPct < 50 ? 'amber' : 'red'} value={totalUtilPct} />
           )}
         </div>
       )}
