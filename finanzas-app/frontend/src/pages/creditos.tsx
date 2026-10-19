@@ -199,7 +199,7 @@ export default function CreditosPage() {
                       aria-valuenow={Math.round(pct)}
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      className="h-1.5 bg-green-500 rounded-full transition-all duration-500"
+                      className="h-1.5 bg-success rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>

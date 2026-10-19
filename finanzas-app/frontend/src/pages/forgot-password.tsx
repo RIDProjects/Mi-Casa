@@ -37,7 +37,7 @@ export default function ForgotPassword() {
           {sent ? (
             <div className="text-center">
               <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center">
                   <CheckCircle size={32} className="text-success" />
                 </div>
               </div>
@@ -82,7 +82,7 @@ export default function ForgotPassword() {
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
+                  <div className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3">
                     <p className="text-danger text-sm">{error}</p>
                   </div>
                 )}

@@ -56,7 +56,7 @@ const PERIOD_DIVISOR: Record<Periodicity, number> = {
 const toMonthly = (amount: number, p: Periodicity) => Number(amount) / PERIOD_DIVISOR[p];
 
 function savingsRating(pct: number): { emoji: string; text: string; color: string } {
-  if (pct <= 5)  return { emoji: '⚠️', text: 'Muy bajo. Intenta ahorrar más.',           color: 'text-danger' };
+  if (pct <= 5) return { emoji: '⚠️', text: 'Muy bajo. Intenta ahorrar más.',           color: 'text-danger' };
   if (pct <= 10) return { emoji: '😐', text: 'Aceptable, pero puedes mejorar.',            color: 'text-warning' };
   if (pct <= 15) return { emoji: '👍', text: 'Bueno. Seguí así.',                         color: 'text-primary' };
   if (pct <= 25) return { emoji: '💪', text: '¡Ideal! Muy buen hábito de ahorro.',        color: 'text-success' };
@@ -273,7 +273,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
                 className={`flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-medium border-2 transition-all ${
                   (form as any)[key]
                     ? `border-${color}-500 bg-${color}-50 dark:bg-${color}-900/30 text-${color}-700 dark:text-${color}-300`
-                    : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+                    : 'border-border-light text-on-surface-variant '
                 }`}
               >{icon}{label}</button>
             ))}

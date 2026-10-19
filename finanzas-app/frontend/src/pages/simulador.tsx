@@ -143,8 +143,8 @@ export default function SimuladorPage() {
                     onClick={() => setMonths(m)}
                     className={`px-3 py-1 rounded-lg text-xs font-medium transition-all border ${
                       months === m
-                        ? 'bg-blue-500 border-blue-500 text-white'
-                        : 'border-outline-variant text-on-surface-variant hover:border-blue-400'
+                        ? 'bg-primary-container border-primary-container text-white'
+                        : 'border-outline-variant text-on-surface-variant hover:border-primary-container'
                     }`}
                   >
                     {m >= 12 ? `${m / 12}a` : `${m}m`}
@@ -168,9 +168,9 @@ export default function SimuladorPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-center">
+              <div className="bg-primary-container/10 border border-primary-container/25 rounded-xl p-4 text-center">
                 <p className="text-xs font-semibold text-primary uppercase mb-1">Cuota mensual</p>
-                <p className="text-4xl font-bold text-blue-700 dark:text-blue-300">{cfmt(payment)}</p>
+                <p className="text-4xl font-bold text-info-ink">{cfmt(payment)}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
@@ -178,11 +178,11 @@ export default function SimuladorPage() {
                   <p className="text-xs text-on-surface-variant mb-1">Total a pagar</p>
                   <p className="text-base font-bold text-on-surface">{cfmt(totalPago)}</p>
                 </div>
-                <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 text-center">
+                <div className="bg-danger/10 rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">Total intereses</p>
                   <p className="text-base font-bold text-danger">{cfmt(totalIntereses)}</p>
                 </div>
-                <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 text-center">
+                <div className="bg-warning/10 rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">% intereses</p>
                   <p className="text-base font-bold text-warning">{pctIntereses.toFixed(1)}%</p>
                 </div>
@@ -201,21 +201,21 @@ export default function SimuladorPage() {
                 >
                   <div
                     aria-hidden="true"
-                    className="h-full bg-blue-500 transition-all duration-500"
+                    className="h-full bg-primary-container transition-all duration-500"
                     style={{ width: `${totalPago > 0 ? (numAmount / totalPago) * 100 : 0}%` }}
                   />
                   <div
                     aria-hidden="true"
-                    className="h-full bg-red-400 transition-all duration-500"
+                    className="h-full bg-danger transition-all duration-500"
                     style={{ width: `${pctIntereses}%` }}
                   />
                 </div>
                 <div className="flex gap-3 mt-1.5 text-xs">
                   <span className="flex items-center gap-1 text-on-surface-variant">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> Capital
+                    <span className="w-2 h-2 rounded-full bg-primary-container inline-block" /> Capital
                   </span>
                   <span className="flex items-center gap-1 text-on-surface-variant">
-                    <span className="w-2 h-2 rounded-full bg-red-400 inline-block" /> Intereses
+                    <span className="w-2 h-2 rounded-full bg-danger inline-block" /> Intereses
                   </span>
                 </div>
               </div>
@@ -259,7 +259,7 @@ export default function SimuladorPage() {
                     <td className="px-4 py-2 text-center text-on-surface-variant font-medium">{row.cuota}</td>
                     <td className="px-4 py-2 text-right text-on-surface">{cfmt(row.pago)}</td>
                     <td className="px-4 py-2 text-right text-primary">{cfmt(row.capital)}</td>
-                    <td className="px-4 py-2 text-right text-red-500 dark:text-red-400">{cfmt(row.interes)}</td>
+                    <td className="px-4 py-2 text-right text-danger-ink">{cfmt(row.interes)}</td>
                     <td className="px-4 py-2 text-right font-medium text-on-surface">{cfmt(row.saldo)}</td>
                   </tr>
                 ))}

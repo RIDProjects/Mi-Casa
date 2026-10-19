@@ -113,7 +113,7 @@ export default function HouseMembersPage() {
       />
 
       {!canManage && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-warning/25 bg-warning/10 px-4 py-3 text-sm text-warn-ink">
           <ShieldAlert size={16} className="shrink-0" />
           Solo el administrador de la casa puede crear, activar/desactivar o eliminar miembros. Puedes ver la lista, pero no gestionarla.
         </div>
@@ -162,15 +162,15 @@ export default function HouseMembersPage() {
                       onClick={() => handleToggleActive(member)}
                       className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         member.isActive
-                          ? 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-900/50'
-                          : 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/50'
+                          ? 'bg-warning/10 text-warn-ink hover:bg-warning/15 '
+                          : 'bg-success/10 text-ok-ink hover:bg-success/15 '
                       }`}
                     >
                       {member.isActive ? 'Desactivar' : 'Activar'}
                     </button>
                     <button
                       onClick={() => handleRemoveUser(member)}
-                      className="flex-1 py-1.5 rounded-lg text-xs font-medium bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                      className="flex-1 py-1.5 rounded-lg text-xs font-medium bg-danger/10 text-danger-ink hover:bg-danger/15 transition-colors"
                     >
                       Eliminar del hogar
                     </button>
@@ -256,7 +256,7 @@ export default function HouseMembersPage() {
               <button
                 onClick={() => removeMut.mutate(memberToDelete.id)}
                 disabled={removeMut.isLoading}
-                className="flex-1 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-60"
+                className="flex-1 py-2 rounded-lg text-sm font-medium bg-danger text-white hover:bg-danger transition-colors disabled:opacity-60"
               >
                 {removeMut.isLoading ? 'Eliminando...' : 'Eliminar'}
               </button>

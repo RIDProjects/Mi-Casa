@@ -137,7 +137,7 @@ export default function DebtsPage() {
               <Plus size={18} /> Registrar deuda
             </button>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+            <div className="flex items-center gap-2 px-3 py-2 bg-warning/15 text-warn-ink rounded-lg text-sm">
               <Lock size={16} /> Sin permisos para agregar
             </div>
           )
@@ -186,8 +186,8 @@ export default function DebtsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 💙 ME DEBEN */}
         <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-          <div className="bg-blue-50 dark:bg-blue-900/30 px-4 py-3 border-b border-blue-100 dark:border-blue-800">
-            <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">💙 ME DEBEN</h2>
+          <div className="bg-primary-container/10 px-4 py-3 border-b border-primary-container/25">
+            <h2 className="text-lg font-semibold text-info-ink">💙 ME DEBEN</h2>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-surface-container-low border-b">
@@ -228,7 +228,7 @@ export default function DebtsPage() {
                 </tr>
               )}
             </tbody>
-            <tfoot className="bg-blue-50 dark:bg-blue-900/20 border-t-2 border-blue-200 dark:border-blue-800">
+            <tfoot className="bg-primary-container/10 border-t-2 border-primary-container/25">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL QUE ME ADEUDAN</td>
                 <td className="px-4 py-3 text-right font-bold text-success">{cfmt(totalTheyOweMe)}</td>
@@ -240,8 +240,8 @@ export default function DebtsPage() {
 
         {/* ❤️ LES DEBO */}
         <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-          <div className="bg-red-50 dark:bg-red-900/30 px-4 py-3 border-b border-red-100 dark:border-red-800">
-            <h2 className="text-lg font-semibold text-red-900 dark:text-red-300">❤️ LES DEBO</h2>
+          <div className="bg-danger/10 px-4 py-3 border-b border-danger/25">
+            <h2 className="text-lg font-semibold text-danger-ink">❤️ LES DEBO</h2>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-surface-container-low border-b">
@@ -282,7 +282,7 @@ export default function DebtsPage() {
                 </tr>
               )}
             </tbody>
-            <tfoot className="bg-red-50 dark:bg-red-900/20 border-t-2 border-red-200 dark:border-red-800">
+            <tfoot className="bg-danger/10 border-t-2 border-danger/25">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL ADEUDADO POR MÍ</td>
                 <td className="px-4 py-3 text-right font-bold text-danger">{cfmt(totalIOwe)}</td>
@@ -333,7 +333,7 @@ export default function DebtsPage() {
             <div className="grid grid-cols-2 gap-3">
               {[{ v: 'they_owe_me', l: '💙 Me deben' }, { v: 'i_owe', l: '❤️ Yo debo' }].map(({ v, l }) => (
                 <button key={v} type="button" onClick={() => setForm({ ...form, type: v })}
-                  className={`py-3 rounded-xl text-sm font-medium border-2 transition-all ${form.type === v ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-outline-variant text-on-surface-variant'}`}>
+                  className={`py-3 rounded-xl text-sm font-medium border-2 transition-all ${form.type === v ? 'border-primary-container bg-primary-container/10 text-info-ink ' : 'border-outline-variant text-on-surface-variant'}`}>
                   {l}
                 </button>
               ))}
@@ -374,9 +374,9 @@ export default function DebtsPage() {
       <Modal isOpen={!!paidDebtInfo} onClose={() => setPaidDebtInfo(null)} title="✅ Deuda Pagada">
         {paidDebtInfo && (
           <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
+            <div className="bg-success/10 border border-success/25 rounded-xl p-4 text-center">
               <CheckCircle size={48} className="mx-auto text-success mb-2" />
-              <p className="text-green-800 dark:text-green-300 font-semibold">¡Pago registrado!</p>
+              <p className="text-ok-ink font-semibold">¡Pago registrado!</p>
             </div>
 
             <div className="space-y-3">

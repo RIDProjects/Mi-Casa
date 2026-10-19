@@ -46,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-surface-container-lowest/50 backdrop-blur-sm flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 animate-backdrop-in"

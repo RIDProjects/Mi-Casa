@@ -9,6 +9,7 @@
   :root {
     /* Pro-Ledger Financial (Light) */
     --ds-surface:          #f9f9ff;
+    --ds-panel:            #ffffff;   /* card/panel fill */
     --ds-surface-dim:      #cfdaf2;
     --ds-surface-bright:   #f9f9ff;
     --ds-surface-lowest:   #ffffff;
@@ -52,6 +53,7 @@
   .dark {
     /* Pro-Ledger Night (Dark) */
     --ds-surface:          #0b1326;
+    --ds-panel:            #131b2e;
     --ds-surface-dim:      #0b1326;
     --ds-surface-bright:   #31394d;
     --ds-surface-lowest:   #060e20;

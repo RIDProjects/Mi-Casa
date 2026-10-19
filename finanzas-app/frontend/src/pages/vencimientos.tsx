@@ -29,9 +29,9 @@ function daysUntil(dateStr: string): number {
 }
 
 function urgencyClasses(days: number) {
-  if (days <= 3) return { badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', border: 'border-red-200 dark:border-red-800', dot: 'bg-red-500' };
-  if (days <= 7) return { badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', dot: 'bg-amber-500' };
-  return { badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', border: 'border-outline-variant', dot: 'bg-green-500' };
+  if (days <= 3) return { badge: 'bg-danger/15 text-danger-ink ', border: 'border-danger/25 ', dot: 'bg-danger' };
+  if (days <= 7) return { badge: 'bg-warning/15 text-warn-ink ', border: 'border-warning/25 ', dot: 'bg-warning' };
+  return { badge: 'bg-success/15 text-ok-ink ', border: 'border-outline-variant', dot: 'bg-success' };
 }
 
 export default function VencimientosPage() {
@@ -83,7 +83,7 @@ export default function VencimientosPage() {
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al cargar los vencimientos</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar

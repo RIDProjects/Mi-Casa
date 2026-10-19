@@ -100,18 +100,18 @@ export default function Register() {
           <h2 className="font-section-title text-[22px] text-on-surface mb-6">Registrarse</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isInvitation ? (
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800 flex items-center gap-2">
+              <div className="bg-primary-container/10 rounded-lg p-4 border border-primary-container/25 flex items-center gap-2">
                 <Home size={18} className="text-primary" />
-                <span className="text-sm text-blue-900 dark:text-blue-200">
+                <span className="text-sm text-info-ink">
                   Te invitaron a unirte a una casa — completa tus datos para aceptar la invitación.
                 </span>
               </div>
             ) : (
               /* Casa Info */
-              <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
+              <div className="bg-primary-container/10 rounded-lg p-4 border border-primary-container/25">
                 <div className="flex items-center gap-2 mb-3">
                   <Home size={18} className="text-primary" />
-                  <span className="font-medium text-blue-900 dark:text-blue-200">Información de la Casa</span>
+                  <span className="font-medium text-info-ink">Información de la Casa</span>
                 </div>
                 <div className="space-y-3">
                   <div>
@@ -202,7 +202,7 @@ export default function Register() {
             {error && (
               <div
                 aria-live="polite"
-                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center gap-2"
+                className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3 flex items-center gap-2"
               >
                 <span className="text-danger text-sm font-medium">{error}</span>
               </div>

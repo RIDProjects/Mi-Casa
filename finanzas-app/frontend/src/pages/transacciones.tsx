@@ -1045,7 +1045,7 @@ export default function TransaccionesPage() {
               onClick={() => setRecurringForm({ ...recurringForm, isActive: !recurringForm.isActive })}
               className={`w-11 h-6 rounded-full transition-colors relative ${recurringForm.isActive ? 'bg-primary' : 'bg-outline-variant'}`}
             >
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${recurringForm.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              <span className={`absolute top-0.5 w-5 h-5 bg-panel rounded-full transition-transform ${recurringForm.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
           </div>
 

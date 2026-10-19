@@ -27,13 +27,13 @@ const STRATEGY_META: Record<string, { label: string; subtitle: string; color: st
   avalanche: {
     label: 'Avalancha',
     subtitle: 'Mayor tasa primero',
-    color: 'border-blue-400 dark:border-blue-500',
+    color: 'border-primary-container ',
     icon: '🧊',
   },
   snowball: {
     label: 'Bola de nieve',
     subtitle: 'Menor saldo primero',
-    color: 'border-purple-400 dark:border-purple-500',
+    color: 'border-primary-container ',
     icon: '⛄',
   },
 };
@@ -134,7 +134,7 @@ export default function PayoffPage() {
                 >
                   {isRecommended && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="flex items-center gap-1 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      <span className="flex items-center gap-1 bg-primary-container text-white text-xs font-bold px-3 py-1 rounded-full">
                         <Award size={11} /> Recomendada
                       </span>
                     </div>

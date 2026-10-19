@@ -286,11 +286,11 @@ export default function PurchasesPage() {
                         <td className="px-3 py-2 text-on-surface-variant text-xs">{item.lugar || '—'}</td>
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => handleEditItem(item)} className="p-1.5 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                            <button onClick={() => handleEditItem(item)} className="p-1.5 text-info-ink hover:text-info-ink rounded hover:bg-primary-container/10">
                               <Edit2 size={13} />
                             </button>
                             {canDelete && (
-                              <button onClick={() => setDeleteItemId(item.id)} className="p-1.5 text-red-400 hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+                              <button onClick={() => setDeleteItemId(item.id)} className="p-1.5 text-danger-ink hover:text-danger-ink rounded hover:bg-danger/10">
                                 <Trash2 size={13} />
                               </button>
                             )}
@@ -373,7 +373,7 @@ export default function PurchasesPage() {
               {budget > 0 && totalInLocal > 0 && (
                 <div className="w-full bg-surface-container rounded-full h-1.5">
                   <div
-                    className={`h-1.5 rounded-full transition-all ${totalInLocal / budget > 1 ? 'bg-red-500' : totalInLocal / budget > 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                    className={`h-1.5 rounded-full transition-all ${totalInLocal / budget > 1 ? 'bg-danger' : totalInLocal / budget > 0.8 ? 'bg-warning' : 'bg-success'}`}
                     style={{ width: `${Math.min((totalInLocal / budget) * 100, 100)}%` }}
                   />
                 </div>
@@ -385,7 +385,7 @@ export default function PurchasesPage() {
 
       {/* Modal: agregar / editar producto */}
       {showItemModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4 text-on-surface">
               {editItem ? 'Editar producto' : 'Agregar producto'}
@@ -487,7 +487,7 @@ export default function PurchasesPage() {
 
       {/* Modal: configuración */}
       {showConfigModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-sm">
             <h3 className="text-lg font-semibold mb-4 text-on-surface">⚙️ Configuración del mes</h3>
             <div className="space-y-4">

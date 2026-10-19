@@ -201,7 +201,7 @@ export default function CuotasPage() {
                 key={c.id}
                 className={`bg-surface-container-lowest rounded-xl border shadow-sm p-5 ${
                   isCompleted
-                    ? 'border-green-200 dark:border-green-800 opacity-70'
+                    ? 'border-success/25 opacity-70'
                     : 'border-outline-variant'
                 }`}
               >
@@ -210,12 +210,12 @@ export default function CuotasPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-on-surface">{c.description}</h3>
                       {isCompleted && (
-                        <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-xs bg-success/15 text-ok-ink px-2 py-0.5 rounded-full">
                           <CheckCircle size={11} /> Completada
                         </span>
                       )}
                       {c.withInterest && (
-                        <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                        <span className="text-xs bg-warning/15 text-warn-ink px-2 py-0.5 rounded-full">
                           Con interés {c.interestRate ? `${c.interestRate}%` : ''}
                         </span>
                       )}
@@ -231,7 +231,7 @@ export default function CuotasPage() {
                       </div>
                       <div className="w-full bg-surface-container rounded-full h-2">
                         <div
-                          className={`h-2 rounded-full transition-all ${isCompleted ? 'bg-green-500' : 'bg-blue-500'}`}
+                          className={`h-2 rounded-full transition-all ${isCompleted ? 'bg-success' : 'bg-primary-container'}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -271,7 +271,7 @@ export default function CuotasPage() {
                       <button
                         onClick={() => payMut.mutate(c.id)}
                         disabled={payMut.isLoading}
-                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
+                        className="px-3 py-1.5 bg-success hover:bg-success text-white text-xs font-medium rounded-lg transition-colors"
                       >
                         Pagar cuota
                       </button>
@@ -279,13 +279,13 @@ export default function CuotasPage() {
                     <div className="flex gap-1 justify-end">
                       <button
                         onClick={() => handleEdit(c)}
-                        className="p-1.5 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        className="p-1.5 text-info-ink hover:text-info-ink rounded hover:bg-primary-container/10"
                       >
                         <Edit2 size={14} />
                       </button>
                       <button
                         onClick={() => setDeleteId(c.id)}
-                        className="p-1.5 text-red-400 hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                        className="p-1.5 text-danger-ink hover:text-danger-ink rounded hover:bg-danger/10"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -385,7 +385,7 @@ export default function CuotasPage() {
               id="withInterest"
               checked={form.withInterest}
               onChange={e => setForm({ ...form, withInterest: e.target.checked })}
-              className="w-4 h-4 text-blue-600 rounded"
+              className="w-4 h-4 text-info-ink rounded"
             />
             <label htmlFor="withInterest" className="text-sm text-on-surface-variant">Con interés</label>
           </div>

@@ -281,10 +281,10 @@ export default function AnalyticsPage() {
           </span>
         </div>
         <div className="flex gap-4 mb-4">
-          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 flex-1">
-            <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold uppercase">Este mes</p>
-            <p className="text-lg font-bold text-amber-700 dark:text-amber-400">${fmt(antCurrentMonth)}</p>
-            <p className="text-xs text-amber-600 dark:text-amber-500">{antCount} transacciones pequeñas</p>
+          <div className="bg-warning/10 rounded-lg p-3 flex-1">
+            <p className="text-xs text-warn-ink font-semibold uppercase">Este mes</p>
+            <p className="text-lg font-bold text-warn-ink">${fmt(antCurrentMonth)}</p>
+            <p className="text-xs text-warn-ink">{antCount} transacciones pequeñas</p>
           </div>
           <div className="bg-surface-container-low rounded-lg p-3 flex-1">
             <p className="font-label-upper text-label-upper text-on-surface-variant">% del gasto total</p>
@@ -332,7 +332,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="w-full bg-surface-container rounded-full h-2">
                       <div
-                        className="h-2 rounded-full bg-red-500 transition-all duration-500"
+                        className="h-2 rounded-full bg-danger transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>

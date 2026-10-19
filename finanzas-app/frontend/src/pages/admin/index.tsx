@@ -10,8 +10,8 @@ import { fmtInt as fmt } from '../../lib/format';
 
 const PLAN_CONFIG = {
   free:   { label: 'Gratis',  color: 'text-on-surface-variant',   bg: 'bg-surface-container',       icon: <Gift size={14} /> },
-  pro:    { label: 'PRO',     color: 'text-primary',    bg: 'bg-blue-100 dark:bg-blue-900/30',    icon: <Star size={14} /> },
-  family: { label: 'Familia', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', icon: <Crown size={14} /> },
+  pro:    { label: 'PRO',     color: 'text-primary',    bg: 'bg-primary-container/15 ',    icon: <Star size={14} /> },
+  family: { label: 'Familia', color: 'text-info-ink ', bg: 'bg-primary-container/15 ', icon: <Crown size={14} /> },
 };
 
 function StatCard({ icon, label, value, sub, color, bg }: { icon: React.ReactNode; label: string; value: string | number; sub?: string; color: string; bg: string }) {
@@ -49,20 +49,20 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <StatCard
           icon={<Users size={18} />} label="Total usuarios" value={stats?.total ?? 0}
-          color="text-primary" bg="bg-blue-50 dark:bg-blue-900/20"
+          color="text-primary" bg="bg-primary-container/10 "
         />
         <StatCard
           icon={<UserCheck size={18} />} label="Activos" value={stats?.activeUsers ?? 0}
           sub={`${stats?.total ? Math.round((stats.activeUsers / stats.total) * 100) : 0}% del total`}
-          color="text-success" bg="bg-green-50 dark:bg-green-900/20"
+          color="text-success" bg="bg-success/10 "
         />
         <StatCard
           icon={<Home size={18} />} label="Casas" value={houses.length}
-          color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-900/20"
+          color="text-info-ink " bg="bg-primary-container/10 "
         />
         <StatCard
           icon={<TrendingUp size={18} />} label="Nuevos (30d)" value={stats?.newLast30 ?? 0}
-          color="text-teal-600 dark:text-teal-400" bg="bg-teal-50 dark:bg-teal-900/20"
+          color="text-info-ink " bg="bg-primary-container/10 "
         />
       </div>
 
@@ -70,21 +70,21 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <StatCard
           icon={<Activity size={18} />} label="Activos últimos 7d" value={stats?.activeLast7 ?? 0}
-          color="text-primary" bg="bg-blue-50 dark:bg-blue-900/20"
+          color="text-primary" bg="bg-primary-container/10 "
         />
         <StatCard
           icon={<Activity size={18} />} label="Activos últimos 30d" value={stats?.activeLast30 ?? 0}
-          color="text-indigo-600 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-900/20"
+          color="text-info-ink " bg="bg-primary-container/10 "
         />
         <StatCard
           icon={<AlertTriangle size={18} />} label="Riesgo de churn" value={stats?.churnRisk ?? 0}
           sub="Activos sin login en 30d"
-          color="text-warning" bg="bg-amber-50 dark:bg-amber-900/20"
+          color="text-warning" bg="bg-warning/10 "
         />
         <StatCard
           icon={<UserX size={18} />} label="Nunca logueados" value={stats?.neverLogged ?? 0}
           sub="Registro sin primer acceso"
-          color="text-danger" bg="bg-red-50 dark:bg-red-900/20"
+          color="text-danger" bg="bg-danger/10 "
         />
       </div>
 
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
         {/* ── Distribución de planes ── */}
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5">
           <h2 className="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
-            <Crown size={16} className="text-purple-500" /> Distribución de planes
+            <Crown size={16} className="text-info-ink" /> Distribución de planes
           </h2>
           <div className="space-y-3">
             {(Object.entries(planDist) as [string, number][]).map(([plan, count]) => {
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="w-full bg-surface-container rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full transition-all ${plan === 'free' ? 'bg-gray-400' : plan === 'pro' ? 'bg-blue-500' : 'bg-purple-500'}`}
+                      className={`h-2 rounded-full transition-all ${plan === 'free' ? 'bg-outline' : plan === 'pro' ? 'bg-primary-container' : 'bg-primary-container'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
           <div className="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
             <h2 className="text-sm font-semibold text-on-surface flex items-center gap-2">
-              <Home size={16} className="text-purple-500" /> Casas ({houses.length})
+              <Home size={16} className="text-info-ink" /> Casas ({houses.length})
             </h2>
             <button onClick={() => router.push('/admin/houses')} className="text-xs text-primary hover:underline">Ver todas →</button>
           </div>
@@ -146,9 +146,9 @@ export default function AdminDashboard() {
           <h2 className="text-sm font-semibold text-on-surface mb-4">Accesos rápidos</h2>
           <div className="space-y-2">
             {[
-              { label: 'Gestionar usuarios', href: '/admin/users', icon: <Users size={16} />, color: 'text-primary', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-              { label: 'Gestionar casas',    href: '/admin/houses', icon: <Home size={16} />,  color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-              { label: 'Gestionar roles',    href: '/admin/roles',  icon: <Star size={16} />,  color: 'text-warning', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+              { label: 'Gestionar usuarios', href: '/admin/users', icon: <Users size={16} />, color: 'text-primary', bg: 'bg-primary-container/10 ' },
+              { label: 'Gestionar casas',    href: '/admin/houses', icon: <Home size={16} />,  color: 'text-info-ink', bg: 'bg-primary-container/10 ' },
+              { label: 'Gestionar roles',    href: '/admin/roles',  icon: <Star size={16} />,  color: 'text-warning', bg: 'bg-warning/10 ' },
             ].map(item => (
               <button
                 key={item.href}
@@ -165,8 +165,8 @@ export default function AdminDashboard() {
           </div>
 
           {(stats?.churnRisk ?? 0) > 0 && (
-            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-              <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
+            <div className="mt-4 p-3 bg-warning/10 border border-warning/25 rounded-xl">
+              <p className="text-xs font-medium text-warn-ink">
                 ⚠️ {stats!.churnRisk} usuario{stats!.churnRisk !== 1 ? 's' : ''} sin actividad en 30 días.
                 Considera enviar un recordatorio.
               </p>

@@ -137,7 +137,7 @@ export default function EmergencyFundPage() {
               <Plus size={18} /> Nueva calculadora
             </button>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+            <div className="flex items-center gap-2 px-3 py-2 bg-warning/15 text-warn-ink rounded-lg text-sm">
               <Lock size={16} /> Sin permisos para agregar
             </div>
           )
@@ -161,7 +161,7 @@ export default function EmergencyFundPage() {
 
             return (
               <div key={f.id} onClick={() => setSelectedFund(f)}
-                className={`bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant cursor-pointer p-4 transition-all hover:shadow-md ${selectedFund?.id === f.id || (!selectedFund && funds[0]?.id === f.id) ? 'ring-2 ring-blue-500' : ''}`}>
+                className={`bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant cursor-pointer p-4 transition-all hover:shadow-md ${selectedFund?.id === f.id || (!selectedFund && funds[0]?.id === f.id) ? 'ring-2 ring-primary-container' : ''}`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <PiggyBank size={18} className="text-primary" />
@@ -210,8 +210,8 @@ export default function EmergencyFundPage() {
                 {/* Main Results */}
                 <div className="p-6">
                   {/* Instructions */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
-                    <ol className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
+                  <div className="bg-primary-container/10 rounded-lg p-4 mb-6">
+                    <ol className="space-y-2 text-sm text-info-ink">
                       <li><strong>1.</strong> Escribe los meses en los que te gustaría lograr tu fondo de emergencia.</li>
                       <li><strong>2.</strong> Ingresa tus gastos fijos mensuales en cada categoría.</li>
                       <li><strong>3.</strong> Revisa el monto óptimo en la primera celda verde y el mínimo en la celda naranja.</li>
@@ -231,23 +231,23 @@ export default function EmergencyFundPage() {
 
                   {/* Results Display */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
-                      <p className="text-sm text-green-700 dark:text-green-400">🏆 Monto óptimo ({fund.targetMonths} meses)</p>
-                      <p className="text-2xl font-bold text-green-700 dark:text-green-400">{cfmt(optimalFund)}</p>
+                    <div className="bg-success/10 border border-success/25 rounded-lg p-4">
+                      <p className="text-sm text-ok-ink">🏆 Monto óptimo ({fund.targetMonths} meses)</p>
+                      <p className="text-2xl font-bold text-ok-ink">{cfmt(optimalFund)}</p>
                     </div>
-                    <div className="bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
-                      <p className="text-sm text-orange-700 dark:text-orange-400">🎯 Monto mínimo ({fund.minimumMonths} meses)</p>
-                      <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">{cfmt(minimumFund)}</p>
+                    <div className="bg-warning/10 border border-warning/25 rounded-lg p-4">
+                      <p className="text-sm text-warn-ink">🎯 Monto mínimo ({fund.minimumMonths} meses)</p>
+                      <p className="text-2xl font-bold text-warn-ink">{cfmt(minimumFund)}</p>
                     </div>
-                    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-                      <p className="text-sm text-blue-700 dark:text-blue-400">📅 Ahorro mensual mínimo</p>
-                      <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{fund.savingPeriodMonths > 0 ? cfmt(monthlySavingsRequired) : '—'}</p>
+                    <div className="bg-primary-container/10 border border-primary-container/25 rounded-lg p-4">
+                      <p className="text-sm text-info-ink">📅 Ahorro mensual mínimo</p>
+                      <p className="text-2xl font-bold text-info-ink">{fund.savingPeriodMonths > 0 ? cfmt(monthlySavingsRequired) : '—'}</p>
                     </div>
                   </div>
 
                   {/* Current balance input */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-4 mb-6">
-                    <label className="block text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                  <div className="bg-primary-container/10 border border-primary-container/25 rounded-xl p-4 mb-6">
+                    <label className="block text-sm font-semibold text-info-ink mb-2">
                       Lo que tienes ahorrado actualmente
                     </label>
                     <div className="flex gap-2">
@@ -270,7 +270,7 @@ export default function EmergencyFundPage() {
                       </button>
                     </div>
                     {totalMonthlyExpenses > 0 && (
-                      <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+                      <p className="text-sm text-info-ink mt-2">
                         Cobertura actual:{' '}
                         <strong>{(currentBalance / totalMonthlyExpenses).toFixed(1)} meses</strong>
                         {' '}(meta: {fund.targetMonths} meses)
@@ -279,11 +279,11 @@ export default function EmergencyFundPage() {
                   </div>
 
                   {coverage && (
-                    <div className={`rounded-xl p-4 border mb-6 ${coverage.status === 'safe' ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-700' : coverage.status === 'low' ? 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-700' : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-700'}`}>
+                    <div className={`rounded-xl p-4 border mb-6 ${coverage.status === 'safe' ? 'bg-success/10 border-success/25 ' : coverage.status === 'low' ? 'bg-warning/10 border-warning/25 ' : 'bg-danger/10 border-danger/25 '}`}>
                       <p className="font-semibold text-sm">Cobertura: {coverage.monthsCovered.toFixed(1)} meses</p>
                       <p className="text-xs text-on-surface-variant mt-1">Meta: 6 meses | Gastos promedio: {cfmt(coverage.monthlyExpenses)}/mes</p>
                       <div className="mt-2 h-2 bg-surface-container rounded-full">
-                        <div className="h-2 bg-green-500 rounded-full" style={{ width: `${Math.min(100, (coverage.monthsCovered / 6) * 100)}%` }} />
+                        <div className="h-2 bg-success rounded-full" style={{ width: `${Math.min(100, (coverage.monthsCovered / 6) * 100)}%` }} />
                       </div>
                     </div>
                   )}
@@ -371,14 +371,14 @@ export default function EmergencyFundPage() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-on-surface">Gastos mensuales por categoría</label>
-              <button type="button" onClick={addCategory} className="text-sm text-primary hover:text-blue-700 font-medium">+ Agregar</button>
+              <button type="button" onClick={addCategory} className="text-sm text-primary hover:text-info-ink font-medium">+ Agregar</button>
             </div>
             <div className="space-y-2 max-h-72 overflow-y-auto border border-outline-variant rounded-xl p-3">
               {form.categories.map((cat: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-2">
                   <input className="input flex-1 text-sm" placeholder="Categoría" value={cat.name} onChange={e => updateCategory(idx, 'name', e.target.value)} />
                   <input type="number" step="0.01" min="0" className="input w-32 text-sm" placeholder="0.00" value={cat.monthlyAmount} onChange={e => updateCategory(idx, 'monthlyAmount', Number(e.target.value))} />
-                  <button type="button" onClick={() => removeCategory(idx)} className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 shrink-0 p-1">✕</button>
+                  <button type="button" onClick={() => removeCategory(idx)} className="text-danger-ink hover:text-danger-ink shrink-0 p-1">✕</button>
                 </div>
               ))}
             </div>

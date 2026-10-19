@@ -244,7 +244,7 @@ export default function MonedasPage() {
                         onClick={() => handleSetLocal(currency)}
                         disabled={loading[`base-${currency.id}`]}
                         title="Establecer como moneda local"
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-warning/25 text-warn-ink hover:bg-warning/10 transition-colors disabled:opacity-50"
                       >
                         <Star size={13} />
                         {loading[`base-${currency.id}`] ? '...' : 'Hacer local'}
@@ -254,7 +254,7 @@ export default function MonedasPage() {
                       onClick={() => handleRemove(currency)}
                       disabled={currency.isLocal || loading[`del-${currency.id}`]}
                       title={currency.isLocal ? 'No se puede eliminar la moneda local' : 'Eliminar moneda'}
-                      className="p-1.5 rounded-lg text-outline hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="p-1.5 rounded-lg text-outline hover:text-danger-ink hover:bg-danger/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Trash2 size={16} />
                     </button>

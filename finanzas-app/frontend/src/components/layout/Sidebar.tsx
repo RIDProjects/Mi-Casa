@@ -221,7 +221,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black/50 animate-backdrop-in"
+            className="fixed inset-0 bg-slate-950/50 animate-backdrop-in"
             onClick={onClose}
             aria-hidden="true"
           />

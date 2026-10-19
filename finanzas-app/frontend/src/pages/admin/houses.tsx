@@ -111,8 +111,8 @@ export default function AdminHouses() {
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                  <div className="p-2 bg-primary-container/15 rounded-lg">
+                    <Building2 className="w-5 h-5 text-info-ink" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-on-surface">{house.name}</h3>
@@ -126,7 +126,7 @@ export default function AdminHouses() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleViewMembers(house)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/30 text-primary rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-container/10 text-primary rounded-lg hover:bg-primary-container/15 transition-colors text-sm"
                 >
                   <Users size={16} />
                   Miembros
@@ -159,11 +159,11 @@ export default function AdminHouses() {
 
       {/* Members Modal */}
       {showMembersModal && selectedHouse && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-outline-variant">
               <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-purple-600" />
+                <Users className="w-5 h-5 text-info-ink" />
                 <h3 className="text-lg font-semibold text-on-surface">
                   Miembros de {selectedHouse.name}
                 </h3>
@@ -180,7 +180,7 @@ export default function AdminHouses() {
                     <div key={member.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                          member.isActive ? 'bg-green-500' : 'bg-gray-400'
+                          member.isActive ? 'bg-success' : 'bg-outline'
                         }`}>
                           {member.name?.[0]?.toUpperCase()}
                         </div>
@@ -195,8 +195,8 @@ export default function AdminHouses() {
                           disabled={toggleUserMut.isLoading}
                           className={`p-2 rounded-lg transition-colors ${
                             member.isActive
-                              ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
-                              : 'text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
+                              ? 'text-danger-ink hover:bg-danger/10 '
+                              : 'text-ok-ink hover:bg-success/10 '
                           }`}
                           title={member.isActive ? 'Desactivar' : 'Activar'}
                         >
@@ -205,7 +205,7 @@ export default function AdminHouses() {
                         <button
                           onClick={() => handleRemoveUser(member)}
                           disabled={removeUserMut.isLoading}
-                          className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          className="p-2 text-danger-ink hover:bg-danger/10 rounded-lg transition-colors"
                           title="Eliminar de la casa"
                         >
                           <Trash2 size={18} />
@@ -226,7 +226,7 @@ export default function AdminHouses() {
 
       {/* Edit Name Modal */}
       {editNameModal && selectedHouse && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-2xl w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b border-outline-variant">
               <h3 className="text-lg font-semibold text-on-surface">
@@ -270,7 +270,7 @@ export default function AdminHouses() {
 
       {/* Confirm Remove Member Modal */}
       {memberToRemove && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-2xl w-full max-w-sm">
             <div className="flex items-center justify-between p-6 border-b border-outline-variant">
               <h3 className="text-lg font-semibold text-on-surface">Eliminar del hogar</h3>
@@ -289,7 +289,7 @@ export default function AdminHouses() {
                 <button
                   onClick={() => removeUserMut.mutate({ userId: memberToRemove.id })}
                   disabled={removeUserMut.isLoading}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-danger text-white hover:bg-danger transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {removeUserMut.isLoading && <Loader2 size={16} className="animate-spin" />}
                   Eliminar

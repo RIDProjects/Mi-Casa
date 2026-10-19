@@ -21,10 +21,10 @@ const TIPO_PAGO_OPTIONS = [
 ];
 
 const ADVISORY: Record<string, { label: string; badge: string }> = {
-  full:    { label: '✅ Pagás saldo completo',       badge: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' },
-  minimum: { label: '⚠️ Pagás mínimo',               badge: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' },
-  stopped: { label: '❌ Dejaste de pagar',            badge: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' },
-  partial: { label: '💡 Pago parcial',               badge: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300' },
+  full:    { label: '✅ Pagás saldo completo',       badge: 'bg-success/15 text-ok-ink ' },
+  minimum: { label: '⚠️ Pagás mínimo',               badge: 'bg-warning/15 text-warn-ink ' },
+  stopped: { label: '❌ Dejaste de pagar',            badge: 'bg-danger/15 text-danger-ink ' },
+  partial: { label: '💡 Pago parcial',               badge: 'bg-primary-container/15 text-info-ink ' },
 };
 
 const defaultForm = {
@@ -39,15 +39,15 @@ const defaultForm = {
 };
 
 function utilizationColor(pct: number) {
-  if (pct < 30) return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300';
-  if (pct < 50) return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300';
-  return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300';
+  if (pct < 30) return 'bg-success/15 text-ok-ink ';
+  if (pct < 50) return 'bg-warning/15 text-warn-ink ';
+  return 'bg-danger/15 text-danger-ink ';
 }
 
 function utilizationBarColor(pct: number) {
-  if (pct < 30) return 'bg-green-500';
-  if (pct < 50) return 'bg-amber-500';
-  return 'bg-red-500';
+  if (pct < 30) return 'bg-success';
+  if (pct < 50) return 'bg-warning';
+  return 'bg-danger';
 }
 
 export default function TarjetasPage() {
@@ -382,7 +382,7 @@ export default function TarjetasPage() {
                   onClick={() => setForm({ ...form, tipoPago: v })}
                   className={`py-2 px-3 rounded-lg text-xs font-medium border-2 text-left transition-all ${
                     form.tipoPago === v
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                      ? 'border-primary-container bg-primary-container/10 text-info-ink '
                       : 'border-outline-variant text-on-surface-variant'
                   }`}
                 >

@@ -102,7 +102,7 @@ export default function Login() {
             {error && (
               <div
                 aria-live="polite"
-                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center gap-2"
+                className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3 flex items-center gap-2"
               >
                 <span className="text-danger text-sm font-medium">{error}</span>
               </div>

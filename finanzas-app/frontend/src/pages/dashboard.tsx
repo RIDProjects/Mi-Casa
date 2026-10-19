@@ -32,12 +32,12 @@ const GREETING = (() => {
 
 type AdvisoryStatus = 'ok' | 'warning' | 'danger';
 const ADVISORY: Record<AdvisoryStatus, { label: string; sub: string; bg: string; text: string; dot: string }> = {
-  ok:      { label: 'En camino con tus metas',   sub: 'Tus gastos están dentro del presupuesto.',        bg: 'bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800',     text: 'text-emerald-800 dark:text-emerald-300', dot: 'bg-emerald-500' },
-  warning: { label: 'Cuidado con los gastos',    sub: 'Estás cerca del límite del presupuesto mensual.', bg: 'bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800',           text: 'text-amber-800 dark:text-amber-300',   dot: 'bg-amber-500' },
-  danger:  { label: 'Gastos superan ingresos',   sub: 'Revisa tu presupuesto — estás en déficit.',       bg: 'bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800',                   text: 'text-red-800 dark:text-red-300',       dot: 'bg-red-500' },
+  ok:      { label: 'En camino con tus metas',   sub: 'Tus gastos están dentro del presupuesto.',        bg: 'bg-success/10 border border-success/25 ',     text: 'text-ok-ink ', dot: 'bg-success' },
+  warning: { label: 'Cuidado con los gastos',    sub: 'Estás cerca del límite del presupuesto mensual.', bg: 'bg-warning/10 border border-warning/25 ',           text: 'text-warn-ink ',   dot: 'bg-warning' },
+  danger:  { label: 'Gastos superan ingresos',   sub: 'Revisa tu presupuesto — estás en déficit.',       bg: 'bg-danger/10 border border-danger/25 ',                   text: 'text-danger-ink ',       dot: 'bg-danger' },
 };
 
-function thermometerColor(pct: number) { return pct > 100 ? 'bg-red-500' : pct > 80 ? 'bg-amber-500' : 'bg-emerald-500'; }
+function thermometerColor(pct: number) { return pct > 100 ? 'bg-danger' : pct > 80 ? 'bg-warning' : 'bg-success'; }
 function thermometerLabel(pct: number) { return pct > 100 ? '¡Superado!' : pct > 80 ? 'Cerca del límite' : 'Todo bajo control'; }
 
 const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#f97316'];
@@ -103,7 +103,7 @@ export default function Dashboard() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-64">
-          <div className="text-sm text-gray-400">Cargando dashboard...</div>
+          <div className="text-sm text-outline">Cargando dashboard...</div>
         </div>
       </Layout>
     );
@@ -122,8 +122,8 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <div className="mb-8 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <p className="text-sm text-gray-400 dark:text-gray-500 font-medium">{GREETING}, {user?.name?.split(' ')[0]}</p>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight mt-0.5">
+          <p className="text-sm text-outline font-medium">{GREETING}, {user?.name?.split(' ')[0]}</p>
+          <h1 className="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
             {currentMonthName} {currentYear}
           </h1>
         </div>
@@ -131,7 +131,7 @@ export default function Dashboard() {
           <CurrencyToggle />
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-white/[0.08] rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors text-gray-600 dark:text-gray-400"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-border-light /[0.08] rounded-xl hover:bg-surface-gray /[0.05] transition-colors text-on-surface-variant"
           >
             <Printer size={14} /> PDF
           </button>
@@ -143,17 +143,17 @@ export default function Dashboard() {
         <div className="mb-6"><ErrorState message="No se pudo cargar el patrimonio neto" onRetry={() => refetchGlobalSummary()} /></div>
       )}
       {globalSummary && (
-        <div className="mb-6 rounded-2xl p-6 border border-black/[0.06] dark:border-white/[0.08] bg-white dark:bg-gray-900 animate-fade-up"
+        <div className="mb-6 rounded-2xl p-6 border border-black/[0.06] /[0.08] bg-panel animate-fade-up"
           style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             {/* Net worth hero */}
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Patrimonio neto</p>
-              <div className={`fin-hero ${netWorthPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+              <p className="text-xs font-semibold text-outline uppercase tracking-widest mb-2">Patrimonio neto</p>
+              <div className={`fin-hero ${netWorthPositive ? 'text-ok-ink ' : 'text-danger-ink '}`}>
                 {netWorthPositive ? '' : '–'}{cfmt(Math.abs(netWorthAnim))}
               </div>
               {netWorth !== 0 && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                <p className="text-xs text-outline mt-2">
                   Activos – Deudas totales
                 </p>
               )}
@@ -162,13 +162,13 @@ export default function Dashboard() {
             {/* Global KPIs */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 min-w-0">
               {[
-                { label: 'Total deudas',  value: cfmt(safeNum((globalSummary as any).debts?.total ?? 0)),               color: 'text-red-600 dark:text-red-400' },
-                { label: 'Ahorro metas',  value: cfmt(safeNum((globalSummary as any).savingsGoals?.totalSaved ?? 0)),   color: 'text-emerald-600 dark:text-emerald-400' },
-                { label: 'Cuotas/mes',    value: cfmt(safeNum((globalSummary as any).loans?.monthlyPayments ?? 0)),     color: 'text-amber-600 dark:text-amber-400' },
-                { label: 'Salud fin.',    value: insights ? `${(insights as any).savingsRate?.toFixed(0) ?? 0}% ahorro` : '—', color: 'text-blue-600 dark:text-blue-400' },
+                { label: 'Total deudas',  value: cfmt(safeNum((globalSummary as any).debts?.total ?? 0)),               color: 'text-danger-ink ' },
+                { label: 'Ahorro metas',  value: cfmt(safeNum((globalSummary as any).savingsGoals?.totalSaved ?? 0)),   color: 'text-ok-ink ' },
+                { label: 'Cuotas/mes',    value: cfmt(safeNum((globalSummary as any).loans?.monthlyPayments ?? 0)),     color: 'text-warn-ink ' },
+                { label: 'Salud fin.',    value: insights ? `${(insights as any).savingsRate?.toFixed(0) ?? 0}% ahorro` : '—', color: 'text-info-ink ' },
               ].map(k => (
                 <div key={k.label} className="text-center">
-                  <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wide mb-1">{k.label}</p>
+                  <p className="text-[11px] text-outline font-medium uppercase tracking-wide mb-1">{k.label}</p>
                   <p className={`text-lg font-bold fin-number ${k.color}`}>{k.value}</p>
                 </div>
               ))}
@@ -184,8 +184,8 @@ export default function Dashboard() {
       {budgetSummary && (
         <div className="mb-6 animate-stagger-1">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-            <StatCard title="Ingresos"  value={cfmt(budgetSummary.totalMonthlyIncome)}   icon="💰" color="green" />
-            <StatCard title="Gastos"    value={cfmt(budgetSummary.totalMonthlyExpenses)}  icon="💸" color="yellow" />
+            <StatCard title="Ingresos" value={cfmt(budgetSummary.totalMonthlyIncome)}   icon="💰" color="green" />
+            <StatCard title="Gastos" value={cfmt(budgetSummary.totalMonthlyExpenses)}  icon="💸" color="yellow" />
             <StatCard title="Disponible" value={cfmt(Math.abs(budgetSummary.available))}  icon="🏦" color={budgetSummary.available >= 0 ? 'green' : 'red'} subtitle={budgetSummary.available < 0 ? 'En déficit' : undefined} />
             <StatCard title={`Meta ahorro (${savingsPercent}%)`} value={cfmt(budgetSummary.savingsTargetAmount)} icon="🎯" color="blue" />
           </div>
@@ -205,8 +205,8 @@ export default function Dashboard() {
       {hasPermission('debts', 'view') && debtsSummary && (
         <div className="grid grid-cols-3 gap-3 mb-6 animate-stagger-2">
           <StatCard title="Me deben" value={cfmt(debtsSummary.totalTheyOweMe)} icon="💙" color="green" />
-          <StatCard title="Debo"     value={cfmt(debtsSummary.totalIOwe)}       icon="❤️" color="red" />
-          <StatCard title="Balance"  value={cfmt(balance)} icon={balance >= 0 ? '✅' : '⚠️'} color={balance >= 0 ? 'green' : 'red'} />
+          <StatCard title="Debo" value={cfmt(debtsSummary.totalIOwe)}       icon="❤️" color="red" />
+          <StatCard title="Balance" value={cfmt(balance)} icon={balance >= 0 ? '✅' : '⚠️'} color={balance >= 0 ? 'green' : 'red'} />
         </div>
       )}
 
@@ -225,11 +225,11 @@ export default function Dashboard() {
         </div>
       )}
       {avgDebtCost > 0 && avgInvestReturn > 0 && avgDebtCost > avgInvestReturn && (
-        <div className="mb-5 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-xl">
-          <p className="font-semibold text-amber-800 dark:text-amber-200 text-sm">
+        <div className="mb-5 p-4 bg-warning/10 border border-warning/25 rounded-xl">
+          <p className="font-semibold text-warn-ink text-sm">
             Tu deuda te cuesta más que lo que rinden tus inversiones
           </p>
-          <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+          <p className="text-xs text-warn-ink mt-1">
             Costo deudas: {avgDebtCost.toFixed(1)}% TNA — Retorno inversiones: {avgInvestReturn.toFixed(1)}% TNA
           </p>
         </div>
@@ -242,31 +242,31 @@ export default function Dashboard() {
           <ErrorState message="No se pudo cargar el resumen de transacciones" onRetry={() => refetchTxSummary()} />
         )}
         {txSummary && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-5"
+          <div className="bg-panel rounded-2xl border border-black/[0.06] /[0.08] p-5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-gray-400" /> Transacciones — {currentMonthName}
+            <h2 className="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
+              <Receipt className="w-4 h-4 text-outline" /> Transacciones — {currentMonthName}
             </h2>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5 text-emerald-500" /> Ingresos reales
+                <span className="text-sm text-on-surface-variant flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-ok-ink" /> Ingresos reales
                 </span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 fin-number">{cfmt(txSummary.totalIncome)}</span>
+                <span className="font-bold text-ok-ink fin-number">{cfmt(txSummary.totalIncome)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                  <TrendingDown className="w-3.5 h-3.5 text-red-400" /> Gastos reales
+                <span className="text-sm text-on-surface-variant flex items-center gap-1.5">
+                  <TrendingDown className="w-3.5 h-3.5 text-danger-ink" /> Gastos reales
                 </span>
-                <span className="font-bold text-red-600 dark:text-red-400 fin-number">{cfmt(txSummary.totalExpenses)}</span>
+                <span className="font-bold text-danger-ink fin-number">{cfmt(txSummary.totalExpenses)}</span>
               </div>
               {txSummary.expectedExpenses > 0 && (
                 <div className="pt-1">
-                  <div className="flex justify-between text-xs text-gray-400 mb-2">
+                  <div className="flex justify-between text-xs text-outline mb-2">
                     <span>{thermometerLabel(txPct)}</span>
                     <span className="font-semibold">{txPct.toFixed(0)}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 dark:bg-white/[0.06] rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-surface-container /[0.06] rounded-full h-2 overflow-hidden">
                     <div
                       className={`h-2 rounded-full transition-all duration-700 ${thermometerColor(txPct)}`}
                       style={{ width: `${Math.min(100, txPct)}%` }}
@@ -280,21 +280,21 @@ export default function Dashboard() {
 
         {/* Ant expenses */}
         {budgetSummary && budgetSummary.antExpensesTotal > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-300 mb-4 flex items-center gap-2">
+          <div className="bg-warning/10 border border-warning/25 rounded-2xl p-5">
+            <h2 className="text-sm font-semibold text-warn-ink mb-4 flex items-center gap-2">
               <Bug className="w-4 h-4" /> Gastos Hormiga del Mes
             </h2>
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-3 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide font-medium">Presupuesto/mes</p>
-                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 fin-number">{cfmt(budgetSummary.antExpensesTotal)}</p>
+              <div className="bg-surface-gray rounded-xl p-3 text-center">
+                <p className="text-[11px] text-on-surface-variant mb-1 uppercase tracking-wide font-medium">Presupuesto/mes</p>
+                <p className="text-xl font-bold text-warn-ink fin-number">{cfmt(budgetSummary.antExpensesTotal)}</p>
               </div>
-              <div className="bg-white/60 dark:bg-gray-900/40 rounded-xl p-3 text-center">
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide font-medium">Máximo/día</p>
-                <p className="text-xl font-bold text-amber-600 dark:text-amber-400 fin-number">{cfmt(budgetSummary.antExpensesTotal / 30)}</p>
+              <div className="bg-surface-gray rounded-xl p-3 text-center">
+                <p className="text-[11px] text-on-surface-variant mb-1 uppercase tracking-wide font-medium">Máximo/día</p>
+                <p className="text-xl font-bold text-warn-ink fin-number">{cfmt(budgetSummary.antExpensesTotal / 30)}</p>
               </div>
             </div>
-            <p className="text-xs text-amber-700 dark:text-amber-400 mt-3">
+            <p className="text-xs text-warn-ink mt-3">
               Pequeños gastos frecuentes que acumulan sin que te des cuenta.
             </p>
           </div>
@@ -302,9 +302,9 @@ export default function Dashboard() {
 
         {/* Pie chart */}
         {categoryPieData.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-5"
+          <div className="bg-panel rounded-2xl border border-black/[0.06] /[0.08] p-5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Gastos por categoría</h2>
+            <h2 className="text-sm font-semibold text-on-surface mb-2">Gastos por categoría</h2>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie data={categoryPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value" paddingAngle={3}>
@@ -321,24 +321,24 @@ export default function Dashboard() {
 
         {/* Hogar quick links */}
         {hasPermission('purchases', 'view') && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-black/[0.06] dark:border-white/[0.08] p-5"
+          <div className="bg-panel rounded-2xl border border-black/[0.06] /[0.08] p-5"
             style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">🏡 Hogar</h2>
+            <h2 className="text-sm font-semibold text-on-surface mb-3">🏡 Hogar</h2>
             <div className="space-y-1">
               {[
                 { href: '/purchases', icon: <ShoppingCart className="w-4 h-4" />, label: 'Lista de la Compra', sub: 'Mercado, precios, totales por lugar' },
                 { href: '/registro-gastos', icon: <BookOpen className="w-4 h-4" />, label: 'Registro de Gastos', sub: 'Salidas y gastos del hogar' },
               ].map(l => (
                 <Link key={l.href} href={l.href}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all duration-150 group active:scale-[0.99]">
+                  className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-gray /[0.04] transition-all duration-150 group active:scale-[0.99]">
                   <div className="flex items-center gap-3">
-                    <span className="text-gray-400 group-hover:text-primary-500 transition-colors duration-150">{l.icon}</span>
+                    <span className="text-outline group-hover:text-primary-500 transition-colors duration-150">{l.icon}</span>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{l.label}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{l.sub}</p>
+                      <p className="text-sm font-medium text-on-surface">{l.label}</p>
+                      <p className="text-xs text-outline">{l.sub}</p>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-primary-400 group-hover:translate-x-0.5 transition-all duration-150" />
+                  <ArrowRight className="w-4 h-4 text-outline group-hover:text-primary-400 group-hover:translate-x-0.5 transition-all duration-150" />
                 </Link>
               ))}
             </div>
@@ -352,12 +352,12 @@ export default function Dashboard() {
       )}
       {insights && (
         <div className="mb-6">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mb-3">Resumen inteligente</p>
+          <p className="text-[11px] font-semibold text-outline uppercase tracking-widest mb-3">Resumen inteligente</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard title="Promedio mensual"     value={cfmt((insights as any).monthlyAverageExpenses)}            icon="📊" color="yellow" />
-            <StatCard title="Tasa de ahorro"       value={`${(insights as any).savingsRate?.toFixed(1) ?? 0}%`}           icon="💹" color="green" />
-            <StatCard title="Fondo emergencia"     value={`${(insights as any).monthsOfEmergencyFund?.toFixed(1) ?? 0} m`} icon="🛡️" color="blue" />
-            <StatCard title="Transacciones mes"    value={`${(insights as any).transactionCount ?? 0}`}                   icon="🔢" color="gray" />
+            <StatCard title="Promedio mensual" value={cfmt((insights as any).monthlyAverageExpenses)}            icon="📊" color="yellow" />
+            <StatCard title="Tasa de ahorro" value={`${(insights as any).savingsRate?.toFixed(1) ?? 0}%`}           icon="💹" color="green" />
+            <StatCard title="Fondo emergencia" value={`${(insights as any).monthsOfEmergencyFund?.toFixed(1) ?? 0} m`} icon="🛡️" color="blue" />
+            <StatCard title="Transacciones mes" value={`${(insights as any).transactionCount ?? 0}`}                   icon="🔢" color="gray" />
           </div>
         </div>
       )}
