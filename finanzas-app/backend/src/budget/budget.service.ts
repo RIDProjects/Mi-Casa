@@ -227,11 +227,14 @@ export class BudgetService {
     }
   }
 
-  async findByHouse(houseId: string) {
+  // `limit` lets callers that only need the latest budget (summary, health
+  // score) skip loading the whole history with its nested relations.
+  async findByHouse(houseId: string, limit?: number) {
     const budgets = await this.budgetRepo.find({
       where: { house: { id: houseId } },
       relations: ['incomeSources', 'categories', 'categories.expenses'],
       order: { createdAt: 'DESC' },
+      ...(limit ? { take: limit } : {}),
     });
     const result = budgets.map((b) => ({ ...b, summary: this.computeSummary(b) }));
     if (result[0]) {

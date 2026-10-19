@@ -236,3 +236,17 @@ describe('BudgetService monthly normalization', () => {
     expect(monthly(1000, Periodicity.MONTHLY)).toBe(1000);
   });
 });
+
+describe('BudgetService.findByHouse limit', () => {
+  it('passes take to the query only when a limit is given', async () => {
+    const find = jest.fn().mockResolvedValue([]);
+    const noop = {} as any;
+    const service = new BudgetService({ find } as any, noop, noop, noop, noop, noop, noop, noop);
+
+    await service.findByHouse('h1');
+    expect(find.mock.calls[0][0]).not.toHaveProperty('take');
+
+    await service.findByHouse('h1', 1);
+    expect(find.mock.calls[1][0]).toMatchObject({ take: 1, order: { createdAt: 'DESC' } });
+  });
+});

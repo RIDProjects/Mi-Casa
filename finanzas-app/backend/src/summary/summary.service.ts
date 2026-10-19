@@ -92,7 +92,7 @@ export class SummaryService {
 
   async getSummary(houseId: string) {
     const [budgets, debtsSummary, cards, loans, goals, funds] = await Promise.all([
-      this.budgetService.findByHouse(houseId),
+      this.budgetService.findByHouse(houseId, 1),
       this.debtsService.getSummary(houseId),
       this.creditCardsService.findByHouse(houseId),
       this.loansService.findByHouse(houseId),
@@ -259,7 +259,7 @@ export class SummaryService {
     const breakdown: Record<string, { points: number; max: number; label: string; status: string }> = {};
 
     // 1. Savings rate (25 pts)
-    const budgets = await this.budgetService.findByHouse(houseId);
+    const budgets = await this.budgetService.findByHouse(houseId, 1);
     if (budgets.length > 0) {
       const summary = (budgets[0] as any).summary;
       const income = summary?.totalMonthlyIncome ?? 0;

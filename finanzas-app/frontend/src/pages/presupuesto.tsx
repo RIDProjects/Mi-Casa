@@ -310,7 +310,24 @@ export default function PresupuestoPage() {
     { enabled: !!activeBudgetId, staleTime: 0 },
   );
 
-  const refresh = () => { qc.invalidateQueries(['budget', activeBudgetId]); qc.invalidateQueries('budgets'); };
+  // The dashboard derives income/expenses/plan from the budget, and caches
+  // them (globalSummary has a 60s staleTime), so they must be invalidated too
+  // or the numbers lag behind what was just edited here.
+  const refresh = () => {
+    qc.invalidateQueries(['budget', activeBudgetId]);
+    qc.invalidateQueries('budgets');
+    qc.invalidateQueries('budgetDashboard');
+    qc.invalidateQueries('globalSummary');
+    qc.invalidateQueries('transactionsDashboard');
+  };
+
+  // PUT /budget/:id already returns the full updated budget (with summary and
+  // plan): write it straight into the cache so the screen updates instantly
+  // instead of waiting for two refetches of the whole budget tree.
+  const applyUpdatedBudget = (updated: Budget) => {
+    qc.setQueryData(['budget', updated.id], updated);
+    qc.setQueryData<Budget[]>('budgets', (list) => (list ?? []).map((b) => (b.id === updated.id ? updated : b)));
+  };
 
   const createBudgetMut = useMutation((d: any) => budgetAPI.create(d), {
     onSuccess: () => { toast.success('Presupuesto creado'); setShowBudgetModal(false); setBudgetForm({ name: '', year: new Date().getFullYear(), savingsTargetPercent: 20 }); qc.invalidateQueries('budgets'); },
@@ -337,7 +354,7 @@ export default function PresupuestoPage() {
     onError: (e: any) => { toast.error(getErr(e)); },
   });
   const updateSavingsMut = useMutation((pct: number) => budgetAPI.update(activeBudgetId!, { savingsTargetPercent: pct }), {
-    onSuccess: () => { toast.success('Meta de ahorro actualizada'); setShowSavingsModal(false); refresh(); },
+    onSuccess: (res: any) => { toast.success('Meta de ahorro actualizada'); setShowSavingsModal(false); applyUpdatedBudget(res.data); refresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
   const updateRuleMut = useMutation(
@@ -346,7 +363,7 @@ export default function PresupuestoPage() {
       savingsTargetPercent: rule === '50-30-20' ? 20 : 10,
     }),
     {
-      onSuccess: () => { toast.success('Regla actualizada'); refresh(); },
+      onSuccess: (res: any) => { toast.success('Regla actualizada'); applyUpdatedBudget(res.data); refresh(); },
       onError: (e: any) => { toast.error(getErr(e)); },
     },
   );
