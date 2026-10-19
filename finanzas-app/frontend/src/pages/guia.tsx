@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
+import guiaHtml from '../content/guia.html';
 import { BookOpen, LayoutDashboard, X, PartyPopper } from 'lucide-react';
 
 export default function GuiaPage() {
@@ -64,7 +65,7 @@ export default function GuiaPage() {
         {/* Guide iframe — takes all remaining space */}
         <div className="flex-1 overflow-hidden">
           <iframe
-            src="/guia.html"
+            srcDoc={guiaHtml}
             title="Guía de Módulos — Mi Casa Pro"
             className="w-full h-full border-0 min-h-[calc(100vh-72px)]"
           />
