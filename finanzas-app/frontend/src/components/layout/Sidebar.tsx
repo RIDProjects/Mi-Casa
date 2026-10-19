@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
@@ -53,6 +53,10 @@ const adminNavItems: NavItem[] = [
   { href: '/admin/houses',  label: 'Casas',      icon: Building2, group: 'Administración' },
 ];
 
+// Every page renders its own <Layout>, so the Sidebar remounts on each navigation and its scroll
+// would jump back to the top. Remember it across mounts.
+const scrollMemory = { aside: 0, nav: 0 };
+
 interface SidebarProps { isOpen?: boolean; onClose?: () => void; }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -88,6 +92,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }, new Map<string, NavItem[]>()),
   );
 
+  const restoreAside = useCallback((el: HTMLElement | null) => { if (el) el.scrollTop = scrollMemory.aside; }, []);
+  const restoreNav = useCallback((el: HTMLElement | null) => { if (el) el.scrollTop = scrollMemory.nav; }, []);
+
+  // After restoring the position, make sure the current module is visible (e.g. landing on /tarjetas).
+  useEffect(() => {
+    document.querySelectorAll('[aria-current="page"]').forEach(el => el.scrollIntoView({ block: 'nearest', behavior: 'instant' }));
+  }, [router.pathname]);
+
   const handleLinkClick = () => onClose?.();
 
   const NavLink = ({ item }: { item: NavItem }) => {
@@ -104,6 +116,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return (
       <Link
         href={item.href}
+        aria-current={isActive ? 'page' : undefined}
         onClick={handleLinkClick}
         className={clsx(
           'group flex items-center gap-3 px-3 py-2 rounded-[10px] text-[13px] transition-all duration-150 active:scale-[0.98]',
@@ -126,7 +139,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   };
 
   const sidebarContent = (
-    <aside className={clsx(
+    <aside
+      ref={restoreAside}
+      onScroll={e => { scrollMemory.aside = e.currentTarget.scrollTop; }}
+      className={clsx(
       'w-64 flex flex-col h-full border-r border-border-light overflow-y-auto md:overflow-visible',
       'bg-surface-container-lowest dark:bg-surface-container-low',
     )}>
@@ -141,7 +157,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
 
       {/* Nav */}
-      <nav className="px-3 py-4 md:overflow-y-auto md:flex-1 space-y-5" aria-label="Principal">
+      <nav
+        ref={restoreNav}
+        onScroll={e => { scrollMemory.nav = e.currentTarget.scrollTop; }}
+        className="px-3 py-4 md:overflow-y-auto md:flex-1 space-y-5"
+        aria-label="Principal"
+      >
         {groupedNav.map(([group, items]) => (
           <div key={group}>
             <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-outline">{group}</p>
@@ -182,6 +203,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <Link
           href="/guia"
+          aria-current={router.pathname === '/guia' ? 'page' : undefined}
           onClick={handleLinkClick}
           className={clsx(
             'flex items-center gap-3 px-3 py-2 text-[12px] font-medium rounded-lg transition-all duration-150',

@@ -43,7 +43,7 @@ export default function StatCard({
   }
 
   return (
-    <div className="group bg-surface-container-lowest dark:bg-surface-container-low border border-border-light rounded-[14px] p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-2.5 sm:gap-4 shadow-soft transition-all duration-200 hover:shadow-lift hover:-translate-y-0.5">
+    <div className="animate-stat group bg-surface-container-lowest dark:bg-surface-container-low border border-border-light rounded-[14px] p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-2.5 sm:gap-4 shadow-soft transition-all duration-200 hover:shadow-lift hover:-translate-y-0.5">
       {icon && (
         <div className={clsx('shrink-0 text-xl', iconColorMap[color])}>
           {icon}

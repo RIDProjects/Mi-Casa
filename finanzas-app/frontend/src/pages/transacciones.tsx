@@ -626,8 +626,8 @@ export default function TransaccionesPage() {
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={50} />
               <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(value: number) => cfmt(value)} />
-              <Bar dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
-              <Bar dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar animationDuration={750} animationEasing="ease-out" dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar animationDuration={750} animationEasing="ease-out" dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         </div>

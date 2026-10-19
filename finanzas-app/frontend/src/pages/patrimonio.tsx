@@ -306,7 +306,7 @@ export default function PatrimonioPage() {
                   return [`${currencySymbol}${fmt(value)}`, labels[name] ?? name];
                 }}
               />
-              <Area
+              <Area animationDuration={750} animationEasing="ease-out"
                 type="monotone"
                 dataKey="netWorth"
                 stroke="#3b82f6"
