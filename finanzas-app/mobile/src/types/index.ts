@@ -249,6 +249,7 @@ export interface MonthlySummary {
   balance: number;
   emergencyFund?: number;
   savingsRate?: number;
+  currency?: string;
 }
 
 // ─── Budget ──────────────────────────────────────────────────────────────────

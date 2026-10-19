@@ -31,8 +31,6 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-const fmt = formatMoney;
-
 function SkeletonCard() {
   return (
     <View style={[skStyles.card]}>
@@ -83,6 +81,7 @@ export default function DashboardScreen() {
   const {
     data: summary,
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: ['summary'],
@@ -114,6 +113,8 @@ export default function DashboardScreen() {
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
+  const currency = summary?.currency;
+  const fmt = (amount: number) => formatMoney(amount, currency);
   const totalIngresos = summary?.totalIngresos ?? 0;
   const totalGastos = summary?.totalGastos ?? 0;
   const balance = summary?.balance ?? (totalIngresos - totalGastos);
@@ -158,6 +159,13 @@ export default function DashboardScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {isError && (
+          <TouchableOpacity style={styles.errorBanner} onPress={() => refetch()} activeOpacity={0.8}>
+            <Ionicons name="alert-circle-outline" size={18} color={Colors.red} />
+            <Text style={styles.errorText}>No se pudieron cargar tus datos. Toca para reintentar.</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Balance principal */}
         <View style={[styles.balanceCard, { borderColor: isBalancePositive ? Colors.green + '60' : Colors.red + '60' }]}>
@@ -413,6 +421,18 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
   },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.red + '60',
+    backgroundColor: Colors.card,
+  },
+  errorText: { color: Colors.red, fontSize: 13, flex: 1 },
   balanceCard: {
     backgroundColor: Colors.card,
     borderRadius: 18,
