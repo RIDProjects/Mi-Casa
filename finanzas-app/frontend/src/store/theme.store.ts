@@ -29,6 +29,12 @@ export const useThemeStore = create<ThemeStore>()(
       theme: getInitialTheme(),
       toggleTheme: () => {
         const newTheme = get().theme === 'light' ? 'dark' : 'light';
+        if (typeof window !== 'undefined') {
+          // Cross-fade colours instead of flipping instantly (CSS lives in globals.css)
+          const root = document.documentElement;
+          root.classList.add('theme-transition');
+          window.setTimeout(() => root.classList.remove('theme-transition'), 450);
+        }
         set({ theme: newTheme });
         // Apply to document
         if (typeof window !== 'undefined') {

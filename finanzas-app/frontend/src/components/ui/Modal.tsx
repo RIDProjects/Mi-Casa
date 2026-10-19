@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import React from 'react';
 import { X } from 'lucide-react';
 
@@ -14,6 +14,16 @@ const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl
 
 export default function Modal({ isOpen, onClose, title, children, size = 'md' }: Props) {
   const titleId  = 'modal-title';
+  // Keep the dialog mounted briefly after closing so it can animate out
+  const [rendered, setRendered] = useState(isOpen);
+  const [closing, setClosing] = useState(false);
+  useEffect(() => {
+    if (isOpen) { setRendered(true); setClosing(false); return; }
+    if (!rendered) return;
+    setClosing(true);
+    const t = setTimeout(() => { setRendered(false); setClosing(false); }, 180);
+    return () => clearTimeout(t);
+  }, [isOpen, rendered]);
   const panelRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -43,13 +53,13 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!rendered) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-surface-container-lowest/50 backdrop-blur-sm flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 animate-backdrop-in"
+        className={`absolute inset-0 ${closing ? 'animate-backdrop-out' : 'animate-backdrop-in'}`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -61,7 +71,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col focus:outline-none animate-fade-in bg-surface-container-lowest border border-border-light rounded-2xl shadow-modal overflow-hidden`}
+        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col focus:outline-none ${closing ? 'animate-modal-out' : 'animate-fade-in'} bg-surface-container-lowest border border-border-light rounded-2xl shadow-modal overflow-hidden`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-surface-gray">
