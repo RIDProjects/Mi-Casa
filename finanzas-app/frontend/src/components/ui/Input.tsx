@@ -28,7 +28,7 @@ export function Input({ label, error, hint, id, className, ...props }: InputProp
         ].join(' ')}
         {...props}
       />
-      {error && <p className="font-body-small text-body-small text-danger">{error}</p>}
+      {error && <p className="font-body-small text-body-small text-danger-ink">{error}</p>}
       {hint && !error && <p className="font-body-small text-body-small text-outline">{hint}</p>}
     </div>
   );

@@ -129,7 +129,7 @@ export default function EmergencyFundPage() {
   return (
     <Layout>
       <PageHeader
-        title="💰 Calculadora de Fondo de Emergencia"
+        title="Calculadora de Fondo de Emergencia"
         subtitle="Calcula cuánto necesitas para estar seguro"
         action={
           canCreate ? (
@@ -203,7 +203,7 @@ export default function EmergencyFundPage() {
               {/* Results - Like Excel */}
               <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant mb-6">
                 <div className="px-4 py-3 border-b border-outline-variant">
-                  <h2 className="text-lg font-semibold text-on-surface">💰 Calcula tu Fondo de Emergencia</h2>
+                  <h2 className="text-lg font-semibold text-on-surface">Calcula tu Fondo de Emergencia</h2>
                   <p className="font-body-default text-on-surface-variant">¡Empieza aquí!</p>
                 </div>
 
@@ -232,15 +232,15 @@ export default function EmergencyFundPage() {
                   {/* Results Display */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="bg-success/10 border border-success/25 rounded-lg p-4">
-                      <p className="text-sm text-ok-ink">🏆 Monto óptimo ({fund.targetMonths} meses)</p>
+                      <p className="text-sm text-ok-ink">Monto óptimo ({fund.targetMonths} meses)</p>
                       <p className="text-2xl font-bold text-ok-ink">{cfmt(optimalFund)}</p>
                     </div>
                     <div className="bg-warning/10 border border-warning/25 rounded-lg p-4">
-                      <p className="text-sm text-warn-ink">🎯 Monto mínimo ({fund.minimumMonths} meses)</p>
+                      <p className="text-sm text-warn-ink">Monto mínimo ({fund.minimumMonths} meses)</p>
                       <p className="text-2xl font-bold text-warn-ink">{cfmt(minimumFund)}</p>
                     </div>
                     <div className="bg-primary-container/10 border border-primary-container/25 rounded-lg p-4">
-                      <p className="text-sm text-info-ink">📅 Ahorro mensual mínimo</p>
+                      <p className="text-sm text-info-ink">Ahorro mensual mínimo</p>
                       <p className="text-2xl font-bold text-info-ink">{fund.savingPeriodMonths > 0 ? cfmt(monthlySavingsRequired) : '—'}</p>
                     </div>
                   </div>

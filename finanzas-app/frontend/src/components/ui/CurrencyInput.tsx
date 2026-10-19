@@ -29,7 +29,7 @@ export function CurrencyInput({ label, value, onChange, placeholder = '0.00', id
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full pl-10 pr-3 py-2 border rounded-lg text-sm bg-panel border-outline-variant text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors ${error ? 'border-danger' : ''}`}
+          className={`w-full pl-10 pr-3 py-2 border rounded-lg text-sm bg-panel border-outline-variant text-on-surface placeholder-outline focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-transparent transition-colors ${error ? 'border-danger' : ''}`}
         />
       </div>
       {error && <p className="text-xs text-danger-ink">{error}</p>}

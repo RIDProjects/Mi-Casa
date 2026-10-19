@@ -14,9 +14,11 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { useCurrencyFormatter } from '../lib/currency';
 import { useCountUp } from '../hooks/useCountUp';
 import {
-  TrendingUp, TrendingDown, Receipt,
+  TrendingUp, TrendingDown, Receipt, Wallet, Banknote, Landmark, Target, ArrowDownLeft, ArrowUpRight,
+  Scale, BarChart3, PiggyBank, ShieldCheck, Hash, Home, AlertTriangle,
   ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
 } from 'lucide-react';
+import { Skeleton } from '../components/ui/Skeleton';
 import { MONTHS } from '../lib/format';
 
 const safeNum = (n: unknown): number => { const v = Number(n); return Number.isFinite(v) ? v : 0; };
@@ -102,8 +104,12 @@ export default function Dashboard() {
   if (loadingDebts) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-sm text-outline">Cargando dashboard...</div>
+        <div className="space-y-6" aria-busy="true" aria-label="Cargando dashboard">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-40 w-full !rounded-2xl" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map(i => <Skeleton key={i} className="h-24 !rounded-[14px]" />)}
+          </div>
         </div>
       </Layout>
     );
@@ -122,8 +128,8 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <div className="mb-8 flex items-start justify-between flex-wrap gap-3">
         <div>
-          <p className="text-sm text-outline font-medium">{GREETING}, {user?.name?.split(' ')[0]}</p>
-          <h1 className="text-2xl font-bold text-on-surface tracking-tight mt-0.5">
+          <p className="text-sm text-on-surface-variant font-medium">{GREETING}, {user?.name?.split(' ')[0]}</p>
+          <h1 className="font-page-title text-page-title text-on-surface tracking-tight mt-0.5">
             {currentMonthName} {currentYear}
           </h1>
         </div>
@@ -131,7 +137,7 @@ export default function Dashboard() {
           <CurrencyToggle />
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-border-light /[0.08] rounded-xl hover:bg-surface-gray /[0.05] transition-colors text-on-surface-variant"
+            className="btn-secondary !min-h-[34px] !px-3 no-print"
           >
             <Printer size={14} /> PDF
           </button>
@@ -143,8 +149,7 @@ export default function Dashboard() {
         <div className="mb-6"><ErrorState message="No se pudo cargar el patrimonio neto" onRetry={() => refetchGlobalSummary()} /></div>
       )}
       {globalSummary && (
-        <div className="mb-6 rounded-2xl p-6 border border-black/[0.06] /[0.08] bg-panel animate-fade-up"
-          style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
+        <div className="mb-6 rounded-2xl p-6 border border-border-light bg-panel shadow-premium animate-fade-up">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             {/* Net worth hero */}
             <div>
@@ -184,10 +189,10 @@ export default function Dashboard() {
       {budgetSummary && (
         <div className="mb-6 animate-stagger-1">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-            <StatCard title="Ingresos" value={cfmt(budgetSummary.totalMonthlyIncome)}   icon="💰" color="green" />
-            <StatCard title="Gastos" value={cfmt(budgetSummary.totalMonthlyExpenses)}  icon="💸" color="yellow" />
-            <StatCard title="Disponible" value={cfmt(Math.abs(budgetSummary.available))}  icon="🏦" color={budgetSummary.available >= 0 ? 'green' : 'red'} subtitle={budgetSummary.available < 0 ? 'En déficit' : undefined} />
-            <StatCard title={`Meta ahorro (${savingsPercent}%)`} value={cfmt(budgetSummary.savingsTargetAmount)} icon="🎯" color="blue" />
+            <StatCard title="Ingresos" value={cfmt(budgetSummary.totalMonthlyIncome)}   icon={<Banknote size={20} />} color="green" />
+            <StatCard title="Gastos" value={cfmt(budgetSummary.totalMonthlyExpenses)}  icon={<Receipt size={20} />} color="yellow" />
+            <StatCard title="Disponible" value={cfmt(Math.abs(budgetSummary.available))}  icon={<Landmark size={20} />} color={budgetSummary.available >= 0 ? 'green' : 'red'} subtitle={budgetSummary.available < 0 ? 'En déficit' : undefined} />
+            <StatCard title={`Meta ahorro (${savingsPercent}%)`} value={cfmt(budgetSummary.savingsTargetAmount)} icon={<Target size={20} />} color="blue" />
           </div>
 
           {/* Advisory */}
@@ -204,9 +209,9 @@ export default function Dashboard() {
       {/* ── Debts row ── */}
       {hasPermission('debts', 'view') && debtsSummary && (
         <div className="grid grid-cols-3 gap-3 mb-6 animate-stagger-2">
-          <StatCard title="Me deben" value={cfmt(debtsSummary.totalTheyOweMe)} icon="💙" color="green" />
-          <StatCard title="Debo" value={cfmt(debtsSummary.totalIOwe)}       icon="❤️" color="red" />
-          <StatCard title="Balance" value={cfmt(balance)} icon={balance >= 0 ? '✅' : '⚠️'} color={balance >= 0 ? 'green' : 'red'} />
+          <StatCard title="Me deben" value={cfmt(debtsSummary.totalTheyOweMe)} icon={<ArrowDownLeft size={20} />} color="green" />
+          <StatCard title="Debo" value={cfmt(debtsSummary.totalIOwe)}       icon={<ArrowUpRight size={20} />} color="red" />
+          <StatCard title="Balance" value={cfmt(balance)} icon={balance >= 0 ? <Scale size={20} /> : <AlertTriangle size={20} />} color={balance >= 0 ? 'green' : 'red'} />
         </div>
       )}
 
@@ -242,8 +247,7 @@ export default function Dashboard() {
           <ErrorState message="No se pudo cargar el resumen de transacciones" onRetry={() => refetchTxSummary()} />
         )}
         {txSummary && (
-          <div className="bg-panel rounded-2xl border border-black/[0.06] /[0.08] p-5"
-            style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
+          <div className="bg-panel rounded-2xl border border-border-light shadow-premium p-5">
             <h2 className="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
               <Receipt className="w-4 h-4 text-outline" /> Transacciones — {currentMonthName}
             </h2>
@@ -266,7 +270,7 @@ export default function Dashboard() {
                     <span>{thermometerLabel(txPct)}</span>
                     <span className="font-semibold">{txPct.toFixed(0)}%</span>
                   </div>
-                  <div className="w-full bg-surface-container /[0.06] rounded-full h-2 overflow-hidden">
+                  <div className="w-full bg-surface-container rounded-full h-2 overflow-hidden">
                     <div
                       className={`h-2 rounded-full transition-all duration-700 ${thermometerColor(txPct)}`}
                       style={{ width: `${Math.min(100, txPct)}%` }}
@@ -302,8 +306,7 @@ export default function Dashboard() {
 
         {/* Pie chart */}
         {categoryPieData.length > 0 && (
-          <div className="bg-panel rounded-2xl border border-black/[0.06] /[0.08] p-5"
-            style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
+          <div className="bg-panel rounded-2xl border border-border-light shadow-premium p-5">
             <h2 className="text-sm font-semibold text-on-surface mb-2">Gastos por categoría</h2>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
@@ -321,24 +324,23 @@ export default function Dashboard() {
 
         {/* Hogar quick links */}
         {hasPermission('purchases', 'view') && (
-          <div className="bg-panel rounded-2xl border border-black/[0.06] /[0.08] p-5"
-            style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)' }}>
-            <h2 className="text-sm font-semibold text-on-surface mb-3">🏡 Hogar</h2>
+          <div className="bg-panel rounded-2xl border border-border-light shadow-premium p-5">
+            <h2 className="text-sm font-semibold text-on-surface mb-3 flex items-center gap-2"><Home className="w-4 h-4 text-outline" /> Hogar</h2>
             <div className="space-y-1">
               {[
                 { href: '/purchases', icon: <ShoppingCart className="w-4 h-4" />, label: 'Lista de la Compra', sub: 'Mercado, precios, totales por lugar' },
                 { href: '/registro-gastos', icon: <BookOpen className="w-4 h-4" />, label: 'Registro de Gastos', sub: 'Salidas y gastos del hogar' },
               ].map(l => (
                 <Link key={l.href} href={l.href}
-                  className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-gray /[0.04] transition-all duration-150 group active:scale-[0.99]">
+                  className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-gray transition-all duration-150 group active:scale-[0.99]">
                   <div className="flex items-center gap-3">
-                    <span className="text-outline group-hover:text-primary-500 transition-colors duration-150">{l.icon}</span>
+                    <span className="text-outline group-hover:text-primary transition-colors duration-150">{l.icon}</span>
                     <div>
                       <p className="text-sm font-medium text-on-surface">{l.label}</p>
                       <p className="text-xs text-outline">{l.sub}</p>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-outline group-hover:text-primary-400 group-hover:translate-x-0.5 transition-all duration-150" />
+                  <ArrowRight className="w-4 h-4 text-outline group-hover:text-primary group-hover:translate-x-0.5 transition-all duration-150" />
                 </Link>
               ))}
             </div>
@@ -354,10 +356,10 @@ export default function Dashboard() {
         <div className="mb-6">
           <p className="text-[11px] font-semibold text-outline uppercase tracking-widest mb-3">Resumen inteligente</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <StatCard title="Promedio mensual" value={cfmt((insights as any).monthlyAverageExpenses)}            icon="📊" color="yellow" />
-            <StatCard title="Tasa de ahorro" value={`${(insights as any).savingsRate?.toFixed(1) ?? 0}%`}           icon="💹" color="green" />
-            <StatCard title="Fondo emergencia" value={`${(insights as any).monthsOfEmergencyFund?.toFixed(1) ?? 0} m`} icon="🛡️" color="blue" />
-            <StatCard title="Transacciones mes" value={`${(insights as any).transactionCount ?? 0}`}                   icon="🔢" color="gray" />
+            <StatCard title="Promedio mensual" value={cfmt((insights as any).monthlyAverageExpenses)}            icon={<BarChart3 size={20} />} color="yellow" />
+            <StatCard title="Tasa de ahorro" value={`${(insights as any).savingsRate?.toFixed(1) ?? 0}%`}           icon={<PiggyBank size={20} />} color="green" />
+            <StatCard title="Fondo emergencia" value={`${(insights as any).monthsOfEmergencyFund?.toFixed(1) ?? 0} m`} icon={<ShieldCheck size={20} />} color="blue" />
+            <StatCard title="Transacciones mes" value={`${(insights as any).transactionCount ?? 0}`}                   icon={<Hash size={20} />} color="gray" />
           </div>
         </div>
       )}

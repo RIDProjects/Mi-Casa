@@ -136,7 +136,7 @@ export default function CuotasPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al cargar las cuotas</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -166,7 +166,7 @@ export default function CuotasPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Compromiso mensual</p>
-          <p className="text-2xl font-bold text-danger">${fmt(compromisoMensual)}</p>
+          <p className="text-2xl font-bold text-danger-ink">${fmt(compromisoMensual)}</p>
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Cuotas activas</p>
@@ -174,13 +174,13 @@ export default function CuotasPage() {
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Deuda total restante</p>
-          <p className="text-2xl font-bold text-warning">${fmt(deudaTotalRestante)}</p>
+          <p className="text-2xl font-bold text-warn-ink">${fmt(deudaTotalRestante)}</p>
         </div>
       </div>
 
       {cuotas.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">💳</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><CreditCard size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">Sin cuotas registradas</h3>
           <p className="text-sm text-on-surface-variant mt-1">Registra tus compras en cuotas para hacer un seguimiento</p>
           <button onClick={() => setShowModal(true)} className="mt-4 btn-primary text-sm">
@@ -244,7 +244,7 @@ export default function CuotasPage() {
                       </div>
                       <div>
                         <p className="text-xs text-on-surface-variant">Restante</p>
-                        <p className="font-semibold text-danger">
+                        <p className="font-semibold text-danger-ink">
                           ${fmt(remaining * Number(c.installmentAmount || 0))}
                         </p>
                       </div>

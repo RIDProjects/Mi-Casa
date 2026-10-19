@@ -288,7 +288,7 @@ export default function RegistroGastosPage() {
         <div className="space-y-4">
           <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
             <div className="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
-              <h2 className="text-sm font-semibold text-on-surface">📊 Resumen del Mes</h2>
+              <h2 className="text-sm font-semibold text-on-surface">Resumen del Mes</h2>
             </div>
             <div className="p-4 space-y-2">
               {resumen.map((r: any) => (

@@ -9,8 +9,8 @@ export default function ServerErrorPage() {
     <div className="min-h-screen bg-surface flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
         <MiCasaProLogo className="justify-center mb-8" />
-        <div className="flex items-center justify-center gap-2 text-6xl font-black text-danger tracking-tight">
-          <AlertTriangle size={44} className="text-danger" /> 500
+        <div className="flex items-center justify-center gap-2 text-6xl font-black text-danger-ink tracking-tight">
+          <AlertTriangle size={44} className="text-danger-ink" /> 500
         </div>
         <h1 className="font-section-title text-[22px] text-on-surface mt-3">Error del servidor</h1>
         <p className="font-body-default text-body-default text-on-surface-variant mt-2">

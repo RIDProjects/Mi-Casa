@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { authAPI } from '../services/api';
+import AuthShell from '../components/layout/AuthShell';
 import { Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 
 export default function ResetPassword() {
@@ -34,37 +35,29 @@ export default function ResetPassword() {
 
   if (!token && typeof window !== 'undefined') {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-          <XCircle size={48} className="text-danger mx-auto mb-4" />
-          <h2 className="font-section-title text-[22px] text-on-surface mb-3">Enlace inválido</h2>
+      <AuthShell subtitle="Enlace inválido">
+        <div className="text-center">
+          <XCircle size={48} className="text-danger-ink mx-auto mb-4" />
+          <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-3">Enlace inválido</h2>
           <p className="text-on-surface-variant text-sm mb-6">Este enlace de recuperación no es válido o ya fue utilizado.</p>
           <button onClick={() => router.push('/forgot-password')} className="btn-primary w-full">
             Solicitar nuevo enlace
           </button>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🏠</div>
-          <h1 className="font-module-title text-[28px] text-primary">Mi Casa Pro</h1>
-          <p className="font-caption text-caption text-on-surface-variant mt-1">Gestión Financiera del Hogar</p>
-        </div>
-
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
+    <AuthShell subtitle="Nueva contraseña">
           {done ? (
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center">
-                  <CheckCircle size={32} className="text-success" />
+                  <CheckCircle size={32} className="text-ok-ink" />
                 </div>
               </div>
-              <h2 className="font-section-title text-[22px] text-on-surface mb-3">¡Contraseña actualizada!</h2>
+              <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-3">¡Contraseña actualizada!</h2>
               <p className="text-on-surface-variant text-sm mb-6">
                 Ya puedes iniciar sesión con tu nueva contraseña.
               </p>
@@ -74,7 +67,7 @@ export default function ResetPassword() {
             </div>
           ) : (
             <>
-              <h2 className="font-section-title text-[22px] text-on-surface mb-2">Nueva contraseña</h2>
+              <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-2">Nueva contraseña</h2>
               <p className="font-body-default text-on-surface-variant mb-6">
                 Elige una contraseña segura con al menos 6 caracteres.
               </p>
@@ -96,7 +89,7 @@ export default function ResetPassword() {
                       {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  {weak && <p className="text-xs text-warning mt-1">Demasiado corta</p>}
+                  {weak && <p className="text-xs text-warn-ink mt-1">Demasiado corta</p>}
                 </div>
 
                 <div>
@@ -109,12 +102,12 @@ export default function ResetPassword() {
                     placeholder="Repite la contraseña"
                     required
                   />
-                  {mismatch && <p className="text-xs text-danger mt-1">Las contraseñas no coinciden</p>}
+                  {mismatch && <p className="text-xs text-danger-ink mt-1">Las contraseñas no coinciden</p>}
                 </div>
 
                 {error && (
                   <div className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3">
-                    <p className="text-danger text-sm">{error}</p>
+                    <p className="text-danger-ink text-sm">{error}</p>
                   </div>
                 )}
 
@@ -124,8 +117,6 @@ export default function ResetPassword() {
               </form>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </AuthShell>
   );
 }

@@ -193,18 +193,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <button
           onClick={logout}
-          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger hover:bg-surface-variant rounded-lg transition-all duration-150"
+          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger-ink hover:bg-surface-variant rounded-lg transition-all duration-150"
         >
           <LogOut size={16} />
-          Cerrar Sesión
+          Cerrar sesión
         </button>
 
         <button
           onClick={handleLogoutAll}
-          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger hover:bg-surface-variant rounded-lg transition-all duration-150"
+          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger-ink hover:bg-surface-variant rounded-lg transition-all duration-150"
         >
           <LogOut size={16} />
-          Cerrar sesión en todos los dispositivos
+          Cerrar todas las sesiones
         </button>
       </div>
     </aside>

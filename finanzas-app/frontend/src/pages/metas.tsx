@@ -154,7 +154,7 @@ export default function MetasPage() {
       {/* ── Error state ── */}
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="font-body-default text-body-default text-on-surface-variant">Error al cargar las metas</p>
           <button onClick={() => refetch()} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant text-on-surface-variant font-body-default text-body-default hover:bg-surface-variant transition-colors">
             <RefreshCw size={16} /> Reintentar
@@ -306,7 +306,7 @@ export default function MetasPage() {
                           {faltante > 0 && (
                             <div className="bg-surface-container-low rounded-lg p-3">
                               <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">FALTANTE</p>
-                              <p className="font-card-title text-card-title text-warning">{cfmt(faltante)}</p>
+                              <p className="font-card-title text-card-title text-warn-ink">{cfmt(faltante)}</p>
                             </div>
                           )}
                           {meses > 0 && (
@@ -336,7 +336,7 @@ export default function MetasPage() {
                         )}
 
                         {pct >= 100 && (
-                          <div className="flex items-center gap-2 text-success font-card-title text-card-title">
+                          <div className="flex items-center gap-2 text-ok-ink font-card-title text-card-title">
                             <CheckCircle size={16} /> Meta alcanzada
                           </div>
                         )}
@@ -399,11 +399,11 @@ export default function MetasPage() {
                       )}
                       {faltante > 0 && (
                         <span className="font-caption text-caption text-on-surface-variant">
-                          Faltante: <span className="text-warning font-medium">{cfmt(faltante)}</span>
+                          Faltante: <span className="text-warn-ink font-medium">{cfmt(faltante)}</span>
                         </span>
                       )}
                       {pct >= 100 && (
-                        <span className="flex items-center gap-1 text-success font-caption text-caption">
+                        <span className="flex items-center gap-1 text-ok-ink font-caption text-caption">
                           <CheckCircle size={12} /> Completada
                         </span>
                       )}
@@ -428,7 +428,7 @@ export default function MetasPage() {
               </div>
 
               <div className="bg-surface-container-low border border-border-light rounded-xl p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center text-success flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center text-ok-ink flex-shrink-0">
                   <CheckCircle size={22} />
                 </div>
                 <div>
@@ -438,7 +438,7 @@ export default function MetasPage() {
               </div>
 
               <div className="bg-surface-container-low border border-border-light rounded-xl p-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center text-warning flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center text-warn-ink flex-shrink-0">
                   <Calendar size={22} />
                 </div>
                 <div>

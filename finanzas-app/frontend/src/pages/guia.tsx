@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
-import { BookOpen, LayoutDashboard, X } from 'lucide-react';
+import { BookOpen, LayoutDashboard, X, PartyPopper } from 'lucide-react';
 
 export default function GuiaPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function GuiaPage() {
         {/* Welcome banner — only after first registration */}
         {showWelcomeBanner && (
           <div className="flex items-start gap-4 px-6 py-4 bg-primary-container border-b border-primary/20 flex-shrink-0">
-            <span className="text-2xl flex-shrink-0">🎉</span>
+            <PartyPopper size={24} className="text-info-ink flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-on-primary-container text-sm">¡Bienvenido/a a Mi Casa Pro!</p>
               <p className="text-sm text-on-primary-container/80 mt-0.5">

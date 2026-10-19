@@ -9,7 +9,7 @@ import { useCurrencyStore, HouseCurrency } from '../../store/currency.store';
 import { useAuthStore } from '../../store/auth.store';
 import { houseCurrenciesAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Coins, Plus, Trash2, Star } from 'lucide-react';
+import { Coins, Plus, Trash2, Star, ArrowLeftRight } from 'lucide-react';
 
 const COMMON_CURRENCIES = [
   { code: 'CUP', name: 'Peso Cubano',                   symbol: '$',    locale: 'es-CU' },
@@ -174,7 +174,7 @@ export default function MonedasPage() {
 
       {currencies.length === 0 ? (
         <EmptyState
-          emoji="💱"
+          icon={<ArrowLeftRight size={28} />}
           title="No hay monedas configuradas"
           description="Agrega una moneda local y luego suma las que uses habitualmente"
           action={{ label: 'Agregar moneda', onClick: () => setShowAddModal(true) }}
@@ -193,7 +193,7 @@ export default function MonedasPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   {/* Currency info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-sm font-bold text-primary-700 dark:text-primary-300 shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary-container/15 /30 flex items-center justify-center text-sm font-bold text-info-ink shrink-0">
                       {currency.symbol}
                     </div>
                     <div className="min-w-0">

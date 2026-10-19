@@ -21,10 +21,10 @@ const TIPO_PAGO_OPTIONS = [
 ];
 
 const ADVISORY: Record<string, { label: string; badge: string }> = {
-  full:    { label: '✅ Pagás saldo completo',       badge: 'bg-success/15 text-ok-ink ' },
-  minimum: { label: '⚠️ Pagás mínimo',               badge: 'bg-warning/15 text-warn-ink ' },
-  stopped: { label: '❌ Dejaste de pagar',            badge: 'bg-danger/15 text-danger-ink ' },
-  partial: { label: '💡 Pago parcial',               badge: 'bg-primary-container/15 text-info-ink ' },
+  full:    { label: 'Pagás saldo completo',       badge: 'bg-success/15 text-ok-ink ' },
+  minimum: { label: 'Pagás mínimo',               badge: 'bg-warning/15 text-warn-ink ' },
+  stopped: { label: 'Dejaste de pagar',            badge: 'bg-danger/15 text-danger-ink ' },
+  partial: { label: 'Pago parcial',               badge: 'bg-primary-container/15 text-info-ink ' },
 };
 
 const defaultForm = {
@@ -110,9 +110,9 @@ export default function TarjetasPage() {
   const totalUtilPct = totalLimite > 0 ? (totalDeuda / totalLimite) * 100 : 0;
 
   const summaryColor =
-    totalUtilPct < 30 ? 'text-success' :
-    totalUtilPct < 50 ? 'text-warning' :
-    'text-danger';
+    totalUtilPct < 30 ? 'text-ok-ink' :
+    totalUtilPct < 50 ? 'text-warn-ink' :
+    'text-danger-ink';
 
   return (
     <Layout>
@@ -131,7 +131,7 @@ export default function TarjetasPage() {
 
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al cargar las tarjetas</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -145,7 +145,7 @@ export default function TarjetasPage() {
           <div className="flex flex-wrap gap-6 items-center">
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Deuda total</p>
-              <p className="text-xl font-bold text-danger">{cfmt(totalDeuda)}</p>
+              <p className="text-xl font-bold text-danger-ink">{cfmt(totalDeuda)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Límite total</p>
@@ -177,10 +177,10 @@ export default function TarjetasPage() {
       )}
       {!isLoading && !isError && cards.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">💳</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><CreditCard size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">No hay tarjetas registradas</h3>
           <p className="text-sm text-on-surface-variant mt-1">Agrega tu primera tarjeta para empezar a hacer seguimiento</p>
-          <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
+          <button onClick={() => setShowModal(true)} className="mt-4 px-4 py-2 bg-primary-container text-white rounded-lg text-sm">
             Agregar tarjeta
           </button>
         </div>
@@ -232,7 +232,7 @@ export default function TarjetasPage() {
                           {daysLeft !== null && <Badge variant={urgVariant}>Pago en {daysLeft}d</Badge>}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-danger">{cfmt(saldo)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-danger-ink">{cfmt(saldo)}</td>
                       <td className="px-4 py-3 text-right text-on-surface-variant">{cfmt(limite)}</td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${utilizationColor(util)}`}>

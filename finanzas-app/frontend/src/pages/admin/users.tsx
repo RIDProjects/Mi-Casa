@@ -137,7 +137,7 @@ export default function UsersPage() {
     <Layout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">👥 Usuarios</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Usuarios</h1>
           <p className="text-on-surface-variant mt-1">{(users as any[]).length} usuarios registrados</p>
         </div>
         <button onClick={() => { resetForm(); setShowCreate(true); }} className="btn-primary flex items-center gap-2">

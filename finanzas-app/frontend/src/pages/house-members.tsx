@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { housesAPI, houseInviteAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
 import toast from 'react-hot-toast';
-import { Users, Plus, UserCheck, UserX, Loader2, ShieldAlert } from 'lucide-react';
+import { Users, Plus, UserCheck, UserX, Loader2, ShieldAlert, Home } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
@@ -75,7 +75,7 @@ export default function HouseMembersPage() {
     return (
       <Layout>
         <EmptyState
-          emoji="🏠"
+          icon={<Home size={28} />}
           title="Sin casa asignada"
           description="No perteneces a ningún hogar todavía"
         />
@@ -121,7 +121,7 @@ export default function HouseMembersPage() {
 
       {members.length === 0 ? (
         <EmptyState
-          emoji="👥"
+          icon={<Users size={28} />}
           title="Sin miembros en el hogar"
           description="Agrega usuarios para gestionar el acceso a la casa"
           action={canManage ? { label: 'Crear usuario', onClick: () => setShowCreateModal(true) } : undefined}

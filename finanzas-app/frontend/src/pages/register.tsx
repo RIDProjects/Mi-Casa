@@ -3,14 +3,13 @@ import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import { authAPI } from '../services/api';
 import { useAuthStore } from '../store/auth.store';
-import { useThemeStore } from '../store/theme.store';
-import { Moon, Sun, ArrowLeft, Home, Eye, EyeOff } from 'lucide-react';
+import AuthShell from '../components/layout/AuthShell';
+import { Home, Eye, EyeOff } from 'lucide-react';
 
 export default function Register() {
   const router = useRouter();
   const setAuth = useAuthStore(s => s.setAuth);
   const isAuthenticated = useAuthStore(s => s.isAuthenticated);
-  const { theme, toggleTheme } = useThemeStore();
   const invitationToken = typeof router.query.invitationToken === 'string' ? router.query.invitationToken : '';
   const isInvitation = !!invitationToken;
   const [form, setForm] = useState({
@@ -68,36 +67,8 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className="fixed top-4 right-4 p-3 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant"
-      >
-        {theme === 'dark' ? (
-          <Sun size={24} className="text-warning" />
-        ) : (
-          <Moon size={24} className="text-on-surface-variant" />
-        )}
-      </button>
-
-      {/* Back to Login */}
-      <button
-        onClick={() => router.push('/login')}
-        className="fixed top-4 left-4 p-3 rounded-full bg-surface-container hover:bg-surface-container-high transition-colors border border-outline-variant text-on-surface"
-      >
-        <ArrowLeft size={24} />
-      </button>
-
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🏠</div>
-          <h1 className="font-module-title text-[28px] text-primary">Mi Casa Pro</h1>
-          <p className="font-caption text-caption text-on-surface-variant mt-1">Crea tu cuenta y únete a tu casa</p>
-        </div>
-
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
-          <h2 className="font-section-title text-[22px] text-on-surface mb-6">Registrarse</h2>
+    <AuthShell subtitle="Crear cuenta" onBack={() => router.push('/login')} backLabel="Volver al login">
+          <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-6">Registrarse</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isInvitation ? (
               <div className="bg-primary-container/10 rounded-lg p-4 border border-primary-container/25 flex items-center gap-2">
@@ -204,7 +175,7 @@ export default function Register() {
                 aria-live="polite"
                 className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3 flex items-center gap-2"
               >
-                <span className="text-danger text-sm font-medium">{error}</span>
+                <span className="text-danger-ink text-sm font-medium">{error}</span>
               </div>
             )}
             <button type="submit" disabled={loading} className="btn-primary w-full py-3 text-base">
@@ -220,8 +191,6 @@ export default function Register() {
               </button>
             </p>
           </div>
-        </div>
-      </div>
-    </div>
+        </AuthShell>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { authAPI } from '../services/api';
+import AuthShell from '../components/layout/AuthShell';
 import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
 
 export default function ForgotPassword() {
@@ -25,23 +26,15 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-4">🏠</div>
-          <h1 className="font-module-title text-[28px] text-primary">Mi Casa Pro</h1>
-          <p className="font-caption text-caption text-on-surface-variant mt-1">Gestión Financiera del Hogar</p>
-        </div>
-
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-lg p-8">
+    <AuthShell subtitle="Recuperar acceso">
           {sent ? (
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-16 h-16 bg-success/15 rounded-full flex items-center justify-center">
-                  <CheckCircle size={32} className="text-success" />
+                  <CheckCircle size={32} className="text-ok-ink" />
                 </div>
               </div>
-              <h2 className="font-section-title text-[22px] text-on-surface mb-3">Revisa tu email</h2>
+              <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-3">Revisa tu email</h2>
               <p className="text-on-surface-variant text-sm mb-6 leading-relaxed">
                 Si el email <strong>{email}</strong> está registrado, vas a recibir un enlace para
                 restablecer tu contraseña en los próximos minutos.
@@ -60,7 +53,7 @@ export default function ForgotPassword() {
                 <ArrowLeft size={16} /> Volver al login
               </button>
 
-              <h2 className="font-section-title text-[22px] text-on-surface mb-2">Recuperar contraseña</h2>
+              <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-2">Recuperar contraseña</h2>
               <p className="font-body-default text-on-surface-variant mb-6">
                 Ingresa tu email y te enviamos un enlace para crear una nueva contraseña.
               </p>
@@ -83,7 +76,7 @@ export default function ForgotPassword() {
 
                 {error && (
                   <div className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3">
-                    <p className="text-danger text-sm">{error}</p>
+                    <p className="text-danger-ink text-sm">{error}</p>
                   </div>
                 )}
 
@@ -93,8 +86,6 @@ export default function ForgotPassword() {
               </form>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </AuthShell>
   );
 }

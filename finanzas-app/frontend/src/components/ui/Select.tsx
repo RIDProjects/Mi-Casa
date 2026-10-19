@@ -42,7 +42,7 @@ export function Select({ label, error, hint, placeholder, id, className, childre
           className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-outline"
         />
       </div>
-      {error && <p className="font-body-small text-body-small text-danger">{error}</p>}
+      {error && <p className="font-body-small text-body-small text-danger-ink">{error}</p>}
       {hint && !error && <p className="font-body-small text-body-small text-outline">{hint}</p>}
     </div>
   );

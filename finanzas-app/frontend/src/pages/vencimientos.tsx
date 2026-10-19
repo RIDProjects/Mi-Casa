@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery } from 'react-query';
 import { upcomingBillsAPI } from '../services/api';
-import { Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Calendar, AlertTriangle, RefreshCw, CheckCircle, CreditCard, Landmark, Package, ClipboardList } from 'lucide-react';
 
 import { useCurrencyFormatter } from '../lib/currency';
 import { parseLocalDate } from '../lib/dates';
@@ -14,10 +14,10 @@ const FILTER_OPTIONS = [
   { label: '60 días', value: 60 },
 ];
 
-const TYPE_ICONS: Record<string, string> = {
-  credit_card: '💳',
-  loan: '🏦',
-  cuota: '📦',
+const TYPE_ICONS: Record<string, JSX.Element> = {
+  credit_card: <CreditCard size={18} />,
+  loan: <Landmark size={18} />,
+  cuota: <Package size={18} />,
 };
 
 function daysUntil(dateStr: string): number {
@@ -66,8 +66,8 @@ export default function VencimientosPage() {
             onClick={() => setDays(opt.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               days === opt.value
-                ? 'bg-primary-600 text-white'
-                : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary-400'
+                ? 'bg-primary-container text-white'
+                : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary-container'
             }`}
           >
             {opt.label}
@@ -91,7 +91,7 @@ export default function VencimientosPage() {
         </div>
       ) : sorted.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">✅</div>
+          <div className="icon-emerald !p-4 !rounded-2xl mb-4 inline-flex"><CheckCircle size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">Sin vencimientos próximos</h3>
           <p className="font-body-default text-on-surface-variant mt-1">No hay pagos pendientes en los próximos {days} días</p>
         </div>
@@ -103,7 +103,7 @@ export default function VencimientosPage() {
             </p>
             <div className="text-right">
               <p className="text-xs text-on-surface-variant uppercase tracking-wide">Total a pagar</p>
-              <p className="text-xl font-bold text-danger">{cfmt(totalDue)}</p>
+              <p className="text-xl font-bold text-danger-ink">{cfmt(totalDue)}</p>
             </div>
           </div>
 
@@ -111,7 +111,7 @@ export default function VencimientosPage() {
             {sorted.map((bill: any, idx: number) => {
               const d = daysUntil(bill.dueDate);
               const { badge, border, dot } = urgencyClasses(d);
-              const icon = TYPE_ICONS[bill.type] ?? '📋';
+              const icon = TYPE_ICONS[bill.type] ?? <ClipboardList size={18} />;
               const dateLabel = parseLocalDate(bill.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
               return (

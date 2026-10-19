@@ -196,7 +196,7 @@ export default function InversionesPage() {
       {/* Table or empty state */}
       {list.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">📈</div>
+          <div className="icon-emerald !p-4 !rounded-2xl mb-4 inline-flex"><TrendingUp size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">Sin inversiones registradas</h3>
           <p className="text-sm text-on-surface-variant mt-1">Agrega tu primera inversión para comenzar</p>
         </div>
@@ -248,14 +248,14 @@ export default function InversionesPage() {
                           <div>
                             <span>{tna}% TNA</span>
                             {tipo === 'plazo_fijo' && (
-                              <div className="text-xs text-success mt-0.5">
+                              <div className="text-xs text-ok-ink mt-0.5">
                                 TEA: {calcTEA(tna).toFixed(2)}%
                               </div>
                             )}
                           </div>
                         ) : '—'}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-success">
+                      <td className="px-4 py-3 font-semibold text-ok-ink">
                         {symbol}{fmt(currentValue)}
                       </td>
                       <td className="px-4 py-3 text-on-surface-variant text-xs">

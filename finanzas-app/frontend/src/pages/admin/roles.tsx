@@ -76,7 +76,7 @@ export default function RolesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-page-title text-page-title text-on-surface">🛡️ Roles y Permisos</h1>
+          <h1 className="font-page-title text-page-title text-on-surface">Roles y Permisos</h1>
           <p className="text-on-surface-variant mt-1">Control de acceso basado en roles (RBAC)</p>
         </div>
         <button onClick={() => { setForm({ name: '', description: '', permissionIds: [] }); setEditRole(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
@@ -102,7 +102,7 @@ export default function RolesPage() {
                 <button onClick={() => handleEdit(role)} className="text-primary hover:text-info-ink p-1">
                   <Edit2 size={16} />
                 </button>
-                <button onClick={() => setDeleteId(role.id)} className="text-danger hover:text-danger-ink p-1">
+                <button onClick={() => setDeleteId(role.id)} className="text-danger-ink hover:text-danger-ink p-1">
                   <Trash2 size={16} />
                 </button>
               </div>

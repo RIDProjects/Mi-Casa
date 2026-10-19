@@ -7,11 +7,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { ErrorState } from '../components/ui/ErrorState';
 import toast from 'react-hot-toast';
-import {
-  Plus, Trash2, ChevronDown, ChevronRight,
-  Calculator, TrendingUp, TrendingDown, CreditCard, Bug, Pencil,
-  Lock, BrainCircuit,
-} from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, Calculator, TrendingUp, TrendingDown, CreditCard, Bug, Pencil, Lock, BrainCircuit, AlertTriangle, Meh, ThumbsUp, Dumbbell, Trophy } from 'lucide-react';
 import { fmt } from '../lib/format';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -55,12 +51,12 @@ const PERIOD_DIVISOR: Record<Periodicity, number> = {
 
 const toMonthly = (amount: number, p: Periodicity) => Number(amount) / PERIOD_DIVISOR[p];
 
-function savingsRating(pct: number): { emoji: string; text: string; color: string } {
-  if (pct <= 5) return { emoji: '⚠️', text: 'Muy bajo. Intenta ahorrar más.',           color: 'text-danger' };
-  if (pct <= 10) return { emoji: '😐', text: 'Aceptable, pero puedes mejorar.',            color: 'text-warning' };
-  if (pct <= 15) return { emoji: '👍', text: 'Bueno. Seguí así.',                         color: 'text-primary' };
-  if (pct <= 25) return { emoji: '💪', text: '¡Ideal! Muy buen hábito de ahorro.',        color: 'text-success' };
-  return              { emoji: '🏆', text: '¡Excelente! Estás en el top de ahorradores.', color: 'text-success' };
+function savingsRating(pct: number): { icon: JSX.Element; text: string; color: string } {
+  if (pct <= 5) return { icon: <AlertTriangle size={16} />, text: 'Muy bajo. Intenta ahorrar más.',           color: 'text-danger-ink' };
+  if (pct <= 10) return { icon: <Meh size={16} />, text: 'Aceptable, pero puedes mejorar.',            color: 'text-warn-ink' };
+  if (pct <= 15) return { icon: <ThumbsUp size={16} />, text: 'Bueno. Seguí así.',                         color: 'text-info-ink' };
+  if (pct <= 25) return { icon: <Dumbbell size={16} />, text: '¡Ideal! Muy buen hábito de ahorro.',        color: 'text-ok-ink' };
+  return              { icon: <Trophy size={16} />, text: '¡Excelente! Estás en el top de ahorradores.', color: 'text-ok-ink' };
 }
 
 const INCOME_TYPE_LABELS: Record<string, string> = {
@@ -133,7 +129,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
             <button
               onClick={e => { e.stopPropagation(); onDeleteCategory(); }}
               title="Eliminar categoría"
-              className="p-1 text-outline hover:text-danger transition-colors rounded"
+              className="p-1 text-outline hover:text-danger-ink transition-colors rounded"
               aria-label="Eliminar categoría"
             >
               <Trash2 size={13} />
@@ -224,7 +220,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
                     <td className="px-4 py-3 text-center">
                       <button
                         onClick={() => setDeleteExpense(e)}
-                        className="text-outline hover:text-danger p-1 transition-colors"
+                        className="text-outline hover:text-danger-ink p-1 transition-colors"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -443,9 +439,9 @@ export default function PresupuestoPage() {
   const gastosVariables   = summary.totalMonthlyExpenses - gastosFijos;
 
   const advisoryBanner = {
-    ok:      { cls: 'bg-surface-container border border-success/30 text-success',  msg: '¡Felicidades! Puedes alcanzar tus metas de ahorro.' },
-    warning: { cls: 'bg-surface-container border border-warning/30 text-warning',  msg: `Cuidado — no alcanzás tu meta de ahorro del ${budget.savingsTargetPercent}%.` },
-    danger:  { cls: 'bg-surface-container border border-danger/30 text-danger',    msg: 'Tus gastos superan tus ingresos.' },
+    ok:      { cls: 'bg-surface-container border border-success/30 text-ok-ink',  msg: '¡Felicidades! Puedes alcanzar tus metas de ahorro.' },
+    warning: { cls: 'bg-surface-container border border-warning/30 text-warn-ink',  msg: `Cuidado — no alcanzás tu meta de ahorro del ${budget.savingsTargetPercent}%.` },
+    danger:  { cls: 'bg-surface-container border border-danger/30 text-danger-ink',    msg: 'Tus gastos superan tus ingresos.' },
   }[summary.advisory];
 
   // Budget health score (0-100) based on advisory + savings pct
@@ -462,10 +458,10 @@ export default function PresupuestoPage() {
     : 'En Riesgo';
 
   const advisoryLabelColor = summary.advisory === 'ok'
-    ? 'text-success'
+    ? 'text-ok-ink'
     : summary.advisory === 'warning'
-    ? 'text-warning'
-    : 'text-danger';
+    ? 'text-warn-ink'
+    : 'text-danger-ink';
 
   return (
     <Layout>
@@ -483,15 +479,15 @@ export default function PresupuestoPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INGRESOS/MES</p>
-          <p className="font-section-title text-[22px] text-success">${fmt(summary.totalMonthlyIncome)}</p>
+          <p className="font-section-title text-[22px] text-ok-ink">${fmt(summary.totalMonthlyIncome)}</p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">GASTOS/MES</p>
-          <p className="font-section-title text-[22px] text-danger">${fmt(summary.totalMonthlyExpenses)}</p>
+          <p className="font-section-title text-[22px] text-danger-ink">${fmt(summary.totalMonthlyExpenses)}</p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">DISPONIBLE/MES</p>
-          <p className={`font-section-title text-[22px] ${summary.available >= 0 ? 'text-success' : 'text-danger'}`}>
+          <p className={`font-section-title text-[22px] ${summary.available >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
             ${fmt(Math.abs(summary.available))}
           </p>
         </div>
@@ -508,12 +504,12 @@ export default function PresupuestoPage() {
 
       {/* ── Budget alert banners ── */}
       {(summary.alerts?.overBudget || summary.available < 0) && (
-        <div className="bg-surface-container border border-danger/30 text-danger rounded-xl px-4 py-3 flex items-center gap-2 mb-4">
+        <div className="bg-surface-container border border-danger/30 text-danger-ink rounded-xl px-4 py-3 flex items-center gap-2 mb-4">
           <span className="font-body-default">Tus gastos superan tus ingresos este mes</span>
         </div>
       )}
       {(summary.alerts?.antExpensesWarning || (summary.antExpensesTotal > 0 && summary.totalMonthlyIncome > 0 && summary.antExpensesTotal / summary.totalMonthlyIncome > 0.15)) && (
-        <div className="bg-surface-container border border-warning/30 text-warning rounded-xl px-4 py-3 flex items-center gap-2 mb-6">
+        <div className="bg-surface-container border border-warning/30 text-warn-ink rounded-xl px-4 py-3 flex items-center gap-2 mb-6">
           <span className="font-body-default">Los gastos hormiga superan el 15% de tus ingresos</span>
         </div>
       )}
@@ -558,7 +554,7 @@ export default function PresupuestoPage() {
                         {INCOME_TYPE_LABELS[inc.type] ?? inc.type}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-card-title text-card-title text-success">${fmt(inc.amount)}</td>
+                    <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(inc.amount)}</td>
                     <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">${fmt(Number(inc.amount) * 12)}</td>
                     <td className="px-2 py-3 text-center whitespace-nowrap">
                       <button
@@ -571,7 +567,7 @@ export default function PresupuestoPage() {
                       >
                         <Pencil size={13} />
                       </button>
-                      <button onClick={() => setDeleteIncomeId(inc.id)} className="text-outline hover:text-danger p-1 transition-colors">
+                      <button onClick={() => setDeleteIncomeId(inc.id)} className="text-outline hover:text-danger-ink p-1 transition-colors">
                         <Trash2 size={13} />
                       </button>
                     </td>
@@ -582,8 +578,8 @@ export default function PresupuestoPage() {
             <tfoot>
               <tr className="bg-surface-container-low font-bold border-t-2 border-outline-variant">
                 <td className="px-6 py-3 font-card-title text-card-title text-on-surface" colSpan={2}>Total ingresos</td>
-                <td className="px-4 py-3 text-right font-card-title text-card-title text-success">${fmt(summary.totalMonthlyIncome)}</td>
-                <td className="px-4 py-3 text-right font-body-small text-body-small text-success">${fmt(totalAnualIngresos)}</td>
+                <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(summary.totalMonthlyIncome)}</td>
+                <td className="px-4 py-3 text-right font-body-small text-body-small text-ok-ink">${fmt(totalAnualIngresos)}</td>
                 <td />
               </tr>
               <tr>
@@ -623,7 +619,7 @@ export default function PresupuestoPage() {
               </div>
             </div>
             <p className={`mt-3 font-body-small text-body-small ${rating.color}`}>
-              {rating.emoji} {rating.text}
+              <span className="inline-flex items-center gap-1.5">{rating.icon}{rating.text}</span>
             </p>
           </div>
 
@@ -662,18 +658,18 @@ export default function PresupuestoPage() {
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-surface-container rounded-lg p-3 text-center">
                 <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">AL MES</p>
-                <p className="font-card-title text-[20px] text-warning">${fmt(summary.antExpensesTotal)}</p>
+                <p className="font-card-title text-[20px] text-warn-ink">${fmt(summary.antExpensesTotal)}</p>
               </div>
               <div className="bg-surface-container rounded-lg p-3 text-center">
                 <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">MÁX. POR DÍA</p>
-                <p className="font-card-title text-[20px] text-warning">${fmt(antPerDay)}</p>
+                <p className="font-card-title text-[20px] text-warn-ink">${fmt(antPerDay)}</p>
               </div>
             </div>
             {summary.antExpensesTotal > 0 ? (
               <div className={`font-body-small text-body-small px-3 py-2 rounded-lg border ${
                 summary.available >= savingsMonthly
-                  ? 'bg-surface-container border-success/30 text-success'
-                  : 'bg-surface-container border-danger/30 text-danger'
+                  ? 'bg-surface-container border-success/30 text-ok-ink'
+                  : 'bg-surface-container border-danger/30 text-danger-ink'
               }`}>
                 {summary.available >= savingsMonthly
                   ? 'Bien, puedes lograr tus metas de ahorro.'
@@ -695,21 +691,21 @@ export default function PresupuestoPage() {
           <div className="p-4 space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-outline-variant">
               <div className="flex items-center gap-2">
-                <TrendingUp size={14} className="text-success" />
+                <TrendingUp size={14} className="text-ok-ink" />
                 <span className="font-body-default text-on-surface-variant">Ingresos anuales</span>
               </div>
-              <span className="font-card-title text-card-title text-success">${fmt(totalAnualIngresos)}</span>
+              <span className="font-card-title text-card-title text-ok-ink">${fmt(totalAnualIngresos)}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-outline-variant">
               <div className="flex items-center gap-2">
-                <TrendingDown size={14} className="text-danger" />
+                <TrendingDown size={14} className="text-danger-ink" />
                 <span className="font-body-default text-on-surface-variant">Gastos anuales</span>
               </div>
-              <span className="font-card-title text-card-title text-danger">${fmt(totalAnualGastos)}</span>
+              <span className="font-card-title text-card-title text-danger-ink">${fmt(totalAnualGastos)}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-outline-variant">
               <span className="font-body-default text-on-surface font-semibold">Disponible anual</span>
-              <span className={`font-card-title text-card-title ${disponibleAnual >= 0 ? 'text-success' : 'text-danger'}`}>
+              <span className={`font-card-title text-card-title ${disponibleAnual >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
                 ${fmt(Math.abs(disponibleAnual))}
               </span>
             </div>
@@ -775,7 +771,7 @@ export default function PresupuestoPage() {
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INVERSIÓN MÍN.</p>
-              <p className="font-card-title text-card-title text-success">${fmt(summary.plan.minMonthlyInvestment)}/mes</p>
+              <p className="font-card-title text-card-title text-ok-ink">${fmt(summary.plan.minMonthlyInvestment)}/mes</p>
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">FONDO EMERGENCIA</p>
@@ -786,11 +782,11 @@ export default function PresupuestoPage() {
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">OCIO/MES</p>
-              <p className="font-card-title text-card-title text-warning">${fmt(summary.plan.entertainmentBudget)}</p>
+              <p className="font-card-title text-card-title text-warn-ink">${fmt(summary.plan.entertainmentBudget)}</p>
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">TOPE GASTOS FIJOS</p>
-              <p className="font-card-title text-card-title text-danger">${fmt(summary.plan.fixedExpensesCap)}</p>
+              <p className="font-card-title text-card-title text-danger-ink">${fmt(summary.plan.fixedExpensesCap)}</p>
             </div>
           </div>
         </div>
@@ -884,7 +880,7 @@ export default function PresupuestoPage() {
             <div className="flex justify-between font-caption text-caption text-outline mt-1"><span>0%</span><span>25%</span><span>50%</span></div>
           </div>
           <div className={`font-body-small text-body-small px-3 py-2 rounded-lg bg-surface-container ${savingsRating(savingsTargetEdit).color}`}>
-            {savingsRating(savingsTargetEdit).emoji} {savingsRating(savingsTargetEdit).text}
+            <span className="inline-flex items-center gap-1.5">{savingsRating(savingsTargetEdit).icon}{savingsRating(savingsTargetEdit).text}</span>
           </div>
           <div className="flex justify-end gap-3 pt-1">
             <button type="button" onClick={() => setShowSavingsModal(false)} className="btn-secondary">Cancelar</button>

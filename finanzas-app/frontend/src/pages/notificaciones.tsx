@@ -101,7 +101,7 @@ export default function NotificacionesPage() {
             onClick={() => setFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filter === f.key
-                ? 'bg-primary-600 text-white'
+                ? 'bg-primary-container text-white'
                 : 'bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-variant'
             }`}
           >
@@ -135,7 +135,7 @@ export default function NotificacionesPage() {
 
       {!isLoading && !isError && filtered.length === 0 && (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">🔔</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><Bell size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">No hay notificaciones</h3>
           <p className="font-body-default text-on-surface-variant mt-1">
             {filter === 'no_leidas' ? 'No tienes notificaciones sin leer' : 'No hay notificaciones en esta categoría'}

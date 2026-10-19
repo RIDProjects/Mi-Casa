@@ -180,11 +180,11 @@ export default function SimuladorPage() {
                 </div>
                 <div className="bg-danger/10 rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">Total intereses</p>
-                  <p className="text-base font-bold text-danger">{cfmt(totalIntereses)}</p>
+                  <p className="text-base font-bold text-danger-ink">{cfmt(totalIntereses)}</p>
                 </div>
                 <div className="bg-warning/10 rounded-lg p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">% intereses</p>
-                  <p className="text-base font-bold text-warning">{pctIntereses.toFixed(1)}%</p>
+                  <p className="text-base font-bold text-warn-ink">{pctIntereses.toFixed(1)}%</p>
                 </div>
               </div>
 

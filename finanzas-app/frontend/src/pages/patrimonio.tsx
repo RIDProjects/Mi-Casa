@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
-import { Plus, TrendingUp, Download, Printer } from 'lucide-react';
+import { Plus, TrendingUp, Download, Printer, Home, Wallet } from 'lucide-react';
 import { useCurrencyStore } from '../store/currency.store';
 import { resolveRate } from '../lib/currency';
 import { CurrencyToggle } from '../components/ui/CurrencyToggle';
@@ -262,7 +262,7 @@ export default function PatrimonioPage() {
                 onClick={() => setHistoryMonths(m)}
                 className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors ${
                   historyMonths === m
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary-container text-white'
                     : 'bg-surface-container text-on-surface-variant hover:bg-surface-high '
                 }`}
               >
@@ -318,7 +318,7 @@ export default function PatrimonioPage() {
 
       <AssetSection
         title="Bienes Físicos"
-        emoji="🏠"
+        icon={<Home size={18} />}
         assets={physicalAssets}
         onEdit={handleEdit}
         onDelete={(id: string) => setDeleteId(id)}
@@ -328,7 +328,7 @@ export default function PatrimonioPage() {
 
       <AssetSection
         title="Efectivo y Cuentas"
-        emoji="💰"
+        icon={<Wallet size={18} />}
         assets={cashAssets}
         onEdit={handleEdit}
         onDelete={(id: string) => setDeleteId(id)}
@@ -347,8 +347,8 @@ export default function PatrimonioPage() {
             <label className="label">Tipo de activo</label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { v: 'physical', l: '🏠 Bien físico' },
-                { v: 'cash', l: '💰 Efectivo / Cuenta' },
+                { v: 'physical', l: 'Bien físico' },
+                { v: 'cash', l: 'Efectivo / Cuenta' },
               ].map(({ v, l }) => (
                 <button
                   key={v} type="button"
@@ -423,7 +423,7 @@ export default function PatrimonioPage() {
 
 function AssetSection({
   title,
-  emoji,
+  icon,
   assets,
   onEdit,
   onDelete,
@@ -431,7 +431,7 @@ function AssetSection({
   divider,
 }: {
   title: string;
-  emoji: string;
+  icon: React.ReactNode;
   assets: any[];
   onEdit: (a: any) => void;
   onDelete: (id: string) => void;
@@ -449,7 +449,7 @@ function AssetSection({
     <div className="bg-panel rounded-xl border border-border-light shadow-sm overflow-hidden mb-4">
       <div className="px-4 py-3 bg-surface-gray border-b border-border-light flex items-center justify-between">
         <h2 className="font-semibold text-on-surface">
-          {emoji} {title}
+          <span className="inline-flex items-center gap-2"><span className="text-info-ink">{icon}</span>{title}</span>
         </h2>
         <span className="text-sm font-bold text-on-surface-variant">{currencySymbol}{fmtLocal(total)}</span>
       </div>

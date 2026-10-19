@@ -54,7 +54,7 @@ export default function AdminDashboard() {
         <StatCard
           icon={<UserCheck size={18} />} label="Activos" value={stats?.activeUsers ?? 0}
           sub={`${stats?.total ? Math.round((stats.activeUsers / stats.total) * 100) : 0}% del total`}
-          color="text-success" bg="bg-success/10 "
+          color="text-ok-ink" bg="bg-success/10 "
         />
         <StatCard
           icon={<Home size={18} />} label="Casas" value={houses.length}
@@ -79,12 +79,12 @@ export default function AdminDashboard() {
         <StatCard
           icon={<AlertTriangle size={18} />} label="Riesgo de churn" value={stats?.churnRisk ?? 0}
           sub="Activos sin login en 30d"
-          color="text-warning" bg="bg-warning/10 "
+          color="text-warn-ink" bg="bg-warning/10 "
         />
         <StatCard
           icon={<UserX size={18} />} label="Nunca logueados" value={stats?.neverLogged ?? 0}
           sub="Registro sin primer acceso"
-          color="text-danger" bg="bg-danger/10 "
+          color="text-danger-ink" bg="bg-danger/10 "
         />
       </div>
 
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
           </div>
           <div className="mt-4 pt-4 border-t border-outline-variant flex items-center justify-between">
             <span className="text-xs text-on-surface-variant">Tasa de conversión</span>
-            <span className="text-sm font-bold text-success">{convRate}%</span>
+            <span className="text-sm font-bold text-ok-ink">{convRate}%</span>
           </div>
         </div>
 
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
             {[
               { label: 'Gestionar usuarios', href: '/admin/users', icon: <Users size={16} />, color: 'text-primary', bg: 'bg-primary-container/10 ' },
               { label: 'Gestionar casas',    href: '/admin/houses', icon: <Home size={16} />,  color: 'text-info-ink', bg: 'bg-primary-container/10 ' },
-              { label: 'Gestionar roles',    href: '/admin/roles',  icon: <Star size={16} />,  color: 'text-warning', bg: 'bg-warning/10 ' },
+              { label: 'Gestionar roles',    href: '/admin/roles',  icon: <Star size={16} />,  color: 'text-warn-ink', bg: 'bg-warning/10 ' },
             ].map(item => (
               <button
                 key={item.href}
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
           {(stats?.churnRisk ?? 0) > 0 && (
             <div className="mt-4 p-3 bg-warning/10 border border-warning/25 rounded-xl">
               <p className="text-xs font-medium text-warn-ink">
-                ⚠️ {stats!.churnRisk} usuario{stats!.churnRisk !== 1 ? 's' : ''} sin actividad en 30 días.
+                {stats!.churnRisk} usuario{stats!.churnRisk !== 1 ? 's' : ''} sin actividad en 30 días.
                 Considera enviar un recordatorio.
               </p>
             </div>

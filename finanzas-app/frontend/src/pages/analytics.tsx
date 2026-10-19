@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
                 onClick={() => setSelectedYear(y)}
                 className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                   selectedYear === y
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary-container text-white'
                     : 'bg-surface-container-lowest border border-outline-variant text-on-surface-variant'
                 }`}
               >
@@ -188,11 +188,11 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio gastos/mes</p>
-          <p className="text-xl font-bold text-danger">${fmt(avgExpenses)}</p>
+          <p className="text-xl font-bold text-danger-ink">${fmt(avgExpenses)}</p>
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio ingresos/mes</p>
-          <p className="text-xl font-bold text-success">${fmt(avgIncome)}</p>
+          <p className="text-xl font-bold text-ok-ink">${fmt(avgIncome)}</p>
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Gastos este mes</p>
@@ -200,7 +200,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">vs mes anterior</p>
-          <p className={`text-xl font-bold ${expenseDiff <= 0 ? 'text-success' : 'text-danger'}`}>
+          <p className={`text-xl font-bold ${expenseDiff <= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
             {expenseDiff <= 0 ? '' : '+'}{fmt(expenseDiff)}
           </p>
         </div>
@@ -210,13 +210,13 @@ export default function AnalyticsPage() {
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Mes mas gastador</p>
           <p className="font-bold text-on-surface">{topSpenderMonth?.name ?? '—'}</p>
-          {topSpenderMonth && <p className="text-sm text-danger">${fmt(topSpenderMonth.Gastos)}</p>}
+          {topSpenderMonth && <p className="text-sm text-danger-ink">${fmt(topSpenderMonth.Gastos)}</p>}
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Mes mas ahorrador</p>
           <p className="font-bold text-on-surface">{topSaverMonth?.name ?? '—'}</p>
           {topSaverMonth && (
-            <p className="text-sm text-success">
+            <p className="text-sm text-ok-ink">
               Ahorro: ${fmt(topSaverMonth.Ingresos - topSaverMonth.Gastos)}
             </p>
           )}
@@ -328,7 +328,7 @@ export default function AnalyticsPage() {
                       <span className="font-medium text-on-surface-variant">
                         {i + 1}. {cat}
                       </span>
-                      <span className="text-danger font-semibold">${fmt(total)}</span>
+                      <span className="text-danger-ink font-semibold">${fmt(total)}</span>
                     </div>
                     <div className="w-full bg-surface-container rounded-full h-2">
                       <div
@@ -365,9 +365,9 @@ export default function AnalyticsPage() {
                   return (
                     <tr key={i} className="hover:bg-surface-gray">
                       <td className="px-4 py-2 text-on-surface-variant font-medium">{d.name}</td>
-                      <td className="px-4 py-2 text-right text-success">${fmt(d.Ingresos)}</td>
-                      <td className="px-4 py-2 text-right text-danger">${fmt(d.Gastos)}</td>
-                      <td className={`px-4 py-2 text-right font-semibold ${bal >= 0 ? 'text-success' : 'text-danger'}`}>
+                      <td className="px-4 py-2 text-right text-ok-ink">${fmt(d.Ingresos)}</td>
+                      <td className="px-4 py-2 text-right text-danger-ink">${fmt(d.Gastos)}</td>
+                      <td className={`px-4 py-2 text-right font-semibold ${bal >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
                         {bal >= 0 ? '+' : ''}{fmt(bal)}
                       </td>
                     </tr>
