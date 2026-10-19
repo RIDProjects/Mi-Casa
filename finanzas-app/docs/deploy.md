@@ -1,14 +1,14 @@
 # Deploy runbook
 
-Single branch (`main`). Environments are Railway environments, not git branches.
+One long-lived branch per environment, promoted with pull requests: `dev` -> `staging` -> `main`.
 
 ## Environment matrix
 
-| Env | Trigger | Database | Backend URL | Frontend (Vercel) | Mobile (EAS channel) |
-|---|---|---|---|---|---|
-| `dev` | auto, after CI on push to `main` | own empty Postgres | https://backend-dev-2110.up.railway.app | preview deployment (placeholder `https://mi-casa-dev.vercel.app`) | `dev` |
-| `staging` | auto, after `dev` smoke test | own empty Postgres | https://backend-staging-494d.up.railway.app | placeholder `https://mi-casa-staging.vercel.app` | `staging` |
-| `production` | after `staging`, **manual approval** | production Postgres | https://backend-production-0d37.up.railway.app | production Vercel project | `production` |
+| Branch | Env | Trigger | Database | Backend URL | Frontend (Vercel) | Mobile (EAS channel) |
+|---|---|---|---|---|---|---|
+| `dev` | `dev` | push (merged PR) | own empty Postgres | https://backend-dev-2110.up.railway.app | branch preview (placeholder `https://mi-casa-dev.vercel.app`) | `development` |
+| `staging` | `staging` | push (PR `dev` -> `staging`) | own empty Postgres | https://backend-staging-494d.up.railway.app | branch preview (placeholder `https://mi-casa-staging.vercel.app`) | `preview` |
+| `main` | `production` | push (PR `staging` -> `main`), **manual approval** | production Postgres | https://backend-production-0d37.up.railway.app | production Vercel project | `production` |
 
 Each Railway environment has its own `JWT_SECRET` (96 hex chars, never shared), `SEED=false`, `NODE_ENV=production`
 and no email credentials (`RESEND_API_KEY` / `SMTP_*` are absent, so email is skipped). `FRONTEND_URL` for
@@ -16,30 +16,32 @@ and no email credentials (`RESEND_API_KEY` / `SMTP_*` are absent, so email is sk
 
 ## Release flow
 
-1. **Develop on a feature branch and open a PR to `main`.** Branch protection requires the `backend`, `frontend`
-   and `mobile` CI checks to pass; nobody pushes to `main` directly.
-2. **Try it in `dev` (optional, before merging).** *Actions -> Deploy backend -> Run workflow*, selecting the
-   feature branch. A run on any branch other than `main` runs CI and deploys to `dev` only.
-3. **Merge to `main`.** The pipeline runs CI, deploys to `dev`, then to **`staging`** (the first deploy of the
-   release), each followed by a smoke test.
-4. **Promote to production.** Only if `staging` is healthy does the `production` job start, and it waits for the
-   manual approval of the `production` GitHub Environment. After approval it deploys and runs the same smoke test.
-5. **If something fails** at any stage the later stages do not run; production is untouched. See Rollback below.
+1. **Work on a feature branch and open a PR into `dev`.** All three long-lived branches are protected by the
+   `Protect branches` ruleset: PR required, the `backend`, `frontend` and `mobile` CI checks must pass, no force
+   pushes, no deletion. Nobody pushes to them directly.
+2. **Merge into `dev`.** The pipeline runs CI, deploys the backend to Railway `dev`, waits until it is healthy and
+   smoke-tests it. This is where the work is exercised first.
+3. **Promote to `staging`.** Open a PR `dev` -> `staging`. Merging it deploys Railway `staging` (the first
+   production-like deploy: `NODE_ENV=production`, own database, migrations run from scratch-compatible state).
+4. **Promote to production.** Only when staging is healthy, open a PR `staging` -> `main`. Merging it starts the
+   `production` deploy, which waits for the manual approval of the `production` GitHub Environment (required
+   reviewer, `main` only), then deploys and smoke-tests.
+5. **If something fails** the branch does not advance: fix forward in `dev` and promote again. Production is only
+   touched by a push to `main`. See Rollback below. Hotfixes follow the same path (PR into `dev`, promote).
 
 ## Pipeline
 
 ```
-push to main (finanzas-app/backend/** or deploy workflows)
+push to dev | staging | main  (finanzas-app/backend/**)
   └─ ci (backend-ci.yml: tsc, lint, tests)
-      └─ dev      deploy -> assert pre-deploy -> wait healthy -> smoke
-          └─ staging  deploy -> ... -> smoke
-              └─ production  [GitHub Environment approval] deploy -> ... -> smoke
+      └─ deploy -> assert pre-deploy -> wait healthy -> smoke
+         environment = dev | staging | production (main; waits for GitHub Environment approval)
 ```
 
 - Workflows: `.github/workflows/deploy-backend.yml` (orchestration), `_deploy-backend-env.yml` (reusable per-env job).
 - Smoke test: `GET /health` must return `{"status":"ok"}` and `GET /api/v1/debts` without a token must return `401`.
-- One pipeline at a time (`concurrency: deploy-backend`, no cancel). A run waiting for production approval queues newer runs.
-- Backend-only: frontend/mobile changes do not trigger it. `workflow_dispatch` re-runs the pipeline manually.
+- One deploy per environment at a time (`concurrency: deploy-backend-<branch>`, no cancel). A run waiting for production approval queues newer pushes to `main`.
+- Backend-only: frontend/mobile changes do not trigger it. `workflow_dispatch` re-runs it manually on `dev`, `staging` or `main` (other branches are refused).
 - Migrations run as Railway **pre-deploy** (`typeorm migration:run`), not in the container `CMD`. A failed migration
   aborts the deploy and the previous deployment keeps serving. Back up production first (README → Backups).
 - Image: non-root (`node`), `CMD ["node","dist/main"]`, Docker `HEALTHCHECK`, Railway `healthcheckPath=/health`.
@@ -56,8 +58,8 @@ push to main (finanzas-app/backend/** or deploy workflows)
      --var i='{"preDeployCommand":["npx typeorm migration:run -d dist/database/data-source.js"],"healthcheckPath":"/health","healthcheckTimeout":60,"restartPolicyType":"ON_FAILURE","restartPolicyMaxRetries":5}'
    ```
    (Or Dashboard → backend → Settings → Deploy → Pre-deploy command / Healthcheck path.)
-2. **GitHub Environments** (Settings → Environments): create `dev`, `staging`, `production`.
-   On `production` add *Required reviewers* (yourself) and restrict deployment branches to `main`.
+2. **GitHub Environments** (already created): `dev`, `staging`, `production`. `production` has *Required reviewers*
+   and is restricted to `main`; restrict `dev` / `staging` to their own branch if you want.
 3. **Railway project tokens** (Dashboard → project `mi-casa-pro` → Settings → Tokens → New token, one per environment).
    Add each as the environment secret **`RAILWAY_TOKEN`** of the matching GitHub Environment:
 
@@ -78,9 +80,9 @@ If a service domain is recreated, update `base_url` in `deploy-backend.yml`.
 ## Frontend and mobile
 
 - **Frontend (Vercel)** is deployed by Vercel's Git integration, outside this pipeline. Production = `main` build;
-  `dev`/`staging` use preview deployments whose `NEXT_PUBLIC_API_URL` targets the matching backend. Promote
-  by promoting the deployment in Vercel (or alias it), separately from the backend.
-- **Mobile (EAS)** uses update channels `dev`, `staging`, `production` (`eas update --channel <name>`),
+  the `dev` and `staging` branches get Vercel branch previews; in Vercel -> Settings -> Environment Variables set
+  `NEXT_PUBLIC_API_URL` for *Preview* with the Git branch `dev` / `staging` pointing at the matching backend URL.
+- **Mobile (EAS)** uses the channels already defined in `eas.json`: `development` (branch `dev`), `preview` (branch `staging`) and `production` (branch `main`) (`eas update --branch <channel>`),
   with `EXPO_PUBLIC_API_URL` set per EAS environment. Not automated yet.
 
 ## Rollback
@@ -88,7 +90,7 @@ If a service domain is recreated, update `base_url` in `deploy-backend.yml`.
 - Fast: Railway Dashboard → backend (`<env>`) → Deployments → previous successful deployment → **Redeploy**
   (or `railway deployment list -s backend -e <env>` then `railway redeploy`/dashboard). Pre-deploy runs again but is a
   no-op when no new migration exists.
-- Code: revert the commit on `main` and let the pipeline promote it through every stage.
+- Code: revert the commit and promote the revert through `dev` -> `staging` -> `main`.
 - Schema: migrations are not auto-reverted. If a bad migration shipped, restore the pre-deploy backup, or
   `npx typeorm migration:revert -d dist/database/data-source.js` from a one-off Railway shell, **before** rolling
   back code that does not know the new schema.
