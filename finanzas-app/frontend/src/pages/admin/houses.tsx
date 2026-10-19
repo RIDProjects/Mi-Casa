@@ -2,8 +2,11 @@ import Layout from '../../components/layout/Layout';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { housesAPI } from '../../services/api';
+import Modal from '../../components/ui/Modal';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import PageHeader from '../../components/ui/PageHeader';
 import toast from 'react-hot-toast';
-import { Building2, Users, Edit2, Trash2, X, UserCheck, UserX, Loader2 } from 'lucide-react';
+import { Building2, Users, Edit2, Trash2, UserCheck, UserX, Loader2 } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -98,26 +101,21 @@ export default function AdminHouses() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-page-title text-page-title text-on-surface">Gestión de Casas</h1>
-          <p className="text-on-surface-variant mt-1">Administra las casas del sistema</p>
-        </div>
-      </div>
+      <PageHeader title="Gestión de casas" subtitle="Administra las casas del sistema" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {houses.map((house: any) => (
-          <div key={house.id} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+          <div key={house.id} className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden transition-shadow hover:shadow-lift">
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary-container/15 rounded-lg">
-                    <Building2 className="w-5 h-5 text-info-ink" />
+                  <div className="icon-blue !p-2.5">
+                    <Building2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-on-surface">{house.name}</h3>
+                    <h3 className="font-bold text-on-surface">{house.name}</h3>
                     <p className="font-body-default text-on-surface-variant">
-                      {house.members?.length || 0} miembros
+                      {house.members?.length || 0} {(house.members?.length || 0) === 1 ? 'miembro' : 'miembros'}
                     </p>
                   </div>
                 </div>
@@ -126,7 +124,7 @@ export default function AdminHouses() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleViewMembers(house)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary-container/10 text-primary rounded-lg hover:bg-primary-container/15 transition-colors text-sm"
+                  className="btn-secondary flex-1 !min-h-[38px]"
                 >
                   <Users size={16} />
                   Miembros
@@ -134,12 +132,13 @@ export default function AdminHouses() {
                 <button
                   onClick={() => handleEditName(house)}
                   className="p-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors"
+                  aria-label="Editar nombre"
                 >
                   <Edit2 size={16} />
                 </button>
               </div>
             </div>
-            <div className="px-6 py-3 bg-surface-container-low border-t border-outline-variant">
+            <div className="px-6 py-3 bg-surface-gray border-t border-border-light">
               <p className="text-xs text-on-surface-variant">
                 Creada: {new Date(house.createdAt).toLocaleDateString('es-ES')}
               </p>
@@ -149,8 +148,8 @@ export default function AdminHouses() {
 
         {houses.length === 0 && (
           <div className="col-span-full">
-            <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-12 text-center">
-              <Building2 size={48} className="mx-auto text-outline mb-4" />
+            <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-12 text-center">
+              <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><Building2 size={32} /></div>
               <p className="text-on-surface-variant">No hay casas todavía</p>
             </div>
           </div>
@@ -158,147 +157,82 @@ export default function AdminHouses() {
       </div>
 
       {/* Members Modal */}
-      {showMembersModal && selectedHouse && (
-        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-lowest rounded-2xl w-full max-w-lg max-h-[80vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-outline-variant">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5 text-info-ink" />
-                <h3 className="text-lg font-semibold text-on-surface">
-                  Miembros de {selectedHouse.name}
-                </h3>
-              </div>
-              <button onClick={() => setShowMembersModal(false)} className="p-2 hover:bg-surface-variant rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto max-h-96">
-              {selectedHouse.members?.length > 0 ? (
-                <div className="space-y-3">
-                  {selectedHouse.members.map((member: Member) => (
-                    <div key={member.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-medium ${
-                          member.isActive ? 'bg-success' : 'bg-outline'
-                        }`}>
-                          {member.name?.[0]?.toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium text-on-surface">{member.name}</p>
-                          <p className="font-body-default text-on-surface-variant">{member.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleToggleUser(member.id)}
-                          disabled={toggleUserMut.isLoading}
-                          className={`p-2 rounded-lg transition-colors ${
-                            member.isActive
-                              ? 'text-danger-ink hover:bg-danger/10 '
-                              : 'text-ok-ink hover:bg-success/10 '
-                          }`}
-                          title={member.isActive ? 'Desactivar' : 'Activar'}
-                        >
-                          {member.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
-                        </button>
-                        <button
-                          onClick={() => handleRemoveUser(member)}
-                          disabled={removeUserMut.isLoading}
-                          className="p-2 text-danger-ink hover:bg-danger/10 rounded-lg transition-colors"
-                          title="Eliminar de la casa"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+      <Modal
+        isOpen={showMembersModal && !!selectedHouse}
+        onClose={() => setShowMembersModal(false)}
+        title={`Miembros de ${selectedHouse?.name ?? ''}`}
+      >
+        {selectedHouse?.members?.length > 0 ? (
+          <ul className="space-y-3">
+            {selectedHouse.members.map((member: Member) => (
+              <li key={member.id} className="flex items-center justify-between gap-3 p-3.5 bg-surface-gray border border-border-light rounded-xl">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0 ${
+                    member.isActive ? 'bg-success/15 text-ok-ink' : 'bg-surface-variant text-on-surface-variant'
+                  }`}>
+                    {member.name?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-on-surface truncate">{member.name}</p>
+                    <p className="text-sm text-on-surface-variant truncate">{member.email}</p>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-center text-on-surface-variant py-8">
-                  Esta casa no tiene miembros
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handleToggleUser(member.id)}
+                    disabled={toggleUserMut.isLoading}
+                    className={`p-2 rounded-lg transition-colors ${
+                      member.isActive ? 'text-danger-ink hover:bg-danger/10' : 'text-ok-ink hover:bg-success/10'
+                    }`}
+                    title={member.isActive ? 'Desactivar' : 'Activar'}
+                    aria-label={member.isActive ? 'Desactivar miembro' : 'Activar miembro'}
+                  >
+                    {member.isActive ? <UserX size={18} /> : <UserCheck size={18} />}
+                  </button>
+                  <button
+                    onClick={() => handleRemoveUser(member)}
+                    disabled={removeUserMut.isLoading}
+                    className="p-2 text-danger-ink hover:bg-danger/10 rounded-lg transition-colors"
+                    title="Eliminar de la casa"
+                    aria-label="Eliminar de la casa"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-center text-on-surface-variant py-8">Esta casa no tiene miembros</p>
+        )}
+      </Modal>
 
       {/* Edit Name Modal */}
-      {editNameModal && selectedHouse && (
-        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-lowest rounded-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b border-outline-variant">
-              <h3 className="text-lg font-semibold text-on-surface">
-                Editar Casa
-              </h3>
-              <button onClick={() => setEditNameModal(false)} className="p-2 hover:bg-surface-variant rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="label">Nombre de la casa</label>
-                <input
-                  className="input"
-                  value={houseName}
-                  onChange={(e) => setHouseName(e.target.value)}
-                />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button
-                  onClick={() => setEditNameModal(false)}
-                  className="flex-1 btn-secondary"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveName}
-                  disabled={updateHouseMut.isLoading}
-                  className="flex-1 btn-primary flex items-center justify-center gap-2"
-                >
-                  {updateHouseMut.isLoading && <Loader2 size={16} className="animate-spin" />}
-                  Guardar
-                </button>
-              </div>
-            </div>
+      <Modal isOpen={editNameModal && !!selectedHouse} onClose={() => setEditNameModal(false)} title="Editar casa" size="sm">
+        <div className="space-y-4">
+          <div>
+            <label className="label" htmlFor="house-name">Nombre de la casa</label>
+            <input id="house-name" className="input" value={houseName} onChange={(e) => setHouseName(e.target.value)} />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setEditNameModal(false)} className="btn-secondary">Cancelar</button>
+            <button onClick={handleSaveName} disabled={updateHouseMut.isLoading} className="btn-primary">
+              {updateHouseMut.isLoading && <Loader2 size={16} className="animate-spin" />}
+              Guardar
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* Confirm Remove Member Modal */}
-      {memberToRemove && (
-        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-lowest rounded-2xl w-full max-w-sm">
-            <div className="flex items-center justify-between p-6 border-b border-outline-variant">
-              <h3 className="text-lg font-semibold text-on-surface">Eliminar del hogar</h3>
-              <button onClick={() => setMemberToRemove(null)} className="p-2 hover:bg-surface-variant rounded-lg">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <p className="text-on-surface">
-                ¿Eliminar a <strong>{memberToRemove.name}</strong> de esta casa?
-              </p>
-              <div className="flex gap-3">
-                <button onClick={() => setMemberToRemove(null)} className="flex-1 btn-secondary">
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => removeUserMut.mutate({ userId: memberToRemove.id })}
-                  disabled={removeUserMut.isLoading}
-                  className="flex-1 py-2 rounded-lg text-sm font-medium bg-danger text-white hover:bg-danger transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-                >
-                  {removeUserMut.isLoading && <Loader2 size={16} className="animate-spin" />}
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirm Remove Member */}
+      <ConfirmDialog
+        isOpen={!!memberToRemove}
+        onClose={() => setMemberToRemove(null)}
+        onConfirm={() => removeUserMut.mutate({ userId: memberToRemove!.id })}
+        loading={removeUserMut.isLoading}
+        title="Eliminar del hogar"
+        message={`¿Eliminar a ${memberToRemove?.name ?? ''} de esta casa?`}
+      />
     </Layout>
   );
 }

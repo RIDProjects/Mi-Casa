@@ -4,7 +4,6 @@ import { Calculator } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
-import StatCard from '../components/ui/StatCard';
 import { useCurrencyFormatter } from '../lib/currency';
 
 function calcPayment(amount: number, annualRate: number, months: number): number {
@@ -82,10 +81,9 @@ export default function SimuladorPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Inputs */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6">
-          <h2 className="font-label-upper text-label-upper text-on-surface-variant mb-4">
-            Parámetros del préstamo
-          </h2>
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-6">
+          <h2 className="section-heading">Parámetros del préstamo</h2>
+          <p className="text-sm text-on-surface-variant mt-0.5 mb-5">Ajusta el monto, la tasa y el plazo; el resultado se actualiza al instante.</p>
 
           <div className="space-y-5">
             <CurrencyInput
@@ -111,7 +109,7 @@ export default function SimuladorPage() {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="label mb-0" htmlFor="sim-plazo">Plazo</label>
-                <span className="text-sm font-semibold text-primary">
+                <span className="text-sm font-semibold text-info-ink fin-number">
                   {months} {months === 1 ? 'mes' : 'meses'}
                   {months >= 12 ? ` (${(months / 12).toFixed(1)} años)` : ''}
                 </span>
@@ -122,7 +120,7 @@ export default function SimuladorPage() {
                 min="1"
                 max="360"
                 step="1"
-                className="w-full accent-blue-500"
+                className="w-full accent-primary-container"
                 value={months}
                 onChange={e => setMonths(Number(e.target.value))}
               />
@@ -156,10 +154,9 @@ export default function SimuladorPage() {
         </div>
 
         {/* Results */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-6">
-          <h2 className="font-label-upper text-label-upper text-on-surface-variant mb-4">
-            Resultados
-          </h2>
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-6">
+          <h2 className="section-heading">Resultados</h2>
+          <p className="text-sm text-on-surface-variant mt-0.5 mb-5">Lo que pagarás mes a mes y cuánto de eso son intereses.</p>
 
           {!hasResults ? (
             <div className="flex flex-col items-center justify-center h-40 text-outline">
@@ -168,23 +165,23 @@ export default function SimuladorPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="bg-primary-container/10 border border-primary-container/25 rounded-xl p-4 text-center">
-                <p className="text-xs font-semibold text-primary uppercase mb-1">Cuota mensual</p>
-                <p className="text-4xl font-bold text-info-ink">{cfmt(payment)}</p>
+              <div className="bg-primary-container/10 border border-primary-container/25 rounded-2xl p-5 text-center">
+                <p className="text-xs font-semibold text-info-ink uppercase tracking-wide mb-1">Cuota mensual</p>
+                <p className="fin-hero text-info-ink">{cfmt(payment)}</p>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-surface-container-low rounded-lg p-3 text-center">
+                <div className="bg-surface-gray rounded-xl p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">Total a pagar</p>
-                  <p className="text-base font-bold text-on-surface">{cfmt(totalPago)}</p>
+                  <p className="text-base font-bold fin-number text-on-surface">{cfmt(totalPago)}</p>
                 </div>
-                <div className="bg-danger/10 rounded-lg p-3 text-center">
+                <div className="bg-danger/10 rounded-xl p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">Total intereses</p>
-                  <p className="text-base font-bold text-danger-ink">{cfmt(totalIntereses)}</p>
+                  <p className="text-base font-bold fin-number text-danger-ink">{cfmt(totalIntereses)}</p>
                 </div>
-                <div className="bg-warning/10 rounded-lg p-3 text-center">
+                <div className="bg-warning/10 rounded-xl p-3 text-center">
                   <p className="text-xs text-on-surface-variant mb-1">% intereses</p>
-                  <p className="text-base font-bold text-warn-ink">{pctIntereses.toFixed(1)}%</p>
+                  <p className="text-base font-bold fin-number text-warn-ink">{pctIntereses.toFixed(1)}%</p>
                 </div>
               </div>
 
@@ -224,53 +221,43 @@ export default function SimuladorPage() {
         </div>
       </div>
 
-      {/* Summary StatCards */}
-      {hasResults && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <StatCard title="Cuota mensual" value={cfmt(payment)} color="blue" />
-          <StatCard title="Total a pagar" value={cfmt(totalPago)} color="gray" />
-          <StatCard title="Total intereses" value={cfmt(totalIntereses)} color="red" />
-          <StatCard title="Costo financiero" value={`${pctIntereses.toFixed(1)}%`} color="yellow" />
-        </div>
-      )}
 
       {/* Amortization table */}
       {amortization.length > 0 && (
-        <div className="mt-6 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
-          <div className="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
-            <h2 className="font-semibold text-on-surface text-sm uppercase tracking-wide">
-              Tabla de amortización — {amortization.length} cuotas
-            </h2>
+        <div className="mt-6 bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+          <div className="px-5 py-4 border-b border-border-light">
+            <h2 className="section-heading">Tabla de amortización</h2>
+            <p className="text-sm text-on-surface-variant mt-0.5">{amortization.length} cuotas · capital e intereses de cada pago</p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-surface-container-low border-b border-outline-variant">
+          <div className="overflow-auto max-h-[520px]">
+            <table className="table-compact w-full text-sm">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2 text-center text-xs font-semibold text-on-surface-variant uppercase">Cuota</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Pago</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Capital</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Interés</th>
-                  <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Saldo restante</th>
+                  <th className="text-center">Cuota</th>
+                  <th className="text-right">Pago</th>
+                  <th className="text-right">Capital</th>
+                  <th className="text-right">Interés</th>
+                  <th className="text-right">Saldo restante</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant">
+              <tbody>
                 {displayedRows.map(row => (
-                  <tr key={row.cuota} className="hover:bg-surface-gray transition-colors">
-                    <td className="px-4 py-2 text-center text-on-surface-variant font-medium">{row.cuota}</td>
-                    <td className="px-4 py-2 text-right text-on-surface">{cfmt(row.pago)}</td>
-                    <td className="px-4 py-2 text-right text-primary">{cfmt(row.capital)}</td>
-                    <td className="px-4 py-2 text-right text-danger-ink">{cfmt(row.interes)}</td>
-                    <td className="px-4 py-2 text-right font-medium text-on-surface">{cfmt(row.saldo)}</td>
+                  <tr key={row.cuota}>
+                    <td className="text-center text-on-surface-variant font-medium">{row.cuota}</td>
+                    <td className="text-right fin-number text-on-surface">{cfmt(row.pago)}</td>
+                    <td className="text-right fin-number text-info-ink">{cfmt(row.capital)}</td>
+                    <td className="text-right fin-number text-danger-ink">{cfmt(row.interes)}</td>
+                    <td className="text-right fin-number font-semibold text-on-surface">{cfmt(row.saldo)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           {hasMore && (
-            <div className="px-4 py-3 border-t border-outline-variant text-center">
+            <div className="px-4 py-3 border-t border-border-light text-center bg-surface-gray">
               <button
                 onClick={() => setShowAll(v => !v)}
-                className="text-sm text-primary hover:underline font-medium"
+                className="text-sm text-info-ink hover:underline font-semibold"
               >
                 {showAll
                   ? 'Ver menos'

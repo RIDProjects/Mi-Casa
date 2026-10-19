@@ -93,8 +93,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const NavLink = ({ item }: { item: NavItem }) => {
     if (item.module && !hasPermission(item.module, 'view')) return null;
 
+    // /dashboard and /admin are section roots: highlight them only on an exact match,
+    // otherwise /admin would also light up on /admin/users, /admin/roles, ...
+    const isRoot = item.href === '/dashboard' || item.href === '/admin';
     const isActive = router.pathname === item.href ||
-      (item.href !== '/dashboard' && router.pathname.startsWith(item.href));
+      (!isRoot && router.pathname.startsWith(item.href));
     const Icon = item.icon;
     const badgeCount = item.href === '/notificaciones' ? unreadCount : 0;
 

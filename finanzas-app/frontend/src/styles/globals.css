@@ -292,6 +292,7 @@
   table tfoot td { font-weight: 700; padding: 12px 16px; background: var(--ds-surface-gray); border-top: 1px solid var(--ds-border-light); }
   .dark table thead th { background: var(--ds-surface-container); border-bottom-color: var(--ds-surface-highest); }
   .dark table tbody td { border-bottom-color: var(--ds-surface-container); }
+  .table-compact tbody td { padding-top: 9px; padding-bottom: 9px; }
   .dark table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   .dark table tbody tr:hover td { background: var(--ds-surface-container); }
 

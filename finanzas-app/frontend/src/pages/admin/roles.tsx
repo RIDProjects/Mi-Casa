@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Layout from '../../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { rolesAPI } from '../../services/api';
+import PageHeader from '../../components/ui/PageHeader';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -9,6 +10,7 @@ import { Plus, Edit2, Trash2, Shield } from 'lucide-react';
 
 const MODULES = ['users', 'roles', 'debts', 'purchases', 'emergency_fund'];
 const ACTIONS = ['view', 'create', 'edit', 'delete'];
+const ACTION_LABELS: Record<string, string> = { view: 'Ver', create: 'Crear', edit: 'Editar', delete: 'Eliminar' };
 const moduleLabels: Record<string, string> = {
   users: 'Usuarios', roles: 'Roles', debts: 'Deudas',
   purchases: 'Compras', emergency_fund: 'Fondo Emergencia',
@@ -73,43 +75,42 @@ export default function RolesPage() {
 
   return (
     <Layout>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="font-page-title text-page-title text-on-surface">Roles y Permisos</h1>
-          <p className="text-on-surface-variant mt-1">Control de acceso basado en roles (RBAC)</p>
-        </div>
-        <button onClick={() => { setForm({ name: '', description: '', permissionIds: [] }); setEditRole(null); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Nuevo rol
-        </button>
-      </div>
+      <PageHeader
+        title="Roles y permisos"
+        subtitle="Control de acceso basado en roles (RBAC)"
+        action={
+          <button onClick={() => { setForm({ name: '', description: '', permissionIds: [] }); setEditRole(null); setShowModal(true); }} className="btn-primary">
+            <Plus size={16} /> Nuevo rol
+          </button>
+        }
+      />
 
       {/* Roles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {roles.map((role: any) => (
-          <div key={role.id} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-5">
+          <div key={role.id} className="bg-panel rounded-2xl shadow-soft border border-border-light p-5 transition-shadow hover:shadow-lift">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-container/15 rounded-lg text-primary">
+                <div className="icon-blue !p-2.5">
                   <Shield size={20} />
                 </div>
                 <div>
-                  <p className="font-semibold text-on-surface">{role.name}</p>
+                  <p className="font-bold text-on-surface capitalize">{String(role.name).replace(/_/g, ' ')}</p>
                   <p className="text-xs text-outline">{role.description}</p>
                 </div>
               </div>
               <div className="flex gap-1">
-                <button onClick={() => handleEdit(role)} className="text-primary hover:text-info-ink p-1">
+                <button onClick={() => handleEdit(role)} className="p-1.5 rounded-lg text-info-ink hover:bg-primary-container/10 transition-colors" aria-label="Editar rol">
                   <Edit2 size={16} />
                 </button>
-                <button onClick={() => setDeleteId(role.id)} className="text-danger-ink hover:text-danger-ink p-1">
+                <button onClick={() => setDeleteId(role.id)} className="p-1.5 rounded-lg text-danger-ink hover:bg-danger/10 transition-colors" aria-label="Eliminar rol">
                   <Trash2 size={16} />
                 </button>
               </div>
             </div>
             <div className="flex flex-wrap gap-1">
               {role.permissions?.slice(0, 8).map((p: any) => (
-                <span key={p.id} className="text-xs bg-surface-container text-on-surface-variant px-2 py-0.5 rounded">
+                <span key={p.id} className="text-[11px] font-medium bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-md">
                   {p.module}:{p.action}
                 </span>
               ))}
@@ -118,7 +119,7 @@ export default function RolesPage() {
           </div>
         ))}
         {roles.length === 0 && (
-          <div className="col-span-full bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant text-center text-outline py-12">
+          <div className="col-span-full bg-panel rounded-2xl shadow-soft border border-border-light text-center text-outline py-12">
             No hay roles creados
           </div>
         )}
@@ -139,32 +140,32 @@ export default function RolesPage() {
           </div>
           <div>
             <label className="label">Permisos por módulo</label>
-            <div className="border border-outline-variant rounded-xl overflow-hidden">
+            <div className="border border-border-light rounded-xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-surface-container-low">
+                <thead>
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium text-on-surface-variant">Módulo</th>
-                    {ACTIONS.map(a => <th key={a} className="px-3 py-2 text-center font-medium text-on-surface-variant capitalize">{a}</th>)}
-                    <th className="px-3 py-2 text-center font-medium text-on-surface-variant">Todos</th>
+                    <th className="text-left">Módulo</th>
+                    {ACTIONS.map(a => <th key={a} className="text-center">{ACTION_LABELS[a] ?? a}</th>)}
+                    <th className="text-center">Todos</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-outline-variant">
+                <tbody>
                   {MODULES.map(mod => (
-                    <tr key={mod} className="hover:bg-surface-gray">
-                      <td className="px-3 py-2 font-medium text-on-surface">{moduleLabels[mod]}</td>
+                    <tr key={mod}>
+                      <td className="font-medium text-on-surface">{moduleLabels[mod]}</td>
                       {ACTIONS.map(action => {
                         const pid = getPermId(mod, action);
                         return (
-                          <td key={action} className="px-3 py-2 text-center">
+                          <td key={action} className="text-center">
                             {pid && <input type="checkbox" checked={form.permissionIds.includes(pid)}
-                              onChange={() => togglePerm(pid)} className="cursor-pointer accent-blue-600" />}
+                              onChange={() => togglePerm(pid)} className="cursor-pointer accent-primary-container" />}
                           </td>
                         );
                       })}
-                      <td className="px-3 py-2 text-center">
+                      <td className="text-center">
                         <input type="checkbox" onChange={() => toggleModule(mod)}
                           checked={permissions.filter(p => p.module === mod).every(p => form.permissionIds.includes(p.id))}
-                          className="cursor-pointer accent-blue-600" />
+                          className="cursor-pointer accent-primary-container" />
                       </td>
                     </tr>
                   ))}

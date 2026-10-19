@@ -3,6 +3,7 @@ import Layout from '../../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { usersAPI, rolesAPI } from '../../services/api';
 import Modal from '../../components/ui/Modal';
+import PageHeader from '../../components/ui/PageHeader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, UserCheck, UserX, Eye, EyeOff, Search, Crown, Star, Gift, X } from 'lucide-react';
@@ -51,7 +52,7 @@ function UserForm({ form, setForm, editUser, showPassword, setShowPassword, onCa
       </div>
       <div>
         <label className="label">Roles</label>
-        <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3">
+        <div className="space-y-2 max-h-40 overflow-y-auto border border-border-light rounded-xl p-3">
           {roles.map((role: any) => (
             <label key={role.id} className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.roleIds.includes(role.id)}
@@ -135,15 +136,15 @@ export default function UsersPage() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-on-surface">Usuarios</h1>
-          <p className="text-on-surface-variant mt-1">{(users as any[]).length} usuarios registrados</p>
-        </div>
-        <button onClick={() => { resetForm(); setShowCreate(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Nuevo usuario
-        </button>
-      </div>
+      <PageHeader
+        title="Usuarios"
+        subtitle={`${(users as any[]).length} usuarios registrados`}
+        action={
+          <button onClick={() => { resetForm(); setShowCreate(true); }} className="btn-primary">
+            <Plus size={16} /> Nuevo usuario
+          </button>
+        }
+      />
 
       {/* ── Barra de búsqueda y filtros ── */}
       <div className="flex flex-wrap gap-3 mb-4">
@@ -179,7 +180,7 @@ export default function UsersPage() {
 
         {hasFilters && (
           <button onClick={() => { setSearch(''); setFilterStatus('all'); setFilterPlan('all'); }}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-on-surface-variant hover:text-on-surface-variant border border-border-light rounded-xl">
+            className="btn-secondary !min-h-[40px]">
             <X size={13} /> Limpiar
           </button>
         )}
@@ -188,14 +189,14 @@ export default function UsersPage() {
       {/* ── Tabla ── */}
       <div className="bg-panel rounded-xl border border-border-light overflow-hidden">
         <table className="w-full">
-          <thead className="bg-surface-gray border-b border-border-light">
+          <thead>
             <tr>
               {['Usuario', 'Email', 'Plan', 'Roles', 'Último login', 'Estado', 'Acciones'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{h}</th>
+                <th key={h} className="text-left">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border-light">
+          <tbody>
             {filtered.map((user: any) => {
               const plan = (user.plan ?? 'free') as keyof typeof PLAN_CONFIG;
               const cfg = PLAN_CONFIG[plan];
@@ -207,17 +208,17 @@ export default function UsersPage() {
               const loginColor = !lastLogin ? 'text-outline' : daysAgo! > 30 ? 'text-warn-ink ' : 'text-on-surface-variant ';
 
               return (
-                <tr key={user.id} className="hover:bg-surface-gray transition-colors">
-                  <td className="px-4 py-3">
+                <tr key={user.id}>
+                  <td>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white text-sm font-bold shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-primary-container/15 text-info-ink flex items-center justify-center text-sm font-bold shrink-0">
                         {user.name?.[0]?.toUpperCase()}
                       </div>
                       <span className="text-sm font-medium text-on-surface">{user.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-on-surface-variant">{user.email}</td>
-                  <td className="px-4 py-3">
+                  <td className="text-sm text-on-surface-variant">{user.email}</td>
+                  <td>
                     <button
                       onClick={() => { setPlanTarget(user); setPlanValue(plan); }}
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${cfg.badge} hover:opacity-80 transition-opacity`}
@@ -226,7 +227,7 @@ export default function UsersPage() {
                       {cfg.icon} {cfg.label}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <div className="flex flex-wrap gap-1">
                       {user.roles?.map((r: any) => (
                         <span key={r.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary-container/15 text-info-ink">{r.name}</span>
@@ -234,7 +235,7 @@ export default function UsersPage() {
                     </div>
                   </td>
                   <td className={`px-4 py-3 text-xs font-medium ${loginColor}`}>{loginLabel}</td>
-                  <td className="px-4 py-3">
+                  <td>
                     <button
                       onClick={() => toggleMut.mutate(user)}
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${user.isActive ? 'bg-success/15 text-ok-ink ' : 'bg-danger/15 text-danger-ink '} hover:opacity-80 transition-opacity`}
@@ -243,7 +244,7 @@ export default function UsersPage() {
                       {user.isActive ? <><UserCheck size={12} /> Activo</> : <><UserX size={12} /> Inactivo</>}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <div className="flex items-center gap-1">
                       <button onClick={() => handleEdit(user)} className="p-1.5 text-info-ink hover:bg-primary-container/10 rounded-lg transition-colors" title="Editar">
                         <Edit2 size={14} />
@@ -264,7 +265,7 @@ export default function UsersPage() {
           </div>
         )}
         {filtered.length > 0 && (
-          <div className="px-4 py-2.5 bg-surface-gray border-t border-border-light text-xs text-outline">
+          <div className="px-4 py-3 bg-surface-gray border-t border-border-light text-xs text-on-surface-variant">
             Mostrando {filtered.length} de {(users as any[]).length} usuarios
           </div>
         )}
