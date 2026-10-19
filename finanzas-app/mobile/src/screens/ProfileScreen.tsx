@@ -16,6 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../theme/colors';
 import { useAuth } from '../context/AuthContext';
 import { RootStackParamList } from '../navigation/types';
+import DeleteAccountModal from '../components/DeleteAccountModal';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -89,6 +90,7 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const navigation = useNavigation<Nav>();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -115,6 +117,8 @@ export default function ProfileScreen() {
 
   const initials = getInitials(user?.name);
   const roleName = user?.roles?.[0]?.name;
+  // Global admins cannot self-delete (the API refuses it).
+  const canDeleteAccount = !user?.roles?.some((r) => r.name === 'admin');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -218,6 +222,23 @@ export default function ProfileScreen() {
             </>
           )}
         </TouchableOpacity>
+
+        {canDeleteAccount && (
+          <TouchableOpacity
+            style={styles.deleteAccountBtn}
+            onPress={() => setShowDeleteAccount(true)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="trash-outline" size={18} color={Colors.red} />
+            <Text style={styles.deleteAccountText}>Eliminar cuenta</Text>
+          </TouchableOpacity>
+        )}
+
+        <DeleteAccountModal
+          visible={showDeleteAccount}
+          onClose={() => setShowDeleteAccount(false)}
+          onDeleted={logout}
+        />
 
         <Text style={styles.versionFooter}>Mi Casa Pro v{APP_VERSION}</Text>
       </ScrollView>
@@ -328,6 +349,21 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontSize: 16,
     fontWeight: '700',
+  },
+  deleteAccountBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.red + '60',
+  },
+  deleteAccountText: {
+    color: Colors.red,
+    fontSize: 15,
+    fontWeight: '600',
   },
   versionFooter: {
     color: Colors.textMuted,
