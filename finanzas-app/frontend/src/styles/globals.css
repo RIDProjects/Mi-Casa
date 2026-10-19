@@ -419,6 +419,12 @@
      `backwards` fill keeps no transform once finished, so fixed descendants (modals) stay correct. */
   .page-enter > * { animation: fadeUp 650ms var(--ease-premium) backwards; }
   .page-enter > .fixed { animation: none; }
+
+  /* Reveal on scroll (lib/scrollReveal): blocks below the fold wait, then ease in once when reached.
+     Descendant animations (rows, KPI cards) are paused meanwhile so they play when revealed. */
+  .page-enter > [data-reveal='pending'] { animation: none; opacity: 0; transform: translateY(18px); }
+  .page-enter > [data-reveal='pending'] * { animation-play-state: paused !important; }
+  .page-enter > [data-reveal='in'] { animation: fadeUp 700ms var(--ease-premium) backwards; }
   .page-enter > *:nth-child(2) { animation-delay: 80ms; }
   .page-enter > *:nth-child(3) { animation-delay: 160ms; }
   .page-enter > *:nth-child(4) { animation-delay: 240ms; }
