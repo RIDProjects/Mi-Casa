@@ -141,7 +141,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
       {open && (
         <div className="overflow-x-auto">
           {category.expenses.length === 0 ? (
-            <p className="px-4 py-8 text-center font-body-small text-body-small text-outline">
+            <p className="px-4 py-3 font-body-small text-body-small text-outline">
               Sin gastos en esta categoría
             </p>
           ) : (
@@ -515,84 +515,136 @@ export default function PresupuestoPage() {
       )}
 
       {/* ── TOP SECTION: Ingresos + Right panel ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6 items-start">
 
-        {/* LEFT (2 cols): Tabla de Ingresos */}
-        <div className="xl:col-span-2 bg-surface-container-lowest rounded-xl border border-border-light overflow-x-auto">
-          <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
-            <h3 className="font-section-title text-section-title text-on-surface">Ingresos Promedio Mensuales</h3>
-            <button
-              onClick={() => setShowIncomeModal(true)}
-              className="flex items-center gap-1 text-primary font-label-upper text-label-upper hover:underline"
-            >
-              <Plus size={12} /> Agregar
-            </button>
-          </div>
-          <table className="w-full text-left font-body-default">
-            <thead>
-              <tr className="font-label-upper text-label-upper text-on-surface-variant bg-surface-container-low border-b border-outline-variant">
-                <th className="px-6 py-3">Fuente</th>
-                <th className="px-4 py-3 text-center">Tipo</th>
-                <th className="px-4 py-3 text-right">Monto/mes</th>
-                <th className="px-4 py-3 text-right">Anual</th>
-                <th className="w-8" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant">
-              {incomeSources.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center font-body-default text-outline">
-                    Sin ingresos registrados
-                  </td>
+        {/* LEFT (2 cols): Ingresos + Proyección Anual */}
+        <div className="xl:col-span-2 space-y-6">
+          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-x-auto">
+            <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
+              <h3 className="font-section-title text-section-title text-on-surface">Ingresos Promedio Mensuales</h3>
+              <button
+                onClick={() => setShowIncomeModal(true)}
+                className="flex items-center gap-1 text-primary font-label-upper text-label-upper hover:underline"
+              >
+                <Plus size={12} /> Agregar
+              </button>
+            </div>
+            <table className="w-full text-left font-body-default">
+              <thead>
+                <tr className="font-label-upper text-label-upper text-on-surface-variant bg-surface-container-low border-b border-outline-variant">
+                  <th className="px-6 py-3">Fuente</th>
+                  <th className="px-4 py-3 text-center">Tipo</th>
+                  <th className="px-4 py-3 text-right">Monto/mes</th>
+                  <th className="px-4 py-3 text-right">Anual</th>
+                  <th className="w-8" />
                 </tr>
-              ) : (
-                incomeSources.map(inc => (
-                  <tr key={inc.id} className="hover:bg-surface-gray transition-colors">
-                    <td className="px-6 py-3 font-body-default text-on-surface">{inc.name}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full font-label-upper text-label-upper bg-primary-fixed text-on-primary-fixed-variant">
-                        {INCOME_TYPE_LABELS[inc.type] ?? inc.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(inc.amount)}</td>
-                    <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">${fmt(Number(inc.amount) * 12)}</td>
-                    <td className="px-2 py-3 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => {
-                          setIncomeForm({ name: inc.name, type: inc.type, amount: String(inc.amount) });
-                          setEditIncomeId(inc.id);
-                          setShowIncomeModal(true);
-                        }}
-                        className="text-outline hover:text-primary p-1 transition-colors"
-                      >
-                        <Pencil size={13} />
-                      </button>
-                      <button onClick={() => setDeleteIncomeId(inc.id)} className="text-outline hover:text-danger-ink p-1 transition-colors">
-                        <Trash2 size={13} />
-                      </button>
+              </thead>
+              <tbody className="divide-y divide-outline-variant">
+                {incomeSources.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center font-body-default text-outline">
+                      Sin ingresos registrados
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-            <tfoot>
-              <tr className="bg-surface-container-low font-bold border-t-2 border-outline-variant">
-                <td className="px-6 py-3 font-card-title text-card-title text-on-surface" colSpan={2}>Total ingresos</td>
-                <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(summary.totalMonthlyIncome)}</td>
-                <td className="px-4 py-3 text-right font-body-small text-body-small text-ok-ink">${fmt(totalAnualIngresos)}</td>
-                <td />
-              </tr>
-              <tr>
-                <td className="px-6 py-2 font-caption text-caption text-outline" colSpan={5}>
-                  {incomeSources.length} fuente{incomeSources.length !== 1 ? 's' : ''} de ingreso
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+                ) : (
+                  incomeSources.map(inc => (
+                    <tr key={inc.id} className="hover:bg-surface-gray transition-colors">
+                      <td className="px-6 py-3 font-body-default text-on-surface">{inc.name}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full font-label-upper text-label-upper bg-primary-fixed text-on-primary-fixed-variant">
+                          {INCOME_TYPE_LABELS[inc.type] ?? inc.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(inc.amount)}</td>
+                      <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">${fmt(Number(inc.amount) * 12)}</td>
+                      <td className="px-2 py-3 text-center whitespace-nowrap">
+                        <button
+                          onClick={() => {
+                            setIncomeForm({ name: inc.name, type: inc.type, amount: String(inc.amount) });
+                            setEditIncomeId(inc.id);
+                            setShowIncomeModal(true);
+                          }}
+                          className="text-outline hover:text-primary p-1 transition-colors"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => setDeleteIncomeId(inc.id)} className="text-outline hover:text-danger-ink p-1 transition-colors">
+                          <Trash2 size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="bg-surface-container-low font-bold border-t-2 border-outline-variant">
+                  <td className="px-6 py-3 font-card-title text-card-title text-on-surface" colSpan={2}>Total ingresos</td>
+                  <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(summary.totalMonthlyIncome)}</td>
+                  <td className="px-4 py-3 text-right font-body-small text-body-small text-ok-ink">${fmt(totalAnualIngresos)}</td>
+                  <td />
+                </tr>
+                <tr>
+                  <td className="px-6 py-2 font-caption text-caption text-outline" colSpan={5}>
+                    {incomeSources.length} fuente{incomeSources.length !== 1 ? 's' : ''} de ingreso
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+            <div className="p-4 border-b border-outline-variant bg-surface-gray">
+              <h3 className="font-section-title text-section-title text-on-surface">Proyección Anual</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+                <div className="flex items-center gap-2">
+                  <TrendingUp size={14} className="text-ok-ink" />
+                  <span className="font-body-default text-on-surface-variant">Ingresos anuales</span>
+                </div>
+                <span className="font-card-title text-card-title text-ok-ink">${fmt(totalAnualIngresos)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+                <div className="flex items-center gap-2">
+                  <TrendingDown size={14} className="text-danger-ink" />
+                  <span className="font-body-default text-on-surface-variant">Gastos anuales</span>
+                </div>
+                <span className="font-card-title text-card-title text-danger-ink">${fmt(totalAnualGastos)}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-outline-variant">
+                <span className="font-body-default text-on-surface font-semibold">Disponible anual</span>
+                <span className={`font-card-title text-card-title ${disponibleAnual >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
+                  ${fmt(Math.abs(disponibleAnual))}
+                </span>
+              </div>
+              <div className="pt-2">
+                <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
+                  <span>Gastos fijos</span>
+                  <span>${fmt(gastosFijos)}</span>
+                </div>
+                <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="bg-primary h-full rounded-full"
+                    style={{ width: summary.totalMonthlyExpenses > 0 ? `${Math.min(100, (gastosFijos / summary.totalMonthlyExpenses) * 100)}%` : '0%' }}
+                  />
+                </div>
+                <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
+                  <span>Gastos variables</span>
+                  <span>${fmt(gastosVariables)}</span>
+                </div>
+                <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden">
+                  <div
+                    className="bg-secondary h-full rounded-full"
+                    style={{ width: summary.totalMonthlyExpenses > 0 ? `${Math.min(100, (gastosVariables / summary.totalMonthlyExpenses) * 100)}%` : '0%' }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT (1 col): Meta de Ahorro + Budget Advisory AI */}
-        <div className="space-y-4">
+        {/* RIGHT (1 col): Meta de Ahorro + Budget Advisory AI + Gastos Hormiga */}
+        <div className="space-y-6">
           {/* Meta de ahorro card */}
           <div className="bg-surface-container-lowest p-4 rounded-xl border border-border-light">
             <div className="flex justify-between items-start mb-4">
@@ -641,95 +693,40 @@ export default function PresupuestoPage() {
               <p className="font-formula-code text-advisory-text text-[32px] text-center">{healthScore} / 100</p>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ── MIDDLE SECTION: Gastos Hormiga + Proyección Anual ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-        {/* Gastos Hormiga */}
-        <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
-          <div className="p-4 border-b border-outline-variant bg-surface-gray flex justify-between items-center">
-            <h3 className="font-section-title text-section-title text-on-surface">Gastos Hormiga</h3>
-            <span className="px-2.5 py-1 bg-error-container text-on-error-container rounded-full font-label-upper text-label-upper">
-              <Bug size={10} className="inline mr-1" />HORMIGA
-            </span>
-          </div>
-          <div className="p-4">
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-surface-container rounded-lg p-3 text-center">
-                <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">AL MES</p>
-                <p className="font-card-title text-[20px] text-warn-ink">${fmt(summary.antExpensesTotal)}</p>
-              </div>
-              <div className="bg-surface-container rounded-lg p-3 text-center">
-                <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">MÁX. POR DÍA</p>
-                <p className="font-card-title text-[20px] text-warn-ink">${fmt(antPerDay)}</p>
-              </div>
-            </div>
-            {summary.antExpensesTotal > 0 ? (
-              <div className={`font-body-small text-body-small px-3 py-2 rounded-lg border ${
-                summary.available >= savingsMonthly
-                  ? 'bg-surface-container border-success/30 text-ok-ink'
-                  : 'bg-surface-container border-danger/30 text-danger-ink'
-              }`}>
-                {summary.available >= savingsMonthly
-                  ? 'Bien, puedes lograr tus metas de ahorro.'
-                  : 'Considera recortar estos gastos para alcanzar tu meta.'}
-              </div>
-            ) : (
-              <p className="font-body-small text-body-small text-outline text-center py-3">
-                Sin gastos hormiga marcados. Usa el ícono de insecto en cada gasto.
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Proyección Anual */}
-        <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
-          <div className="p-4 border-b border-outline-variant bg-surface-gray">
-            <h3 className="font-section-title text-section-title text-on-surface">Proyección Anual</h3>
-          </div>
-          <div className="p-4 space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-outline-variant">
-              <div className="flex items-center gap-2">
-                <TrendingUp size={14} className="text-ok-ink" />
-                <span className="font-body-default text-on-surface-variant">Ingresos anuales</span>
-              </div>
-              <span className="font-card-title text-card-title text-ok-ink">${fmt(totalAnualIngresos)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-outline-variant">
-              <div className="flex items-center gap-2">
-                <TrendingDown size={14} className="text-danger-ink" />
-                <span className="font-body-default text-on-surface-variant">Gastos anuales</span>
-              </div>
-              <span className="font-card-title text-card-title text-danger-ink">${fmt(totalAnualGastos)}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-outline-variant">
-              <span className="font-body-default text-on-surface font-semibold">Disponible anual</span>
-              <span className={`font-card-title text-card-title ${disponibleAnual >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
-                ${fmt(Math.abs(disponibleAnual))}
+          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+            <div className="p-4 border-b border-outline-variant bg-surface-gray flex justify-between items-center">
+              <h3 className="font-section-title text-section-title text-on-surface">Gastos Hormiga</h3>
+              <span className="px-2.5 py-1 bg-error-container text-on-error-container rounded-full font-label-upper text-label-upper">
+                <Bug size={10} className="inline mr-1" />HORMIGA
               </span>
             </div>
-            <div className="pt-2">
-              <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
-                <span>Gastos fijos</span>
-                <span>${fmt(gastosFijos)}</span>
+            <div className="p-4">
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-surface-container rounded-lg p-3 text-center">
+                  <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">AL MES</p>
+                  <p className="font-card-title text-[20px] text-warn-ink">${fmt(summary.antExpensesTotal)}</p>
+                </div>
+                <div className="bg-surface-container rounded-lg p-3 text-center">
+                  <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">MÁX. POR DÍA</p>
+                  <p className="font-card-title text-[20px] text-warn-ink">${fmt(antPerDay)}</p>
+                </div>
               </div>
-              <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden mb-2">
-                <div
-                  className="bg-primary h-full rounded-full"
-                  style={{ width: summary.totalMonthlyExpenses > 0 ? `${Math.min(100, (gastosFijos / summary.totalMonthlyExpenses) * 100)}%` : '0%' }}
-                />
-              </div>
-              <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
-                <span>Gastos variables</span>
-                <span>${fmt(gastosVariables)}</span>
-              </div>
-              <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden">
-                <div
-                  className="bg-secondary h-full rounded-full"
-                  style={{ width: summary.totalMonthlyExpenses > 0 ? `${Math.min(100, (gastosVariables / summary.totalMonthlyExpenses) * 100)}%` : '0%' }}
-                />
-              </div>
+              {summary.antExpensesTotal > 0 ? (
+                <div className={`font-body-small text-body-small px-3 py-2 rounded-lg border ${
+                  summary.available >= savingsMonthly
+                    ? 'bg-surface-container border-success/30 text-ok-ink'
+                    : 'bg-surface-container border-danger/30 text-danger-ink'
+                }`}>
+                  {summary.available >= savingsMonthly
+                    ? 'Bien, puedes lograr tus metas de ahorro.'
+                    : 'Considera recortar estos gastos para alcanzar tu meta.'}
+                </div>
+              ) : (
+                <p className="font-body-small text-body-small text-outline text-center">
+                  Sin gastos hormiga marcados. Usa el ícono de insecto en cada gasto.
+                </p>
+              )}
             </div>
           </div>
         </div>
