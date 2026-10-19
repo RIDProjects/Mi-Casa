@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createContext, useContext } from 'react';
 import Sidebar from './Sidebar';
 import { useAuthStore } from '../../store/auth.store';
 import { useRouter } from 'next/router';
@@ -7,7 +7,19 @@ import { Menu } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { enhanceTables } from '../../lib/tableEnhancer';
 
+/**
+ * The shell (sidebar + top bar + auth guard) lives once in _app, so it persists across navigations:
+ * no sidebar flicker, no lost scroll, and only the page content transitions. Pages still wrap
+ * themselves in <Layout>; inside the shell that wrapper is a pass-through.
+ */
+const ShellContext = createContext(false);
+
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const inShell = useContext(ShellContext);
+  return inShell ? <>{children}</> : <AppShell>{children}</AppShell>;
+}
+
+export function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isAdminGlobal } = useAuthStore();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -69,7 +81,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </span>
         </div>
         <main className="flex-1 overflow-auto">
-          <div className="page-enter mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">{children}</div>
+          {/* Keyed by route so the entrance animation replays on every navigation */}
+          <div key={router.pathname} className="page-enter mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">
+            <ShellContext.Provider value>{children}</ShellContext.Provider>
+          </div>
         </main>
       </div>
     </div>

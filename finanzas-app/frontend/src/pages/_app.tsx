@@ -1,4 +1,6 @@
 import type { AppProps } from 'next/app';
+import { useRouter } from 'next/router';
+import { AppShell } from '../components/layout/Layout';
 import Head from 'next/head';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
@@ -59,7 +61,13 @@ function ThemeInitializer({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Public pages draw their own full-screen layout; everything else lives inside the persistent shell.
+const NO_SHELL_ROUTES = new Set(['/', '/login', '/register', '/forgot-password', '/reset-password', '/404', '/500', '/_error']);
+
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  const page = <Component {...pageProps} />;
+
   useEffect(() => {
     const handleReset = () => queryClient.clear();
     window.addEventListener('auth:logout', handleReset);
@@ -92,7 +100,7 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <ThemeInitializer>
         <CurrencyLoader />
-        <Component {...pageProps} />
+        {NO_SHELL_ROUTES.has(router.pathname) ? page : <AppShell>{page}</AppShell>}
         <Toaster
           position="bottom-right"
           toastOptions={{

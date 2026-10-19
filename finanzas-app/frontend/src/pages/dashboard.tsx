@@ -77,7 +77,7 @@ export default function Dashboard() {
   const { data: allDebts, isError: isDebtsError, refetch: refetchDebts }       = useQuery('debts', () => debtsAPI.getAll().then(r => r.data ?? []), { retry: false, staleTime: 60000, enabled: hasPermission('debts', 'view') });
 
   const netWorth     = safeNum((globalSummary as any)?.netWorth?.total ?? 0);
-  const netWorthAnim = useCountUp(netWorth, 1200, netWorth !== 0);
+  const netWorthAnim = useCountUp(netWorth, 1800, netWorth !== 0);
   const balance      = debtsSummary?.balance ?? 0;
   const txPct        = txSummary && txSummary.expectedExpenses > 0 ? (txSummary.totalExpenses / txSummary.expectedExpenses) * 100 : 0;
 
@@ -300,7 +300,7 @@ export default function Dashboard() {
             <h2 className="text-sm font-semibold text-on-surface mb-2">Gastos por categoría</h2>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie animationDuration={750} animationEasing="ease-out" data={categoryPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value" paddingAngle={3}>
+                <Pie animationDuration={1200} animationEasing="ease-out" data={categoryPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value" paddingAngle={3}>
                   {categoryPieData.map((_: any, idx: number) => (
                     <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                   ))}

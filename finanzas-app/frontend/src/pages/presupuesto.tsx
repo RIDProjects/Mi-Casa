@@ -7,7 +7,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { ErrorState } from '../components/ui/ErrorState';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, ChevronDown, ChevronRight, Calculator, TrendingUp, TrendingDown, CreditCard, Bug, Pencil, Lock, BrainCircuit, AlertTriangle, Meh, ThumbsUp, Dumbbell, Trophy } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, Calculator, TrendingUp, TrendingDown, CreditCard, Bug, Pencil, Lock, BrainCircuit, AlertTriangle, Meh, ThumbsUp, Dumbbell, Trophy } from 'lucide-react';
 import { fmt } from '../lib/format';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -110,10 +110,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
         onClick={() => setOpen(o => !o)}
       >
         <div className="flex items-center gap-2">
-          {open
-            ? <ChevronDown size={15} className="text-on-surface-variant" />
-            : <ChevronRight size={15} className="text-on-surface-variant" />
-          }
+          <ChevronDown size={15} className={`text-on-surface-variant transition-transform duration-500 ${open ? '' : '-rotate-90'}`} />
           <span className="font-section-title text-section-title text-on-surface">{category.name}</span>
           <span className="font-body-small text-body-small text-outline">({category.expenses.length})</span>
         </div>
@@ -138,7 +135,12 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
         </div>
       </div>
 
-      {open && (
+      <div
+        className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+        aria-hidden={!open}
+        {...(open ? {} : { inert: '' as unknown as boolean })}
+      >
+        <div className="min-h-0 overflow-hidden">
         <div className="overflow-x-auto">
           {category.expenses.length === 0 ? (
             <p className="px-4 py-3 font-body-small text-body-small text-outline">
@@ -238,7 +240,8 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
             </table>
           )}
         </div>
-      )}
+        </div>
+      </div>
 
       {/* Add expense modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Agregar gasto — ${category.name}`}>
