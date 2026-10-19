@@ -68,6 +68,10 @@ module.exports = {
         'primary-900': '#00174b',
 
         /* ── Semantic ── */
+        'ok-ink':           'var(--ds-ok-ink)',
+        'warn-ink':         'var(--ds-warn-ink)',
+        'danger-ink':       'var(--ds-danger-ink)',
+        'info-ink':         'var(--ds-info-ink)',
         'success':          '#16a34a',
         'warning':          '#d97706',
         'danger':           '#dc2626',
@@ -155,6 +159,8 @@ module.exports = {
 
       boxShadow: {
         'card-hover': '0 0 0 1.5px rgba(37,99,235,0.3)',
+        'soft':       'var(--ds-shadow-sm)',
+        'lift':       'var(--ds-shadow-md)',
         'modal':      '0 20px 25px -5px rgba(0,0,0,0.4), 0 8px 10px -6px rgba(0,0,0,0.3)',
         'premium':    '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
       },

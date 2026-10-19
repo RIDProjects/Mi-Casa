@@ -10,15 +10,15 @@ export function CurrencyToggle() {
     currencies.find(c => c.isLocal)?.currencyCode;
 
   return (
-    <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+    <div className="flex items-center gap-1 bg-surface-container dark:bg-surface-container rounded-[10px] p-1 border border-border-light">
       {currencies.map(c => (
         <button
           key={c.currencyCode}
           onClick={() => setActiveCurrency(c.currencyCode)}
-          className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+          className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
             selectedCode === c.currencyCode
-              ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-              : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              ? 'bg-surface-container-lowest dark:bg-surface-high text-on-surface shadow-soft'
+              : 'text-on-surface-variant hover:text-on-surface'
           }`}
         >
           {c.currencyCode}

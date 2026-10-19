@@ -17,15 +17,15 @@ const iconColorMap: Record<NonNullable<StatCardProps['color']>, string> = {
   red:    'icon-red',
   yellow: 'icon-amber',
   purple: 'icon-purple',
-  gray:   'bg-surface-variant text-on-surface-variant p-3 rounded-xl',
+  gray:   'bg-surface-variant text-on-surface-variant p-2.5 rounded-[10px]',
 };
 
 const valueColorMap: Record<NonNullable<StatCardProps['color']>, string> = {
-  blue:   'text-primary',
-  green:  'text-success',
-  red:    'text-danger',
-  yellow: 'text-warning',
-  purple: 'text-primary',
+  blue:   'text-info-ink',
+  green:  'text-ok-ink',
+  red:    'text-danger-ink',
+  yellow: 'text-warn-ink',
+  purple: 'text-info-ink',
   gray:   'text-on-surface',
 };
 
@@ -34,7 +34,7 @@ export default function StatCard({
 }: StatCardProps) {
   if (loading) {
     return (
-      <div className="rounded-[14px] p-5 space-y-3 bg-surface-container-lowest border border-outline-variant">
+      <div className="rounded-[14px] p-5 space-y-3 bg-surface-container-lowest border border-border-light shadow-soft">
         <Skeleton className="h-3 w-1/3" />
         <Skeleton className="h-7 w-1/2" />
         <Skeleton className="h-2.5 w-2/3" />
@@ -43,7 +43,7 @@ export default function StatCard({
   }
 
   return (
-    <div className="bg-surface-container-lowest border border-outline-variant rounded-[14px] p-5 flex items-start gap-4">
+    <div className="group bg-surface-container-lowest dark:bg-surface-container-low border border-border-light rounded-[14px] p-5 flex items-start gap-4 shadow-soft transition-all duration-200 hover:shadow-lift hover:-translate-y-0.5">
       {icon && (
         <div className={clsx('shrink-0 text-xl', iconColorMap[color])}>
           {icon}
@@ -51,7 +51,7 @@ export default function StatCard({
       )}
       <div className="flex-1 min-w-0">
         <p className="font-label-upper text-label-upper text-on-surface-variant uppercase">{title}</p>
-        <p className={clsx('text-[22px] font-bold mt-1 truncate fin-number', valueColorMap[color])}>{value}</p>
+        <p className={clsx('text-[24px] leading-tight font-bold mt-1.5 truncate fin-number', valueColorMap[color])}>{value}</p>
         {subtitle && (
           <p className="font-caption text-caption text-outline mt-1">{subtitle}</p>
         )}

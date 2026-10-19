@@ -37,7 +37,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile top bar */}
-        <div className="md:hidden flex items-center gap-3 px-4 h-14 bg-surface-container-low border-b border-outline-variant flex-shrink-0">
+        <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-surface-container-lowest/90 dark:bg-surface-container-low/90 backdrop-blur border-b border-border-light flex-shrink-0">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-1.5 text-on-surface-variant hover:text-on-surface transition-colors active:scale-95"
@@ -45,12 +45,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             <Menu size={20} />
           </button>
-          <h1 className="text-[18px] font-black text-primary uppercase tracking-tight leading-none">
+          <span className="text-[16px] font-extrabold text-primary tracking-tight leading-none">
             Mi Casa Pro
-          </h1>
+          </span>
         </div>
         <main className="flex-1 overflow-auto">
-          <div className="p-4 md:p-8">{children}</div>
+          <div className="mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">{children}</div>
         </main>
       </div>
     </div>

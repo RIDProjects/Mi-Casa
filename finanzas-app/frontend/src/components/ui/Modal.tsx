@@ -46,7 +46,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-on-surface/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 animate-backdrop-in"
@@ -61,11 +61,11 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col focus:outline-none animate-fade-in bg-surface-container-lowest border border-outline-variant rounded-2xl shadow-2xl`}
+        className={`relative w-full ${widths[size]} max-h-[90vh] flex flex-col focus:outline-none animate-fade-in bg-surface-container-lowest border border-border-light rounded-2xl shadow-modal overflow-hidden`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant">
-          <h2 id={titleId} className="font-section-title text-section-title text-on-surface">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-surface-gray">
+          <h2 id={titleId} className="font-section-title text-section-title text-on-surface tracking-tight">
             {title}
           </h2>
           <button
