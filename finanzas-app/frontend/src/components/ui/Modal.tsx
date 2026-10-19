@@ -21,7 +21,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     if (isOpen) { setRendered(true); setClosing(false); return; }
     if (!rendered) return;
     setClosing(true);
-    const t = setTimeout(() => { setRendered(false); setClosing(false); }, 180);
+    const t = setTimeout(() => { setRendered(false); setClosing(false); }, 260);
     return () => clearTimeout(t);
   }, [isOpen, rendered]);
   const panelRef = useRef<HTMLDivElement>(null);

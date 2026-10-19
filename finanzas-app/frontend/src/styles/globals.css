@@ -100,14 +100,14 @@
   /* Smooth state changes (hover, focus, active, disabled) on interactive elements */
   a, button, summary, [role='tab'], [role='button'] {
     transition-property: color, background-color, border-color, box-shadow, opacity, text-decoration-color;
-    transition-duration: 160ms;
+    transition-duration: 240ms;
     transition-timing-function: ease;
   }
 
   /* Theme switch: cross-fade colours for a moment (class added by the theme store) */
   .theme-transition, .theme-transition *, .theme-transition *::before, .theme-transition *::after {
-    transition: background-color 320ms ease, color 320ms ease, border-color 320ms ease,
-                fill 320ms ease, stroke 320ms ease, box-shadow 320ms ease !important;
+    transition: background-color 500ms ease, color 500ms ease, border-color 500ms ease,
+                fill 500ms ease, stroke 500ms ease, box-shadow 500ms ease !important;
   }
 
   /* Thin, themed scrollbars */
@@ -417,44 +417,44 @@
 @layer utilities {
   /* ── Motion: content eases in as it mounts (data blocks, KPI cards, table rows) ─────────
      `backwards` fill keeps no transform once finished, so fixed descendants (modals) stay correct. */
-  .page-enter > * { animation: fadeUp 380ms var(--ease-premium) backwards; }
+  .page-enter > * { animation: fadeUp 650ms var(--ease-premium) backwards; }
   .page-enter > .fixed { animation: none; }
-  .page-enter > *:nth-child(2) { animation-delay: 40ms; }
-  .page-enter > *:nth-child(3) { animation-delay: 80ms; }
-  .page-enter > *:nth-child(4) { animation-delay: 120ms; }
-  .page-enter > *:nth-child(5) { animation-delay: 160ms; }
-  .page-enter > *:nth-child(6) { animation-delay: 200ms; }
-  .page-enter > *:nth-child(n+7) { animation-delay: 240ms; }
+  .page-enter > *:nth-child(2) { animation-delay: 80ms; }
+  .page-enter > *:nth-child(3) { animation-delay: 160ms; }
+  .page-enter > *:nth-child(4) { animation-delay: 240ms; }
+  .page-enter > *:nth-child(5) { animation-delay: 320ms; }
+  .page-enter > *:nth-child(6) { animation-delay: 400ms; }
+  .page-enter > *:nth-child(n+7) { animation-delay: 480ms; }
 
-  .animate-stat { animation: fadeUp 420ms var(--ease-premium) backwards; }
-  .animate-stat:nth-child(2) { animation-delay: 60ms; }
-  .animate-stat:nth-child(3) { animation-delay: 120ms; }
-  .animate-stat:nth-child(4) { animation-delay: 180ms; }
-  .animate-stat:nth-child(n+5) { animation-delay: 220ms; }
+  .animate-stat { animation: fadeUp 700ms var(--ease-premium) backwards; }
+  .animate-stat:nth-child(2) { animation-delay: 110ms; }
+  .animate-stat:nth-child(3) { animation-delay: 220ms; }
+  .animate-stat:nth-child(4) { animation-delay: 330ms; }
+  .animate-stat:nth-child(n+5) { animation-delay: 400ms; }
 
-  table tbody tr { animation: rowIn 320ms var(--ease-premium) backwards; }
-  table tbody tr:nth-child(2) { animation-delay: 25ms; }
-  table tbody tr:nth-child(3) { animation-delay: 50ms; }
-  table tbody tr:nth-child(4) { animation-delay: 75ms; }
-  table tbody tr:nth-child(5) { animation-delay: 100ms; }
-  table tbody tr:nth-child(6) { animation-delay: 125ms; }
-  table tbody tr:nth-child(7) { animation-delay: 150ms; }
-  table tbody tr:nth-child(8) { animation-delay: 175ms; }
-  table tbody tr:nth-child(n+9) { animation-delay: 200ms; }
+  table tbody tr { animation: rowIn 520ms var(--ease-premium) backwards; }
+  table tbody tr:nth-child(2) { animation-delay: 45ms; }
+  table tbody tr:nth-child(3) { animation-delay: 90ms; }
+  table tbody tr:nth-child(4) { animation-delay: 135ms; }
+  table tbody tr:nth-child(5) { animation-delay: 180ms; }
+  table tbody tr:nth-child(6) { animation-delay: 225ms; }
+  table tbody tr:nth-child(7) { animation-delay: 270ms; }
+  table tbody tr:nth-child(8) { animation-delay: 315ms; }
+  table tbody tr:nth-child(n+9) { animation-delay: 360ms; }
 
-  .animate-fade-in   { animation: modalIn  220ms cubic-bezier(0.23,1,0.32,1) both; }
-  .animate-fade-up   { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) both; }
+  .animate-fade-in   { animation: modalIn  340ms cubic-bezier(0.23,1,0.32,1) both; }
+  .animate-fade-up   { animation: fadeUp   500ms cubic-bezier(0.23,1,0.32,1) both; }
   .animate-stagger-1 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 30ms  both; }
   .animate-stagger-2 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 60ms  both; }
   .animate-stagger-3 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 90ms  both; }
-  .animate-backdrop-out { animation: backdropOut 180ms ease-in both; }
-  .animate-modal-out { animation: modalOut 180ms cubic-bezier(0.4,0,1,1) both; }
-  .animate-backdrop-in { animation: backdropIn 200ms ease-out both; }
-  .animate-slide-in    { animation: slideIn    280ms cubic-bezier(0.32,0.72,0,1) both; }
+  .animate-backdrop-out { animation: backdropOut 260ms ease-in both; }
+  .animate-modal-out { animation: modalOut 260ms cubic-bezier(0.4,0,1,1) both; }
+  .animate-backdrop-in { animation: backdropIn 300ms ease-out both; }
+  .animate-slide-in    { animation: slideIn    400ms cubic-bezier(0.32,0.72,0,1) both; }
 
   @keyframes modalIn    { from{opacity:0;transform:scale(0.96) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
-  @keyframes rowIn      { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeUp     { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes rowIn      { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeUp     { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
   @keyframes backdropOut { from{opacity:1} to{opacity:0} }
   @keyframes modalOut   { from{opacity:1;transform:scale(1) translateY(0)} to{opacity:0;transform:scale(0.97) translateY(6px)} }
   @keyframes backdropIn { from{opacity:0} to{opacity:1} }

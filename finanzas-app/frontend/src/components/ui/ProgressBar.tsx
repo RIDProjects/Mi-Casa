@@ -56,7 +56,7 @@ export function ProgressBar({ value, tone = 'goal', label, valueLabel, size = 'm
         aria-valuemax={100}
         className={`w-full rounded-full bg-surface-variant overflow-hidden ${size === 'sm' ? 'h-1.5' : 'h-2.5'}`}
       >
-        <div className={`h-full rounded-full transition-[width] duration-[900ms] ease-out ${fill}`} style={{ width: mounted ? `${width}%` : '0%' }} />
+        <div className={`h-full rounded-full transition-[width] duration-[1400ms] ease-out ${fill}`} style={{ width: mounted ? `${width}%` : '0%' }} />
       </div>
     </div>
   );

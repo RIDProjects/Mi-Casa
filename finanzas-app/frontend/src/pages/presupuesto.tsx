@@ -110,7 +110,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
         onClick={() => setOpen(o => !o)}
       >
         <div className="flex items-center gap-2">
-          <ChevronDown size={15} className={`text-on-surface-variant transition-transform duration-300 ${open ? '' : '-rotate-90'}`} />
+          <ChevronDown size={15} className={`text-on-surface-variant transition-transform duration-500 ${open ? '' : '-rotate-90'}`} />
           <span className="font-section-title text-section-title text-on-surface">{category.name}</span>
           <span className="font-body-small text-body-small text-outline">({category.expenses.length})</span>
         </div>
@@ -136,7 +136,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
       </div>
 
       <div
-        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+        className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
         aria-hidden={!open}
         {...(open ? {} : { inert: '' as unknown as boolean })}
       >
