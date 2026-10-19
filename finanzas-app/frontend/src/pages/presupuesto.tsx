@@ -303,6 +303,8 @@ export default function PresupuestoPage() {
   const [categoryForm, setCategoryForm]         = useState({ ...defaultCategoryForm });
   const [showSavingsModal, setShowSavingsModal] = useState(false);
   const [savingsTargetEdit, setSavingsTargetEdit] = useState(20);
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [nameEdit, setNameEdit] = useState('');
 
   const { data: budgets = [], isLoading, isError: isBudgetsError, refetch: refetchBudgets } = useQuery<Budget[]>('budgets', () => budgetAPI.getAll().then(r => r.data), { staleTime: 0 });
   const activeBudgetId = (budgets as Budget[])[0]?.id ?? null;
@@ -360,6 +362,15 @@ export default function PresupuestoPage() {
     onSuccess: (res: any) => { toast.success('Meta de ahorro actualizada'); setShowSavingsModal(false); applyUpdatedBudget(res.data); refresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
+  const updateNameMut = useMutation((name: string) => budgetAPI.update(activeBudgetId!, { name }), {
+    onSuccess: (res: any) => { toast.success('Nombre actualizado'); setShowNameModal(false); applyUpdatedBudget(res.data); refresh(); },
+    onError: (e: any) => { toast.error(getErr(e)); },
+  });
+  const handleSaveName = () => {
+    const name = nameEdit.trim();
+    if (!name) { toast.error('El nombre no puede estar vacío'); return; }
+    updateNameMut.mutate(name);
+  };
   const updateRuleMut = useMutation(
     (rule: BudgetRule) => budgetAPI.update(activeBudgetId!, {
       rule,
@@ -488,7 +499,18 @@ export default function PresupuestoPage() {
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
         <div>
-          <h1 className="font-page-title text-page-title text-on-surface">{budget.name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-page-title text-page-title text-on-surface">{budget.name}</h1>
+            <button
+              type="button"
+              aria-label="Editar nombre"
+              title="Editar nombre"
+              onClick={() => { setNameEdit(budget.name); setShowNameModal(true); }}
+              className="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-variant rounded-lg transition-colors"
+            >
+              <Pencil size={16} />
+            </button>
+          </div>
           <p className="font-body-default text-body-default text-on-surface-variant mt-1">
             Año {budget.year} · Meta de ahorro: {budget.savingsTargetPercent}%
           </p>
@@ -880,6 +902,28 @@ export default function PresupuestoPage() {
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => setShowCategoryModal(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" disabled={addCategoryMut.isLoading} className="btn-primary">{addCategoryMut.isLoading ? 'Creando...' : 'Crear categoría'}</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={showNameModal} onClose={() => setShowNameModal(false)} title="Editar nombre del presupuesto">
+        <form onSubmit={(e) => { e.preventDefault(); handleSaveName(); }} className="space-y-5">
+          <div>
+            <label htmlFor="budget-name" className="label">Nombre del presupuesto</label>
+            <input
+              id="budget-name"
+              className="input"
+              value={nameEdit}
+              onChange={(e) => setNameEdit(e.target.value)}
+              maxLength={80}
+              autoFocus
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-1">
+            <button type="button" onClick={() => setShowNameModal(false)} className="btn-secondary">Cancelar</button>
+            <button type="submit" disabled={updateNameMut.isLoading} className="btn-primary">
+              {updateNameMut.isLoading ? 'Guardando...' : 'Guardar'}
+            </button>
           </div>
         </form>
       </Modal>
