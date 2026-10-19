@@ -1,0 +1,53 @@
+name: Deploy backend
+
+# Release flow: work and test in dev, first real deploy goes to staging, and only
+# if staging is healthy does it reach production.
+#   - push to main:           ci -> dev -> staging -> production (manual approval)
+#   - manual run on a branch: ci -> dev only (try a branch in dev before merging)
+# See finanzas-app/docs/deploy.md for the full flow and one-time setup.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'finanzas-app/backend/**'
+      - '.github/workflows/deploy-backend.yml'
+      - '.github/workflows/_deploy-backend-env.yml'
+      - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One pipeline at a time; a newer push queues behind a run waiting for approval
+# instead of cancelling a deploy that is already in flight.
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/backend-ci.yml
+
+  dev:
+    needs: ci
+    uses: ./.github/workflows/_deploy-backend-env.yml
+    with:
+      environment: dev
+      base_url: https://backend-dev-2110.up.railway.app
+
+  staging:
+    needs: dev
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_deploy-backend-env.yml
+    with:
+      environment: staging
+      base_url: https://backend-staging-494d.up.railway.app
+
+  production:
+    needs: staging
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/_deploy-backend-env.yml
+    with:
+      environment: production
+      base_url: https://backend-production-0d37.up.railway.app

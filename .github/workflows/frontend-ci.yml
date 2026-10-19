@@ -6,8 +6,6 @@ on:
     paths:
       - 'finanzas-app/frontend/**'
   pull_request:
-    paths:
-      - 'finanzas-app/frontend/**'
 
 defaults:
   run:
@@ -15,6 +13,7 @@ defaults:
 
 jobs:
   test:
+    name: frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
