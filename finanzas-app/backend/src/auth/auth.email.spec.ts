@@ -15,7 +15,12 @@ const matchesEmail = (stored: string, cond: any): boolean =>
     : stored === cond;
 
 describe('RegisterDto', () => {
-  const base = { name: 'Juan', email: 'Juan@X.com ', password: 'secret1', houseName: 'Casa', housePassword: 'abc' };
+  const base = { name: 'Juan', email: 'Juan@X.com ', password: 'secret123', houseName: 'Casa', housePassword: 'abc' };
+
+  it('rejects passwords shorter than 8 characters', async () => {
+    const errors = await validate(plainToInstance(RegisterDto, { ...base, password: 'abc1234' }));
+    expect(errors.map((e) => e.property)).toContain('password');
+  });
 
   it('keeps localCurrencyCode when whitelisting', async () => {
     const dto = plainToInstance(RegisterDto, { ...base, localCurrencyCode: 'USD' });
@@ -77,25 +82,25 @@ describe('AuthService email handling', () => {
   it('register detects an existing mixed-case email and stores the normalized one', async () => {
     userRepo.findOne.mockImplementation(async ({ where }: any) => (matchesEmail('Juan@X.com', where.email) ? { id: 'old' } : null));
     await expect(
-      service.register({ name: 'Juan', email: 'juan@x.com', password: 'secret1', houseName: 'C', housePassword: 'abc' }),
+      service.register({ name: 'Juan', email: 'juan@x.com', password: 'secret123', houseName: 'C', housePassword: 'abc' }),
     ).rejects.toThrow('El email ya está registrado');
 
     userRepo.findOne.mockResolvedValue(null);
-    await service.register({ name: 'Ana', email: ' Ana@X.com', password: 'secret1', houseName: 'C', housePassword: 'abc' });
+    await service.register({ name: 'Ana', email: ' Ana@X.com', password: 'secret123', houseName: 'C', housePassword: 'abc' });
     expect(userRepo.create).toHaveBeenCalledWith(expect.objectContaining({ email: 'ana@x.com' }));
   });
 
   it('register seeds the chosen local currency for a new house', async () => {
     userRepo.findOne.mockResolvedValue(null);
     await service.register({
-      name: 'Ana', email: 'ana@x.com', password: 'secret1', houseName: 'C', housePassword: 'abc', localCurrencyCode: 'USD',
+      name: 'Ana', email: 'ana@x.com', password: 'secret123', houseName: 'C', housePassword: 'abc', localCurrencyCode: 'USD',
     });
     expect(houseCurrencyRepo.create).toHaveBeenCalledWith(expect.objectContaining({ currencyCode: 'USD', isLocal: true }));
   });
 
   it('register defaults to CUP when no currency is chosen', async () => {
     userRepo.findOne.mockResolvedValue(null);
-    await service.register({ name: 'Ana', email: 'ana@x.com', password: 'secret1', houseName: 'C', housePassword: 'abc' });
+    await service.register({ name: 'Ana', email: 'ana@x.com', password: 'secret123', houseName: 'C', housePassword: 'abc' });
     expect(houseCurrencyRepo.create).toHaveBeenCalledWith(expect.objectContaining({ currencyCode: 'CUP' }));
   });
 });

@@ -201,6 +201,10 @@ export class AuthService {
     };
   }
 
+  private hashResetToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
+  }
+
   async forgotPassword(email: string): Promise<void> {
     const user = await this.userRepo.findOne({ where: { email: emailMatch(email) } });
     // No revelar si el email existe o no (seguridad)
@@ -209,7 +213,8 @@ export class AuthService {
     const token = crypto.randomBytes(32).toString('hex');
     const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
 
-    await this.userRepo.update(user.id, { resetToken: token, resetTokenExpiry: expiry });
+    // Only the hash is stored: a leaked DB row must not be a usable reset link.
+    await this.userRepo.update(user.id, { resetToken: this.hashResetToken(token), resetTokenExpiry: expiry });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${token}`;
@@ -221,7 +226,7 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const user = await this.userRepo.findOne({ where: { resetToken: token },
+    const user = await this.userRepo.findOne({ where: { resetToken: this.hashResetToken(token) },
       select: ['id', 'resetToken', 'resetTokenExpiry'],
     });
 

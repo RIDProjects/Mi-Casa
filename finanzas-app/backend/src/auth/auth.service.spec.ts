@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { AuthService } from './auth.service';
 import { User } from '../database/entities/user.entity';
 import { Role } from '../database/entities/role.entity';
@@ -261,6 +262,22 @@ describe('AuthService', () => {
     });
   });
 
+  describe('forgotPassword', () => {
+    it('stores only the hash of the emailed token', async () => {
+      userRepo.findOne.mockResolvedValue({ id: 'user-1', email: 'a@b.c', name: 'A', isActive: true } as unknown as User);
+      notificationsService.sendPasswordReset = jest.fn().mockResolvedValue(true);
+
+      await service.forgotPassword('a@b.c');
+
+      const [, patch]: any = userRepo.update.mock.calls[0];
+      const resetUrl: string = (notificationsService.sendPasswordReset as jest.Mock).mock.calls[0][2];
+      const emailed = new URL(resetUrl).searchParams.get('token');
+      expect(emailed).toMatch(/^[a-f0-9]{64}$/);
+      expect(patch.resetToken).toBe(crypto.createHash('sha256').update(emailed).digest('hex'));
+      expect(patch.resetToken).not.toBe(emailed);
+    });
+  });
+
   describe('resetPassword', () => {
     it('explicitly selects the non-selectable reset token columns', async () => {
       userRepo.findOne.mockResolvedValue({
@@ -272,7 +289,8 @@ describe('AuthService', () => {
       await service.resetPassword('tok', 'NewPassword1');
 
       const arg: any = userRepo.findOne.mock.calls[0][0];
-      expect(arg.where).toEqual({ resetToken: 'tok' });
+      // the DB only ever stores the sha256 of the emailed token
+      expect(arg.where).toEqual({ resetToken: crypto.createHash('sha256').update('tok').digest('hex') });
       expect(arg.select).toEqual(expect.arrayContaining(['id', 'resetToken', 'resetTokenExpiry']));
       expect(userRepo.update).toHaveBeenCalledWith(
         'user-1',

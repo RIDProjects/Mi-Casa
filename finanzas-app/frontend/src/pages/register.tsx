@@ -31,8 +31,8 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (form.password.length < 6) {
-      toast.error('La contraseña debe tener al menos 6 caracteres');
+    if (form.password.length < 8) {
+      toast.error('La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
@@ -158,7 +158,7 @@ export default function Register() {
                   className="input pr-10"
                   placeholder="••••••••"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <button
                   type="button"
@@ -168,7 +168,7 @@ export default function Register() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <p className="font-body-small text-outline mt-1">Mínimo 6 caracteres</p>
+              <p className="font-body-small text-outline mt-1">Mínimo 8 caracteres</p>
             </div>
             {error && (
               <div

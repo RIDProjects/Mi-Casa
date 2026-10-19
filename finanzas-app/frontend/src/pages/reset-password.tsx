@@ -15,12 +15,12 @@ export default function ResetPassword() {
   const [error, setError]       = useState<string | null>(null);
 
   const mismatch = confirm.length > 0 && password !== confirm;
-  const weak = password.length > 0 && password.length < 6;
+  const weak = password.length > 0 && password.length < 8;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password !== confirm) { setError('Las contraseñas no coinciden'); return; }
-    if (password.length < 6)  { setError('La contraseña debe tener al menos 6 caracteres'); return; }
+    if (password.length < 8)  { setError('La contraseña debe tener al menos 8 caracteres'); return; }
     setError(null);
     setLoading(true);
     try {
@@ -69,7 +69,7 @@ export default function ResetPassword() {
             <>
               <h2 className="text-[22px] font-bold tracking-tight text-on-surface mb-2">Nueva contraseña</h2>
               <p className="font-body-default text-on-surface-variant mb-6">
-                Elige una contraseña segura con al menos 6 caracteres.
+                Elige una contraseña segura con al menos 8 caracteres.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,7 +81,7 @@ export default function ResetPassword() {
                       value={password}
                       onChange={e => { setPassword(e.target.value); setError(null); }}
                       className={`input pr-10 ${weak ? 'border-warning' : ''}`}
-                      placeholder="Mínimo 6 caracteres"
+                      placeholder="Mínimo 8 caracteres"
                       required
                     />
                     <button type="button" onClick={() => setShowPw(!showPw)}

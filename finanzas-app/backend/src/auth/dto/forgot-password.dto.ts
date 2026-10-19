@@ -9,5 +9,5 @@ export class ForgotPasswordDto {
 
 export class ResetPasswordDto {
   @IsString() token: string;
-  @IsString() @MinLength(6) password: string;
+  @IsString() @MinLength(8) password: string;
 }
