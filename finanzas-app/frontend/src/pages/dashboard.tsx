@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '../components/ui/Skeleton';
 import { MONTHS } from '../lib/format';
+import { CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const safeNum = (n: unknown): number => { const v = Number(n); return Number.isFinite(v) ? v : 0; };
 
@@ -315,7 +316,7 @@ export default function Dashboard() {
                     <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(v: number) => cfmt(v)} contentStyle={{ borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)', fontSize: 12 }} />
+                <Tooltip formatter={(v: number) => cfmt(v)} contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} />
                 <Legend iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
               </PieChart>
             </ResponsiveContainer>

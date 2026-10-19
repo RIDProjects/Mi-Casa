@@ -12,6 +12,7 @@ import { MONTH_NAMES } from '../lib/format';
 import { useCurrencyFormatter } from '../lib/currency';
 import { parseLocalDate, todayLocalISO } from '../lib/dates';
 import { getErrorMessage } from '../utils/errors';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const CATEGORIES = [
   'Casa', 'Comida', 'Familia', 'Transporte', 'Viajes',
@@ -97,6 +98,8 @@ function MetodoBadge({ metodo }: { metodo: string }) {
     </span>
   );
 }
+
+const STATUS_LABELS: Record<string, string> = { EN_META: 'En meta', 'ATENCIÓN': 'Atención', ALERTA: 'Alerta' };
 
 export default function TransaccionesPage() {
   const qc = useQueryClient();
@@ -597,14 +600,16 @@ export default function TransaccionesPage() {
             <p className="font-caption text-caption opacity-70 text-advisory-text-dim">Diferencia proyectada vs real</p>
           </div>
           <div className="py-4">
-            <span className={`font-hero-title text-[38px] leading-tight ${disponible >= 0 ? 'text-advisory-text' : 'text-danger-ink'}`}>
+            <span className={`font-hero-title fin-number text-[38px] leading-tight ${disponible >= 0 ? 'text-advisory-text' : 'text-danger-ink'}`}>
               {disponible >= 0 ? '+' : '-'}{cfmt(Math.abs(disponible))}
             </span>
           </div>
-          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-            <p className="font-formula-code text-formula-code text-advisory-text-dim">
-              STATUS: {thermoLabel.status}
-            </p>
+          <div className="bg-panel rounded-xl p-3 border border-border-light flex items-center justify-between gap-3">
+            <span className="text-xs font-medium text-on-surface-variant">Estado del presupuesto</span>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${thermoLabel.color}`}>
+              <span className={`w-2 h-2 rounded-full ${thermoLabel.bar}`} />
+              {STATUS_LABELS[thermoLabel.status] ?? thermoLabel.status}
+            </span>
           </div>
         </div>
       </div>
@@ -617,12 +622,12 @@ export default function TransaccionesPage() {
         <div className="p-4">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant, #e5e7eb)" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={50} />
-              <Tooltip formatter={(value: number) => cfmt(value)} />
-              <Bar dataKey="Ingresos" fill="#16a34a" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Gastos" fill="#d97706" radius={[3, 3, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={50} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(value: number) => cfmt(value)} />
+              <Bar dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         </div>

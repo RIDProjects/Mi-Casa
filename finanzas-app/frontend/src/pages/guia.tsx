@@ -21,11 +21,11 @@ export default function GuiaPage() {
 
   return (
     <Layout>
-      <div className="flex flex-col h-full" style={{ minHeight: 'calc(100vh - 0px)' }}>
+      <div className="flex flex-col h-full min-h-screen">
         {/* Header bar */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-lowest flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-panel flex-shrink-0">
           <div className="flex items-center gap-3">
-            <BookOpen size={22} className="text-primary" />
+            <BookOpen size={22} className="text-info-ink" />
             <div>
               <h1 className="font-semibold text-on-surface text-base leading-tight">Guía de Módulos</h1>
               <p className="text-xs text-on-surface-variant">Mi Casa Pro — Referencia completa de todas las funcionalidades</p>
@@ -33,7 +33,7 @@ export default function GuiaPage() {
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            className="btn-primary"
           >
             <LayoutDashboard size={16} />
             Ir al Dashboard
@@ -66,8 +66,7 @@ export default function GuiaPage() {
           <iframe
             src="/guia.html"
             title="Guía de Módulos — Mi Casa Pro"
-            className="w-full h-full border-0"
-            style={{ minHeight: 'calc(100vh - 72px)' }}
+            className="w-full h-full border-0 min-h-[calc(100vh-72px)]"
           />
         </div>
       </div>

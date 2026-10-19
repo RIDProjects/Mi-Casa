@@ -16,6 +16,7 @@ import {
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { fmt } from '../lib/format';
 import { getErrorMessage } from '../utils/errors';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const safeNum = (n: unknown): number => {
   const v = Number(n);
@@ -286,11 +287,13 @@ export default function PatrimonioPage() {
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis
-                tick={{ fontSize: 11 }}
-                tickFormatter={(v: number) => `${currencySymbol}${(safeNum(v) / 1000).toFixed(0)}k`}
+                tick={{ ...CHART_TICK, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => formatAxisMoney(safeNum(v), currencySymbol)}
                 width={60}
               />
               <Tooltip
