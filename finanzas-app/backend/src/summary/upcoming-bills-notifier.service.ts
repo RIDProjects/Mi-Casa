@@ -62,6 +62,7 @@ export class UpcomingBillsNotifierService {
         houseId,
         { type: dedupeType, title, message },
         24 * (REMINDER_WINDOW_DAYS + 1), // cubre toda la ventana de recordatorio, no solo un dia
+        { includeRead: true }, // una vez leído, no se vuelve a crear ni reenviar por email
       );
 
       // Solo mandar el email la primera vez que se crea la notificación

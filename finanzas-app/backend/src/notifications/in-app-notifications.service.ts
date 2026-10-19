@@ -53,10 +53,20 @@ export class InAppNotificationsService {
     houseId: string,
     data: { message: string; title?: string; body?: string; type: string },
     windowHours = 24,
+    // includeRead: dedupe also against notifications the user already read.
+    // For per-occurrence types (e.g. a bill with its due date) a read alert
+    // must not be recreated, or the daily cron re-notifies (and re-emails)
+    // every day of the reminder window.
+    options: { includeRead?: boolean } = {},
   ): Promise<AppNotification | null> {
     const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
     const recent = await this.repo.findOne({
-      where: { houseId, type: data.type, isRead: false, createdAt: MoreThan(since) },
+      where: {
+        houseId,
+        type: data.type,
+        ...(options.includeRead ? {} : { isRead: false }),
+        createdAt: MoreThan(since),
+      },
     });
     if (recent) return null;
     return this.create(houseId, data);
