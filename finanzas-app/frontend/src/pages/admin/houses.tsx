@@ -25,6 +25,7 @@ export default function AdminHouses() {
   const [editNameModal, setEditNameModal] = useState(false);
   const [houseName, setHouseName] = useState('');
   const [memberToRemove, setMemberToRemove] = useState<Member | null>(null);
+  const [houseToDelete, setHouseToDelete] = useState<any>(null);
 
   const { data: houses = [], isLoading } = useQuery('adminHouses', () => housesAPI.getAll().then(r => r.data));
 
@@ -60,6 +61,18 @@ export default function AdminHouses() {
       setMemberToRemove(null);
     },
     onError: (e: any) => { toast.error(e.response?.data?.message || 'Error al eliminar'); },
+  });
+
+  const deleteHouseMut = useMutation((id: string) => housesAPI.deleteHouse(id), {
+    onSuccess: () => {
+      toast.success('Casa eliminada');
+      qc.invalidateQueries('adminHouses');
+      setHouseToDelete(null);
+    },
+    onError: (e: any) => {
+      toast.error(e.response?.data?.message || 'Error al eliminar la casa');
+      setHouseToDelete(null);
+    },
   });
 
   const handleViewMembers = (house: any) => {
@@ -135,6 +148,15 @@ export default function AdminHouses() {
                   aria-label="Editar nombre"
                 >
                   <Edit2 size={16} />
+                </button>
+                <button
+                  onClick={() => setHouseToDelete(house)}
+                  disabled={(house.members?.length || 0) > 0}
+                  title={(house.members?.length || 0) > 0 ? 'Elimina primero a los miembros para poder borrar la casa' : 'Eliminar casa'}
+                  aria-label="Eliminar casa"
+                  className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                >
+                  <Trash2 size={16} />
                 </button>
               </div>
             </div>
@@ -223,6 +245,15 @@ export default function AdminHouses() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!houseToDelete}
+        onClose={() => setHouseToDelete(null)}
+        onConfirm={() => houseToDelete && deleteHouseMut.mutate(houseToDelete.id)}
+        loading={deleteHouseMut.isLoading}
+        title="Eliminar casa"
+        message={`¿Eliminar "${houseToDelete?.name ?? ''}" y todos sus datos (presupuestos, deudas, gastos, notificaciones…)? Esta acción no se puede deshacer.`}
+      />
 
       {/* Confirm Remove Member */}
       <ConfirmDialog

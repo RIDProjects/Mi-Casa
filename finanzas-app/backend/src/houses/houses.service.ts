@@ -118,6 +118,41 @@ export class HousesService {
     return this.houseRepo.save(house);
   }
 
+  // Irreversible: purges every row that references the house, then the house.
+  // Only empty houses (no members) can be deleted, so nobody loses access to
+  // data they still use. Runs in one transaction; if some dependent table
+  // still blocks the delete (FK violation) nothing is removed.
+  async deleteHouse(id: string) {
+    const house = await this.houseRepo.findOne({ where: { id }, relations: ['members'] });
+    if (!house) throw new NotFoundException('Casa no encontrada');
+    if (house.members?.length) {
+      throw new BadRequestException('La casa todavía tiene miembros. Elimínalos de la casa antes de borrarla.');
+    }
+
+    try {
+      await this.houseRepo.manager.transaction(async (em) => {
+        // Single-column FKs pointing at houses(id); names come from the catalog.
+        const refs: { tbl: string; col: string }[] = await em.query(
+          `SELECT c.conrelid::regclass::text AS tbl, quote_ident(a.attname) AS col
+             FROM pg_constraint c
+             JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = c.conkey[1]
+            WHERE c.contype = 'f' AND c.confrelid = 'houses'::regclass AND cardinality(c.conkey) = 1`,
+        );
+        for (const { tbl, col } of refs) {
+          await em.query(`DELETE FROM ${tbl} WHERE ${col} = $1`, [id]);
+        }
+        await em.delete(House, id);
+      });
+    } catch (e) {
+      if (e?.code === '23503') {
+        throw new ConflictException('La casa tiene datos dependientes que no se pudieron eliminar');
+      }
+      throw e;
+    }
+    this.logger.warn(`Casa ${id} eliminada`);
+    return { message: 'Casa eliminada' };
+  }
+
   // Global admin, o house_admin de esa casa puntual, puede gestionar sus propios miembros.
   async assertCanManageHouse(houseId: string, requestingUserId: string): Promise<void> {
     const requester = await this.userRepo.findOne({

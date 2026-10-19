@@ -72,6 +72,7 @@ export const housesAPI = {
   getMembers: (id: string) => api.get(`/houses/${id}/members`),
   switchHouse: (id: string) => api.post(`/houses/${id}/switch`),
   updateHouse: (id: string, data: any) => api.put(`/houses/${id}`, data),
+  deleteHouse: (id: string) => api.delete(`/houses/${id}`),
   toggleUserActive: (houseId: string, userId: string) => api.post(`/houses/${houseId}/members/${userId}/toggle-active`, {}),
   removeUserFromHouse: (houseId: string, userId: string) => api.delete(`/houses/${houseId}/members/${userId}`),
 };

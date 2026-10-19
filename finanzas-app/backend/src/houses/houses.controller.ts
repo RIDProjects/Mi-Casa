@@ -54,6 +54,14 @@ export class HousesController {
     return this.housesService.updateHouse(id, name);
   }
 
+  @Delete(':id')
+  @ApiOperation({ summary: 'Eliminar una casa sin miembros y todos sus datos (solo admin global)' })
+  deleteHouse(@Param('id') id: string, @Request() req) {
+    const isAdminGlobal = req.user.roles?.some((r: any) => r.name === 'admin');
+    if (!isAdminGlobal) throw new ForbiddenException('Solo el admin global puede eliminar casas');
+    return this.housesService.deleteHouse(id);
+  }
+
   @Post(':id/members/:userId/toggle-active')
   @ApiOperation({ summary: 'Activar/desactivar miembro de casa (admin global o house_admin de esa casa)' })
   toggleUserActive(@Param('id') houseId: string, @Param('userId') userId: string, @Request() req) {
