@@ -2,6 +2,7 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
+import { Analytics } from '@vercel/analytics/react';
 import '../styles/globals.css';
 import { useThemeStore } from '../store/theme.store';
 import { useEffect, useState } from 'react';
@@ -102,6 +103,7 @@ export default function App({ Component, pageProps }: AppProps) {
             error:   { iconTheme: { primary: '#dc2626', secondary: '#fee2e2' } },
           }}
         />
+        <Analytics />
       </ThemeInitializer>
     </QueryClientProvider>
   );
