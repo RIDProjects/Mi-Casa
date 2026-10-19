@@ -5,6 +5,7 @@ import { housesAPI } from '../../services/api';
 import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import PageHeader from '../../components/ui/PageHeader';
+import { CardSkeleton } from '../../components/ui/Skeleton';
 import toast from 'react-hot-toast';
 import { Building2, Users, Edit2, Trash2, UserCheck, UserX, Loader2 } from 'lucide-react';
 
@@ -105,8 +106,8 @@ export default function AdminHouses() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-on-surface-variant">Cargando...</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-label="Cargando casas">
+          {[1, 2, 3].map(i => <CardSkeleton key={i} />)}
         </div>
       </Layout>
     );

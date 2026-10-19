@@ -243,8 +243,8 @@ export default function AnalyticsPage() {
               <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={52} />
               <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
               <ReferenceLine y={avgExpenses} stroke={CHART_COLORS.expense} strokeDasharray="4 4" label={{ value: 'Prom.', fontSize: 10, fill: 'var(--ds-on-surface-variant)' }} />
-              <Bar dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
-              <Bar dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar animationDuration={750} animationEasing="ease-out" dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar animationDuration={750} animationEasing="ease-out" dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -265,8 +265,8 @@ export default function AnalyticsPage() {
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={52} />
               <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
-              <Bar dataKey={String(selectedYear - 1)} fill={CHART_COLORS.previous} radius={[5, 5, 0, 0]} maxBarSize={26} />
-              <Bar dataKey={String(selectedYear)} fill={CHART_COLORS.current} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar animationDuration={750} animationEasing="ease-out" dataKey={String(selectedYear - 1)} fill={CHART_COLORS.previous} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar animationDuration={750} animationEasing="ease-out" dataKey={String(selectedYear)} fill={CHART_COLORS.current} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -305,7 +305,7 @@ export default function AnalyticsPage() {
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={44} />
               <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => [`$${fmt(v)}`, 'Gastos hormiga']} />
-              <Line type="monotone" dataKey="Hormiga" stroke={CHART_COLORS.ant} strokeWidth={2} dot={{ r: 3 }} />
+              <Line animationDuration={750} animationEasing="ease-out" type="monotone" dataKey="Hormiga" stroke={CHART_COLORS.ant} strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}

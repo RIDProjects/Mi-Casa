@@ -402,6 +402,33 @@
 }
 
 @layer utilities {
+  /* ── Motion: content eases in as it mounts (data blocks, KPI cards, table rows) ─────────
+     `backwards` fill keeps no transform once finished, so fixed descendants (modals) stay correct. */
+  .page-enter > * { animation: fadeUp 380ms var(--ease-premium) backwards; }
+  .page-enter > .fixed { animation: none; }
+  .page-enter > *:nth-child(2) { animation-delay: 40ms; }
+  .page-enter > *:nth-child(3) { animation-delay: 80ms; }
+  .page-enter > *:nth-child(4) { animation-delay: 120ms; }
+  .page-enter > *:nth-child(5) { animation-delay: 160ms; }
+  .page-enter > *:nth-child(6) { animation-delay: 200ms; }
+  .page-enter > *:nth-child(n+7) { animation-delay: 240ms; }
+
+  .animate-stat { animation: fadeUp 420ms var(--ease-premium) backwards; }
+  .animate-stat:nth-child(2) { animation-delay: 60ms; }
+  .animate-stat:nth-child(3) { animation-delay: 120ms; }
+  .animate-stat:nth-child(4) { animation-delay: 180ms; }
+  .animate-stat:nth-child(n+5) { animation-delay: 220ms; }
+
+  table tbody tr { animation: rowIn 320ms var(--ease-premium) backwards; }
+  table tbody tr:nth-child(2) { animation-delay: 25ms; }
+  table tbody tr:nth-child(3) { animation-delay: 50ms; }
+  table tbody tr:nth-child(4) { animation-delay: 75ms; }
+  table tbody tr:nth-child(5) { animation-delay: 100ms; }
+  table tbody tr:nth-child(6) { animation-delay: 125ms; }
+  table tbody tr:nth-child(7) { animation-delay: 150ms; }
+  table tbody tr:nth-child(8) { animation-delay: 175ms; }
+  table tbody tr:nth-child(n+9) { animation-delay: 200ms; }
+
   .animate-fade-in   { animation: modalIn  220ms cubic-bezier(0.23,1,0.32,1) both; }
   .animate-fade-up   { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) both; }
   .animate-stagger-1 { animation: fadeUp   220ms cubic-bezier(0.23,1,0.32,1) 30ms  both; }
@@ -411,6 +438,7 @@
   .animate-slide-in    { animation: slideIn    280ms cubic-bezier(0.32,0.72,0,1) both; }
 
   @keyframes modalIn    { from{opacity:0;transform:scale(0.96) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  @keyframes rowIn      { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeUp     { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   @keyframes backdropIn { from{opacity:0} to{opacity:1} }
   @keyframes slideIn    { from{transform:translateX(-100%)} to{transform:translateX(0)} }

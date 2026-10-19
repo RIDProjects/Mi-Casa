@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 type Tone = 'spend' | 'goal' | 'blue' | 'green' | 'amber' | 'red';
 
@@ -34,6 +34,13 @@ export function ProgressBar({ value, tone = 'goal', label, valueLabel, size = 'm
   const width = Math.min(100, safe);
   const fill = FILL[toneFor(safe, tone)];
 
+  // Start empty and grow to the real value after the first paint so the fill is visible as motion.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
     <div className={className}>
       {(label || valueLabel !== undefined) && (
@@ -49,7 +56,7 @@ export function ProgressBar({ value, tone = 'goal', label, valueLabel, size = 'm
         aria-valuemax={100}
         className={`w-full rounded-full bg-surface-variant overflow-hidden ${size === 'sm' ? 'h-1.5' : 'h-2.5'}`}
       >
-        <div className={`h-full rounded-full transition-all duration-700 ${fill}`} style={{ width: `${width}%` }} />
+        <div className={`h-full rounded-full transition-[width] duration-[900ms] ease-out ${fill}`} style={{ width: mounted ? `${width}%` : '0%' }} />
       </div>
     </div>
   );

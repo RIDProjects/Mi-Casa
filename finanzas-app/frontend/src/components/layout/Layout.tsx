@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </span>
         </div>
         <main className="flex-1 overflow-auto">
-          <div className="mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">{children}</div>
+          <div className="page-enter mx-auto w-full max-w-[1400px] p-4 sm:p-6 lg:p-10">{children}</div>
         </main>
       </div>
     </div>

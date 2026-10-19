@@ -300,7 +300,7 @@ export default function Dashboard() {
             <h2 className="text-sm font-semibold text-on-surface mb-2">Gastos por categoría</h2>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
-                <Pie data={categoryPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value" paddingAngle={3}>
+                <Pie animationDuration={750} animationEasing="ease-out" data={categoryPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value" paddingAngle={3}>
                   {categoryPieData.map((_: any, idx: number) => (
                     <Cell key={idx} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
                   ))}
