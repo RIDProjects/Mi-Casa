@@ -1,4 +1,5 @@
 import React from 'react';
+import { Inbox } from 'lucide-react';
 import { TableRowSkeleton } from './Skeleton';
 
 interface TableProps {
@@ -21,31 +22,26 @@ export function Table({
     React.Children.count(children) === 0;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
+    <div className="overflow-x-auto rounded-[14px] border border-border-light bg-surface-container-lowest dark:bg-surface-container-low shadow-soft">
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <thead>
           <tr>
             {headers.map((h) => (
-              <th
-                key={h}
-                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap"
-              >
+              <th key={h} scope="col" className="text-left">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-100 dark:divide-gray-800">
+        <tbody>
           {loading ? (
             Array.from({ length: skeletonRows }).map((_, i) => (
               <TableRowSkeleton key={i} cols={headers.length} />
             ))
           ) : isEmpty ? (
             <tr>
-              <td
-                colSpan={headers.length}
-                className="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500"
-              >
+              <td colSpan={headers.length} className="!py-14 text-center text-sm text-outline">
+                <Inbox className="mx-auto mb-2 h-6 w-6 text-outline-variant" aria-hidden="true" />
                 {emptyMessage}
               </td>
             </tr>

@@ -13,15 +13,15 @@ interface ErrorStateProps {
  */
 export function ErrorState({ message = 'No se pudo cargar esta sección', onRetry }: ErrorStateProps) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10 px-4 py-3">
-      <div className="flex items-center gap-2 min-w-0">
-        <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
-        <p className="text-sm text-danger truncate">{message}</p>
+    <div role="alert" className="flex items-center justify-between gap-3 rounded-[12px] border border-danger/25 bg-danger/5 px-4 py-3">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <AlertTriangle className="w-4 h-4 text-danger-ink shrink-0" />
+        <p className="text-sm text-danger-ink truncate">{message}</p>
       </div>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-1.5 text-xs font-medium text-danger hover:opacity-80 shrink-0"
+          className="flex items-center gap-1.5 text-xs font-semibold text-danger-ink hover:underline shrink-0"
         >
           <RotateCw className="w-3.5 h-3.5" /> Reintentar
         </button>

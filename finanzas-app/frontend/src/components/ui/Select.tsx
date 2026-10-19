@@ -12,7 +12,7 @@ export function Select({ label, error, hint, placeholder, id, className, childre
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={id} className="block font-label-upper text-label-upper text-on-surface-variant uppercase mb-1.5">
+        <label htmlFor={id} className="block text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase mb-1.5">
           {label}
         </label>
       )}
@@ -20,12 +20,12 @@ export function Select({ label, error, hint, placeholder, id, className, childre
         <select
           id={id}
           className={[
-            'w-full px-4 py-3 bg-surface-container-lowest border rounded-xl appearance-none',
+            'w-full min-h-[42px] px-3.5 py-2.5 bg-surface-container-lowest dark:bg-surface-container border rounded-[10px] shadow-soft hover:border-outline appearance-none',
             'font-body-default text-body-default text-on-surface',
-            'focus:ring-1 outline-none transition-all',
+            'focus:ring-[3px] focus:ring-primary-container/20 outline-none transition-all',
             error
-              ? 'border-danger focus:border-danger focus:ring-danger'
-              : 'border-outline-variant focus:border-primary focus:ring-primary',
+              ? 'border-danger focus:border-danger focus:ring-danger/20'
+              : 'border-outline-variant focus:border-primary-container',
             className ?? '',
           ].join(' ')}
           {...props}

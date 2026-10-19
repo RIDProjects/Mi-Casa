@@ -16,7 +16,7 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title = '¿E
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <div role="alertdialog" aria-modal="true">
         <div className="flex items-start gap-3 mb-6">
-          <AlertTriangle className="text-danger mt-0.5 shrink-0" size={20} />
+          <span className="icon-red !p-2 shrink-0"><AlertTriangle size={18} /></span>
           <p className="font-body-default text-body-default text-on-surface-variant">{message}</p>
         </div>
         <div className="flex justify-end gap-3">
@@ -24,7 +24,7 @@ export default function ConfirmDialog({ isOpen, onClose, onConfirm, title = '¿E
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="bg-danger text-white hover:bg-red-700 rounded-xl px-4 py-2 font-section-title text-section-title transition-all active:scale-95 disabled:opacity-50"
+            className="btn-danger"
           >
             {loading ? 'Eliminando...' : 'Eliminar'}
           </button>
