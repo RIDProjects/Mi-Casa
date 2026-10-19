@@ -7,6 +7,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, CreditCard, Edit2, Trash2, CheckCircle, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 import { parseLocalDate } from '../lib/dates';
+import { ProgressBar } from '../components/ui/ProgressBar';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n) || 0);
@@ -224,18 +225,13 @@ export default function CuotasPage() {
                       <p className="text-sm text-on-surface-variant mt-0.5">{c.store}</p>
                     )}
 
-                    <div className="mt-3">
-                      <div className="flex items-center justify-between text-xs text-on-surface-variant mb-1">
-                        <span>{paid} de {total} cuotas pagadas</span>
-                        <span>{Math.round(pct)}%</span>
-                      </div>
-                      <div className="w-full bg-surface-container rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${isCompleted ? 'bg-success' : 'bg-primary-container'}`}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
+                    <ProgressBar
+                      className="mt-3"
+                      tone={isCompleted ? 'green' : 'blue'}
+                      value={pct}
+                      label={`${paid} de ${total} cuotas pagadas`}
+                      valueLabel={`${Math.round(pct)}%`}
+                    />
 
                     <div className="mt-3 flex flex-wrap gap-4 text-sm">
                       <div>

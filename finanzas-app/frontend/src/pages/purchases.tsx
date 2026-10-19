@@ -10,6 +10,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
 import { useCurrencyFormatter, toLocalAmount } from '../lib/currency';
+import { ProgressBar } from '../components/ui/ProgressBar';
 
 const defaultItemForm = { name: '', quantity: 1, unitPrice: 0, currency: '', lugar: '' };
 const defaultConfigForm = { budget: 0 };
@@ -371,12 +372,7 @@ export default function PurchasesPage() {
                 </div>
               </div>
               {budget > 0 && totalInLocal > 0 && (
-                <div className="w-full bg-surface-container rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${totalInLocal / budget > 1 ? 'bg-danger' : totalInLocal / budget > 0.8 ? 'bg-warning' : 'bg-success'}`}
-                    style={{ width: `${Math.min((totalInLocal / budget) * 100, 100)}%` }}
-                  />
-                </div>
+                <ProgressBar tone="spend" size="sm" value={(totalInLocal / budget) * 100} />
               )}
             </div>
           )}

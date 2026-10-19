@@ -230,7 +230,7 @@ export default function SimuladorPage() {
             <p className="text-sm text-on-surface-variant mt-0.5">{amortization.length} cuotas · capital e intereses de cada pago</p>
           </div>
           <div className="overflow-auto max-h-[520px]">
-            <table className="table-compact w-full text-sm">
+            <table className="table-compact w-full text-sm" data-plain>
               <thead>
                 <tr>
                   <th className="text-center">Cuota</th>

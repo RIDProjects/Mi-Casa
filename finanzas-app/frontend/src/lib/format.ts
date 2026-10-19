@@ -7,8 +7,16 @@ const currencyFormatter = new Intl.NumberFormat('es-ES', {
 
 const intFormatter = new Intl.NumberFormat('es-ES');
 
-export const fmt = (n: number | string | null | undefined): string =>
-  currencyFormatter.format(Number(n) || 0);
+/**
+ * Amounts: large whole numbers drop the meaningless ",00" (1.254.300), while small or fractional
+ * amounts keep two decimals so cents stay aligned in a column (17,94 / 20,00).
+ */
+export const fmt = (n: number | string | null | undefined): string => {
+  const value = Number(n) || 0;
+  return Number.isInteger(value) && Math.abs(value) >= 1000
+    ? intFormatter.format(value)
+    : currencyFormatter.format(value);
+};
 
 /** Formatea un número como entero sin decimales (ej: contadores, cantidades). */
 export const fmtInt = (n: number | string | null | undefined): string =>
