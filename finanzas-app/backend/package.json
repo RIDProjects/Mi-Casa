@@ -1,6 +1,7 @@
 {
   "name": "finanzas-backend",
   "version": "1.0.0",
+  "license": "UNLICENSED",
   "description": "FinanzasApp - Backend API (NestJS)",
   "scripts": {
     "build": "nest build",
