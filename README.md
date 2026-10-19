@@ -312,7 +312,7 @@ cd finanzas-app/backend
 railway up
 ```
 
-> El servicio de Railway **no está vinculado a GitHub**: hacer push no despliega el backend; hay que ejecutar `railway up`. El contenedor (Dockerfile) ejecuta las migraciones al iniciar (`typeorm migration:run` y luego `node dist/main`), por lo que conviene **respaldar la base de datos antes** de cada despliegue (ver [Backups](#backups)).
+> El servicio de Railway **no está vinculado a GitHub**: el despliegue lo hace el workflow `deploy-backend.yml` (`railway up`) en la cadena `dev` → `staging` → `production` (esta última con aprobación manual). Las migraciones corren como **pre-deploy** de Railway (`railway.json`), no en el `CMD` del contenedor, por lo que conviene **respaldar la base de datos antes** de cada despliegue a producción (ver [Backups](#backups)). Entornos, secretos, configuración inicial y rollback: [finanzas-app/docs/deploy.md](finanzas-app/docs/deploy.md).
 
 Variables de entorno en Railway:
 

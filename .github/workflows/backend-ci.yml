@@ -1,15 +1,9 @@
 name: Backend CI
 
+# Pushes to main run this via deploy-backend.yml (workflow_call) so CI gates the deploy.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'finanzas-app/backend/**'
-      - '.github/workflows/backend-ci.yml'
+  workflow_call:
   pull_request:
-    paths:
-      - 'finanzas-app/backend/**'
-      - '.github/workflows/backend-ci.yml'
 
 defaults:
   run:
@@ -17,6 +11,7 @@ defaults:
 
 jobs:
   test:
+    name: backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
