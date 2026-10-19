@@ -25,10 +25,10 @@ export default function PrivacyPolicyScreen() {
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.title}>Política de Privacidad</Text>
-        <Text style={styles.draftNotice}>Última actualización: 2 de septiembre de 2026.</Text>
+        <Text style={styles.draftNotice}>Última actualización: 19 de octubre de 2026.</Text>
 
         <Section title="1. Datos que recolectamos">
-          Recolectamos la información que ingresás voluntariamente para usar
+          Recolectamos la información que ingresas voluntariamente para usar
           la app: tu nombre y email al registrarte, y los datos financieros
           que cargas tú mismo (gastos, ingresos, presupuestos, metas de
           ahorro, deudas, tarjetas de crédito, préstamos e inversiones). No
@@ -50,39 +50,47 @@ export default function PrivacyPolicyScreen() {
 
         <Section title="3. Dónde se almacenan tus datos">
           Tus datos se almacenan en nuestro backend propio, en una base de
-          datos protegida, alojada en infraestructura de terceros (proveedor
-          de hosting en la nube) que actúa únicamente como encargado técnico
-          del almacenamiento. Las credenciales de acceso se guardan de forma
-          segura en el dispositivo (almacenamiento cifrado del sistema
-          operativo) y todas las comunicaciones con el servidor viajan
-          cifradas (HTTPS).
+          datos alojada en infraestructura de terceros (Railway), que actúa
+          únicamente como encargado técnico del almacenamiento. Los
+          servidores pueden estar ubicados fuera de tu país, por lo que tus
+          datos pueden transferirse y tratarse en otras jurisdicciones. Todas
+          las comunicaciones con el servidor viajan cifradas (HTTPS). Tu
+          sesión se guarda en el almacenamiento local de la app en tu
+          dispositivo hasta que cierres sesión.
         </Section>
 
         <Section title="4. Servicios de terceros que usamos">
-          Usamos un proveedor de email transaccional para enviarte alertas de
-          presupuesto y correos de recuperación de contraseña — estos correos
-          incluyen tu email y el contenido de la alerta, no el detalle de tus
-          transacciones. La app tiene integrado (pero no necesariamente
-          activo en todo momento) un servicio de monitoreo de errores que, de
-          estar habilitado, recibe información técnica sobre fallas
-          inesperadas (mensaje de error, pila de llamadas) para poder
-          diagnosticarlas — esta información nunca incluye tus datos
-          financieros. Si usás notificaciones push, el sistema operativo de
-          tu dispositivo (Apple/Google) intermedia su entrega, como en
-          cualquier app.
+          Usamos Resend como proveedor de email transaccional para enviarte
+          alertas de presupuesto, avisos de vencimientos y correos de
+          recuperación de contraseña; estos correos incluyen tu email y el
+          contenido de la alerta, no el detalle de tus transacciones. El
+          alojamiento de la API y la base de datos está en Railway, y el de
+          la versión web en Vercel. La app tiene integrado (pero no
+          necesariamente activo en todo momento) un servicio de monitoreo de
+          errores (Sentry) que, de estar habilitado, recibe información
+          técnica sobre fallas inesperadas (mensaje de error, pila de
+          llamadas); esta información no incluye tus datos financieros. Si
+          usas notificaciones push, el sistema operativo de tu dispositivo
+          (Apple/Google) intermedia su entrega, como en cualquier app.
         </Section>
 
         <Section title="5. Cuánto tiempo conservamos tus datos">
-          Conservamos tu información mientras tu cuenta esté activa. Si pedís
-          la eliminación de tu cuenta, borramos tus datos personales y
-          financieros de forma permanente, salvo que la ley exija conservar
-          cierta información por un plazo adicional.
+          Conservamos tu información mientras tu cuenta esté activa. Puedes
+          eliminar tu cuenta en cualquier momento desde Perfil → Eliminar
+          cuenta (se te pedirá tu contraseña). Al hacerlo borramos tu cuenta
+          de forma permanente y, si eras el único miembro de tu casa, también
+          todos los datos financieros de esa casa. Si compartes la casa con
+          otros miembros, los datos de la casa permanecen disponibles para
+          ellos. Podemos conservar cierta información por un plazo adicional
+          solo si la ley lo exige.
         </Section>
 
         <Section title="6. Tus derechos">
-          Puedes acceder, corregir, exportar o solicitar la eliminación de tus
-          datos personales y financieros en cualquier momento, ya sea desde
-          la propia app o contactándonos por los medios indicados abajo.
+          Puedes consultar y corregir tus datos financieros directamente en
+          la app y eliminar tu cuenta y tus datos desde Perfil → Eliminar
+          cuenta. Para solicitar una copia (exportación) de tus datos
+          personales o ejercer cualquier otro derecho, escríbenos a los
+          medios indicados abajo.
         </Section>
 
         <Section title="7. Menores de edad">
@@ -98,7 +106,7 @@ export default function PrivacyPolicyScreen() {
 
         <Section title="9. Contacto">
           Ante cualquier consulta sobre esta política o sobre tus datos,
-          escribinos a: ridgomez99@gmail.com.
+          escríbenos a: ridgomez99@gmail.com.
         </Section>
       </ScrollView>
     </SafeAreaView>
