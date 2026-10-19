@@ -15,24 +15,26 @@ export function CurrencyInput({ label, value, onChange, placeholder = '0.00', id
   return (
     <div className="space-y-1">
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={id} className="block text-[11px] font-semibold tracking-wide text-on-surface-variant uppercase mb-1.5">
           {label}
         </label>
       )}
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">{symbol}</span>
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-outline text-sm font-medium pointer-events-none">{symbol}</span>
         <input
           id={id}
           type="number"
+          inputMode="decimal"
           step="0.01"
           min="0"
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full pl-10 pr-3 py-2 border rounded-lg text-sm bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors ${error ? 'border-red-500' : ''}`}
+          aria-invalid={!!error}
+          className={`input fin-number !pl-9 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${error ? '!border-danger' : ''}`}
         />
       </div>
-      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-xs text-danger-ink">{error}</p>}
     </div>
   );
 }

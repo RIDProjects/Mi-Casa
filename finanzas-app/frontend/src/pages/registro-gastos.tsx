@@ -21,14 +21,14 @@ const CATEGORIES = [
 type Category = typeof CATEGORIES[number];
 
 const CAT_COLORS: Record<Category, string> = {
-  Comida:     'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  Transporte: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
-  Hogar:      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
-  Salud:      'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-  Ocio:       'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+  Comida:     'bg-success/15 text-ok-ink ',
+  Transporte: 'bg-primary-container/15 text-info-ink ',
+  Hogar:      'bg-warning/15 text-warn-ink ',
+  Salud:      'bg-danger/15 text-danger-ink ',
+  Ocio:       'bg-primary-container/15 text-info-ink ',
   Salidas:    'bg-pink-100 text-pink-800 dark:bg-pink-900/40 dark:text-pink-300',
-  Shopper:    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300',
-  Otros:      'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  Shopper:    'bg-primary-container/15 text-info-ink ',
+  Otros:      'bg-surface-container text-on-surface-variant ',
 };
 
 function buildDefaultForm(monedaLocal: string) {
@@ -126,12 +126,12 @@ export default function RegistroGastosPage() {
   return (
     <Layout>
       {isError && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 mb-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
+        <div className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3 mb-6 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-sm text-danger-ink">
             <AlertTriangle size={16} />
             Error al cargar el registro de gastos.
           </div>
-          <button onClick={() => refetch()} className="flex items-center gap-1 text-xs font-medium text-red-700 dark:text-red-300 hover:underline">
+          <button onClick={() => refetch()} className="flex items-center gap-1 text-xs font-medium text-danger-ink hover:underline">
             <RefreshCw size={13} /> Reintentar
           </button>
         </div>
@@ -161,9 +161,9 @@ export default function RegistroGastosPage() {
 
           {/* Section 1: Compras de Mercado */}
           <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-            <div className="px-4 py-3 border-b border-outline-variant bg-emerald-50 dark:bg-emerald-900/20 flex items-center gap-2">
-              <ShoppingCart size={16} className="text-emerald-600 dark:text-emerald-400" />
-              <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+            <div className="px-4 py-3 border-b border-outline-variant bg-success/10 flex items-center gap-2">
+              <ShoppingCart size={16} className="text-ok-ink" />
+              <h2 className="text-sm font-semibold text-ok-ink">
                 Compras de Mercado
               </h2>
               <span className="ml-auto text-xs text-on-surface-variant">Auto desde Lista de la Compra</span>
@@ -199,10 +199,10 @@ export default function RegistroGastosPage() {
                   )}
                 </tbody>
                 {comprasMercado.length > 0 && (
-                  <tfoot className="bg-emerald-50 dark:bg-emerald-900/20">
+                  <tfoot className="bg-success/10">
                     <tr>
-                      <td colSpan={3} className="px-3 py-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">Subtotal Compras</td>
-                      <td className="px-3 py-2 text-right text-sm font-bold text-emerald-700 dark:text-emerald-300">{fmt(totalCompras)} {monedaLocal}</td>
+                      <td colSpan={3} className="px-3 py-2 text-xs font-bold text-ok-ink">Subtotal Compras</td>
+                      <td className="px-3 py-2 text-right text-sm font-bold text-ok-ink">{fmt(totalCompras)} {monedaLocal}</td>
                     </tr>
                   </tfoot>
                 )}
@@ -212,14 +212,14 @@ export default function RegistroGastosPage() {
 
           {/* Section 2: Salidas y Otros Gastos */}
           <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-            <div className="px-4 py-3 border-b border-outline-variant bg-orange-50 dark:bg-orange-900/20 flex items-center gap-2">
-              <BookOpen size={16} className="text-orange-600 dark:text-orange-400" />
-              <h2 className="text-sm font-semibold text-orange-800 dark:text-orange-300">
+            <div className="px-4 py-3 border-b border-outline-variant bg-warning/10 flex items-center gap-2">
+              <BookOpen size={16} className="text-warn-ink" />
+              <h2 className="text-sm font-semibold text-warn-ink">
                 Salidas y Otros Gastos
               </h2>
               <button
                 onClick={() => { setForm(buildDefaultForm(monedaLocal)); setEditItem(null); setShowModal(true); }}
-                className="ml-auto flex items-center gap-1 text-xs font-medium text-orange-700 dark:text-orange-300 hover:text-orange-900 dark:hover:text-orange-100 bg-orange-100 dark:bg-orange-900/40 hover:bg-orange-200 dark:hover:bg-orange-900/60 px-2.5 py-1.5 rounded-lg transition-colors"
+                className="ml-auto flex items-center gap-1 text-xs font-medium text-warn-ink hover:text-warn-ink bg-warning/15 hover:bg-warning/20 px-2.5 py-1.5 rounded-lg transition-colors"
               >
                 <Plus size={13} /> Nueva salida
               </button>
@@ -258,10 +258,10 @@ export default function RegistroGastosPage() {
                         </td>
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                            <button onClick={() => handleEdit(s)} className="p-1.5 text-info-ink hover:text-info-ink rounded hover:bg-primary-container/10">
                               <Edit2 size={13} />
                             </button>
-                            <button onClick={() => deleteMut.mutate(s.id)} className="p-1.5 text-red-400 hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+                            <button onClick={() => deleteMut.mutate(s.id)} className="p-1.5 text-danger-ink hover:text-danger-ink rounded hover:bg-danger/10">
                               <Trash2 size={13} />
                             </button>
                           </div>
@@ -271,10 +271,10 @@ export default function RegistroGastosPage() {
                   )}
                 </tbody>
                 {salidas.length > 0 && (
-                  <tfoot className="bg-orange-50 dark:bg-orange-900/20">
+                  <tfoot className="bg-warning/10">
                     <tr>
-                      <td colSpan={4} className="px-3 py-2 text-xs font-bold text-orange-800 dark:text-orange-300">Subtotal Salidas</td>
-                      <td className="px-3 py-2 text-right text-sm font-bold text-orange-700 dark:text-orange-300">{fmtLocal(totalSalidas)}</td>
+                      <td colSpan={4} className="px-3 py-2 text-xs font-bold text-warn-ink">Subtotal Salidas</td>
+                      <td className="px-3 py-2 text-right text-sm font-bold text-warn-ink">{fmtLocal(totalSalidas)}</td>
                       <td />
                     </tr>
                   </tfoot>
@@ -288,7 +288,7 @@ export default function RegistroGastosPage() {
         <div className="space-y-4">
           <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
             <div className="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
-              <h2 className="text-sm font-semibold text-on-surface">📊 Resumen del Mes</h2>
+              <h2 className="text-sm font-semibold text-on-surface">Resumen del Mes</h2>
             </div>
             <div className="p-4 space-y-2">
               {resumen.map((r: any) => (
@@ -306,16 +306,16 @@ export default function RegistroGastosPage() {
             <div className="border-t border-outline-variant p-4 space-y-2">
               <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Compras</span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">{fmt(totalCompras)} {monedaLocal}</span>
+                <span className="font-medium text-ok-ink">{fmt(totalCompras)} {monedaLocal}</span>
               </div>
               {unconvertedItems > 0 && (
-                <p className="text-xs text-amber-600 dark:text-amber-400">
+                <p className="text-xs text-warn-ink">
                   Algunos artículos no tienen tasa de cambio y no se incluyen en el total
                 </p>
               )}
               <div className="flex justify-between text-sm text-on-surface-variant">
                 <span>Subtotal Salidas</span>
-                <span className="font-medium text-orange-600 dark:text-orange-400">{fmtLocal(totalSalidas)}</span>
+                <span className="font-medium text-warn-ink">{fmtLocal(totalSalidas)}</span>
               </div>
               <div className="flex justify-between text-base font-bold text-on-surface border-t border-outline-variant pt-2 mt-1">
                 <span>TOTAL</span>
@@ -328,7 +328,7 @@ export default function RegistroGastosPage() {
 
       {/* Modal: nueva / editar salida */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4 text-on-surface">
               {editItem ? 'Editar gasto' : 'Nueva salida / gasto'}

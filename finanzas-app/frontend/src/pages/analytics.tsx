@@ -5,6 +5,7 @@ import { transactionsAPI } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, LineChart, Line } from 'recharts';
 import { BarChart2, Printer } from 'lucide-react';
 import { fmt, MONTH_NAMES } from '../lib/format';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const ANT_THRESHOLD = 500;
 
@@ -174,7 +175,7 @@ export default function AnalyticsPage() {
                 onClick={() => setSelectedYear(y)}
                 className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                   selectedYear === y
-                    ? 'bg-primary-600 text-white'
+                    ? 'bg-primary-container text-white'
                     : 'bg-surface-container-lowest border border-outline-variant text-on-surface-variant'
                 }`}
               >
@@ -188,11 +189,11 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio gastos/mes</p>
-          <p className="text-xl font-bold text-danger">${fmt(avgExpenses)}</p>
+          <p className="text-xl font-bold text-danger-ink">${fmt(avgExpenses)}</p>
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Promedio ingresos/mes</p>
-          <p className="text-xl font-bold text-success">${fmt(avgIncome)}</p>
+          <p className="text-xl font-bold text-ok-ink">${fmt(avgIncome)}</p>
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Gastos este mes</p>
@@ -200,7 +201,7 @@ export default function AnalyticsPage() {
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">vs mes anterior</p>
-          <p className={`text-xl font-bold ${expenseDiff <= 0 ? 'text-success' : 'text-danger'}`}>
+          <p className={`text-xl font-bold ${expenseDiff <= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
             {expenseDiff <= 0 ? '' : '+'}{fmt(expenseDiff)}
           </p>
         </div>
@@ -210,13 +211,13 @@ export default function AnalyticsPage() {
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Mes mas gastador</p>
           <p className="font-bold text-on-surface">{topSpenderMonth?.name ?? '—'}</p>
-          {topSpenderMonth && <p className="text-sm text-danger">${fmt(topSpenderMonth.Gastos)}</p>}
+          {topSpenderMonth && <p className="text-sm text-danger-ink">${fmt(topSpenderMonth.Gastos)}</p>}
         </div>
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">Mes mas ahorrador</p>
           <p className="font-bold text-on-surface">{topSaverMonth?.name ?? '—'}</p>
           {topSaverMonth && (
-            <p className="text-sm text-success">
+            <p className="text-sm text-ok-ink">
               Ahorro: ${fmt(topSaverMonth.Ingresos - topSaverMonth.Gastos)}
             </p>
           )}
@@ -237,13 +238,13 @@ export default function AnalyticsPage() {
         ) : (
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={52} />
-              <Tooltip formatter={(v: number) => `$${fmt(v)}`} />
-              <ReferenceLine y={avgExpenses} stroke="#ef4444" strokeDasharray="4 4" label={{ value: 'Prom.', fontSize: 10 }} />
-              <Bar dataKey="Ingresos" fill="#22c55e" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Gastos" fill="#ef4444" radius={[3, 3, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={52} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
+              <ReferenceLine y={avgExpenses} stroke={CHART_COLORS.expense} strokeDasharray="4 4" label={{ value: 'Prom.', fontSize: 10, fill: 'var(--ds-on-surface-variant)' }} />
+              <Bar dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -260,12 +261,12 @@ export default function AnalyticsPage() {
         ) : (
           <ResponsiveContainer width="100%" height={210}>
             <BarChart data={yearComparisonData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={52} />
-              <Tooltip formatter={(v: number) => `$${fmt(v)}`} />
-              <Bar dataKey={String(selectedYear - 1)} fill="#94a3b8" radius={[3, 3, 0, 0]} />
-              <Bar dataKey={String(selectedYear)} fill="#3b82f6" radius={[3, 3, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={52} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
+              <Bar dataKey={String(selectedYear - 1)} fill={CHART_COLORS.previous} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar dataKey={String(selectedYear)} fill={CHART_COLORS.current} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -281,10 +282,10 @@ export default function AnalyticsPage() {
           </span>
         </div>
         <div className="flex gap-4 mb-4">
-          <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3 flex-1">
-            <p className="text-xs text-amber-700 dark:text-amber-400 font-semibold uppercase">Este mes</p>
-            <p className="text-lg font-bold text-amber-700 dark:text-amber-400">${fmt(antCurrentMonth)}</p>
-            <p className="text-xs text-amber-600 dark:text-amber-500">{antCount} transacciones pequeñas</p>
+          <div className="bg-warning/10 rounded-lg p-3 flex-1">
+            <p className="text-xs text-warn-ink font-semibold uppercase">Este mes</p>
+            <p className="text-lg font-bold text-warn-ink">${fmt(antCurrentMonth)}</p>
+            <p className="text-xs text-warn-ink">{antCount} transacciones pequeñas</p>
           </div>
           <div className="bg-surface-container-low rounded-lg p-3 flex-1">
             <p className="font-label-upper text-label-upper text-on-surface-variant">% del gasto total</p>
@@ -300,11 +301,11 @@ export default function AnalyticsPage() {
         ) : (
           <ResponsiveContainer width="100%" height={130}>
             <LineChart data={antExpensesData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={44} />
-              <Tooltip formatter={(v: number) => [`$${fmt(v)}`, 'Gastos hormiga']} />
-              <Line type="monotone" dataKey="Hormiga" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ ...CHART_TICK, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={44} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => [`$${fmt(v)}`, 'Gastos hormiga']} />
+              <Line type="monotone" dataKey="Hormiga" stroke={CHART_COLORS.ant} strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -328,11 +329,11 @@ export default function AnalyticsPage() {
                       <span className="font-medium text-on-surface-variant">
                         {i + 1}. {cat}
                       </span>
-                      <span className="text-danger font-semibold">${fmt(total)}</span>
+                      <span className="text-danger-ink font-semibold">${fmt(total)}</span>
                     </div>
                     <div className="w-full bg-surface-container rounded-full h-2">
                       <div
-                        className="h-2 rounded-full bg-red-500 transition-all duration-500"
+                        className="h-2 rounded-full bg-danger transition-all duration-500"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -365,9 +366,9 @@ export default function AnalyticsPage() {
                   return (
                     <tr key={i} className="hover:bg-surface-gray">
                       <td className="px-4 py-2 text-on-surface-variant font-medium">{d.name}</td>
-                      <td className="px-4 py-2 text-right text-success">${fmt(d.Ingresos)}</td>
-                      <td className="px-4 py-2 text-right text-danger">${fmt(d.Gastos)}</td>
-                      <td className={`px-4 py-2 text-right font-semibold ${bal >= 0 ? 'text-success' : 'text-danger'}`}>
+                      <td className="px-4 py-2 text-right text-ok-ink">${fmt(d.Ingresos)}</td>
+                      <td className="px-4 py-2 text-right text-danger-ink">${fmt(d.Gastos)}</td>
+                      <td className={`px-4 py-2 text-right font-semibold ${bal >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
                         {bal >= 0 ? '+' : ''}{fmt(bal)}
                       </td>
                     </tr>

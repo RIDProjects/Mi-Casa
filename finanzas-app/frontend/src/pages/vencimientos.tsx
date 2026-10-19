@@ -2,7 +2,7 @@ import { useState } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery } from 'react-query';
 import { upcomingBillsAPI } from '../services/api';
-import { Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Calendar, AlertTriangle, RefreshCw, CheckCircle, CreditCard, Landmark, Package, ClipboardList } from 'lucide-react';
 
 import { useCurrencyFormatter } from '../lib/currency';
 import { parseLocalDate } from '../lib/dates';
@@ -14,10 +14,10 @@ const FILTER_OPTIONS = [
   { label: '60 días', value: 60 },
 ];
 
-const TYPE_ICONS: Record<string, string> = {
-  credit_card: '💳',
-  loan: '🏦',
-  cuota: '📦',
+const TYPE_ICONS: Record<string, JSX.Element> = {
+  credit_card: <CreditCard size={18} />,
+  loan: <Landmark size={18} />,
+  cuota: <Package size={18} />,
 };
 
 function daysUntil(dateStr: string): number {
@@ -29,9 +29,9 @@ function daysUntil(dateStr: string): number {
 }
 
 function urgencyClasses(days: number) {
-  if (days <= 3) return { badge: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300', border: 'border-red-200 dark:border-red-800', dot: 'bg-red-500' };
-  if (days <= 7) return { badge: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', dot: 'bg-amber-500' };
-  return { badge: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300', border: 'border-outline-variant', dot: 'bg-green-500' };
+  if (days <= 3) return { badge: 'bg-danger/15 text-danger-ink ', border: 'border-danger/25 ', dot: 'bg-danger' };
+  if (days <= 7) return { badge: 'bg-warning/15 text-warn-ink ', border: 'border-warning/25 ', dot: 'bg-warning' };
+  return { badge: 'bg-success/15 text-ok-ink ', border: 'border-outline-variant', dot: 'bg-success' };
 }
 
 export default function VencimientosPage() {
@@ -66,8 +66,8 @@ export default function VencimientosPage() {
             onClick={() => setDays(opt.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               days === opt.value
-                ? 'bg-primary-600 text-white'
-                : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary-400'
+                ? 'bg-primary-container text-white'
+                : 'bg-surface-container-lowest border border-outline-variant text-on-surface hover:border-primary-container'
             }`}
           >
             {opt.label}
@@ -83,7 +83,7 @@ export default function VencimientosPage() {
         </div>
       ) : isError ? (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al cargar los vencimientos</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -91,7 +91,7 @@ export default function VencimientosPage() {
         </div>
       ) : sorted.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">✅</div>
+          <div className="icon-emerald !p-4 !rounded-2xl mb-4 inline-flex"><CheckCircle size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">Sin vencimientos próximos</h3>
           <p className="font-body-default text-on-surface-variant mt-1">No hay pagos pendientes en los próximos {days} días</p>
         </div>
@@ -103,7 +103,7 @@ export default function VencimientosPage() {
             </p>
             <div className="text-right">
               <p className="text-xs text-on-surface-variant uppercase tracking-wide">Total a pagar</p>
-              <p className="text-xl font-bold text-danger">{cfmt(totalDue)}</p>
+              <p className="text-xl font-bold text-danger-ink">{cfmt(totalDue)}</p>
             </div>
           </div>
 
@@ -111,7 +111,7 @@ export default function VencimientosPage() {
             {sorted.map((bill: any, idx: number) => {
               const d = daysUntil(bill.dueDate);
               const { badge, border, dot } = urgencyClasses(d);
-              const icon = TYPE_ICONS[bill.type] ?? '📋';
+              const icon = TYPE_ICONS[bill.type] ?? <ClipboardList size={18} />;
               const dateLabel = parseLocalDate(bill.dueDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
               return (

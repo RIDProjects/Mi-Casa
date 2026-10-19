@@ -7,6 +7,7 @@ module.exports = {
       colors: {
         /* ── Pro-Ledger token colors (CSS-var-backed — switch light/dark automatically) ── */
         'surface':                  'var(--ds-surface)',
+        'panel':                    'var(--ds-panel)',
         'surface-dim':              'var(--ds-surface-dim)',
         'surface-bright':           'var(--ds-surface-bright)',
         'surface-container-lowest': 'var(--ds-surface-lowest)',

@@ -3,6 +3,7 @@ import Layout from '../../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { usersAPI, rolesAPI } from '../../services/api';
 import Modal from '../../components/ui/Modal';
+import PageHeader from '../../components/ui/PageHeader';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { Plus, Edit2, Trash2, UserCheck, UserX, Eye, EyeOff, Search, Crown, Star, Gift, X } from 'lucide-react';
@@ -12,9 +13,9 @@ interface UserFormValues {
 }
 
 const PLAN_CONFIG = {
-  free:   { label: 'Gratis',  icon: <Gift size={12} />,  badge: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300' },
-  pro:    { label: 'PRO',     icon: <Star size={12} />,  badge: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-  family: { label: 'Familia', icon: <Crown size={12} />, badge: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
+  free:   { label: 'Gratis',  icon: <Gift size={12} />,  badge: 'bg-surface-container text-on-surface-variant ' },
+  pro:    { label: 'PRO',     icon: <Star size={12} />,  badge: 'bg-primary-container/15 text-info-ink ' },
+  family: { label: 'Familia', icon: <Crown size={12} />, badge: 'bg-primary-container/15 text-info-ink ' },
 };
 
 function UserForm({ form, setForm, editUser, showPassword, setShowPassword, onCancel, onSubmit, roles, isLoading }: {
@@ -44,20 +45,20 @@ function UserForm({ form, setForm, editUser, showPassword, setShowPassword, onCa
             {...(!editUser && { required: true })}
           />
           <button type="button" onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant">
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
       </div>
       <div>
         <label className="label">Roles</label>
-        <div className="space-y-2 max-h-40 overflow-y-auto border dark:border-gray-600 rounded-lg p-3">
+        <div className="space-y-2 max-h-40 overflow-y-auto border border-border-light rounded-xl p-3">
           {roles.map((role: any) => (
             <label key={role.id} className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.roleIds.includes(role.id)}
                 onChange={e => setForm({ ...form, roleIds: e.target.checked ? [...form.roleIds, role.id] : form.roleIds.filter(id => id !== role.id) })} />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{role.name}</span>
-              <span className="text-xs text-gray-400">{role.description}</span>
+              <span className="text-sm font-medium text-on-surface-variant">{role.name}</span>
+              <span className="text-xs text-outline">{role.description}</span>
             </label>
           ))}
         </div>
@@ -135,20 +136,20 @@ export default function UsersPage() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">👥 Usuarios</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">{(users as any[]).length} usuarios registrados</p>
-        </div>
-        <button onClick={() => { resetForm(); setShowCreate(true); }} className="btn-primary flex items-center gap-2">
-          <Plus size={18} /> Nuevo usuario
-        </button>
-      </div>
+      <PageHeader
+        title="Usuarios"
+        subtitle={`${(users as any[]).length} usuarios registrados`}
+        action={
+          <button onClick={() => { resetForm(); setShowCreate(true); }} className="btn-primary">
+            <Plus size={16} /> Nuevo usuario
+          </button>
+        }
+      />
 
       {/* ── Barra de búsqueda y filtros ── */}
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="relative flex-1 min-w-56">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-outline" />
           <input
             className="input pl-9 py-2"
             placeholder="Buscar por nombre o email..."
@@ -156,7 +157,7 @@ export default function UsersPage() {
             onChange={e => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant">
               <X size={14} />
             </button>
           )}
@@ -179,23 +180,23 @@ export default function UsersPage() {
 
         {hasFilters && (
           <button onClick={() => { setSearch(''); setFilterStatus('all'); setFilterPlan('all'); }}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl">
+            className="btn-secondary !min-h-[40px]">
             <X size={13} /> Limpiar
           </button>
         )}
       </div>
 
       {/* ── Tabla ── */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-panel rounded-xl border border-border-light overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+          <thead>
             <tr>
               {['Usuario', 'Email', 'Plan', 'Roles', 'Último login', 'Estado', 'Acciones'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                <th key={h} className="text-left">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+          <tbody>
             {filtered.map((user: any) => {
               const plan = (user.plan ?? 'free') as keyof typeof PLAN_CONFIG;
               const cfg = PLAN_CONFIG[plan];
@@ -204,20 +205,20 @@ export default function UsersPage() {
               const loginLabel = lastLogin
                 ? daysAgo === 0 ? 'Hoy' : daysAgo === 1 ? 'Ayer' : `${daysAgo}d atrás`
                 : 'Nunca';
-              const loginColor = !lastLogin ? 'text-gray-400' : daysAgo! > 30 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-600 dark:text-gray-400';
+              const loginColor = !lastLogin ? 'text-outline' : daysAgo! > 30 ? 'text-warn-ink ' : 'text-on-surface-variant ';
 
               return (
-                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <td className="px-4 py-3">
+                <tr key={user.id}>
+                  <td>
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-primary-container/15 text-info-ink flex items-center justify-center text-sm font-bold shrink-0">
                         {user.name?.[0]?.toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</span>
+                      <span className="text-sm font-medium text-on-surface">{user.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
-                  <td className="px-4 py-3">
+                  <td className="text-sm text-on-surface-variant">{user.email}</td>
+                  <td>
                     <button
                       onClick={() => { setPlanTarget(user); setPlanValue(plan); }}
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${cfg.badge} hover:opacity-80 transition-opacity`}
@@ -226,29 +227,29 @@ export default function UsersPage() {
                       {cfg.icon} {cfg.label}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <div className="flex flex-wrap gap-1">
                       {user.roles?.map((r: any) => (
-                        <span key={r.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">{r.name}</span>
+                        <span key={r.id} className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary-container/15 text-info-ink">{r.name}</span>
                       ))}
                     </div>
                   </td>
                   <td className={`px-4 py-3 text-xs font-medium ${loginColor}`}>{loginLabel}</td>
-                  <td className="px-4 py-3">
+                  <td>
                     <button
                       onClick={() => toggleMut.mutate(user)}
-                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${user.isActive ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} hover:opacity-80 transition-opacity`}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${user.isActive ? 'bg-success/15 text-ok-ink ' : 'bg-danger/15 text-danger-ink '} hover:opacity-80 transition-opacity`}
                       title={user.isActive ? 'Desactivar' : 'Activar'}
                     >
                       {user.isActive ? <><UserCheck size={12} /> Activo</> : <><UserX size={12} /> Inactivo</>}
                     </button>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleEdit(user)} className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar">
+                      <button onClick={() => handleEdit(user)} className="p-1.5 text-info-ink hover:bg-primary-container/10 rounded-lg transition-colors" title="Editar">
                         <Edit2 size={14} />
                       </button>
-                      <button onClick={() => setDeleteId(user.id)} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Eliminar">
+                      <button onClick={() => setDeleteId(user.id)} className="p-1.5 text-danger-ink hover:bg-danger/10 rounded-lg transition-colors" title="Eliminar">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -259,12 +260,12 @@ export default function UsersPage() {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div className="text-center text-gray-400 dark:text-gray-500 py-12">
+          <div className="text-center text-outline py-12">
             {hasFilters ? 'Sin resultados para ese filtro' : 'No hay usuarios registrados'}
           </div>
         )}
         {filtered.length > 0 && (
-          <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-400">
+          <div className="px-4 py-3 bg-surface-gray border-t border-border-light text-xs text-on-surface-variant">
             Mostrando {filtered.length} de {(users as any[]).length} usuarios
           </div>
         )}
@@ -280,8 +281,8 @@ export default function UsersPage() {
       {/* ── Modal cambio de plan ── */}
       <Modal isOpen={!!planTarget} onClose={() => setPlanTarget(null)} title="Cambiar plan" size="sm">
         <div className="space-y-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Usuario: <strong className="text-gray-900 dark:text-white">{planTarget?.name}</strong>
+          <p className="text-sm text-on-surface-variant">
+            Usuario: <strong className="text-on-surface">{planTarget?.name}</strong>
           </p>
           <div className="grid grid-cols-3 gap-2">
             {(Object.entries(PLAN_CONFIG) as [string, typeof PLAN_CONFIG.free][]).map(([key, cfg]) => (
@@ -290,10 +291,10 @@ export default function UsersPage() {
                 onClick={() => setPlanValue(key as any)}
                 className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-sm font-semibold ${
                   planValue === key
-                    ? key === 'free' ? 'border-gray-400 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200'
-                    : key === 'pro' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                    : 'border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400'
+                    ? key === 'free' ? 'border-outline bg-surface-gray text-on-surface-variant '
+                    : key === 'pro' ? 'border-primary-container bg-primary-container/10 text-info-ink '
+                    : 'border-primary-container bg-primary-container/10 text-info-ink '
+                    : 'border-border-light text-on-surface-variant '
                 }`}
               >
                 {cfg.icon} {cfg.label}

@@ -9,6 +9,7 @@
   :root {
     /* Pro-Ledger Financial (Light) */
     --ds-surface:          #f9f9ff;
+    --ds-panel:            #ffffff;   /* card/panel fill */
     --ds-surface-dim:      #cfdaf2;
     --ds-surface-bright:   #f9f9ff;
     --ds-surface-lowest:   #ffffff;
@@ -52,6 +53,7 @@
   .dark {
     /* Pro-Ledger Night (Dark) */
     --ds-surface:          #0b1326;
+    --ds-panel:            #131b2e;
     --ds-surface-dim:      #0b1326;
     --ds-surface-bright:   #31394d;
     --ds-surface-lowest:   #060e20;
@@ -220,10 +222,10 @@
 
   /* ── Fin typography ─────────────────────────────────────── */
   .fin-number {
-    font-family: 'Courier Prime', monospace;
+    font-family: 'Inter', system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum";
-    letter-spacing: -0.01em;
+    font-feature-settings: "tnum", "zero";
+    letter-spacing: -0.015em;
   }
   .fin-hero {
     font-family: 'Inter', system-ui, sans-serif;
@@ -290,6 +292,7 @@
   table tfoot td { font-weight: 700; padding: 12px 16px; background: var(--ds-surface-gray); border-top: 1px solid var(--ds-border-light); }
   .dark table thead th { background: var(--ds-surface-container); border-bottom-color: var(--ds-surface-highest); }
   .dark table tbody td { border-bottom-color: var(--ds-surface-container); }
+  .table-compact tbody td { padding-top: 9px; padding-bottom: 9px; }
   .dark table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   .dark table tbody tr:hover td { background: var(--ds-surface-container); }
 
@@ -320,6 +323,22 @@
             mask-image: radial-gradient(ellipse 80% 90% at 100% 100%, #000 0%, transparent 72%);
   }
   .dark .app-bg::after { opacity: 0.16; }
+
+  /* ── Auth brand panel ────────────────────────────────────── */
+  .auth-brand {
+    background-color: #0b1326;
+    background-image:
+      radial-gradient(700px 360px at 90% 0%, rgba(37,99,235,0.35), transparent 65%),
+      linear-gradient(rgba(180,197,255,0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(180,197,255,0.05) 1px, transparent 1px);
+    background-size: auto, 32px 32px, 32px 32px;
+  }
+  .auth-brand::after {
+    content: ''; position: absolute; right: 0; bottom: 0; width: 80%; height: 45%; pointer-events: none; opacity: 0.18;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 300' preserveAspectRatio='none'%3E%3Cpath d='M0 260 L90 235 L170 248 L260 190 L340 205 L430 140 L520 160 L610 90 L700 110 L800 40 L800 300 L0 300 Z' fill='%2316a34a' fill-opacity='0.5'/%3E%3Cpath d='M0 260 L90 235 L170 248 L260 190 L340 205 L430 140 L520 160 L610 90 L700 110 L800 40' fill='none' stroke='%239db8ff' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right bottom / 100% 100%;
+    -webkit-mask-image: radial-gradient(ellipse 85% 95% at 100% 100%, #000 0%, transparent 72%);
+            mask-image: radial-gradient(ellipse 85% 95% at 100% 100%, #000 0%, transparent 72%);
+  }
 
   /* ── Page shell helpers ─────────────────────────────────── */
   .section-heading {

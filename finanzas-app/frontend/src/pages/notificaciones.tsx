@@ -60,9 +60,9 @@ export default function NotificacionesPage() {
   return (
     <Layout>
       {permission === 'default' && (
-        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between">
+        <div className="mb-4 p-4 bg-primary-container/10 border border-primary-container/25 rounded-xl flex items-center justify-between">
           <div>
-            <p className="font-semibold text-blue-800 dark:text-blue-200 text-sm">Activar notificaciones push</p>
+            <p className="font-semibold text-info-ink text-sm">Activar notificaciones push</p>
             <p className="text-xs text-primary mt-0.5">Recibe alertas de presupuesto y vencimientos en tu dispositivo</p>
           </div>
           <button onClick={requestPermission} className="px-3 py-1.5 bg-primary-container text-on-primary text-sm rounded-lg hover:opacity-90">
@@ -75,7 +75,7 @@ export default function NotificacionesPage() {
           <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <Bell size={24} /> Notificaciones
             {unreadCount > 0 && (
-              <span className="ml-1 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">
+              <span className="ml-1 px-2 py-0.5 bg-danger text-white text-xs font-bold rounded-full">
                 {unreadCount}
               </span>
             )}
@@ -101,13 +101,13 @@ export default function NotificacionesPage() {
             onClick={() => setFilter(f.key)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               filter === f.key
-                ? 'bg-primary-600 text-white'
+                ? 'bg-primary-container text-white'
                 : 'bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:bg-surface-variant'
             }`}
           >
             {f.label}
             {f.key === 'no_leidas' && unreadCount > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">
+              <span className="ml-1.5 px-1.5 py-0.5 bg-danger text-white text-xs rounded-full">
                 {unreadCount}
               </span>
             )}
@@ -125,7 +125,7 @@ export default function NotificacionesPage() {
 
       {isError && (
         <div className="flex flex-col items-center justify-center h-48 gap-4">
-          <AlertTriangle size={40} className="text-red-400" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">No se pudieron cargar las notificaciones</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -135,7 +135,7 @@ export default function NotificacionesPage() {
 
       {!isLoading && !isError && filtered.length === 0 && (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">🔔</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><Bell size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">No hay notificaciones</h3>
           <p className="font-body-default text-on-surface-variant mt-1">
             {filter === 'no_leidas' ? 'No tienes notificaciones sin leer' : 'No hay notificaciones en esta categoría'}
@@ -152,13 +152,13 @@ export default function NotificacionesPage() {
               className={`bg-surface-container-lowest rounded-xl border p-4 cursor-pointer transition-all hover:shadow-sm ${
                 n.isRead
                   ? 'border-outline-variant opacity-70'
-                  : 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/10'
+                  : 'border-primary-container/25 bg-primary-container/30 '
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 flex-1">
                   {!n.isRead && (
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
+                    <div className="w-2 h-2 rounded-full bg-primary-container mt-2 flex-shrink-0" />
                   )}
                   <div className="flex-1">
                     <p className={`text-sm ${n.isRead ? 'text-on-surface-variant' : 'font-medium text-on-surface'}`}>

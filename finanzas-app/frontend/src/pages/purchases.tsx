@@ -170,7 +170,7 @@ export default function PurchasesPage() {
   if (isError) return (
     <Layout>
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <AlertTriangle size={40} className="text-danger" />
+        <AlertTriangle size={40} className="text-danger-ink" />
         <p className="text-on-surface-variant">Error al cargar la lista</p>
         <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
           <RefreshCw size={16} /> Reintentar
@@ -219,13 +219,13 @@ export default function PurchasesPage() {
 
       {!selectedList && (
         <div className="text-center py-16 mb-4">
-          <div className="text-5xl mb-4">🛒</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><ShoppingCart size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">Sin lista para este mes</h3>
           <p className="text-sm text-on-surface-variant mt-1">
             No hay lista de compras creada para {MONTH_NAMES[month - 1]} {year}
           </p>
           {canCreate && (
-            <button onClick={handleOpenAdd} className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm">
+            <button onClick={handleOpenAdd} className="mt-4 px-4 py-2 bg-primary-container text-white rounded-lg text-sm">
               Agregar producto
             </button>
           )}
@@ -286,11 +286,11 @@ export default function PurchasesPage() {
                         <td className="px-3 py-2 text-on-surface-variant text-xs">{item.lugar || '—'}</td>
                         <td className="px-3 py-2 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => handleEditItem(item)} className="p-1.5 text-blue-500 hover:text-blue-700 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                            <button onClick={() => handleEditItem(item)} className="p-1.5 text-info-ink hover:text-info-ink rounded hover:bg-primary-container/10">
                               <Edit2 size={13} />
                             </button>
                             {canDelete && (
-                              <button onClick={() => setDeleteItemId(item.id)} className="p-1.5 text-red-400 hover:text-red-600 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+                              <button onClick={() => setDeleteItemId(item.id)} className="p-1.5 text-danger-ink hover:text-danger-ink rounded hover:bg-danger/10">
                                 <Trash2 size={13} />
                               </button>
                             )}
@@ -321,7 +321,7 @@ export default function PurchasesPage() {
           {/* Por lugar */}
           <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
             <div className="px-4 py-3 border-b border-outline-variant bg-surface-container-low">
-              <h2 className="text-sm font-semibold text-on-surface">📍 Total por lugar</h2>
+              <h2 className="text-sm font-semibold text-on-surface">Total por lugar</h2>
             </div>
             <div className="p-4">
               {porLugar.length === 0 ? (
@@ -353,7 +353,7 @@ export default function PurchasesPage() {
           {/* Presupuesto */}
           {budget > 0 && (
             <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-on-surface">💰 Presupuesto del mes</h3>
+              <h3 className="text-sm font-semibold text-on-surface">Presupuesto del mes</h3>
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-xs text-on-surface-variant">Asignado</p>
@@ -365,7 +365,7 @@ export default function PurchasesPage() {
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant">Restante</p>
-                  <p className={`text-sm font-bold ${remaining !== null && remaining >= 0 ? 'text-success' : 'text-danger'}`}>
+                  <p className={`text-sm font-bold ${remaining !== null && remaining >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
                     {remaining !== null ? `${remaining >= 0 ? '+' : ''}${cfmt(remaining)}` : '—'}
                   </p>
                 </div>
@@ -373,7 +373,7 @@ export default function PurchasesPage() {
               {budget > 0 && totalInLocal > 0 && (
                 <div className="w-full bg-surface-container rounded-full h-1.5">
                   <div
-                    className={`h-1.5 rounded-full transition-all ${totalInLocal / budget > 1 ? 'bg-red-500' : totalInLocal / budget > 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                    className={`h-1.5 rounded-full transition-all ${totalInLocal / budget > 1 ? 'bg-danger' : totalInLocal / budget > 0.8 ? 'bg-warning' : 'bg-success'}`}
                     style={{ width: `${Math.min((totalInLocal / budget) * 100, 100)}%` }}
                   />
                 </div>
@@ -385,7 +385,7 @@ export default function PurchasesPage() {
 
       {/* Modal: agregar / editar producto */}
       {showItemModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-md">
             <h3 className="text-lg font-semibold mb-4 text-on-surface">
               {editItem ? 'Editar producto' : 'Agregar producto'}
@@ -487,9 +487,9 @@ export default function PurchasesPage() {
 
       {/* Modal: configuración */}
       {showConfigModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold mb-4 text-on-surface">⚙️ Configuración del mes</h3>
+            <h3 className="text-lg font-semibold mb-4 text-on-surface">Configuración del mes</h3>
             <div className="space-y-4">
               <div>
                 <label className="label">Presupuesto ({localCurrency?.symbol ?? '$'}{localCurrency?.currencyCode ?? ''})</label>

@@ -93,7 +93,7 @@ export default function CreditosPage() {
 
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al cargar los créditos</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -106,11 +106,11 @@ export default function CreditosPage() {
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-6 shadow-sm flex flex-wrap gap-8">
           <div>
             <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Deuda total</p>
-            <p className="text-2xl font-bold text-danger">${fmt(totalDeuda)}</p>
+            <p className="text-2xl font-bold text-danger-ink">${fmt(totalDeuda)}</p>
           </div>
           <div>
             <p className="font-label-upper text-label-upper text-on-surface-variant mb-0.5">Cuota mensual total</p>
-            <p className="text-2xl font-bold text-warning">${fmt(totalCuota)}/mes</p>
+            <p className="text-2xl font-bold text-warn-ink">${fmt(totalCuota)}/mes</p>
           </div>
         </div>
       )}
@@ -125,7 +125,7 @@ export default function CreditosPage() {
       )}
       {!isLoading && !isError && loans.length === 0 ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">🏦</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><Landmark size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">No hay créditos registrados</h3>
           <p className="text-sm text-on-surface-variant mt-1">Registra tu primer préstamo para llevar el control</p>
           <button onClick={() => setShowModal(true)} className="mt-4 btn-primary text-sm">
@@ -170,11 +170,11 @@ export default function CreditosPage() {
                   <div className="text-outline self-center">→</div>
                   <div>
                     <span className="text-xs text-on-surface-variant block mb-0.5">Deuda actual</span>
-                    <span className="font-bold text-danger">${fmt(actual)}</span>
+                    <span className="font-bold text-danger-ink">${fmt(actual)}</span>
                   </div>
                   <div className="ml-auto text-right">
                     <span className="text-xs text-on-surface-variant block mb-0.5">Cuota mensual</span>
-                    <span className="font-semibold text-warning">${fmt(Number(l.cuotaMensual || 0))}/mes</span>
+                    <span className="font-semibold text-warn-ink">${fmt(Number(l.cuotaMensual || 0))}/mes</span>
                   </div>
                   {Number(l.cuotaMensual) > 0 && actual > 0 && (
                     <div className="text-right">
@@ -199,7 +199,7 @@ export default function CreditosPage() {
                       aria-valuenow={Math.round(pct)}
                       aria-valuemin={0}
                       aria-valuemax={100}
-                      className="h-1.5 bg-green-500 rounded-full transition-all duration-500"
+                      className="h-1.5 bg-success rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, pct)}%` }}
                     />
                   </div>

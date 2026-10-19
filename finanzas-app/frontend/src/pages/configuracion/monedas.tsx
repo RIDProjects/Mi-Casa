@@ -9,7 +9,7 @@ import { useCurrencyStore, HouseCurrency } from '../../store/currency.store';
 import { useAuthStore } from '../../store/auth.store';
 import { houseCurrenciesAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Coins, Plus, Trash2, Star } from 'lucide-react';
+import { Coins, Plus, Trash2, Star, ArrowLeftRight } from 'lucide-react';
 
 const COMMON_CURRENCIES = [
   { code: 'CUP', name: 'Peso Cubano',                   symbol: '$',    locale: 'es-CU' },
@@ -174,7 +174,7 @@ export default function MonedasPage() {
 
       {currencies.length === 0 ? (
         <EmptyState
-          emoji="💱"
+          icon={<ArrowLeftRight size={28} />}
           title="No hay monedas configuradas"
           description="Agrega una moneda local y luego suma las que uses habitualmente"
           action={{ label: 'Agregar moneda', onClick: () => setShowAddModal(true) }}
@@ -193,7 +193,7 @@ export default function MonedasPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   {/* Currency info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-sm font-bold text-primary-700 dark:text-primary-300 shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-primary-container/15 /30 flex items-center justify-center text-sm font-bold text-info-ink shrink-0">
                       {currency.symbol}
                     </div>
                     <div className="min-w-0">
@@ -244,7 +244,7 @@ export default function MonedasPage() {
                         onClick={() => handleSetLocal(currency)}
                         disabled={loading[`base-${currency.id}`]}
                         title="Establecer como moneda local"
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-warning/25 text-warn-ink hover:bg-warning/10 transition-colors disabled:opacity-50"
                       >
                         <Star size={13} />
                         {loading[`base-${currency.id}`] ? '...' : 'Hacer local'}
@@ -254,7 +254,7 @@ export default function MonedasPage() {
                       onClick={() => handleRemove(currency)}
                       disabled={currency.isLocal || loading[`del-${currency.id}`]}
                       title={currency.isLocal ? 'No se puede eliminar la moneda local' : 'Eliminar moneda'}
-                      className="p-1.5 rounded-lg text-outline hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="p-1.5 rounded-lg text-outline hover:text-danger-ink hover:bg-danger/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <Trash2 size={16} />
                     </button>

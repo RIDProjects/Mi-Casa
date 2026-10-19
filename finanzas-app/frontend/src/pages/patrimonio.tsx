@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
-import { Plus, TrendingUp, Download, Printer } from 'lucide-react';
+import { Plus, TrendingUp, Download, Printer, Home, Wallet } from 'lucide-react';
 import { useCurrencyStore } from '../store/currency.store';
 import { resolveRate } from '../lib/currency';
 import { CurrencyToggle } from '../components/ui/CurrencyToggle';
@@ -16,6 +16,7 @@ import {
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { fmt } from '../lib/format';
 import { getErrorMessage } from '../utils/errors';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const safeNum = (n: unknown): number => {
   const v = Number(n);
@@ -174,16 +175,16 @@ export default function PatrimonioPage() {
     <Layout>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">
             <TrendingUp size={24} /> Patrimonio Neto {activeCode !== localCode ? `(${activeCode})` : ''}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Activos físicos, efectivo y deudas consolidadas</p>
+          <p className="text-on-surface-variant mt-1">Activos físicos, efectivo y deudas consolidadas</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencyToggle />
           {requestedCode === 'USD' && requestedCode !== localCode && (
             <div className="flex items-center gap-1">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Cotización:</span>
+              <span className="text-xs text-on-surface-variant">Cotización:</span>
               <input
                 type="number"
                 min="1"
@@ -196,7 +197,7 @@ export default function PatrimonioPage() {
           )}
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-border-light rounded-lg hover:bg-surface-gray transition-colors"
           >
             <Printer size={14} /> PDF
           </button>
@@ -216,43 +217,43 @@ export default function PatrimonioPage() {
       </div>
 
       {(isErrorCards || isErrorLoans || isErrorNetWorth) && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 text-sm text-red-700 dark:text-red-300 mb-6">
+        <div className="bg-danger/10 border border-danger/25 rounded-lg px-4 py-3 text-sm text-danger-ink mb-6">
           {isErrorNetWorth && 'No se pudo cargar el patrimonio. Intenta recargar.'}
           {isErrorCards && !isErrorNetWorth && 'No se pudieron cargar las tarjetas de crédito.'}
           {isErrorLoans && !isErrorNetWorth && 'No se pudieron cargar los créditos.'}
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6 text-center">
-        <p className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
+      <div className="bg-panel rounded-xl border border-border-light shadow-sm p-6 mb-6 text-center">
+        <p className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide mb-2">
           Patrimonio Neto {activeCode !== localCode ? `(en ${activeCode})` : ''}
         </p>
-        <p className={`text-5xl font-bold mb-4 ${netWorthPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+        <p className={`text-5xl font-bold mb-4 ${netWorthPositive ? 'text-ok-ink ' : 'text-danger-ink '}`}>
           {netWorthPositive ? '+' : '-'}{currencySymbol}{fmt(Math.abs(netWorth))}
         </p>
         <div className="flex flex-wrap justify-center gap-6 text-sm">
           <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-0.5">Activos físicos</p>
-            <p className="font-semibold text-gray-800 dark:text-gray-200">
+            <p className="text-xs text-on-surface-variant uppercase mb-0.5">Activos físicos</p>
+            <p className="font-semibold text-on-surface">
               {currencySymbol}{fmt(physicalAssets.reduce((s: number, a: any) => s + Number(a.valorEstimado || 0), 0) / divider)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-0.5">Efectivo y cuentas</p>
-            <p className="font-semibold text-gray-800 dark:text-gray-200">
+            <p className="text-xs text-on-surface-variant uppercase mb-0.5">Efectivo y cuentas</p>
+            <p className="font-semibold text-on-surface">
               {currencySymbol}{fmt(cashAssets.reduce((s: number, a: any) => s + Number(a.valorEstimado || 0), 0) / divider)}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-0.5">Deudas (tarjetas + créditos)</p>
-            <p className="font-semibold text-red-600 dark:text-red-400">-{currencySymbol}{fmt(totalDebts / divider)}</p>
+            <p className="text-xs text-on-surface-variant uppercase mb-0.5">Deudas (tarjetas + créditos)</p>
+            <p className="font-semibold text-danger-ink">-{currencySymbol}{fmt(totalDebts / divider)}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 mb-6">
+      <div className="bg-panel rounded-xl border border-border-light shadow-sm p-5 mb-6">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+          <h2 className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide">
             Evolución del patrimonio
           </h2>
           <div className="flex gap-1">
@@ -262,8 +263,8 @@ export default function PatrimonioPage() {
                 onClick={() => setHistoryMonths(m)}
                 className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors ${
                   historyMonths === m
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'bg-primary-container text-white'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-high '
                 }`}
               >
                 {m} meses
@@ -272,10 +273,10 @@ export default function PatrimonioPage() {
           </div>
         </div>
         {loadingHistory ? (
-          <div className="h-52 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
+          <div className="h-52 bg-surface-container rounded-xl animate-pulse" />
         ) : chartData.length === 0 ? (
           <div className="h-52 flex items-center justify-center">
-            <p className="text-sm text-gray-400 dark:text-gray-500">Sin historial disponible todavía</p>
+            <p className="text-sm text-outline">Sin historial disponible todavía</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={210}>
@@ -286,11 +287,13 @@ export default function PatrimonioPage() {
                   <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis
-                tick={{ fontSize: 11 }}
-                tickFormatter={(v: number) => `${currencySymbol}${(safeNum(v) / 1000).toFixed(0)}k`}
+                tick={{ ...CHART_TICK, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => formatAxisMoney(safeNum(v), currencySymbol)}
                 width={60}
               />
               <Tooltip
@@ -318,7 +321,7 @@ export default function PatrimonioPage() {
 
       <AssetSection
         title="Bienes Físicos"
-        emoji="🏠"
+        icon={<Home size={18} />}
         assets={physicalAssets}
         onEdit={handleEdit}
         onDelete={(id: string) => setDeleteId(id)}
@@ -328,7 +331,7 @@ export default function PatrimonioPage() {
 
       <AssetSection
         title="Efectivo y Cuentas"
-        emoji="💰"
+        icon={<Wallet size={18} />}
         assets={cashAssets}
         onEdit={handleEdit}
         onDelete={(id: string) => setDeleteId(id)}
@@ -347,16 +350,16 @@ export default function PatrimonioPage() {
             <label className="label">Tipo de activo</label>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { v: 'physical', l: '🏠 Bien físico' },
-                { v: 'cash', l: '💰 Efectivo / Cuenta' },
+                { v: 'physical', l: 'Bien físico' },
+                { v: 'cash', l: 'Efectivo / Cuenta' },
               ].map(({ v, l }) => (
                 <button
                   key={v} type="button"
                   onClick={() => setForm({ ...form, assetType: v })}
                   className={`py-3 rounded-xl text-sm font-medium border-2 transition-all ${
                     form.assetType === v
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                      : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400'
+                      ? 'border-primary-container bg-primary-container/10 text-info-ink '
+                      : 'border-border-light text-on-surface-variant '
                   }`}
                 >
                   {l}
@@ -423,7 +426,7 @@ export default function PatrimonioPage() {
 
 function AssetSection({
   title,
-  emoji,
+  icon,
   assets,
   onEdit,
   onDelete,
@@ -431,7 +434,7 @@ function AssetSection({
   divider,
 }: {
   title: string;
-  emoji: string;
+  icon: React.ReactNode;
   assets: any[];
   onEdit: (a: any) => void;
   onDelete: (id: string) => void;
@@ -446,30 +449,30 @@ function AssetSection({
   const total = assets.reduce((s, a) => s + Number(a.valorEstimado || 0), 0) / divider;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden mb-4">
-      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-        <h2 className="font-semibold text-gray-800 dark:text-gray-200">
-          {emoji} {title}
+    <div className="bg-panel rounded-xl border border-border-light shadow-sm overflow-hidden mb-4">
+      <div className="px-4 py-3 bg-surface-gray border-b border-border-light flex items-center justify-between">
+        <h2 className="font-semibold text-on-surface">
+          <span className="inline-flex items-center gap-2"><span className="text-info-ink">{icon}</span>{title}</span>
         </h2>
-        <span className="text-sm font-bold text-gray-700 dark:text-gray-300">{currencySymbol}{fmtLocal(total)}</span>
+        <span className="text-sm font-bold text-on-surface-variant">{currencySymbol}{fmtLocal(total)}</span>
       </div>
       <table className="w-full text-sm">
-        <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-600">
+        <thead className="bg-surface-gray border-b border-border-light">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Nombre</th>
-            <th className="px-4 py-2 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Valor</th>
-            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Notas</th>
-            <th className="px-4 py-2 text-center text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Acc.</th>
+            <th className="px-4 py-2 text-left text-xs font-semibold text-on-surface-variant uppercase">Nombre</th>
+            <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Valor</th>
+            <th className="px-4 py-2 text-left text-xs font-semibold text-on-surface-variant uppercase">Notas</th>
+            <th className="px-4 py-2 text-center text-xs font-semibold text-on-surface-variant uppercase">Acc.</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+        <tbody className="divide-y divide-border-light">
           {assets.map((a: any) => (
-            <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-              <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{a.nombre}</td>
-              <td className="px-4 py-3 text-right font-semibold text-green-600 dark:text-green-400">
+            <tr key={a.id} className="hover:bg-surface-gray transition-colors">
+              <td className="px-4 py-3 font-medium text-on-surface">{a.nombre}</td>
+              <td className="px-4 py-3 text-right font-semibold text-ok-ink">
                 {currencySymbol}{fmtLocal(Number(a.valorEstimado || 0) / divider)}
               </td>
-              <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{a.notas || '-'}</td>
+              <td className="px-4 py-3 text-on-surface-variant text-xs">{a.notas || '-'}</td>
               <td className="px-4 py-3 text-center">
                 <ActionButtons
                   onEdit={() => onEdit(a)}
@@ -480,7 +483,7 @@ function AssetSection({
           ))}
           {assets.length === 0 && (
             <tr>
-              <td colSpan={4} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500 text-sm">
+              <td colSpan={4} className="px-4 py-6 text-center text-outline text-sm">
                 Sin {title.toLowerCase()} registrados
               </td>
             </tr>

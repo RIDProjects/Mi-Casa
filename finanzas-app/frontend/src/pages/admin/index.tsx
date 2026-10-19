@@ -4,30 +4,17 @@ import { usersAPI, housesAPI } from '../../services/api';
 import { useRouter } from 'next/router';
 import {
   Users, Home, UserCheck, UserX, TrendingUp,
-  AlertTriangle, Activity, Crown, Star, Gift,
+  AlertTriangle, Activity, Crown, Star, Gift, ArrowRight,
 } from 'lucide-react';
 import { fmtInt as fmt } from '../../lib/format';
+import PageHeader from '../../components/ui/PageHeader';
+import StatCard from '../../components/ui/StatCard';
 
 const PLAN_CONFIG = {
   free:   { label: 'Gratis',  color: 'text-on-surface-variant',   bg: 'bg-surface-container',       icon: <Gift size={14} /> },
-  pro:    { label: 'PRO',     color: 'text-primary',    bg: 'bg-blue-100 dark:bg-blue-900/30',    icon: <Star size={14} /> },
-  family: { label: 'Familia', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30', icon: <Crown size={14} /> },
+  pro:    { label: 'PRO',     color: 'text-info-ink',    bg: 'bg-primary-container/15 ',    icon: <Star size={14} /> },
+  family: { label: 'Familia', color: 'text-info-ink ', bg: 'bg-primary-container/15 ', icon: <Crown size={14} /> },
 };
-
-function StatCard({ icon, label, value, sub, color, bg }: { icon: React.ReactNode; label: string; value: string | number; sub?: string; color: string; bg: string }) {
-  return (
-    <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`p-2 rounded-lg ${bg}`}>
-          <span className={color}>{icon}</span>
-        </div>
-        <span className="font-body-default text-on-surface-variant font-medium">{label}</span>
-      </div>
-      <p className={`text-2xl font-bold ${color}`}>{fmt(Number(value))}</p>
-      {sub && <p className="text-xs text-outline mt-1">{sub}</p>}
-    </div>
-  );
-}
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -40,59 +27,29 @@ export default function AdminDashboard() {
 
   return (
     <Layout>
-      <div className="mb-6">
-        <h1 className="font-page-title text-page-title text-on-surface">Panel de Administración</h1>
-        <p className="text-on-surface-variant mt-1">Resumen del sistema en tiempo real</p>
-      </div>
+      <PageHeader title="Panel de administración" subtitle="Resumen del sistema en tiempo real" />
 
       {/* ── KPIs principales ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={<Users size={18} />} label="Total usuarios" value={stats?.total ?? 0}
-          color="text-primary" bg="bg-blue-50 dark:bg-blue-900/20"
-        />
-        <StatCard
-          icon={<UserCheck size={18} />} label="Activos" value={stats?.activeUsers ?? 0}
-          sub={`${stats?.total ? Math.round((stats.activeUsers / stats.total) * 100) : 0}% del total`}
-          color="text-success" bg="bg-green-50 dark:bg-green-900/20"
-        />
-        <StatCard
-          icon={<Home size={18} />} label="Casas" value={houses.length}
-          color="text-purple-600 dark:text-purple-400" bg="bg-purple-50 dark:bg-purple-900/20"
-        />
-        <StatCard
-          icon={<TrendingUp size={18} />} label="Nuevos (30d)" value={stats?.newLast30 ?? 0}
-          color="text-teal-600 dark:text-teal-400" bg="bg-teal-50 dark:bg-teal-900/20"
-        />
+        <StatCard icon={<Users size={20} />} title="Total usuarios" value={fmt(Number(stats?.total ?? 0))} color="blue" />
+        <StatCard icon={<UserCheck size={20} />} title="Activos" value={fmt(Number(stats?.activeUsers ?? 0))} subtitle={`${stats?.total ? Math.round((stats.activeUsers / stats.total) * 100) : 0}% del total`} color="green" />
+        <StatCard icon={<Home size={20} />} title="Casas" value={fmt(Number(houses.length))} color="blue" />
+        <StatCard icon={<TrendingUp size={20} />} title="Nuevos (30d)" value={fmt(Number(stats?.newLast30 ?? 0))} color="blue" />
       </div>
 
       {/* ── Engagement + Churn ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={<Activity size={18} />} label="Activos últimos 7d" value={stats?.activeLast7 ?? 0}
-          color="text-primary" bg="bg-blue-50 dark:bg-blue-900/20"
-        />
-        <StatCard
-          icon={<Activity size={18} />} label="Activos últimos 30d" value={stats?.activeLast30 ?? 0}
-          color="text-indigo-600 dark:text-indigo-400" bg="bg-indigo-50 dark:bg-indigo-900/20"
-        />
-        <StatCard
-          icon={<AlertTriangle size={18} />} label="Riesgo de churn" value={stats?.churnRisk ?? 0}
-          sub="Activos sin login en 30d"
-          color="text-warning" bg="bg-amber-50 dark:bg-amber-900/20"
-        />
-        <StatCard
-          icon={<UserX size={18} />} label="Nunca logueados" value={stats?.neverLogged ?? 0}
-          sub="Registro sin primer acceso"
-          color="text-danger" bg="bg-red-50 dark:bg-red-900/20"
-        />
+        <StatCard icon={<Activity size={20} />} title="Activos últimos 7d" value={fmt(Number(stats?.activeLast7 ?? 0))} color="blue" />
+        <StatCard icon={<Activity size={20} />} title="Activos últimos 30d" value={fmt(Number(stats?.activeLast30 ?? 0))} color="blue" />
+        <StatCard icon={<AlertTriangle size={20} />} title="Riesgo de churn" value={fmt(Number(stats?.churnRisk ?? 0))} subtitle="Activos sin login en 30d" color="yellow" />
+        <StatCard icon={<UserX size={20} />} title="Nunca logueados" value={fmt(Number(stats?.neverLogged ?? 0))} subtitle="Registro sin primer acceso" color="red" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Distribución de planes ── */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5">
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-5">
           <h2 className="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
-            <Crown size={16} className="text-purple-500" /> Distribución de planes
+            <Crown size={16} className="text-info-ink" /> Distribución de planes
           </h2>
           <div className="space-y-3">
             {(Object.entries(planDist) as [string, number][]).map(([plan, count]) => {
@@ -108,7 +65,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="w-full bg-surface-container rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full transition-all ${plan === 'free' ? 'bg-gray-400' : plan === 'pro' ? 'bg-blue-500' : 'bg-purple-500'}`}
+                      className={`h-2 rounded-full transition-all ${plan === 'free' ? 'bg-outline' : plan === 'pro' ? 'bg-primary-container' : 'bg-primary-container'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -116,21 +73,21 @@ export default function AdminDashboard() {
               );
             })}
           </div>
-          <div className="mt-4 pt-4 border-t border-outline-variant flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-border-light flex items-center justify-between">
             <span className="text-xs text-on-surface-variant">Tasa de conversión</span>
-            <span className="text-sm font-bold text-success">{convRate}%</span>
+            <span className="text-sm font-bold text-ok-ink fin-number">{convRate}%</span>
           </div>
         </div>
 
         {/* ── Casas recientes ── */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant overflow-hidden">
-          <div className="px-5 py-4 border-b border-outline-variant flex items-center justify-between">
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+          <div className="px-5 py-4 border-b border-border-light flex items-center justify-between">
             <h2 className="text-sm font-semibold text-on-surface flex items-center gap-2">
-              <Home size={16} className="text-purple-500" /> Casas ({houses.length})
+              <Home size={16} className="text-info-ink" /> Casas ({houses.length})
             </h2>
-            <button onClick={() => router.push('/admin/houses')} className="text-xs text-primary hover:underline">Ver todas →</button>
+            <button onClick={() => router.push('/admin/houses')} className="inline-flex items-center gap-1 text-xs font-semibold text-info-ink hover:underline">Ver todas <ArrowRight size={12} /></button>
           </div>
-          <div className="divide-y divide-outline-variant max-h-64 overflow-y-auto">
+          <div className="divide-y divide-border-light max-h-64 overflow-y-auto">
             {(houses as any[]).slice(0, 8).map((h: any) => (
               <div key={h.id} className="px-5 py-3 flex items-center justify-between">
                 <p className="text-sm font-medium text-on-surface">{h.name}</p>
@@ -142,13 +99,13 @@ export default function AdminDashboard() {
         </div>
 
         {/* ── Accesos rápidos ── */}
-        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-5">
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-5">
           <h2 className="text-sm font-semibold text-on-surface mb-4">Accesos rápidos</h2>
           <div className="space-y-2">
             {[
-              { label: 'Gestionar usuarios', href: '/admin/users', icon: <Users size={16} />, color: 'text-primary', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-              { label: 'Gestionar casas',    href: '/admin/houses', icon: <Home size={16} />,  color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-              { label: 'Gestionar roles',    href: '/admin/roles',  icon: <Star size={16} />,  color: 'text-warning', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+              { label: 'Gestionar usuarios', href: '/admin/users', icon: <Users size={16} />, color: 'text-info-ink', bg: 'bg-primary-container/10 ' },
+              { label: 'Gestionar casas',    href: '/admin/houses', icon: <Home size={16} />,  color: 'text-info-ink', bg: 'bg-primary-container/10 ' },
+              { label: 'Gestionar roles',    href: '/admin/roles',  icon: <Star size={16} />,  color: 'text-warn-ink', bg: 'bg-warning/10 ' },
             ].map(item => (
               <button
                 key={item.href}
@@ -159,15 +116,15 @@ export default function AdminDashboard() {
                   <span className={item.color}>{item.icon}</span>
                 </div>
                 <span className="text-sm font-medium text-on-surface">{item.label}</span>
-                <span className="ml-auto text-outline">→</span>
+                <ArrowRight size={16} className="ml-auto text-outline" />
               </button>
             ))}
           </div>
 
           {(stats?.churnRisk ?? 0) > 0 && (
-            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-              <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
-                ⚠️ {stats!.churnRisk} usuario{stats!.churnRisk !== 1 ? 's' : ''} sin actividad en 30 días.
+            <div className="mt-4 p-3 bg-warning/10 border border-warning/25 rounded-xl">
+              <p className="text-xs font-medium text-warn-ink">
+                {stats!.churnRisk} usuario{stats!.churnRisk !== 1 ? 's' : ''} sin actividad en 30 días.
                 Considera enviar un recordatorio.
               </p>
             </div>

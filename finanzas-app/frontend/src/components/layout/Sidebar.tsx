@@ -93,8 +93,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const NavLink = ({ item }: { item: NavItem }) => {
     if (item.module && !hasPermission(item.module, 'view')) return null;
 
+    // /dashboard and /admin are section roots: highlight them only on an exact match,
+    // otherwise /admin would also light up on /admin/users, /admin/roles, ...
+    const isRoot = item.href === '/dashboard' || item.href === '/admin';
     const isActive = router.pathname === item.href ||
-      (item.href !== '/dashboard' && router.pathname.startsWith(item.href));
+      (!isRoot && router.pathname.startsWith(item.href));
     const Icon = item.icon;
     const badgeCount = item.href === '/notificaciones' ? unreadCount : 0;
 
@@ -193,18 +196,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         <button
           onClick={logout}
-          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger hover:bg-surface-variant rounded-lg transition-all duration-150"
+          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger-ink hover:bg-surface-variant rounded-lg transition-all duration-150"
         >
           <LogOut size={16} />
-          Cerrar Sesión
+          Cerrar sesión
         </button>
 
         <button
           onClick={handleLogoutAll}
-          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger hover:bg-surface-variant rounded-lg transition-all duration-150"
+          className="flex items-center gap-3 w-full px-3 py-2 text-[12px] font-medium text-on-surface-variant hover:text-danger-ink hover:bg-surface-variant rounded-lg transition-all duration-150"
         >
           <LogOut size={16} />
-          Cerrar sesión en todos los dispositivos
+          Cerrar todas las sesiones
         </button>
       </div>
     </aside>
@@ -221,7 +224,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-black/50 animate-backdrop-in"
+            className="fixed inset-0 bg-slate-950/50 animate-backdrop-in"
             onClick={onClose}
             aria-hidden="true"
           />

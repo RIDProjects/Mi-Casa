@@ -7,7 +7,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ActionButtons from '../components/ui/ActionButtons';
 import toast from 'react-hot-toast';
-import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, RefreshCw, ArrowDownLeft, ArrowUpRight, Scale } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
 import { getErrorMessage } from '../utils/errors';
@@ -64,7 +64,7 @@ export default function DebtsPage() {
         paidAt: now,
         originalNote: debt?.note,
       });
-      toast.success('Marcada como pagada ✅');
+      toast.success('Marcada como pagada');
       updateDebtsCache();
     },
     onError: (e: any) => { toast.error(getErrorMessage(e)); },
@@ -108,7 +108,7 @@ export default function DebtsPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al cargar las deudas</p>
           <button onClick={() => refetchDebts()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -129,7 +129,7 @@ export default function DebtsPage() {
   return (
     <Layout>
       <PageHeader
-        title="💸 Gestor de Deudas"
+        title="Gestor de deudas"
         subtitle="Control de lo que te deben y lo que debes"
         action={
           canCreate ? (
@@ -137,7 +137,7 @@ export default function DebtsPage() {
               <Plus size={18} /> Registrar deuda
             </button>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg text-sm">
+            <div className="flex items-center gap-2 px-3 py-2 bg-warning/15 text-warn-ink rounded-lg text-sm">
               <Lock size={16} /> Sin permisos para agregar
             </div>
           )
@@ -145,22 +145,22 @@ export default function DebtsPage() {
       />
 
       {/* Summary Banner */}
-      <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-4 mb-6">
+      <div className="bg-panel rounded-2xl shadow-soft border border-border-light p-4 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <span className="text-lg font-semibold text-on-surface">Saldo:</span>
-            <span className={`text-2xl font-bold ${balance >= 0 ? 'text-success' : 'text-danger'}`}>
-              {balance >= 0 ? '✅' : '⚠️'} {balance >= 0 ? '+' : ''}{cfmt(balance)}
+            <span className={`text-2xl font-bold fin-number ${balance >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg mr-2 align-middle ${balance >= 0 ? 'icon-emerald !p-0' : 'icon-red !p-0'}`}>{balance >= 0 ? <Scale size={18} /> : <AlertTriangle size={18} />}</span>{balance >= 0 ? '+' : ''}{cfmt(balance)}
             </span>
           </div>
           <div className="flex gap-8">
             <div className="text-center">
               <p className="text-sm text-on-surface-variant">Total que me adeudan</p>
-              <p className="text-xl font-bold text-success">+{cfmt(totalTheyOweMe)}</p>
+              <p className="text-xl font-bold text-ok-ink">+{cfmt(totalTheyOweMe)}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-on-surface-variant">Total adeudado por mí</p>
-              <p className="text-xl font-bold text-danger">-{cfmt(totalIOwe)}</p>
+              <p className="text-xl font-bold text-danger-ink">-{cfmt(totalIOwe)}</p>
             </div>
           </div>
         </div>
@@ -184,17 +184,17 @@ export default function DebtsPage() {
 
       {/* Main Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 💙 ME DEBEN */}
-        <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-          <div className="bg-blue-50 dark:bg-blue-900/30 px-4 py-3 border-b border-blue-100 dark:border-blue-800">
-            <h2 className="text-lg font-semibold text-blue-900 dark:text-blue-300">💙 ME DEBEN</h2>
+        {/* Me deben */}
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+          <div className="bg-primary-container/10 px-4 py-3 border-b border-primary-container/15">
+            <h2 className="text-sm font-bold text-info-ink flex items-center gap-2"><ArrowDownLeft size={16} /> Me deben</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-surface-container-low border-b">
+            <thead>
               <tr>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">👤 Persona</th>
-                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">💰 Monto</th>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">📝 Nota</th>
+                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Persona</th>
+                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">Monto</th>
+                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Nota</th>
                 <th className="px-4 py-2 text-center font-label-upper text-label-upper text-on-surface-variant uppercase">Acc.</th>
               </tr>
             </thead>
@@ -207,7 +207,7 @@ export default function DebtsPage() {
                       <div className="mt-0.5"><Badge variant="red">{d.interestRate}% TNA</Badge></div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-success">
+                  <td className="px-4 py-3 text-right font-medium text-ok-ink">
                     <div>{cfmt(d.amount)}</div>
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant text-xs">{d.note || '-'}</td>
@@ -228,27 +228,27 @@ export default function DebtsPage() {
                 </tr>
               )}
             </tbody>
-            <tfoot className="bg-blue-50 dark:bg-blue-900/20 border-t-2 border-blue-200 dark:border-blue-800">
+            <tfoot className="bg-primary-container/10 border-t-2 border-primary-container/25">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL QUE ME ADEUDAN</td>
-                <td className="px-4 py-3 text-right font-bold text-success">{cfmt(totalTheyOweMe)}</td>
+                <td className="px-4 py-3 text-right font-bold text-ok-ink">{cfmt(totalTheyOweMe)}</td>
                 <td colSpan={2}></td>
               </tr>
             </tfoot>
           </table>
         </div>
 
-        {/* ❤️ LES DEBO */}
-        <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-          <div className="bg-red-50 dark:bg-red-900/30 px-4 py-3 border-b border-red-100 dark:border-red-800">
-            <h2 className="text-lg font-semibold text-red-900 dark:text-red-300">❤️ LES DEBO</h2>
+        {/* Les debo */}
+        <div className="bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+          <div className="bg-danger/10 px-4 py-3 border-b border-danger/25">
+            <h2 className="text-sm font-bold text-danger-ink flex items-center gap-2"><ArrowUpRight size={16} /> Les debo</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-surface-container-low border-b">
+            <thead>
               <tr>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">👤 Persona</th>
-                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">💰 Monto</th>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">📝 Nota</th>
+                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Persona</th>
+                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">Monto</th>
+                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Nota</th>
                 <th className="px-4 py-2 text-center font-label-upper text-label-upper text-on-surface-variant uppercase">Acc.</th>
               </tr>
             </thead>
@@ -261,7 +261,7 @@ export default function DebtsPage() {
                       <div className="mt-0.5"><Badge variant="red">{d.interestRate}% TNA</Badge></div>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-medium text-danger">
+                  <td className="px-4 py-3 text-right font-medium text-danger-ink">
                     <div>{cfmt(d.amount)}</div>
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant text-xs">{d.note || '-'}</td>
@@ -282,10 +282,10 @@ export default function DebtsPage() {
                 </tr>
               )}
             </tbody>
-            <tfoot className="bg-red-50 dark:bg-red-900/20 border-t-2 border-red-200 dark:border-red-800">
+            <tfoot className="bg-danger/10 border-t-2 border-danger/25">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL ADEUDADO POR MÍ</td>
-                <td className="px-4 py-3 text-right font-bold text-danger">{cfmt(totalIOwe)}</td>
+                <td className="px-4 py-3 text-right font-bold text-danger-ink">{cfmt(totalIOwe)}</td>
                 <td colSpan={2}></td>
               </tr>
             </tfoot>
@@ -295,12 +295,12 @@ export default function DebtsPage() {
 
       {/* Paid Debts History */}
       {paidDebts.length > 0 && (
-        <div className="mt-8 bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-          <div className="bg-surface-container-low px-4 py-3 border-b border-outline-variant">
-            <h2 className="text-lg font-semibold text-on-surface">✅ Deudas Pagadas ({paidDebts.length})</h2>
+        <div className="mt-8 bg-panel rounded-2xl shadow-soft border border-border-light overflow-hidden">
+          <div className="bg-surface-gray px-4 py-3 border-b border-border-light">
+            <h2 className="text-sm font-bold text-on-surface flex items-center gap-2"><CheckCircle size={16} className="text-ok-ink" /> Deudas pagadas ({paidDebts.length})</h2>
           </div>
           <table className="w-full text-sm">
-            <thead className="bg-surface-container-low border-b">
+            <thead>
               <tr>
                 <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Persona</th>
                 <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">Monto</th>
@@ -331,9 +331,9 @@ export default function DebtsPage() {
           <div>
             <label className="label">Tipo</label>
             <div className="grid grid-cols-2 gap-3">
-              {[{ v: 'they_owe_me', l: '💙 Me deben' }, { v: 'i_owe', l: '❤️ Yo debo' }].map(({ v, l }) => (
+              {[{ v: 'they_owe_me', l: 'Me deben' }, { v: 'i_owe', l: 'Yo debo' }].map(({ v, l }) => (
                 <button key={v} type="button" onClick={() => setForm({ ...form, type: v })}
-                  className={`py-3 rounded-xl text-sm font-medium border-2 transition-all ${form.type === v ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'border-outline-variant text-on-surface-variant'}`}>
+                  className={`py-3 rounded-xl text-sm font-medium border-2 transition-all ${form.type === v ? 'border-primary-container bg-primary-container/10 text-info-ink ' : 'border-outline-variant text-on-surface-variant'}`}>
                   {l}
                 </button>
               ))}
@@ -371,12 +371,12 @@ export default function DebtsPage() {
       </Modal>
 
       {/* Modal for Paid Debt Info */}
-      <Modal isOpen={!!paidDebtInfo} onClose={() => setPaidDebtInfo(null)} title="✅ Deuda Pagada">
+      <Modal isOpen={!!paidDebtInfo} onClose={() => setPaidDebtInfo(null)} title="Deuda pagada">
         {paidDebtInfo && (
           <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-xl p-4 text-center">
-              <CheckCircle size={48} className="mx-auto text-success mb-2" />
-              <p className="text-green-800 dark:text-green-300 font-semibold">¡Pago registrado!</p>
+            <div className="bg-success/10 border border-success/25 rounded-xl p-4 text-center">
+              <CheckCircle size={48} className="mx-auto text-ok-ink mb-2" />
+              <p className="text-ok-ink font-semibold">¡Pago registrado!</p>
             </div>
 
             <div className="space-y-3">
@@ -392,7 +392,7 @@ export default function DebtsPage() {
                 <DollarSign size={18} className="text-on-surface-variant" />
                 <div>
                   <p className="text-xs text-on-surface-variant">Monto pagado</p>
-                  <p className="font-medium text-success">{cfmt(paidDebtInfo.amount)}</p>
+                  <p className="font-medium text-ok-ink">{cfmt(paidDebtInfo.amount)}</p>
                 </div>
               </div>
 

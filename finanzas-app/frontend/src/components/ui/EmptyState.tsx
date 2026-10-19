@@ -1,7 +1,9 @@
 import React from 'react';
 
 interface EmptyStateProps {
-  emoji: string;
+  /** Preferred: a lucide icon element. `emoji` kept for backwards compatibility. */
+  icon?: React.ReactNode;
+  emoji?: string;
   title: string;
   description?: string;
   action?: {
@@ -10,11 +12,11 @@ interface EmptyStateProps {
   };
 }
 
-export function EmptyState({ emoji, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, emoji, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center animate-fade-up rounded-[14px] border border-dashed border-outline-variant bg-surface-container-lowest/60 dark:bg-surface-container-low/60">
-      <div className="w-16 h-16 rounded-2xl bg-surface-container-low dark:bg-surface-container border border-border-light shadow-premium flex items-center justify-center text-3xl mb-5">
-        {emoji}
+      <div className="w-16 h-16 rounded-2xl bg-surface-container-low dark:bg-surface-container border border-border-light shadow-premium flex items-center justify-center text-3xl text-info-ink mb-5">
+        {icon ?? emoji}
       </div>
 
       <h3 className="text-base font-semibold text-on-surface tracking-tight">{title}</h3>

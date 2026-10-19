@@ -6,17 +6,13 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
 import ActionButtons from '../components/ui/ActionButtons';
-import {
-  Plus, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw,
-  Download, Upload, TrendingUp, DollarSign,
-  ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight,
-  Laptop, Calendar, Repeat, Zap,
-} from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw, Download, Upload, TrendingUp, DollarSign, ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight, Laptop, Calendar, Repeat, Zap, Construction } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { MONTH_NAMES } from '../lib/format';
 import { useCurrencyFormatter } from '../lib/currency';
 import { parseLocalDate, todayLocalISO } from '../lib/dates';
 import { getErrorMessage } from '../utils/errors';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const CATEGORIES = [
   'Casa', 'Comida', 'Familia', 'Transporte', 'Viajes',
@@ -76,12 +72,12 @@ function CategoryIcon({ categoria }: { categoria: string }) {
 function TypeBadge({ tipo }: { tipo: string }) {
   if (tipo === 'gasto') {
     return (
-      <span className="px-2 py-1 bg-danger/10 text-danger text-[10px] font-bold rounded-full uppercase">Gasto</span>
+      <span className="px-2 py-1 bg-danger/10 text-danger-ink text-[10px] font-bold rounded-full uppercase">Gasto</span>
     );
   }
   if (tipo === 'ingreso_fijo') {
     return (
-      <span className="px-2 py-1 bg-success/10 text-success text-[10px] font-bold rounded-full uppercase">Ing. Fijo</span>
+      <span className="px-2 py-1 bg-success/10 text-ok-ink text-[10px] font-bold rounded-full uppercase">Ing. Fijo</span>
     );
   }
   return (
@@ -102,6 +98,8 @@ function MetodoBadge({ metodo }: { metodo: string }) {
     </span>
   );
 }
+
+const STATUS_LABELS: Record<string, string> = { EN_META: 'En meta', 'ATENCIÓN': 'Atención', ALERTA: 'Alerta' };
 
 export default function TransaccionesPage() {
   const qc = useQueryClient();
@@ -296,10 +294,10 @@ export default function TransaccionesPage() {
 
   // Thermometer label
   const thermoLabel = usoPct < 70
-    ? { text: 'Todo bajo control', color: 'text-success', bar: 'bg-success', status: 'EN_META' }
+    ? { text: 'Todo bajo control', color: 'text-ok-ink', bar: 'bg-success', status: 'EN_META' }
     : usoPct < 90
-    ? { text: 'Acercándose al límite', color: 'text-warning', bar: 'bg-warning', status: 'ATENCIÓN' }
-    : { text: '¡Gastos superaron el presupuesto!', color: 'text-danger', bar: 'bg-danger', status: 'ALERTA' };
+    ? { text: 'Acercándose al límite', color: 'text-warn-ink', bar: 'bg-warning', status: 'ATENCIÓN' }
+    : { text: '¡Gastos superaron el presupuesto!', color: 'text-danger-ink', bar: 'bg-danger', status: 'ALERTA' };
 
   // Category breakdown
   const categoryBreakdown = useMemo(() => {
@@ -334,7 +332,7 @@ export default function TransaccionesPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="font-body-default text-body-default text-on-surface-variant">Error al cargar las transacciones</p>
           <button onClick={() => refetch()} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-outline-variant text-on-surface-variant hover:bg-surface-variant transition-colors">
             <RefreshCw size={16} /> Reintentar
@@ -403,7 +401,7 @@ export default function TransaccionesPage() {
       {/* ── WIP tab placeholder ── */}
       {TABS_WIP.includes(activeTab) && (
         <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant gap-3">
-          <span className="text-4xl">🚧</span>
+          <Construction size={32} className="text-warn-ink" />
           <p className="font-section-title text-section-title">Próximamente</p>
           <p className="font-body-default text-body-default opacity-60">
             La sección <strong>{activeTab}</strong> estará disponible en una próxima versión.
@@ -489,12 +487,12 @@ export default function TransaccionesPage() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${
-                          rt.isActive ? 'bg-success/10 text-success' : 'bg-surface-container text-on-surface-variant'
+                          rt.isActive ? 'bg-success/10 text-ok-ink' : 'bg-surface-container text-on-surface-variant'
                         }`}>
                           {rt.isActive ? 'Activa' : 'Pausada'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right font-card-title text-card-title text-warning">
+                      <td className="px-6 py-4 text-right font-card-title text-card-title text-warn-ink">
                         {cfmt(rt.amount)}
                       </td>
                       <td className="px-6 py-4 text-center">
@@ -550,11 +548,11 @@ export default function TransaccionesPage() {
           <div className="grid grid-cols-3 gap-4 mb-5">
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">INGRESOS REALES</p>
-              <p className="text-[20px] font-bold text-success">{cfmt(ingresos)}</p>
+              <p className="text-[20px] font-bold text-ok-ink">{cfmt(ingresos)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">GASTOS REALES</p>
-              <p className="text-[20px] font-bold text-danger">{cfmt(gastos)}</p>
+              <p className="text-[20px] font-bold text-danger-ink">{cfmt(gastos)}</p>
             </div>
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">% USO</p>
@@ -567,7 +565,7 @@ export default function TransaccionesPage() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <span className="font-caption text-caption text-on-surface-variant flex items-center gap-1.5">
-                  <ArrowUpRight size={12} className="text-success" /> Ingresos
+                  <ArrowUpRight size={12} className="text-ok-ink" /> Ingresos
                 </span>
                 <span className="font-caption text-caption text-on-surface">{cfmt(ingresos)}</span>
               </div>
@@ -578,7 +576,7 @@ export default function TransaccionesPage() {
             <div>
               <div className="flex justify-between items-center mb-1.5">
                 <span className="font-caption text-caption text-on-surface-variant flex items-center gap-1.5">
-                  <ArrowDownRight size={12} className="text-danger" /> Gastos
+                  <ArrowDownRight size={12} className="text-danger-ink" /> Gastos
                 </span>
                 <span className="font-caption text-caption text-on-surface">{cfmt(gastos)}</span>
               </div>
@@ -602,14 +600,16 @@ export default function TransaccionesPage() {
             <p className="font-caption text-caption opacity-70 text-advisory-text-dim">Diferencia proyectada vs real</p>
           </div>
           <div className="py-4">
-            <span className={`font-hero-title text-[38px] leading-tight ${disponible >= 0 ? 'text-advisory-text' : 'text-danger'}`}>
+            <span className={`font-hero-title fin-number text-[38px] leading-tight ${disponible >= 0 ? 'text-advisory-text' : 'text-danger-ink'}`}>
               {disponible >= 0 ? '+' : '-'}{cfmt(Math.abs(disponible))}
             </span>
           </div>
-          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-            <p className="font-formula-code text-formula-code text-advisory-text-dim">
-              STATUS: {thermoLabel.status}
-            </p>
+          <div className="bg-panel rounded-xl p-3 border border-border-light flex items-center justify-between gap-3">
+            <span className="text-xs font-medium text-on-surface-variant">Estado del presupuesto</span>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-bold ${thermoLabel.color}`}>
+              <span className={`w-2 h-2 rounded-full ${thermoLabel.bar}`} />
+              {STATUS_LABELS[thermoLabel.status] ?? thermoLabel.status}
+            </span>
           </div>
         </div>
       </div>
@@ -622,12 +622,12 @@ export default function TransaccionesPage() {
         <div className="p-4">
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-outline-variant, #e5e7eb)" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} width={50} />
-              <Tooltip formatter={(value: number) => cfmt(value)} />
-              <Bar dataKey="Ingresos" fill="#16a34a" radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Gastos" fill="#d97706" radius={[3, 3, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
+              <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={50} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(value: number) => cfmt(value)} />
+              <Bar dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
+              <Bar dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -744,7 +744,7 @@ export default function TransaccionesPage() {
                         <span className="ml-1 font-caption text-caption text-outline">({t.nombreTarjeta})</span>
                       )}
                     </td>
-                    <td className={`px-6 py-4 text-right font-card-title text-card-title ${isIncome ? 'text-primary' : 'text-warning'}`}>
+                    <td className={`px-6 py-4 text-right font-card-title text-card-title ${isIncome ? 'text-primary' : 'text-warn-ink'}`}>
                       {isIncome ? '+' : '-'}{cfmt(t.monto)}
                     </td>
                     <td className="px-6 py-4 text-center">
@@ -815,11 +815,11 @@ export default function TransaccionesPage() {
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {categoryBreakdown.map(([cat, total]) => (
               <div key={cat} className="bg-surface-container-low border border-border-light rounded-xl p-3 text-center">
-                <div className="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center text-danger mx-auto mb-2">
+                <div className="w-8 h-8 rounded-full bg-danger/10 flex items-center justify-center text-danger-ink mx-auto mb-2">
                   <CategoryIcon categoria={cat} />
                 </div>
                 <p className="font-caption text-caption text-on-surface-variant mb-1 truncate">{cat}</p>
-                <p className="font-card-title text-card-title text-danger">{cfmt(total)}</p>
+                <p className="font-card-title text-card-title text-danger-ink">{cfmt(total)}</p>
               </div>
             ))}
           </div>
@@ -1045,7 +1045,7 @@ export default function TransaccionesPage() {
               onClick={() => setRecurringForm({ ...recurringForm, isActive: !recurringForm.isActive })}
               className={`w-11 h-6 rounded-full transition-colors relative ${recurringForm.isActive ? 'bg-primary' : 'bg-outline-variant'}`}
             >
-              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${recurringForm.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+              <span className={`absolute top-0.5 w-5 h-5 bg-panel rounded-full transition-transform ${recurringForm.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
           </div>
 

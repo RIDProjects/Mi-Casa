@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery } from 'react-query';
 import { debtPayoffAPI } from '../services/api';
-import { TrendingDown, Award, AlertTriangle, RefreshCw } from 'lucide-react';
+import { TrendingDown, Award, AlertTriangle, RefreshCw, Banknote, Flame, Snowflake } from 'lucide-react';
 
 import { useCurrencyFormatter } from '../lib/currency';
 import { parseLocalDate } from '../lib/dates';
@@ -17,24 +17,24 @@ const fmtMonth = (months: number) => {
   return parts.join(' y ');
 };
 
-const STRATEGY_META: Record<string, { label: string; subtitle: string; color: string; icon: string }> = {
+const STRATEGY_META: Record<string, { label: string; subtitle: string; color: string; icon: JSX.Element }> = {
   minimum: {
     label: 'Solo mínimos',
     subtitle: 'Sin pago extra',
     color: 'border-outline-variant',
-    icon: '📉',
+    icon: <TrendingDown size={28} />,
   },
   avalanche: {
     label: 'Avalancha',
     subtitle: 'Mayor tasa primero',
-    color: 'border-blue-400 dark:border-blue-500',
-    icon: '🧊',
+    color: 'border-primary-container ',
+    icon: <Flame size={28} />,
   },
   snowball: {
     label: 'Bola de nieve',
     subtitle: 'Menor saldo primero',
-    color: 'border-purple-400 dark:border-purple-500',
-    icon: '⛄',
+    color: 'border-primary-container ',
+    icon: <Snowflake size={28} />,
   },
 };
 
@@ -101,7 +101,7 @@ export default function PayoffPage() {
 
       {isError ? (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <AlertTriangle size={40} className="text-danger" />
+          <AlertTriangle size={40} className="text-danger-ink" />
           <p className="text-on-surface-variant">Error al calcular estrategias</p>
           <button onClick={() => refetch()} className="btn-secondary flex items-center gap-2">
             <RefreshCw size={16} /> Reintentar
@@ -109,7 +109,7 @@ export default function PayoffPage() {
         </div>
       ) : !data && !isLoading ? (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">💸</div>
+          <div className="icon-blue !p-4 !rounded-2xl mb-4 inline-flex"><Banknote size={32} /></div>
           <h3 className="text-lg font-semibold text-on-surface">Sin deudas registradas</h3>
           <p className="text-sm text-on-surface-variant mt-1">Registra tarjetas y créditos para calcular estrategias de pago</p>
         </div>
@@ -134,17 +134,17 @@ export default function PayoffPage() {
                 >
                   {isRecommended && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="flex items-center gap-1 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      <span className="flex items-center gap-1 bg-primary-container text-white text-xs font-bold px-3 py-1 rounded-full">
                         <Award size={11} /> Recomendada
                       </span>
                     </div>
                   )}
-                  <div className="text-3xl mb-2">{meta.icon}</div>
+                  <div className="text-info-ink mb-2">{meta.icon}</div>
                   <h3 className="font-bold text-on-surface">{meta.label}</h3>
                   <p className="text-xs text-on-surface-variant mb-4">{meta.subtitle}</p>
 
                   {!feasible && (
-                    <p className="text-xs text-danger font-medium mb-3">
+                    <p className="text-xs text-danger-ink font-medium mb-3">
                       Con estos pagos la deuda no se termina de pagar: no alcanzan a cubrir los intereses.
                     </p>
                   )}
@@ -155,18 +155,18 @@ export default function PayoffPage() {
                     </div>
                     <div>
                       <p className="text-xs text-on-surface-variant">Total intereses</p>
-                      <p className="font-semibold text-danger text-sm">{cfmt(s.totalInterest ?? 0)}</p>
+                      <p className="font-semibold text-danger-ink text-sm">{cfmt(s.totalInterest ?? 0)}</p>
                     </div>
                     {key !== 'minimum' && monthsSaved > 0 && (
                       <div className="pt-2 border-t border-outline-variant">
-                        <p className="text-xs text-success font-medium">
+                        <p className="text-xs text-ok-ink font-medium">
                           {fmtMonth(monthsSaved)} menos que solo mínimos
                         </p>
                       </div>
                     )}
                     {key !== 'minimum' && interestSaved > 0 && (
                       <div>
-                        <p className="text-xs text-success font-medium">
+                        <p className="text-xs text-ok-ink font-medium">
                           Ahorrás {cfmt(interestSaved)} en intereses
                         </p>
                       </div>
@@ -186,7 +186,7 @@ export default function PayoffPage() {
               <div key={key} className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden mb-4">
                 <div className="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
                   <h2 className="font-label-upper text-label-upper text-on-surface-variant">
-                    {meta.icon} Orden de pago — {meta.label}
+                    Orden de pago — {meta.label}
                   </h2>
                 </div>
                 <div className="overflow-x-auto">
@@ -205,7 +205,7 @@ export default function PayoffPage() {
                         <tr key={d.id ?? i} className="hover:bg-surface-gray">
                           <td className="px-4 py-3 text-on-surface-variant font-bold">{i + 1}</td>
                           <td className="px-4 py-3 font-medium text-on-surface">{d.name}</td>
-                          <td className="px-4 py-3 text-right text-danger">{cfmt(d.balance ?? d.saldo ?? 0)}</td>
+                          <td className="px-4 py-3 text-right text-danger-ink">{cfmt(d.balance ?? d.saldo ?? 0)}</td>
                           <td className="px-4 py-3 text-right text-on-surface-variant">
                             {d.rate != null ? `${d.rate}%` : '—'}
                           </td>
