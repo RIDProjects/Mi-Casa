@@ -43,15 +43,15 @@ export default function StatCard({
   }
 
   return (
-    <div className="group bg-surface-container-lowest dark:bg-surface-container-low border border-border-light rounded-[14px] p-5 flex items-start gap-4 shadow-soft transition-all duration-200 hover:shadow-lift hover:-translate-y-0.5">
+    <div className="group bg-surface-container-lowest dark:bg-surface-container-low border border-border-light rounded-[14px] p-4 sm:p-5 flex flex-col sm:flex-row items-start gap-2.5 sm:gap-4 shadow-soft transition-all duration-200 hover:shadow-lift hover:-translate-y-0.5">
       {icon && (
         <div className={clsx('shrink-0 text-xl', iconColorMap[color])}>
           {icon}
         </div>
       )}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 w-full">
         <p className="font-label-upper text-label-upper text-on-surface-variant uppercase">{title}</p>
-        <p className={clsx('text-[24px] leading-tight font-bold mt-1.5 truncate fin-number', valueColorMap[color])}>{value}</p>
+        <p className={clsx('text-[20px] sm:text-[24px] leading-tight font-bold mt-1 sm:mt-1.5 truncate fin-number', valueColorMap[color])}>{value}</p>
         {subtitle && (
           <p className="font-caption text-caption text-outline mt-1">{subtitle}</p>
         )}

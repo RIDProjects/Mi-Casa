@@ -228,7 +228,7 @@ export default function PatrimonioPage() {
         <p className="text-sm font-semibold text-on-surface-variant uppercase tracking-wide mb-2">
           Patrimonio Neto {activeCode !== localCode ? `(en ${activeCode})` : ''}
         </p>
-        <p className={`text-5xl font-bold mb-4 ${netWorthPositive ? 'text-ok-ink ' : 'text-danger-ink '}`}>
+        <p className={`text-[1.7rem] sm:text-5xl font-bold fin-number mb-4 break-words ${netWorthPositive ? 'text-ok-ink ' : 'text-danger-ink '}`}>
           {netWorthPositive ? '+' : '-'}{currencySymbol}{fmt(Math.abs(netWorth))}
         </p>
         <div className="flex flex-wrap justify-center gap-6 text-sm">
@@ -449,7 +449,7 @@ function AssetSection({
   const total = assets.reduce((s, a) => s + Number(a.valorEstimado || 0), 0) / divider;
 
   return (
-    <div className="bg-panel rounded-xl border border-border-light shadow-sm overflow-hidden mb-4">
+    <div className="bg-panel rounded-xl border border-border-light shadow-sm overflow-x-auto mb-4">
       <div className="px-4 py-3 bg-surface-gray border-b border-border-light flex items-center justify-between">
         <h2 className="font-semibold text-on-surface">
           <span className="inline-flex items-center gap-2"><span className="text-info-ink">{icon}</span>{title}</span>

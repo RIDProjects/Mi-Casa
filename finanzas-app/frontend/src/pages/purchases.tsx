@@ -182,14 +182,14 @@ export default function PurchasesPage() {
   return (
     <Layout>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <ShoppingCart size={24} /> Lista de la Compra
           </h1>
           <p className="text-on-surface-variant mt-1">Control de compras del mercado por mes</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => { setConfigForm({ budget: Number(selectedList?.budget) || 0 }); setShowConfigModal(true); }}
             className="btn-secondary flex items-center gap-2"

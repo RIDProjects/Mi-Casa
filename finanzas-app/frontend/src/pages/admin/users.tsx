@@ -187,7 +187,7 @@ export default function UsersPage() {
       </div>
 
       {/* ── Tabla ── */}
-      <div className="bg-panel rounded-xl border border-border-light overflow-hidden">
+      <div className="bg-panel rounded-xl border border-border-light overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr>

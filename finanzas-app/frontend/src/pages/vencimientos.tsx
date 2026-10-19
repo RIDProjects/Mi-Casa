@@ -50,7 +50,7 @@ export default function VencimientosPage() {
 
   return (
     <Layout>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-page-title text-page-title text-on-surface flex items-center gap-2">
             <Calendar size={24} /> Próximos Vencimientos

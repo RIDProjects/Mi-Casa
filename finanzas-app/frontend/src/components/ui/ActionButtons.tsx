@@ -22,7 +22,7 @@ export default function ActionButtons({
           onClick={onMarkPaid}
           aria-label="Marcar como pagada"
           title="Marcar como pagada"
-          className="text-ok-ink p-2 rounded-lg hover:bg-success/10 transition-colors"
+          className="text-ok-ink p-2.5 rounded-lg hover:bg-success/10 transition-colors"
         >
           <CheckCircle size={15} />
         </button>
@@ -32,7 +32,7 @@ export default function ActionButtons({
           onClick={onEdit}
           aria-label="Editar"
           title="Editar"
-          className="text-info-ink p-2 rounded-lg hover:bg-primary-container/10 transition-colors"
+          className="text-info-ink p-2.5 rounded-lg hover:bg-primary-container/10 transition-colors"
         >
           <Edit2 size={15} />
         </button>
@@ -42,7 +42,7 @@ export default function ActionButtons({
           onClick={onDelete}
           aria-label="Eliminar"
           title="Eliminar"
-          className="text-danger-ink p-2 rounded-lg hover:bg-danger/10 transition-colors"
+          className="text-danger-ink p-2.5 rounded-lg hover:bg-danger/10 transition-colors"
         >
           <Trash2 size={15} />
         </button>

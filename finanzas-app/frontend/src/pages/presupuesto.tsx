@@ -376,7 +376,7 @@ export default function PresupuestoPage() {
   if (isBudgetsError || isBudgetError) {
     return (
       <Layout>
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div>
             <h1 className="font-page-title text-page-title text-on-surface">Presupuesto</h1>
             <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planifica tus ingresos y gastos mensuales</p>
@@ -393,7 +393,7 @@ export default function PresupuestoPage() {
   if (!activeBudgetId || !budget) {
     return (
       <Layout>
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <div>
             <h1 className="font-page-title text-page-title text-on-surface">Presupuesto</h1>
             <p className="font-body-default text-body-default text-on-surface-variant mt-1">Planifica tus ingresos y gastos mensuales</p>
@@ -466,7 +466,7 @@ export default function PresupuestoPage() {
   return (
     <Layout>
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
         <div>
           <h1 className="font-page-title text-page-title text-on-surface">{budget.name}</h1>
           <p className="font-body-default text-body-default text-on-surface-variant mt-1">
@@ -479,21 +479,21 @@ export default function PresupuestoPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INGRESOS/MES</p>
-          <p className="font-section-title text-[22px] text-ok-ink">${fmt(summary.totalMonthlyIncome)}</p>
+          <p className="font-section-title text-lg sm:text-[22px] text-ok-ink">${fmt(summary.totalMonthlyIncome)}</p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">GASTOS/MES</p>
-          <p className="font-section-title text-[22px] text-danger-ink">${fmt(summary.totalMonthlyExpenses)}</p>
+          <p className="font-section-title text-lg sm:text-[22px] text-danger-ink">${fmt(summary.totalMonthlyExpenses)}</p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">DISPONIBLE/MES</p>
-          <p className={`font-section-title text-[22px] ${summary.available >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
+          <p className={`font-section-title text-lg sm:text-[22px] ${summary.available >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
             ${fmt(Math.abs(summary.available))}
           </p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">META DE AHORRO</p>
-          <p className="font-section-title text-[22px] text-primary">${fmt(savingsMonthly)}</p>
+          <p className="font-section-title text-lg sm:text-[22px] text-primary">${fmt(savingsMonthly)}</p>
         </div>
       </div>
 
@@ -518,7 +518,7 @@ export default function PresupuestoPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
 
         {/* LEFT (2 cols): Tabla de Ingresos */}
-        <div className="xl:col-span-2 bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+        <div className="xl:col-span-2 bg-surface-container-lowest rounded-xl border border-border-light overflow-x-auto">
           <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
             <h3 className="font-section-title text-section-title text-on-surface">Ingresos Promedio Mensuales</h3>
             <button

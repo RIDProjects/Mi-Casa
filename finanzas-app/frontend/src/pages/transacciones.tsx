@@ -352,7 +352,7 @@ export default function TransaccionesPage() {
             Registro mensual de ingresos y gastos
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="file"
             accept=".csv"
@@ -362,19 +362,19 @@ export default function TransaccionesPage() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-border-light text-on-surface-variant hover:bg-surface-gray rounded-xl transition-colors"
+            className="btn-secondary"
           >
             <Upload size={15} /> Importar
           </button>
           <button
             onClick={() => exportTransactionsCSV(year, month)}
-            className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-border-light text-on-surface-variant hover:bg-surface-gray rounded-xl transition-colors"
+            className="btn-secondary"
           >
             <Download size={15} /> Exportar
           </button>
           <button
             onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
-            className="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-section-title text-section-title transition-opacity hover:opacity-90"
+            className="btn-primary"
           >
             <Plus size={18} /> Nueva transacción
           </button>
@@ -420,20 +420,20 @@ export default function TransaccionesPage() {
               <button
                 onClick={() => generateMut.mutate()}
                 disabled={generateMut.isLoading}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-surface-container-lowest border border-border-light text-on-surface-variant hover:bg-surface-gray rounded-xl transition-colors disabled:opacity-50"
+                className="btn-secondary"
               >
                 <Zap size={15} /> {generateMut.isLoading ? 'Generando...' : `Generar para ${MONTH_NAMES[month - 1]}`}
               </button>
               <button
                 onClick={() => { setRecurringForm(defaultRecurringForm); setEditRecurringItem(null); setShowRecurringModal(true); }}
-                className="flex items-center gap-2 bg-primary-container text-on-primary-container px-4 py-2.5 rounded-xl font-section-title text-section-title transition-opacity hover:opacity-90"
+                className="btn-primary"
               >
                 <Plus size={18} /> Nueva recurrente
               </button>
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden">
+          <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
@@ -545,7 +545,7 @@ export default function TransaccionesPage() {
           </div>
 
           {/* KPI stats */}
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5">
             <div>
               <p className="font-label-upper text-label-upper text-on-surface-variant uppercase mb-1">INGRESOS REALES</p>
               <p className="text-[20px] font-bold text-ok-ink">{cfmt(ingresos)}</p>
@@ -669,7 +669,7 @@ export default function TransaccionesPage() {
       </div>
 
       {/* ── Transactions table ── */}
-      <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-hidden mb-6">
+      <div className="bg-surface-container-lowest border border-border-light rounded-xl overflow-x-auto mb-6">
         <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
           <h3 className="font-section-title text-section-title text-on-surface">
             {MONTH_NAMES[month - 1]} {year}
@@ -763,7 +763,7 @@ export default function TransaccionesPage() {
 
       {/* ── Pagination ── */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <span className="font-caption text-caption text-on-surface-variant">
             Página {currentPage} de {totalPages}
           </span>

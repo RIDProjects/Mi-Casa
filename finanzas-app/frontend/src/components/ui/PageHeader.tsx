@@ -17,7 +17,7 @@ export default function PageHeader({ title, subtitle, action }: PageHeaderProps)
           <p className="font-body-default text-body-default text-on-surface-variant mt-1.5 max-w-2xl">{subtitle}</p>
         )}
       </div>
-      {action && <div className="flex items-center gap-3 shrink-0">{action}</div>}
+      {action && <div className="flex flex-wrap items-center gap-3 sm:shrink-0">{action}</div>}
     </div>
   );
 }
