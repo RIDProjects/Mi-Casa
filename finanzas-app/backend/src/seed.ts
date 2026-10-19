@@ -85,10 +85,14 @@ export async function seed() {
     console.log('✅ House Admin role created');
   }
 
-  // Create admin user
+  // Create admin user. The password must come from the environment: a
+  // hardcoded default ended up valid in production.
   const adminExists = await userRepo.findOne({ where: { email: 'admin@finanzas.com' } });
-  if (!adminExists) {
-    const password = await bcrypt.hash('Admin123!', 12);
+  const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+  if (!adminExists && !adminPassword) {
+    console.warn('⚠️ SEED_ADMIN_PASSWORD not set: skipping admin user creation');
+  } else if (!adminExists) {
+    const password = await bcrypt.hash(adminPassword, 12);
     const admin = userRepo.create({
       name: 'Administrador',
       email: 'admin@finanzas.com',

@@ -211,6 +211,7 @@ VAPID_EMAIL=mailto:admin@mi-casa.app
 | `APP_TIMEZONE` | Zona horaria para calcular "hoy" y los límites de mes (default `America/Havana`) |
 | `TRUST_PROXY_HOPS` | Saltos de proxy confiables para obtener la IP real (default `1`; `0` lo desactiva) |
 | `SEED` | `true` solo para crear los roles y permisos base en una DB vacía. Sin roles, el registro falla. Déjala sin definir o en `false` después |
+| `SEED_ADMIN_PASSWORD` | Contraseña del admin global (`admin@finanzas.com`) que crea el seed. Si no se define, el seed no crea ese usuario. No hay contraseña por defecto |
 | `RESEND_API_KEY`, `RESEND_FROM` | Envío de emails (invitaciones, alertas y recordatorios a los administradores de la casa) vía Resend |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL` | Notificaciones push web |
 
