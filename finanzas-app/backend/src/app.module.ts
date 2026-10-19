@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { HousesModule } from './houses/houses.module';
+import { AccountModule } from './account/account.module';
 import { DebtsModule } from './debts/debts.module';
 import { PurchasesModule } from './purchases/purchases.module';
 import { EmergencyFundModule } from './emergency-fund/emergency-fund.module';
@@ -68,7 +69,7 @@ if (process.env.NODE_ENV === 'production') {
         connectionTimeoutMillis: 5000,
       },
     }),
-    AuthModule, UsersModule, RolesModule, HousesModule, DebtsModule,
+    AuthModule, UsersModule, RolesModule, HousesModule, AccountModule, DebtsModule,
     PurchasesModule, EmergencyFundModule, NotificationsModule,
     BudgetModule, TransactionsModule, SavingsGoalsModule,
     CreditCardsModule, LoansModule, NetWorthModule, HouseholdExpensesModule,
