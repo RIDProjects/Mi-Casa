@@ -41,6 +41,10 @@
     --ds-shadow-sm:        0 1px 2px rgba(16,24,40,0.05);
     --ds-shadow-md:        0 1px 3px rgba(16,24,40,0.06), 0 6px 16px -4px rgba(16,24,40,0.08);
     --ds-ring:             0 0 0 3px rgba(37,99,235,0.18);
+    --ds-grid:             rgba(37,99,235,0.055);
+    --ds-glow:             rgba(37,99,235,0.10);
+    --ds-chart-line:       rgba(37,99,235,0.16);
+    --ds-chart-fill:       rgba(22,163,74,0.07);
     --ease-premium:        cubic-bezier(0.23, 1, 0.32, 1);
     --ease-drawer:         cubic-bezier(0.32, 0.72, 0, 1);
   }
@@ -78,6 +82,10 @@
     --ds-shadow-sm:        0 1px 2px rgba(0,0,0,0.3);
     --ds-shadow-md:        0 1px 3px rgba(0,0,0,0.35), 0 8px 20px -6px rgba(0,0,0,0.45);
     --ds-ring:             0 0 0 3px rgba(180,197,255,0.22);
+    --ds-grid:             rgba(180,197,255,0.045);
+    --ds-glow:             rgba(37,99,235,0.22);
+    --ds-chart-line:       rgba(180,197,255,0.18);
+    --ds-chart-fill:       rgba(74,222,128,0.06);
   }
 
   * {
@@ -285,6 +293,34 @@
   .dark table tbody tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
   .dark table tbody tr:hover td { background: var(--ds-surface-container); }
 
+
+  /* ── Finance backdrop ──────────────────────────────────────
+     Ledger grid fading downward + blue glow (::before) and a
+     faint rising chart line (::after). Fixed, behind content. */
+  .app-bg { position: relative; background-color: var(--ds-surface); }
+  .app-bg::before, .app-bg::after {
+    content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .app-bg::before {
+    background-image:
+      radial-gradient(900px 380px at 85% -8%, var(--ds-glow), transparent 65%),
+      linear-gradient(var(--ds-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--ds-grid) 1px, transparent 1px);
+    background-size: auto, 32px 32px, 32px 32px;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 35%, transparent 90%);
+            mask-image: linear-gradient(180deg, #000 0%, #000 35%, transparent 90%);
+  }
+  .app-bg::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 300' preserveAspectRatio='none'%3E%3Cpath d='M0 260 L90 235 L170 248 L260 190 L340 205 L430 140 L520 160 L610 90 L700 110 L800 40 L800 300 L0 300 Z' fill='%2316a34a' fill-opacity='0.55'/%3E%3Cpath d='M0 260 L90 235 L170 248 L260 190 L340 205 L430 140 L520 160 L610 90 L700 110 L800 40' fill='none' stroke='%232563eb' stroke-width='3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right bottom;
+    background-size: min(640px, 60vw) auto;
+    opacity: 0.11;
+    -webkit-mask-image: radial-gradient(ellipse 80% 90% at 100% 100%, #000 0%, transparent 72%);
+            mask-image: radial-gradient(ellipse 80% 90% at 100% 100%, #000 0%, transparent 72%);
+  }
+  .dark .app-bg::after { opacity: 0.16; }
+
   /* ── Page shell helpers ─────────────────────────────────── */
   .section-heading {
     font-size: 15px; font-weight: 700; letter-spacing: -0.01em; color: var(--ds-on-surface);
@@ -312,6 +348,7 @@
 /* ── Print ────────────────────────────────────────────────── */
 @media print {
   nav, aside, button, .no-print { display: none !important; }
+  .app-bg::before, .app-bg::after { display: none !important; }
   main  { margin: 0 !important; padding: 0 !important; }
   body  { background: #ffffff !important; color: #111c2d !important; }
   .card { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }

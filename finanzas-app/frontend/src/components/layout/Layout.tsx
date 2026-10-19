@@ -33,9 +33,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-surface text-on-surface">
+    <div className="app-bg flex min-h-screen text-on-surface">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="relative z-[1] flex-1 flex flex-col overflow-hidden">
         {/* Mobile top bar */}
         <div className="md:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-surface-container-lowest/90 dark:bg-surface-container-low/90 backdrop-blur border-b border-border-light flex-shrink-0">
           <button

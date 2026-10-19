@@ -213,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop */}
-      <div className="hidden md:flex w-64 min-h-screen flex-shrink-0">
+      <div className="hidden md:flex relative z-[1] w-64 min-h-screen flex-shrink-0">
         {sidebarContent}
       </div>
 
