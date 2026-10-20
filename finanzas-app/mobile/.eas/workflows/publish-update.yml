@@ -2,6 +2,7 @@
 # through the Expo GitHub app connected to this repository. See finanzas-app/docs/deploy.md.
 # OTA ships JS and assets only: a change that adds a native module needs a new
 # `eas build` first (runtimeVersion policy is `appVersion`).
+# Base directory in expo.dev -> GitHub settings must be finanzas-app/mobile.
 # EXPO_PUBLIC_API_URL comes from the EAS `production` environment variables.
 name: Publish update
 
