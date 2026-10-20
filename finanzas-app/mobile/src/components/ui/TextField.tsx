@@ -27,6 +27,8 @@ const createStyles = (c: ThemeColors) => ({
     minHeight: 48,
     gap: 8,
   },
+  fieldMultiline: { alignItems: 'flex-start' as const },
+  iconMultiline: { marginTop: 15 },
   focused: { borderColor: c.brand, backgroundColor: c.panel },
   invalid: { borderColor: c.dangerInk },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: c.onSurface, paddingVertical: 10 },
@@ -43,8 +45,12 @@ export default function TextField({ label, error, icon, passwordToggle, containe
   return (
     <View style={containerStyle}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
-      <View style={[styles.field, focused && styles.focused, !!error && styles.invalid]}>
-        {icon ? <Ionicons name={icon} size={18} color={focused ? colors.primary : colors.outline} /> : null}
+      <View style={[styles.field, rest.multiline && styles.fieldMultiline, focused && styles.focused, !!error && styles.invalid]}>
+        {icon ? (
+          <View style={rest.multiline ? styles.iconMultiline : undefined}>
+            <Ionicons name={icon} size={18} color={focused ? colors.primary : colors.outline} />
+          </View>
+        ) : null}
         <TextInput
           {...rest}
           secureTextEntry={secure}
