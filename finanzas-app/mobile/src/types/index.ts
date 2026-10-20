@@ -78,15 +78,31 @@ export const TRANSACTION_CATEGORIES: TransactionCategory[] = [
   'Otros',
 ];
 
+// Backend (transactions.service.ts `toFrontend`) returns Spanish field names.
+// `monto` comes from a decimal column and may arrive as a string; `categoria`
+// is one of the web's expense categories (free string, empty for income).
 export interface Transaction {
   id: string;
   tipo: TransactionType;
   concepto: string;
-  categoria: TransactionCategory;
+  categoria?: string | null;
+  monto: number | string;
+  metodoPago?: PaymentMethod | null;
+  nombreTarjeta?: string | null;
+  fecha: string;
+  notas?: string | null;
+  createdAt?: string;
+}
+
+export interface TransactionPayload {
+  tipo: TransactionType;
+  concepto: string;
+  categoria: string;
   monto: number;
   metodoPago: PaymentMethod;
+  nombreTarjeta: string;
   fecha: string;
-  createdAt: string;
+  notas: string;
 }
 
 export interface CreateTransactionDto {
@@ -381,6 +397,19 @@ export interface CreditCard {
   advisory: string;
 }
 
+// Body of POST/PUT /credit-cards (CreateCreditCardDto). fechaCorte/fechaPago
+// are day-of-month strings.
+export interface CreditCardPayload {
+  banco: string;
+  nombreTarjeta: string;
+  tasaAnual: number;
+  saldoActual: number;
+  lineaCredito: number;
+  fechaCorte?: string;
+  fechaPago?: string;
+  tipoPago: CardPaymentType;
+}
+
 // ─── Cuotas ──────────────────────────────────────────────────────────────────
 
 export interface Cuota {
@@ -397,4 +426,103 @@ export interface Cuota {
   interestRate: number;
   createdAt: string;
   updatedAt: string;
+  // Computed by the backend (CuotasService.computeFields).
+  remainingInstallments?: number;
+  remainingAmount?: number;
+  nextPaymentDate?: string;
+  isCompleted?: boolean;
+}
+
+// Body of POST/PUT /cuotas (CreateCuotaDto). The backend reads cardLastFour
+// but returns the column as cardLast4.
+export interface CuotaPayload {
+  description: string;
+  store?: string;
+  totalAmount: number;
+  totalInstallments: number;
+  installmentAmount: number;
+  startDate: string;
+  withInterest: boolean;
+  interestRate?: number;
+  cardLastFour?: string;
+}
+
+// GET /emergency-fund (EmergencyFundService.findAll). Decimal columns can
+// arrive as strings.
+export interface EmergencyFundCategory {
+  id?: string;
+  name: string;
+  monthlyAmount: number | string;
+}
+
+export interface EmergencyFundCalculations {
+  totalMonthlyExpenses: number;
+  optimalFund: number;
+  minimumFund: number;
+  monthlySavingsRequired: number;
+  monthsToOptimal: number;
+}
+
+export interface EmergencyFund {
+  id: string;
+  name: string;
+  targetMonths: number;
+  minimumMonths: number;
+  savingPeriodMonths: number;
+  currentBalance?: number | string | null;
+  categories?: EmergencyFundCategory[];
+  calculations?: EmergencyFundCalculations;
+}
+
+export type EmergencyCoverageStatus = 'safe' | 'low' | 'critical';
+
+// GET /emergency-fund/coverage (balance of the latest fund vs. 3-month average expenses).
+export interface EmergencyFundCoverage {
+  balance: number;
+  monthlyExpenses: number;
+  monthsCovered: number;
+  targetMonths: number;
+  status: EmergencyCoverageStatus;
+}
+
+export type NetWorthAssetType = 'physical' | 'cash';
+
+// Asset as returned by GET /net-worth (NetWorthService.toFrontend).
+export interface NetWorthAsset {
+  id: string;
+  nombre: string;
+  valorEstimado: number | string;
+  assetType: NetWorthAssetType;
+  notas?: string | null;
+}
+
+// GET /net-worth. totalDebts is whatever the client passed as query params.
+export interface NetWorthSummary {
+  physicalAssets: number;
+  cashAssets: number;
+  totalAssets: number;
+  totalDebts: number;
+  netWorth: number;
+  assets: NetWorthAsset[];
+}
+
+// A debt counted against the net worth (credit card balance or loan debt).
+export interface NetWorthLiability {
+  id: string;
+  nombre: string;
+  monto: number;
+  kind: 'card' | 'loan';
+}
+
+export interface NetWorthOverview {
+  summary: NetWorthSummary;
+  liabilities: NetWorthLiability[];
+}
+
+// GET /net-worth/history (most recent month first); month is YYYY-MM-DD.
+export interface NetWorthHistoryPoint {
+  month: string;
+  netWorth: number;
+  assets: number;
+  liabilities: number;
 }

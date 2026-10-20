@@ -1,14 +1,21 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { DebtsStackParamList } from './types';
+import { MasStackParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
+import MasScreen from '../screens/MasScreen';
 import DebtsSummaryScreen from '../screens/debts/DebtsSummaryScreen';
 import AddDebtScreen from '../screens/debts/AddDebtScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 
-const Stack = createNativeStackNavigator<DebtsStackParamList>();
+const Stack = createNativeStackNavigator<MasStackParamList>();
 
-export default function DebtsStack() {
+/**
+ * Stack of the "Más" tab: the hub plus the screens that used to be tabs (Deudas, Perfil).
+ * The native header only provides the back arrow there (empty title): both screens keep
+ * their own large title in the body.
+ */
+export default function MasStack() {
   const { colors } = useTheme();
   return (
     <Stack.Navigator
@@ -20,21 +27,17 @@ export default function DebtsStack() {
         contentStyle: { backgroundColor: colors.surface },
       }}
     >
-      {/* DebtsSummaryScreen ya renderiza su propio header — sin header nativo */}
-      <Stack.Screen
-        name="DebtsSummary"
-        component={DebtsSummaryScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name="MasHome" component={MasScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="DebtsSummary" component={DebtsSummaryScreen} options={{ headerTitle: '' }} />
       <Stack.Screen
         name="AddDebt"
         component={AddDebtScreen}
         options={({ route }) => ({
           presentation: 'modal',
-          headerShown: true,
           headerTitle: route.params?.debtId ? 'Editar Deuda' : 'Registrar Deuda',
         })}
       />
+      <Stack.Screen name="Perfil" component={ProfileScreen} options={{ headerTitle: '' }} />
     </Stack.Navigator>
   );
 }

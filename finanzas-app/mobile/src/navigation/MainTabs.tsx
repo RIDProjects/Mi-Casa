@@ -6,10 +6,9 @@ import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
 import DashboardScreen from '../screens/DashboardScreen';
 import GastosStack from './GastosStack';
-import BudgetScreen from '../screens/BudgetScreen';
-import MetasScreen from '../screens/MetasScreen';
-import DebtsStack from './DebtsStack';
-import ProfileScreen from '../screens/ProfileScreen';
+import BudgetStack from './BudgetStack';
+import MetasStack from './MetasStack';
+import MasStack from './MasStack';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -20,8 +19,7 @@ const ICONS: Record<TabName, { outline: keyof typeof Ionicons.glyphMap; filled: 
   Expenses:    { outline: 'cart-outline',       filled: 'cart' },
   Presupuesto: { outline: 'pie-chart-outline',  filled: 'pie-chart' },
   Metas:       { outline: 'trophy-outline',     filled: 'trophy' },
-  Deudas:      { outline: 'people-outline',     filled: 'people' },
-  Perfil:      { outline: 'person-outline',     filled: 'person' },
+  Mas:         { outline: 'ellipsis-horizontal-circle-outline', filled: 'ellipsis-horizontal-circle' },
 };
 
 const TAB_LABELS: Record<TabName, string> = {
@@ -29,8 +27,7 @@ const TAB_LABELS: Record<TabName, string> = {
   Expenses:    'Gastos',
   Presupuesto: 'Presupuesto',
   Metas:       'Metas',
-  Deudas:      'Deudas',
-  Perfil:      'Perfil',
+  Mas:         'Más',
 };
 
 export default function MainTabs() {
@@ -68,10 +65,9 @@ export default function MainTabs() {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Expenses" component={GastosStack} />
-      <Tab.Screen name="Presupuesto" component={BudgetScreen} />
-      <Tab.Screen name="Metas" component={MetasScreen} />
-      <Tab.Screen name="Deudas" component={DebtsStack} />
-      <Tab.Screen name="Perfil" component={ProfileScreen} />
+      <Tab.Screen name="Presupuesto" component={BudgetStack} />
+      <Tab.Screen name="Metas" component={MetasStack} />
+      <Tab.Screen name="Mas" component={MasStack} />
     </Tab.Navigator>
   );
 }
