@@ -38,6 +38,17 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
+      - name: Check Railway token
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::RAILWAY_TOKEN is empty in GitHub Environment '$DEPLOY_ENV' (environment secret missing, empty, or not visible to this job)"
+            exit 1
+          fi
+          echo "RAILWAY_TOKEN present (length ${#RAILWAY_TOKEN})"
+          # A project token is scoped to one environment; this proves it is valid and is the right type.
+          railway status --json | jq -r '"token ok -> project \(.name), environments: \([.environments.edges[].node.name]|join(","))"' \
+            || { echo "::error::RAILWAY_TOKEN was rejected by Railway (it must be a *project* token created for the '$DEPLOY_ENV' environment)"; exit 1; }
+
       # The image no longer runs migrations in CMD. If the environment lacks the
       # pre-deploy command, a deploy would silently skip them: refuse instead.
       - name: Assert pre-deploy migration step is configured
