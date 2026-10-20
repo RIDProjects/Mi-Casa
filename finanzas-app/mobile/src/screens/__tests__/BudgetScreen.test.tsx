@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import BudgetScreen from '../BudgetScreen';
@@ -12,9 +13,13 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: any) => children,
 }));
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
-jest.mock('../../services/apiClient', () => ({ __esModule: true, default: { get: jest.fn() } }));
+jest.mock('../../services/apiClient', () => ({ __esModule: true, default: { get: jest.fn(), post: jest.fn() } }));
+
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: mockNavigate }) }));
 
 const mockGet = apiClient.get as jest.Mock;
+const mockPost = apiClient.post as jest.Mock;
 
 const exp = (id: string, amount: number, periodicity: string) => ({
   id, name: id, amount, periodicity, isFixed: true, isCreditCard: false, isAntExpense: false,
@@ -24,6 +29,10 @@ const budget = (over: any = {}) => ({
   id: 'b1',
   name: 'Hogar',
   year: 2026,
+  incomeSources: [
+    { id: 'i1', name: 'Sueldo', type: 'salary', amount: 300 },
+    { id: 'i2', name: 'Extra', type: 'extras', amount: 100 },
+  ],
   categories: [
     { id: 'c1', name: 'Servicios', sortOrder: 0, isDefault: false, expenses: [exp('e1', 300, 'quarterly'), exp('e2', 50, 'monthly')] },
     { id: 'c2', name: 'Seguros', sortOrder: 1, isDefault: false, expenses: [exp('e3', 120, 'annual')] },
@@ -37,8 +46,10 @@ const budget = (over: any = {}) => ({
   ...over,
 });
 
+let client: QueryClient;
 const renderBudget = () => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  jest.spyOn(client, 'invalidateQueries');
   return render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
@@ -109,5 +120,66 @@ describe('BudgetScreen', () => {
     await waitFor(() => expect(mockGet.mock.calls.length).toBeGreaterThan(before));
     expect(await screen.findByText('Hogar — 2026')).toBeTruthy();
     expect(screen.queryByText('Algo salió mal')).toBeNull();
+  });
+
+  it('opens the income sources screen from the Ingresos card', async () => {
+    mockGet.mockResolvedValue({ data: [budget()] });
+    renderBudget();
+    expect(await screen.findByText('Ingresos')).toBeTruthy();
+    expect(screen.getByText('2 fuentes')).toBeTruthy();
+    fireEvent.press(screen.getByText('Ingresos'));
+    expect(mockNavigate).toHaveBeenCalledWith('IncomeSources');
+  });
+
+  it('opens the category detail when a category card is tapped', async () => {
+    mockGet.mockResolvedValue({ data: [budget()] });
+    renderBudget();
+    fireEvent.press(await screen.findByText('Seguros'));
+    expect(mockNavigate).toHaveBeenCalledWith('CategoryDetail', { categoryId: 'c2' });
+  });
+
+  it('validates the new category name without calling the API', async () => {
+    mockGet.mockResolvedValue({ data: [budget()] });
+    renderBudget();
+    await screen.findByText('Servicios');
+    fireEvent.press(screen.getByText('Nueva categoría'));
+    fireEvent.press(screen.getByText('Guardar'));
+    expect(await screen.findByText('Ingresa un nombre.')).toBeTruthy();
+    expect(mockPost).not.toHaveBeenCalled();
+  });
+
+  it('creates a category and invalidates the budget and summary queries', async () => {
+    mockGet.mockResolvedValue({ data: [budget()] });
+    mockPost.mockResolvedValue({ data: {} });
+    renderBudget();
+    await screen.findByText('Servicios');
+    fireEvent.press(screen.getByText('Nueva categoría'));
+    fireEvent.changeText(screen.getByLabelText('Nombre de la categoría'), ' Transporte ');
+    fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(mockPost).toHaveBeenCalledWith('/budget/b1/categories', { name: 'Transporte' }));
+    await waitFor(() => {
+      expect(client.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['budget'] });
+      expect(client.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['summary'] });
+    });
+  });
+
+  it('keeps the form and alerts when the server rejects the category', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    mockGet.mockResolvedValue({ data: [budget()] });
+    mockPost.mockRejectedValue({ response: { data: { message: 'Nombre duplicado' } } });
+    renderBudget();
+    await screen.findByText('Servicios');
+    fireEvent.press(screen.getByText('Nueva categoría'));
+    fireEvent.changeText(screen.getByLabelText('Nombre de la categoría'), 'Casa');
+    fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() => expect(alertSpy).toHaveBeenCalledWith('Error', 'Nombre duplicado'));
+    expect(screen.getByLabelText('Nombre de la categoría').props.value).toBe('Casa');
+  });
+
+  it('does not offer to add a category when there is no budget', async () => {
+    mockGet.mockResolvedValue({ data: [] });
+    renderBudget();
+    await screen.findByText('Sin presupuesto activo');
+    expect(screen.queryByText('Nueva categoría')).toBeNull();
   });
 });

@@ -1,36 +1,21 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
-import { budgetService } from '../services/budget.service';
-import { BudgetCategory, Periodicity } from '../types';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BudgetCategory } from '../types';
+import { BudgetStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/currency';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
 import { fonts, radius, Tone, toneInk, toneTint } from '../theme/tokens';
 import type { ThemeColors } from '../theme/tokens';
-import { Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
+import { ActionBar, Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
+import CategoryNameModal from './budget/CategoryNameModal';
+import { categoryMonthlyTotal } from './budget/shared';
+import { useBudgetQuery } from './budget/useBudgetQuery';
 
 const fmt = formatMoney;
-
-// Mirrors backend PERIODICITY_FACTOR (backend/src/budget/budget.service.ts)
-const PERIODICITY_FACTOR: Record<Periodicity, number> = {
-  daily: 1 / 30,
-  weekly: 12 / 52,
-  biweekly: (12 * 15) / 365,
-  monthly: 1,
-  bimonthly: 2,
-  quarterly: 3,
-  fourmonthly: 4,
-  semiannual: 6,
-  annual: 12,
-};
-
-const toMonthly = (amount: number, periodicity: Periodicity) =>
-  Number(amount) / PERIODICITY_FACTOR[periodicity];
-
-const categoryMonthlyTotal = (cat: BudgetCategory) =>
-  cat.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -81,15 +66,23 @@ const createStyles = (c: ThemeColors) =>
     catTotal: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15 },
     catFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
     catFooterText: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    flex: { flex: 1 },
+    scrollContent: { padding: 16, paddingBottom: 32, gap: 14 },
+    incomeRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    incomeIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    incomeText: { flex: 1, gap: 2 },
+    incomeTitle: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 15 },
+    incomeMeta: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    incomeTotal: { fontFamily: fonts.title, fontSize: 16 },
   });
 
-function CategoryCard({ cat, total }: { cat: BudgetCategory; total: number }) {
+function CategoryCard({ cat, total, onPress }: { cat: BudgetCategory; total: number; onPress: () => void }) {
   const styles = useThemedStyles(createStyles);
   const monthlyTotal = categoryMonthlyTotal(cat);
   const share = total > 0 ? monthlyTotal / total : 0;
 
   return (
-    <Card style={styles.catCard}>
+    <Card style={styles.catCard} onPress={onPress}>
       <View style={styles.catHeader}>
         <Text style={styles.catName} numberOfLines={1}>{cat.name}</Text>
         <Text style={styles.catTotal}>{fmt(monthlyTotal)}/mes</Text>
@@ -118,17 +111,9 @@ function SkeletonBlocks() {
 export default function BudgetScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const {
-    data: budget,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ['budget'],
-    queryFn: budgetService.getCurrent,
-    staleTime: 0,
-    retry: 1,
-  });
+  const navigation = useNavigation<NativeStackNavigationProp<BudgetStackParamList>>();
+  const [addingCategory, setAddingCategory] = useState(false);
+  const { data: budget, isLoading, isError, refetch } = useBudgetQuery();
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
@@ -192,10 +177,20 @@ export default function BudgetScreen() {
   const usedPct = Math.round(usedRatio * 100);
   const heroTone: Tone = overBudget ? 'danger' : usedRatio > 0.8 ? 'warn' : 'ok';
   const categories = budget.categories ?? [];
+  const incomeSources = budget.incomeSources ?? [];
+  const incomeSourcesTotal = incomeSources.reduce((sum, i) => sum + Number(i.amount), 0);
   const categoriesTotal = categories.reduce((s, cat) => s + categoryMonthlyTotal(cat), 0);
 
   return (
-    <Screen refreshing={refreshing} onRefresh={onRefresh}>
+    <Screen scroll={false}>
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} colors={[colors.brand]} />
+        }
+      >
       {header}
 
       {overBudget && (
@@ -251,16 +246,43 @@ export default function BudgetScreen() {
         </Card>
       </Reveal>
 
+      <Reveal index={3}>
+        <Card onPress={() => navigation.navigate('IncomeSources')}>
+          <View style={styles.incomeRow}>
+            <View style={[styles.incomeIcon, { backgroundColor: toneTint(colors, 'ok') }]}>
+              <Ionicons name="wallet-outline" size={19} color={toneInk(colors, 'ok')} />
+            </View>
+            <View style={styles.incomeText}>
+              <Text style={styles.incomeTitle}>Ingresos</Text>
+              <Text style={styles.incomeMeta}>
+                {incomeSources.length} {incomeSources.length === 1 ? 'fuente' : 'fuentes'}
+              </Text>
+            </View>
+            <Text style={[styles.incomeTotal, { color: toneInk(colors, 'ok') }]}>{fmt(incomeSourcesTotal)}</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.outline} />
+          </View>
+        </Card>
+      </Reveal>
+
       {categories.length > 0 && (
-        <Reveal index={3} style={styles.section}>
+        <Reveal index={4} style={styles.section}>
           <Text style={styles.sectionTitle}>Categorías</Text>
           <View style={styles.list}>
             {categories.map((cat) => (
-              <CategoryCard key={cat.id} cat={cat} total={categoriesTotal} />
+              <CategoryCard
+                key={cat.id}
+                cat={cat}
+                total={categoriesTotal}
+                onPress={() => navigation.navigate('CategoryDetail', { categoryId: cat.id })}
+              />
             ))}
           </View>
         </Reveal>
       )}
+      </ScrollView>
+
+      <ActionBar label="Nueva categoría" onPress={() => setAddingCategory(true)} />
+      <CategoryNameModal visible={addingCategory} budgetId={budget.id} onClose={() => setAddingCategory(false)} />
     </Screen>
   );
 }
