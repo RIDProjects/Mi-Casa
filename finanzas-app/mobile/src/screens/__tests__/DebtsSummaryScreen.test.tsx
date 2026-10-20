@@ -96,12 +96,12 @@ describe('DebtsSummaryScreen', () => {
     expect(screen.getByText('No debes dinero a nadie')).toBeTruthy();
   });
 
-  it('navigates to the add form from the FAB and to edit from a card', async () => {
+  it('navigates to the add form from the action bar and to edit from a card', async () => {
     svc.getAll.mockResolvedValue([debt()]);
     svc.getSummary.mockResolvedValue({ totalTheyOweMe: 100, totalIOwe: 0, balance: 100 });
     renderScreen();
     await screen.findByText('Juan');
-    fireEvent.press(screen.getByLabelText('Registrar deuda'));
+    fireEvent.press(screen.getByText('Registrar deuda'));
     expect(mockNavigate).toHaveBeenCalledWith('AddDebt', {});
     fireEvent.press(screen.getByText('Juan'));
     expect(mockNavigate).toHaveBeenCalledWith('AddDebt', { debtId: 'd1' });
