@@ -1,19 +1,16 @@
 name: Deploy mobile (EAS Update)
 
-# Publishes an over-the-air update of the Expo app on every push to a long-lived
-# branch that touches the mobile app. Same branch-per-environment model as the
-# backend (see finanzas-app/docs/deploy.md):
-#   dev      -> EAS channel `development`
-#   staging  -> EAS channel `staging`
-#   main     -> EAS channel `preview` (the channel the installed builds listen to;
-#               override with the environment variable EAS_CHANNEL once a store
-#               build on `production` exists). Needs approval of the `production` environment.
+# Publishes an over-the-air update of the Expo app to production. It runs only from
+# `main` (the production branch of the dev -> staging -> main promotion flow, see
+# finanzas-app/docs/deploy.md) and waits for the manual approval of the `production`
+# GitHub Environment, like the backend deploy.
 # OTA only: it ships JS and assets, never native code. A change that adds a native
-# module needs a new build (`eas build`) first, or older installs will crash.
+# module needs a new build (`eas build`) first, or older installs will crash. The
+# runtime version policy is `appVersion`, so installs of another app version ignore it.
 
 on:
   push:
-    branches: [dev, staging, main]
+    branches: [main]
     paths:
       - 'finanzas-app/mobile/**'
       - '.github/workflows/deploy-mobile.yml'
@@ -23,20 +20,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: deploy-mobile-${{ github.ref_name }}
+  group: deploy-mobile
   cancel-in-progress: false
 
 jobs:
   ci:
-    # workflow_dispatch from a feature branch must not publish updates.
-    if: contains(fromJSON('["dev","staging","main"]'), github.ref_name)
+    # workflow_dispatch from another branch must not publish an update.
+    if: github.ref_name == 'main'
     uses: ./.github/workflows/mobile-ci.yml
 
   update:
     needs: ci
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+    environment: production
     defaults:
       run:
         working-directory: finanzas-app/mobile
@@ -44,9 +41,11 @@ jobs:
       CI: '1'
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EXPO_NO_TELEMETRY: '1'
-      EAS_CHANNEL: ${{ vars.EAS_CHANNEL || (github.ref_name == 'main' && 'preview' || github.ref_name == 'staging' && 'staging' || 'development') }}
+      # `preview` is the channel the installed builds listen to; set the environment
+      # variable EAS_CHANNEL (e.g. `production`) once a store build exists.
+      EAS_CHANNEL: ${{ vars.EAS_CHANNEL || 'preview' }}
       # Inlined into the JS bundle at export time (EXPO_PUBLIC_*).
-      EXPO_PUBLIC_API_URL: ${{ github.ref_name == 'main' && 'https://backend-production-0d37.up.railway.app/api/v1' || github.ref_name == 'staging' && 'https://backend-staging-494d.up.railway.app/api/v1' || 'https://backend-dev-2110.up.railway.app/api/v1' }}
+      EXPO_PUBLIC_API_URL: https://backend-production-0d37.up.railway.app/api/v1
     steps:
       - uses: actions/checkout@v4
 
@@ -59,7 +58,7 @@ jobs:
       - name: Check Expo token
         run: |
           if [ -z "$EXPO_TOKEN" ]; then
-            echo "::error::EXPO_TOKEN is empty in GitHub Environment '${{ github.ref_name == 'main' && 'production' || github.ref_name }}' (create an access token at expo.dev -> Account settings -> Access tokens and store it as an environment secret)"
+            echo "::error::EXPO_TOKEN is empty in GitHub Environment 'production' (create an access token at expo.dev -> Account settings -> Access tokens and store it as an environment secret)"
             exit 1
           fi
           npx --yes eas-cli@latest whoami
@@ -71,5 +70,5 @@ jobs:
         run: |
           npx --yes eas-cli@latest update \
             --channel "$EAS_CHANNEL" \
-            --message "${GITHUB_SHA::7} ${GITHUB_REF_NAME} via GitHub Actions" \
+            --message "${GITHUB_SHA::7} via GitHub Actions" \
             --non-interactive
