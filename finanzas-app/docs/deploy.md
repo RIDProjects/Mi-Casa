@@ -38,7 +38,7 @@ push to dev | staging | main  (finanzas-app/backend/**)
          environment = dev | staging | production (main; waits for GitHub Environment approval)
 ```
 
-- Workflows: `.github/workflows/deploy-backend.yml` (orchestration), `_deploy-backend-env.yml` (reusable per-env job).
+- Workflows: `.github/workflows/deploy-backend.yml` (orchestration), the deploy job (all steps inline: GitHub does not pass environment secrets into reusable workflows).
 - Smoke test: `GET /health` must return `{"status":"ok"}` and `GET /api/v1/debts` without a token must return `401`.
 - One deploy per environment at a time (`concurrency: deploy-backend-<branch>`, no cancel). A run waiting for production approval queues newer pushes to `main`.
 - Backend-only: frontend/mobile changes do not trigger it. `workflow_dispatch` re-runs it manually on `dev`, `staging` or `main` (other branches are refused).
