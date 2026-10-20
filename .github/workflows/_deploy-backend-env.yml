@@ -24,7 +24,9 @@ jobs:
     environment: ${{ inputs.environment }}
     env:
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_ENV: ${{ inputs.environment }}
+      # Not RAILWAY_ENV: the Railway CLI reads that variable to pick its API
+      # host, and 'dev' made it target backboard.railway-develop.com.
+      DEPLOY_ENV: ${{ inputs.environment }}
       BASE_URL: ${{ inputs.base_url }}
     steps:
       - uses: actions/checkout@v4
@@ -40,26 +42,26 @@ jobs:
       # pre-deploy command, a deploy would silently skip them: refuse instead.
       - name: Assert pre-deploy migration step is configured
         run: |
-          cmd=$(railway environment config --environment "$RAILWAY_ENV" --json | jq -r '[.services[] | .deploy.preDeployCommand // empty][0] | if type == "array" then join(" ") else . end // empty')
+          cmd=$(railway environment config --environment "$DEPLOY_ENV" --json | jq -r '[.services[] | .deploy.preDeployCommand // empty][0] | if type == "array" then join(" ") else . end // empty')
           case "$cmd" in
             *"migration:run"*) echo "pre-deploy: $cmd" ;;
-            *) echo "::error::preDeployCommand missing in $RAILWAY_ENV (see finanzas-app/docs/deploy.md)"; exit 1 ;;
+            *) echo "::error::preDeployCommand missing in $DEPLOY_ENV (see finanzas-app/docs/deploy.md)"; exit 1 ;;
           esac
 
       - name: Record current deployment
         id: before
         run: |
-          prev=$(railway deployment list --service backend --environment "$RAILWAY_ENV" --limit 1 --json | jq -r '.[0].id // "none"')
+          prev=$(railway deployment list --service backend --environment "$DEPLOY_ENV" --limit 1 --json | jq -r '.[0].id // "none"')
           echo "id=$prev" >> "$GITHUB_OUTPUT"
 
       - name: Deploy (migrations run in railway.json preDeployCommand)
         working-directory: finanzas-app/backend
-        run: railway up --service backend --environment "$RAILWAY_ENV" --detach --message "${GITHUB_SHA::7} via GitHub Actions"
+        run: railway up --service backend --environment "$DEPLOY_ENV" --detach --message "${GITHUB_SHA::7} via GitHub Actions"
 
       - name: Wait for the new deployment to become healthy
         run: |
           for i in $(seq 1 60); do
-            read -r id status < <(railway deployment list --service backend --environment "$RAILWAY_ENV" --limit 1 --json | jq -r '.[0] | "\(.id) \(.status)"')
+            read -r id status < <(railway deployment list --service backend --environment "$DEPLOY_ENV" --limit 1 --json | jq -r '.[0] | "\(.id) \(.status)"')
             echo "attempt $i: $id $status"
             if [ "$id" != "${{ steps.before.outputs.id }}" ]; then
               case "$status" in
