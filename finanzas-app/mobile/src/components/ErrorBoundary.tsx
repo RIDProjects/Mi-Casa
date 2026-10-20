@@ -1,8 +1,61 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Sentry from '@sentry/react-native';
-import { Colors } from '../theme/colors';
+import { useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { fonts } from '../theme/tokens';
+import type { ThemeColors } from '../theme/tokens';
+import { Button, LedgerBackground } from './ui';
+
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: c.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 32,
+      gap: 12,
+    },
+    iconWrap: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      backgroundColor: c.dangerTint,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    title: { fontFamily: fonts.title, color: c.onSurface, fontSize: 20, textAlign: 'center' },
+    message: {
+      fontFamily: fonts.regular,
+      color: c.onSurfaceVariant,
+      fontSize: 14,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 12,
+    },
+  });
+
+// The boundary wraps ThemeProvider, so the context falls back to its default (dark) palette here.
+function ErrorFallback({ onRetry }: { onRetry: () => void }) {
+  const styles = useThemedStyles(createStyles);
+  const { colors } = useTheme();
+  return (
+    <View style={styles.container}>
+      <LedgerBackground />
+      <View style={styles.iconWrap}>
+        <Ionicons name="alert-circle-outline" size={48} color={colors.dangerInk} />
+      </View>
+      <Text style={styles.title}>Algo salió mal</Text>
+      <Text style={styles.message}>
+        Ocurrió un error inesperado. Puedes intentar de nuevo; si el problema
+        persiste, cierra y vuelve a abrir la app.
+      </Text>
+      <Button label="Reintentar" icon="refresh-outline" onPress={onRetry} />
+    </View>
+  );
+}
 
 interface Props {
   children: React.ReactNode;
@@ -40,76 +93,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   render(): React.ReactNode {
     if (this.state.hasError) {
-      return (
-        <View style={styles.container}>
-          <View style={styles.iconWrap}>
-            <Ionicons name="alert-circle-outline" size={48} color={Colors.red} />
-          </View>
-          <Text style={styles.title}>Algo salió mal</Text>
-          <Text style={styles.message}>
-            Ocurrió un error inesperado. Puedes intentar de nuevo; si el problema
-            persiste, cierra y vuelve a abrir la app.
-          </Text>
-          <TouchableOpacity
-            style={styles.retryBtn}
-            onPress={this.handleRetry}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="refresh-outline" size={18} color={Colors.white} />
-            <Text style={styles.retryText}>Reintentar</Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return <ErrorFallback onRetry={this.handleRetry} />;
     }
 
     return this.props.children;
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    gap: 12,
-  },
-  iconWrap: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: Colors.redBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  title: {
-    color: Colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  message: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  retryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.blue,
-    borderRadius: 14,
-    paddingHorizontal: 24,
-    height: 50,
-  },
-  retryText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

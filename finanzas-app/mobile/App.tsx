@@ -65,17 +65,17 @@ export default function App() {
   if (!fontsLoaded) return null;
 
   return (
-    <ErrorBoundary>
-      <GestureHandlerRootView style={styles.flex}>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
+    <ThemeProvider>
+      <ErrorBoundary>
+        <GestureHandlerRootView style={styles.flex}>
+          <QueryClientProvider client={queryClient}>
             <AuthProvider>
               <AppNavigator />
             </AuthProvider>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </GestureHandlerRootView>
-    </ErrorBoundary>
+          </QueryClientProvider>
+        </GestureHandlerRootView>
+      </ErrorBoundary>
+    </ThemeProvider>
   );
 }
 
