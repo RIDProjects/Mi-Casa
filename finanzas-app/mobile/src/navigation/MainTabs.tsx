@@ -2,7 +2,8 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList } from './types';
-import { Colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
+import { fonts } from '../theme/tokens';
 import DashboardScreen from '../screens/DashboardScreen';
 import GastosStack from './GastosStack';
 import BudgetScreen from '../screens/BudgetScreen';
@@ -33,6 +34,7 @@ const TAB_LABELS: Record<TabName, string> = {
 };
 
 export default function MainTabs() {
+  const { colors } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => {
@@ -40,17 +42,17 @@ export default function MainTabs() {
         return {
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: Colors.card,
-            borderTopColor: Colors.border,
+            backgroundColor: colors.panel,
+            borderTopColor: colors.border,
             borderTopWidth: 1,
             paddingBottom: 4,
             height: 62,
           },
-          tabBarActiveTintColor: Colors.blue,
-          tabBarInactiveTintColor: Colors.textSecondary,
+          tabBarActiveTintColor: colors.brand,
+          tabBarInactiveTintColor: colors.outline,
           tabBarLabelStyle: {
+            fontFamily: fonts.semibold,
             fontSize: 10,
-            fontWeight: '600',
             marginBottom: 4,
           },
           tabBarLabel: TAB_LABELS[name],
