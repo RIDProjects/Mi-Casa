@@ -99,7 +99,7 @@ describe('ExpenseRegistryScreen', () => {
   it('the add button opens an empty form', async () => {
     mockGetMonth.mockResolvedValue(month());
     renderRegistry();
-    fireEvent.press(await screen.findByLabelText('Registrar gasto'));
+    fireEvent.press(await screen.findByText('Registrar gasto'));
     expect(mockNavigate).toHaveBeenCalledWith('AddHouseholdExpense', undefined);
   });
 

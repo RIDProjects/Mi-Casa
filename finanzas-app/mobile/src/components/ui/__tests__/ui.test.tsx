@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { render, fireEvent, screen } from '@testing-library/react-native';
-import { Button, EmptyState, ErrorState, ProgressRing, StatCard, TextField } from '..';
+import { ActionBar, Button, EmptyState, ErrorState, ProgressRing, StatCard, TextField } from '..';
 import { ThemeProvider } from '../../../theme/ThemeContext';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -98,5 +98,32 @@ describe('ProgressRing', () => {
   it('renders its children', () => {
     wrap(<ProgressRing value={0.5}><Text>50%</Text></ProgressRing>);
     expect(screen.getByText('50%')).toBeTruthy();
+  });
+});
+
+describe('ActionBar', () => {
+  it('shows the label and runs the action', () => {
+    const onPress = jest.fn();
+    wrap(<ActionBar label="Registrar gasto" onPress={onPress} />);
+    fireEvent.press(screen.getByText('Registrar gasto'));
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('TextField multiline', () => {
+  const fieldStyle = () => {
+    const input = screen.getByPlaceholderText('nota');
+    // TextInput > field row (the bordered container)
+    return StyleSheet.flatten(input.parent?.parent?.props.style);
+  };
+
+  it('aligns a multiline field to the top so the icon does not float in the middle', () => {
+    wrap(<TextField icon="create-outline" multiline placeholder="nota" value="" onChangeText={() => undefined} />);
+    expect(fieldStyle().alignItems).toBe('flex-start');
+  });
+
+  it('keeps a single-line field centred', () => {
+    wrap(<TextField icon="mail-outline" placeholder="nota" value="" onChangeText={() => undefined} />);
+    expect(fieldStyle().alignItems).toBe('center');
   });
 });

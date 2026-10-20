@@ -21,7 +21,7 @@ import { GastosStackParamList } from '../../navigation/types';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
-import { Badge, Card, EmptyState, ErrorState, Reveal, Screen, Skeleton } from '../../components/ui';
+import { ActionBar, Badge, Card, EmptyState, ErrorState, Reveal, Screen, Skeleton } from '../../components/ui';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
 
@@ -50,7 +50,7 @@ interface ExpenseRow {
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
-    listContent: { padding: 16, paddingBottom: 96, gap: 10 },
+    listContent: { padding: 16, paddingBottom: 24, gap: 10 },
     header: { gap: 14, marginBottom: 4 },
     monthSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 10 },
     monthArrow: {
@@ -107,22 +107,6 @@ const createStyles = (c: ThemeColors) =>
     expensePlace: { flexShrink: 1, fontFamily: fonts.regular, color: c.outline, fontSize: 11 },
     expenseDate: { fontFamily: fonts.regular, color: c.outline, fontSize: 11, marginLeft: 'auto' },
     deleteBtn: { padding: 12 },
-    fab: {
-      position: 'absolute',
-      bottom: 24,
-      right: 24,
-      width: 58,
-      height: 58,
-      borderRadius: 29,
-      backgroundColor: c.brand,
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 6,
-      shadowColor: c.brand,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.4,
-      shadowRadius: 8,
-    },
   });
 
 function CategoryBar({
@@ -431,14 +415,7 @@ export default function ExpenseRegistryScreen() {
           />
         }
       />
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddHouseholdExpense', undefined)}
-        activeOpacity={0.85}
-        accessibilityLabel="Registrar gasto"
-      >
-        <Ionicons name="add" size={28} color={colors.onBrand} />
-      </TouchableOpacity>
+      <ActionBar label="Registrar gasto" onPress={() => navigation.navigate('AddHouseholdExpense', undefined)} />
     </Screen>
   );
 }

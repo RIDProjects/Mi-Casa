@@ -23,6 +23,7 @@ import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius, toneInk } from '../../theme/tokens';
 import type { ThemeColors, Tone } from '../../theme/tokens';
 import {
+  ActionBar,
   Badge,
   Card,
   EmptyState,
@@ -48,7 +49,7 @@ interface Section {
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
-    listContent: { padding: 16, paddingBottom: 110 },
+    listContent: { padding: 16, paddingBottom: 24 },
     header: { gap: 14, paddingBottom: 14 },
     addHint: {
       width: 44,
@@ -103,22 +104,6 @@ const createStyles = (c: ThemeColors) =>
       color: c.outline,
       fontSize: 14,
       textDecorationLine: 'line-through',
-    },
-    fab: {
-      position: 'absolute',
-      bottom: 24,
-      right: 24,
-      width: 58,
-      height: 58,
-      borderRadius: 29,
-      backgroundColor: c.brand,
-      alignItems: 'center',
-      justifyContent: 'center',
-      elevation: 6,
-      shadowColor: c.brand,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.4,
-      shadowRadius: 8,
     },
   });
 
@@ -359,20 +344,13 @@ export default function DebtsSummaryScreen() {
             <EmptyState
               icon="wallet-outline"
               title="Sin deudas registradas"
-              subtitle="Pulsa el botón + para registrar una nueva deuda"
+              subtitle="Usa el botón de abajo para registrar una nueva deuda"
             />
           </Card>
         }
       />
 
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('AddDebt', {})}
-        activeOpacity={0.85}
-        accessibilityLabel="Registrar deuda"
-      >
-        <Ionicons name="add" size={28} color={colors.onBrand} />
-      </TouchableOpacity>
+      <ActionBar label="Registrar deuda" onPress={() => navigation.navigate('AddDebt', {})} />
     </Screen>
   );
 }
