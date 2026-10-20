@@ -1,28 +1,22 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors } from '../theme/colors';
 import { summaryService } from '../services/summary.service';
 import { notificationsService } from '../services/notifications.service';
 import { creditCardsService } from '../services/creditCards.service';
 import { cuotasService } from '../services/cuotas.service';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useAuth } from '../context/AuthContext';
-import { StatCard } from '../components/common/StatCard';
+import { useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { fonts, radius, Tone, toneInk, toneTint } from '../theme/tokens';
+import type { ThemeColors } from '../theme/tokens';
 import { RootStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/currency';
+import { Card, ErrorState, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
+import { StatCard } from '../components/common/StatCard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -31,50 +25,114 @@ const MONTH_NAMES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-function SkeletonCard() {
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    headerText: { flex: 1 },
+    greeting: { fontFamily: fonts.title, color: c.onSurface, fontSize: 24, letterSpacing: -0.5 },
+    subheading: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 14, marginTop: 2 },
+    bellBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: c.panel,
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+    bellBadge: {
+      position: 'absolute',
+      top: -3,
+      right: -3,
+      minWidth: 18,
+      height: 18,
+      borderRadius: 9,
+      paddingHorizontal: 4,
+      backgroundColor: c.dangerInk,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: c.surface,
+    },
+    bellBadgeText: { fontFamily: fonts.bold, color: c.surface, fontSize: 10 },
+    heroRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    heroText: { flex: 1, gap: 4 },
+    eyebrow: {
+      fontFamily: fonts.semibold,
+      color: c.onSurfaceVariant,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    heroAmount: { fontFamily: fonts.title, fontSize: 30, letterSpacing: -0.8 },
+    heroMeta: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13 },
+    ringValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 18 },
+    ringCaption: { fontFamily: fonts.medium, color: c.outline, fontSize: 10 },
+    advisory: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: radius.md,
+      borderWidth: 1,
+    },
+    advisoryText: { flex: 1, fontFamily: fonts.medium, fontSize: 13, lineHeight: 18 },
+    row: { flexDirection: 'row', gap: 12 },
+    quickAccess: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    quickAccessLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+    quickAccessIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    quickAccessTitle: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 15 },
+    quickAccessSubtitle: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12, marginTop: 1 },
+    section: { gap: 10 },
+    sectionTitle: { fontFamily: fonts.title, color: c.onSurface, fontSize: 17 },
+    sectionList: { gap: 10 },
+    miniCard: { gap: 10 },
+    miniCardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    miniCardHeaderText: { flex: 1 },
+    miniCardTitle: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14 },
+    miniCardSubtitle: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12, marginTop: 1 },
+    miniCardPct: { fontFamily: fonts.title, color: c.onSurfaceVariant, fontSize: 15 },
+    miniCardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    miniCardFooterText: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12, flexShrink: 1 },
+    progressHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+    progressLabel: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14 },
+    progressPercent: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 13 },
+    progressLegend: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 10 },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendText: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12, flexShrink: 1 },
+  });
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Buenos días';
+  if (h < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+}
+
+function SkeletonBlocks() {
   return (
-    <View style={[skStyles.card]}>
-      <View style={skStyles.iconBlock} />
-      <View style={skStyles.lineShort} />
-      <View style={skStyles.lineLong} />
+    <View testID="dashboard-skeleton" style={{ gap: 14 }}>
+      <Skeleton height={132} radius={radius.lg} />
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <Skeleton height={104} radius={radius.lg} style={{ flex: 1 }} />
+        <Skeleton height={104} radius={radius.lg} style={{ flex: 1 }} />
+      </View>
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <Skeleton height={104} radius={radius.lg} style={{ flex: 1 }} />
+        <Skeleton height={104} radius={radius.lg} style={{ flex: 1 }} />
+      </View>
     </View>
   );
 }
 
-const skStyles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 14,
-    flex: 1,
-    margin: 5,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  iconBlock: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
-    backgroundColor: Colors.cardAlt,
-  },
-  lineShort: {
-    height: 10,
-    width: '60%',
-    borderRadius: 5,
-    backgroundColor: Colors.cardAlt,
-  },
-  lineLong: {
-    height: 20,
-    width: '80%',
-    borderRadius: 5,
-    backgroundColor: Colors.cardAlt,
-  },
-});
-
 export default function DashboardScreen() {
   const { user } = useAuth();
   const navigation = useNavigation<Nav>();
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const now = new Date();
   const monthName = MONTH_NAMES[now.getMonth()];
 
@@ -121,503 +179,234 @@ export default function DashboardScreen() {
   const emergencyFund = summary?.emergencyFund ?? 0;
 
   const isBalancePositive = balance >= 0;
+  const balanceTone: Tone = isBalancePositive ? 'ok' : 'danger';
   const unreadCount = notifications.filter((n) => !n.isRead).length;
   const activeCuotas = cuotas.filter((c) => c.paidInstallments < c.totalInstallments);
 
+  const usedRatio = totalIngresos > 0 ? totalGastos / totalIngresos : 0;
+  const usedPct = Math.min(100, Math.round(usedRatio * 100));
+  const ringTone: Tone = totalGastos > totalIngresos ? 'danger' : usedRatio > 0.8 ? 'warn' : 'ok';
+
+  let advisoryTone: Tone = 'ok';
+  let advisoryIcon: keyof typeof Ionicons.glyphMap = 'checkmark-circle-outline';
+  let advisoryText = 'Vas por buen camino: tus gastos están bajo control este mes.';
+  if (totalIngresos <= 0 && totalGastos <= 0) {
+    advisoryTone = 'info';
+    advisoryIcon = 'information-circle-outline';
+    advisoryText = 'Aún no hay movimientos este mes. Registra tus ingresos y gastos para ver tu panorama.';
+  } else if (balance < 0) {
+    advisoryTone = 'danger';
+    advisoryIcon = 'alert-circle-outline';
+    advisoryText = 'Estás gastando más de lo que ingresas este mes.';
+  } else if (usedRatio > 0.8) {
+    advisoryTone = 'warn';
+    advisoryIcon = 'warning-outline';
+    advisoryText = 'Ya usaste más del 80% de tus ingresos del mes.';
+  }
+
+  const showSummary = !isLoading && !isError;
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar style="light" />
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.blue}
-            colors={[Colors.blue]}
-          />
-        }
-      >
-        {/* Header */}
+    <Screen refreshing={refreshing} onRefresh={onRefresh}>
+      <Reveal index={0}>
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>
+          <View style={styles.headerText}>
+            <Text style={styles.greeting} numberOfLines={1} adjustsFontSizeToFit>
               {getGreeting()}, {user?.name?.split(' ')[0] ?? 'usuario'}
             </Text>
             <Text style={styles.subheading}>{monthName} {now.getFullYear()}</Text>
           </View>
-          <TouchableOpacity
+          <Pressable
             style={styles.bellBtn}
             onPress={() => navigation.navigate('Notificaciones')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel="Notificaciones"
           >
-            <Ionicons name="notifications-outline" size={24} color={Colors.textPrimary} />
+            <Ionicons name="notifications-outline" size={22} color={colors.onSurface} />
             {unreadCount > 0 && (
               <View style={styles.bellBadge}>
                 <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
               </View>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </View>
+      </Reveal>
 
-        {isError && (
-          <TouchableOpacity style={styles.errorBanner} onPress={() => refetch()} activeOpacity={0.8}>
-            <Ionicons name="alert-circle-outline" size={18} color={Colors.red} />
-            <Text style={styles.errorText}>No se pudieron cargar tus datos. Toca para reintentar.</Text>
-          </TouchableOpacity>
-        )}
+      {isLoading && <SkeletonBlocks />}
 
-        {/* Balance principal */}
-        <View style={[styles.balanceCard, { borderColor: isBalancePositive ? Colors.green + '60' : Colors.red + '60' }]}>
-          <Text style={styles.balanceLabel}>Disponible del mes</Text>
-          <Text style={[styles.balanceAmount, { color: isBalancePositive ? Colors.green : Colors.red }]}>
-            {isBalancePositive ? '+' : ''}{fmt(balance)}
-          </Text>
-          {summary?.savingsRate != null && (
-            <View style={styles.savingsRateRow}>
-              <Text style={styles.savingsRateLabel}>Tasa de ahorro</Text>
-              <Text style={[styles.savingsRateValue, { color: summary.savingsRate >= 0 ? Colors.green : Colors.red }]}>
-                {summary.savingsRate.toFixed(1)}%
-              </Text>
-            </View>
-          )}
-        </View>
+      {isError && (
+        <Reveal index={1}>
+          <Card>
+            <ErrorState
+              message="No se pudieron cargar tus datos. Revisa tu conexión e inténtalo de nuevo."
+              onRetry={() => refetch()}
+            />
+          </Card>
+        </Reveal>
+      )}
 
-        {/* Stat Cards 2×2 */}
-        {isLoading ? (
-          <>
+      {showSummary && (
+        <>
+          <Reveal index={1}>
+            <Card accent={toneInk(colors, balanceTone)}>
+              <View style={styles.heroRow}>
+                <View style={styles.heroText}>
+                  <Text style={styles.eyebrow}>Disponible del mes</Text>
+                  <Text
+                    style={[styles.heroAmount, { color: toneInk(colors, balanceTone) }]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                  >
+                    {isBalancePositive ? '+' : ''}{fmt(balance)}
+                  </Text>
+                  {summary?.savingsRate != null && (
+                    <Text style={styles.heroMeta}>
+                      Tasa de ahorro{' '}
+                      <Text style={{ fontFamily: fonts.bold, color: toneInk(colors, summary.savingsRate >= 0 ? 'ok' : 'danger') }}>
+                        {summary.savingsRate.toFixed(1)}%
+                      </Text>
+                    </Text>
+                  )}
+                </View>
+                <ProgressRing value={usedRatio} size={84} thickness={9} color={toneInk(colors, ringTone)}>
+                  <Text style={styles.ringValue}>{usedPct}%</Text>
+                  <Text style={styles.ringCaption}>usado</Text>
+                </ProgressRing>
+              </View>
+            </Card>
+          </Reveal>
+
+          <Reveal index={2}>
+            <View
+              style={[
+                styles.advisory,
+                { backgroundColor: toneTint(colors, advisoryTone), borderColor: toneInk(colors, advisoryTone) + '40' },
+              ]}
+            >
+              <Ionicons name={advisoryIcon} size={20} color={toneInk(colors, advisoryTone)} />
+              <Text style={[styles.advisoryText, { color: toneInk(colors, advisoryTone) }]}>{advisoryText}</Text>
+            </View>
+          </Reveal>
+
+          <Reveal index={3} style={{ gap: 12 }}>
             <View style={styles.row}>
-              <SkeletonCard />
-              <SkeletonCard />
+              <StatCard title="Ingresos" value={fmt(totalIngresos)} icon="trending-up-outline" tone="ok" />
+              <StatCard title="Gastos" value={fmt(totalGastos)} icon="trending-down-outline" tone="danger" />
             </View>
             <View style={styles.row}>
-              <SkeletonCard />
-              <SkeletonCard />
-            </View>
-          </>
-        ) : (
-          <>
-            <View style={styles.row}>
-              <StatCard
-                title="Ingresos"
-                value={fmt(totalIngresos)}
-                icon="trending-up-outline"
-                color={Colors.green}
-              />
-              <StatCard
-                title="Gastos"
-                value={fmt(totalGastos)}
-                icon="trending-down-outline"
-                color={Colors.red}
-              />
-            </View>
-            <View style={styles.row}>
-              <StatCard
-                title="Disponible"
-                value={fmt(balance)}
-                icon="wallet-outline"
-                color={isBalancePositive ? Colors.blue : Colors.red}
-              />
+              <StatCard title="Disponible" value={fmt(balance)} icon="wallet-outline" tone={isBalancePositive ? 'info' : 'danger'} />
               <StatCard
                 title="Fondo Emergencia"
                 value={emergencyFund > 0 ? fmt(emergencyFund) : '—'}
                 icon="shield-checkmark-outline"
-                color="#f59e0b"
+                tone="warn"
               />
             </View>
-          </>
-        )}
+          </Reveal>
+        </>
+      )}
 
-        {/* Acceso rápido a Vencimientos */}
-        <TouchableOpacity
-          style={styles.quickAccess}
-          onPress={() => navigation.navigate('Vencimientos')}
-          activeOpacity={0.8}
-        >
-          <View style={styles.quickAccessLeft}>
-            <View style={[styles.quickAccessIcon, { backgroundColor: Colors.blueBg }]}>
-              <Ionicons name="calendar-outline" size={18} color={Colors.blue} />
+      <Reveal index={4}>
+        <Card onPress={() => navigation.navigate('Vencimientos')}>
+          <View style={styles.quickAccess}>
+            <View style={styles.quickAccessLeft}>
+              <View style={[styles.quickAccessIcon, { backgroundColor: colors.infoTint }]}>
+                <Ionicons name="calendar-outline" size={19} color={colors.infoInk} />
+              </View>
+              <View>
+                <Text style={styles.quickAccessTitle}>Vencimientos</Text>
+                <Text style={styles.quickAccessSubtitle}>Próximos pagos del hogar</Text>
+              </View>
             </View>
-            <View>
-              <Text style={styles.quickAccessTitle}>Vencimientos</Text>
-              <Text style={styles.quickAccessSubtitle}>Próximos pagos del hogar</Text>
-            </View>
+            <Ionicons name="chevron-forward" size={18} color={colors.outline} />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
-        </TouchableOpacity>
+        </Card>
+      </Reveal>
 
-        {/* Tarjetas de crédito */}
-        {creditCards.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tarjetas de crédito</Text>
-            <View style={styles.sectionList}>
-              {creditCards.map((card) => {
-                const available = card.lineaCredito - card.saldoActual;
-                const utilization = card.utilizationPercent ?? (
-                  card.lineaCredito > 0
-                    ? Math.min(100, (card.saldoActual / card.lineaCredito) * 100)
-                    : 0
-                );
-                const utilColor = utilization > 80 ? Colors.red : utilization > 50 ? '#f59e0b' : Colors.green;
-                return (
-                  <View key={card.id} style={styles.miniCard}>
-                    <View style={styles.miniCardHeader}>
-                      <View>
-                        <Text style={styles.miniCardTitle}>{card.nombreTarjeta}</Text>
-                        <Text style={styles.miniCardSubtitle}>{card.banco}</Text>
-                      </View>
-                      <Text style={[styles.miniCardPct, { color: utilColor }]}>
-                        {utilization.toFixed(0)}%
-                      </Text>
+      {creditCards.length > 0 && (
+        <Reveal index={5} style={styles.section}>
+          <Text style={styles.sectionTitle}>Tarjetas de crédito</Text>
+          <View style={styles.sectionList}>
+            {creditCards.map((card) => {
+              const available = card.lineaCredito - card.saldoActual;
+              const utilization = card.utilizationPercent ?? (
+                card.lineaCredito > 0
+                  ? Math.min(100, (card.saldoActual / card.lineaCredito) * 100)
+                  : 0
+              );
+              const utilTone: Tone = utilization > 80 ? 'danger' : utilization > 50 ? 'warn' : 'ok';
+              return (
+                <Card key={card.id} style={styles.miniCard}>
+                  <View style={styles.miniCardHeader}>
+                    <View style={styles.miniCardHeaderText}>
+                      <Text style={styles.miniCardTitle} numberOfLines={1}>{card.nombreTarjeta}</Text>
+                      <Text style={styles.miniCardSubtitle} numberOfLines={1}>{card.banco}</Text>
                     </View>
-                    <View style={styles.miniBarBg}>
-                      <View
-                        style={[
-                          styles.miniBarFill,
-                          { width: `${utilization}%` as any, backgroundColor: utilColor },
-                        ]}
-                      />
-                    </View>
-                    <View style={styles.miniCardFooter}>
-                      <Text style={styles.miniCardFooterText}>
-                        Disponible: {fmt(available)}
-                      </Text>
-                      <Text style={styles.miniCardFooterText}>
-                        Límite: {fmt(card.lineaCredito)}
-                      </Text>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        )}
-
-        {/* Cuotas activas */}
-        {activeCuotas.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Cuotas activas</Text>
-            <View style={styles.sectionList}>
-              {activeCuotas.map((cuota) => {
-                const pct = cuota.totalInstallments > 0
-                  ? Math.min(100, (cuota.paidInstallments / cuota.totalInstallments) * 100)
-                  : 0;
-                return (
-                  <View key={cuota.id} style={styles.miniCard}>
-                    <View style={styles.miniCardHeader}>
-                      <Text style={styles.miniCardTitle} numberOfLines={1}>{cuota.description}</Text>
-                      <Text style={styles.miniCardPct}>
-                        {cuota.paidInstallments}/{cuota.totalInstallments}
-                      </Text>
-                    </View>
-                    <View style={styles.miniBarBg}>
-                      <View
-                        style={[
-                          styles.miniBarFill,
-                          { width: `${pct}%` as any, backgroundColor: Colors.blue },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.miniCardFooterText}>
-                      Cuota mensual: {fmt(cuota.installmentAmount)}
+                    <Text style={[styles.miniCardPct, { color: toneInk(colors, utilTone) }]}>
+                      {utilization.toFixed(0)}%
                     </Text>
                   </View>
-                );
-              })}
-            </View>
+                  <ProgressBar value={utilization / 100} tone={utilTone} height={6} />
+                  <View style={styles.miniCardFooter}>
+                    <Text style={styles.miniCardFooterText}>Disponible: {fmt(available)}</Text>
+                    <Text style={styles.miniCardFooterText}>Límite: {fmt(card.lineaCredito)}</Text>
+                  </View>
+                </Card>
+              );
+            })}
           </View>
-        )}
+        </Reveal>
+      )}
 
-        {/* Barra de progreso ingresos vs gastos */}
-        {!isLoading && totalIngresos > 0 && (
-          <View style={styles.progressCard}>
+      {activeCuotas.length > 0 && (
+        <Reveal index={6} style={styles.section}>
+          <Text style={styles.sectionTitle}>Cuotas activas</Text>
+          <View style={styles.sectionList}>
+            {activeCuotas.map((cuota) => {
+              const pct = cuota.totalInstallments > 0
+                ? Math.min(100, (cuota.paidInstallments / cuota.totalInstallments) * 100)
+                : 0;
+              return (
+                <Card key={cuota.id} style={styles.miniCard}>
+                  <View style={styles.miniCardHeader}>
+                    <Text style={[styles.miniCardTitle, { flex: 1 }]} numberOfLines={1}>{cuota.description}</Text>
+                    <Text style={styles.miniCardPct}>
+                      {cuota.paidInstallments}/{cuota.totalInstallments}
+                    </Text>
+                  </View>
+                  <ProgressBar value={pct / 100} tone="info" height={6} />
+                  <Text style={styles.miniCardFooterText}>
+                    Cuota mensual: {fmt(cuota.installmentAmount)}
+                  </Text>
+                </Card>
+              );
+            })}
+          </View>
+        </Reveal>
+      )}
+
+      {showSummary && totalIngresos > 0 && (
+        <Reveal index={7}>
+          <Card>
             <View style={styles.progressHeader}>
               <Text style={styles.progressLabel}>Ingresos vs Gastos</Text>
-              <Text style={styles.progressPercent}>
-                {Math.min(100, Math.round((totalGastos / totalIngresos) * 100))}% usado
-              </Text>
+              <Text style={styles.progressPercent}>{usedPct}% usado</Text>
             </View>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    width: `${Math.min(100, (totalGastos / totalIngresos) * 100)}%` as any,
-                    backgroundColor: totalGastos > totalIngresos ? Colors.red : Colors.blue,
-                  },
-                ]}
-              />
-            </View>
+            <ProgressBar value={usedRatio} tone={totalGastos > totalIngresos ? 'danger' : 'info'} />
             <View style={styles.progressLegend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.green }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.okInk }]} />
                 <Text style={styles.legendText}>Ingresos: {fmt(totalIngresos)}</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: Colors.red }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.dangerInk }]} />
                 <Text style={styles.legendText}>Gastos: {fmt(totalGastos)}</Text>
               </View>
             </View>
-          </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          </Card>
+        </Reveal>
+      )}
+    </Screen>
   );
 }
-
-function getGreeting(): string {
-  const h = new Date().getHours();
-  if (h < 12) return 'Buenos días';
-  if (h < 19) return 'Buenas tardes';
-  return 'Buenas noches';
-}
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: 16, paddingBottom: 32 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  greeting: {
-    color: Colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  subheading: {
-    color: Colors.textSecondary,
-    fontSize: 14,
-    marginTop: 2,
-  },
-  bellBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  bellBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    backgroundColor: Colors.red,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.background,
-  },
-  bellBadgeText: {
-    color: Colors.white,
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 12,
-    marginBottom: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.red + '60',
-    backgroundColor: Colors.card,
-  },
-  errorText: { color: Colors.red, fontSize: 13, flex: 1 },
-  balanceCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 18,
-    padding: 20,
-    borderWidth: 1.5,
-    marginBottom: 4,
-    gap: 6,
-  },
-  balanceLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  balanceAmount: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -1,
-  },
-  savingsRateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 10,
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  savingsRateLabel: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  savingsRateValue: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  row: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  quickAccess: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginTop: 10,
-  },
-  quickAccessLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  quickAccessIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickAccessTitle: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  quickAccessSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    marginTop: 1,
-  },
-  section: {
-    marginTop: 16,
-    gap: 10,
-  },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  sectionList: {
-    gap: 8,
-  },
-  miniCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 8,
-  },
-  miniCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  miniCardTitle: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-    flexShrink: 1,
-  },
-  miniCardSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    marginTop: 1,
-  },
-  miniCardPct: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  miniBarBg: {
-    height: 6,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  miniBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  miniCardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  miniCardFooterText: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  progressCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 16,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 10,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  progressLabel: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  progressPercent: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  progressLegend: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-});

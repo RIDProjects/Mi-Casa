@@ -1,17 +1,16 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Colors } from '../theme/colors';
 import { summaryService } from '../services/summary.service';
 import { UpcomingBill } from '../types';
 import { formatMoney } from '../utils/currency';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { parseLocalDate } from '../utils/dates';
+import { useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { fonts, radius, toneInk, toneTint } from '../theme/tokens';
+import type { ThemeColors, Tone } from '../theme/tokens';
+import { Card, EmptyState, ErrorState, Reveal, Screen, Skeleton } from '../components/ui';
 
 const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   credit_card: 'card-outline',
@@ -19,44 +18,82 @@ const TYPE_ICON: Record<string, keyof typeof Ionicons.glyphMap> = {
   cuota: 'receipt-outline',
 };
 
-function urgencyColor(daysUntilDue: number): string {
-  if (daysUntilDue <= 3) return Colors.red;
-  if (daysUntilDue <= 7) return '#f59e0b';
-  return Colors.blue;
+function urgencyTone(daysUntilDue: number): Tone {
+  if (daysUntilDue <= 3) return 'danger';
+  if (daysUntilDue <= 7) return 'warn';
+  return 'info';
 }
 
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    listContent: { padding: 16, paddingBottom: 32, gap: 10 },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingLeft: 18, paddingRight: 14 },
+    iconWrap: {
+      width: 38,
+      height: 38,
+      borderRadius: radius.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    rowContent: { flex: 1, gap: 2 },
+    rowName: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14 },
+    rowDate: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    rowRight: { alignItems: 'flex-end', gap: 2 },
+    rowAmount: { fontFamily: fonts.title, color: c.onSurface, fontSize: 14 },
+    rowDays: { fontFamily: fonts.semibold, fontSize: 11 },
+  });
+
 function BillRow({ bill }: { bill: UpcomingBill }) {
-  const color = urgencyColor(bill.daysUntilDue);
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const tone = urgencyTone(bill.daysUntilDue);
+  const ink = toneInk(colors, tone);
   const icon = TYPE_ICON[bill.type] ?? 'calendar-outline';
 
   return (
-    <View style={styles.row}>
-      <View style={[styles.iconWrap, { backgroundColor: color + '20' }]}>
-        <Ionicons name={icon} size={18} color={color} />
+    <Card padded={false} accent={ink}>
+      <View style={styles.row}>
+        <View style={[styles.iconWrap, { backgroundColor: toneTint(colors, tone) }]}>
+          <Ionicons name={icon} size={18} color={ink} />
+        </View>
+        <View style={styles.rowContent}>
+          <Text style={styles.rowName} numberOfLines={1}>{bill.name}</Text>
+          <Text style={styles.rowDate}>
+            Vence {parseLocalDate(bill.dueDate).toLocaleDateString('es-CU', {
+              day: 'numeric',
+              month: 'short',
+            })}
+          </Text>
+        </View>
+        <View style={styles.rowRight}>
+          <Text style={styles.rowAmount}>{formatMoney(bill.amount)}</Text>
+          <Text style={[styles.rowDays, { color: ink }]}>
+            {bill.daysUntilDue <= 0 ? 'Hoy' : `${bill.daysUntilDue} días`}
+          </Text>
+        </View>
       </View>
-      <View style={styles.rowContent}>
-        <Text style={styles.rowName} numberOfLines={1}>{bill.name}</Text>
-        <Text style={styles.rowDate}>
-          Vence {parseLocalDate(bill.dueDate).toLocaleDateString('es-CU', {
-            day: 'numeric',
-            month: 'short',
-          })}
-        </Text>
-      </View>
-      <View style={styles.rowRight}>
-        <Text style={styles.rowAmount}>{formatMoney(bill.amount)}</Text>
-        <Text style={[styles.rowDays, { color }]}>
-          {bill.daysUntilDue <= 0 ? 'Hoy' : `${bill.daysUntilDue} días`}
-        </Text>
-      </View>
+    </Card>
+  );
+}
+
+function SkeletonBlocks() {
+  return (
+    <View testID="vencimientos-skeleton" style={{ gap: 10 }}>
+      <Skeleton height={64} radius={radius.lg} />
+      <Skeleton height={64} radius={radius.lg} />
+      <Skeleton height={64} radius={radius.lg} />
+      <Skeleton height={64} radius={radius.lg} />
     </View>
   );
 }
 
 export default function VencimientosScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const {
     data: bills = [],
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: ['upcoming-bills'],
@@ -67,60 +104,56 @@ export default function VencimientosScreen() {
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
-  if (isLoading) return <LoadingSpinner message="Cargando vencimientos..." />;
+  if (isLoading) {
+    return (
+      <Screen edges={['bottom']}>
+        <SkeletonBlocks />
+      </Screen>
+    );
+  }
+
+  if (isError && bills.length === 0) {
+    return (
+      <Screen edges={['bottom']} refreshing={refreshing} onRefresh={onRefresh}>
+        <Card>
+          <ErrorState
+            message="No se pudieron cargar los vencimientos. Revisa tu conexión e inténtalo de nuevo."
+            onRetry={() => refetch()}
+          />
+        </Card>
+      </Screen>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <StatusBar style="light" />
+    <Screen scroll={false} edges={['bottom']}>
       <FlatList
         data={bills}
         keyExtractor={(item, index) => `${item.type}-${item.name}-${index}`}
-        renderItem={({ item }) => <BillRow bill={item} />}
+        renderItem={({ item, index }) => (
+          <Reveal index={Math.min(index, 7)}>
+            <BillRow bill={item} />
+          </Reveal>
+        )}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={Colors.blue}
-            colors={[Colors.blue]}
+            tintColor={colors.brand}
+            colors={[colors.brand]}
           />
         }
         ListEmptyComponent={
-          <EmptyState
-            icon="calendar-outline"
-            title="Sin vencimientos próximos"
-            subtitle="No hay pagos programados en los próximos 30 días"
-          />
+          <Card>
+            <EmptyState
+              icon="calendar-outline"
+              title="Sin vencimientos próximos"
+              subtitle="No hay pagos programados en los próximos 30 días"
+            />
+          </Card>
         }
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  listContent: { padding: 16, paddingBottom: 32, gap: 8 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 10,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rowContent: { flex: 1, gap: 2 },
-  rowName: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  rowDate: { color: Colors.textSecondary, fontSize: 12 },
-  rowRight: { alignItems: 'flex-end', gap: 2 },
-  rowAmount: { color: Colors.textPrimary, fontSize: 13, fontWeight: '700' },
-  rowDays: { fontSize: 11, fontWeight: '600' },
-});

@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   Modal,
   StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Colors } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { fonts, radius } from '../theme/tokens';
+import type { ThemeColors } from '../theme/tokens';
+import { Button, TextField } from './ui';
 import { accountService } from '../services/account.service';
 
 interface Props {
@@ -27,6 +27,7 @@ function errorMessage(error: any): string {
 }
 
 export default function DeleteAccountModal({ visible, onClose, onDeleted }: Props) {
+  const styles = useThemedStyles(createStyles);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,12 +68,10 @@ export default function DeleteAccountModal({ visible, onClose, onDeleted }: Prop
             Se eliminarán tu cuenta y, si eres el único miembro de tu casa, también todos los datos
             de esa casa (presupuestos, deudas, gastos, metas). Esta acción no se puede deshacer.
           </Text>
-          <TextInput
-            style={styles.input}
+          <TextField
             value={password}
             onChangeText={setPassword}
             placeholder="Tu contraseña"
-            placeholderTextColor={Colors.textMuted}
             secureTextEntry
             autoCapitalize="none"
             autoCorrect={false}
@@ -80,20 +79,8 @@ export default function DeleteAccountModal({ visible, onClose, onDeleted }: Prop
           />
           {error && <Text style={styles.error}>{error}</Text>}
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={close} disabled={loading}>
-              <Text style={styles.cancelText}>Cancelar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.deleteBtn, loading && styles.disabled]}
-              onPress={confirm}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={styles.deleteText}>Eliminar</Text>
-              )}
-            </TouchableOpacity>
+            <Button label="Cancelar" variant="secondary" onPress={close} disabled={loading} style={styles.action} />
+            <Button label="Eliminar" variant="danger" onPress={confirm} loading={loading} style={styles.action} />
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -101,53 +88,30 @@ export default function DeleteAccountModal({ visible, onClose, onDeleted }: Prop
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  sheet: {
-    backgroundColor: Colors.card,
-    borderRadius: 18,
-    padding: 20,
-    gap: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  title: { color: Colors.textPrimary, fontSize: 18, fontWeight: '800' },
-  body: { color: Colors.textSecondary, fontSize: 14, lineHeight: 20 },
-  input: {
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    color: Colors.textPrimary,
-    paddingHorizontal: 14,
-    height: 48,
-    fontSize: 15,
-  },
-  error: { color: Colors.red, fontSize: 13 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  cancelBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  cancelText: { color: Colors.textPrimary, fontWeight: '600', fontSize: 15 },
-  deleteBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.red,
-  },
-  deleteText: { color: Colors.white, fontWeight: '700', fontSize: 15 },
-  disabled: { opacity: 0.6 },
-});
+const createStyles = (c: ThemeColors, isDark: boolean) =>
+  StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: c.overlay,
+      justifyContent: 'center',
+      padding: 24,
+    },
+    sheet: {
+      backgroundColor: c.panel,
+      borderRadius: radius.xl,
+      padding: 20,
+      gap: 14,
+      borderWidth: 1,
+      borderColor: c.border,
+      shadowColor: '#000',
+      shadowOpacity: isDark ? 0.35 : 0.12,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 6,
+    },
+    title: { fontFamily: fonts.title, color: c.onSurface, fontSize: 18 },
+    body: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 14, lineHeight: 20 },
+    error: { fontFamily: fonts.medium, color: c.dangerInk, fontSize: 13 },
+    actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
+    action: { flex: 1 },
+  });

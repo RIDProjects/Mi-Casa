@@ -8,7 +8,6 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,10 +16,12 @@ import { Colors } from '../../theme/colors';
 import { householdExpensesService } from '../../services/household-expenses.service';
 import { HouseholdResumenCategoria } from '../../types';
 import { formatMoney } from '../../utils/currency';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import EmptyState from '../../components/common/EmptyState';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { GastosStackParamList } from '../../navigation/types';
+import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
+import { fonts, radius } from '../../theme/tokens';
+import type { ThemeColors } from '../../theme/tokens';
+import { Badge, Card, EmptyState, ErrorState, Reveal, Screen, Skeleton } from '../../components/ui';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
 
@@ -46,6 +47,84 @@ interface ExpenseRow {
   deletable: boolean;
 }
 
+
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    listContent: { padding: 16, paddingBottom: 96, gap: 10 },
+    header: { gap: 14, marginBottom: 4 },
+    monthSelector: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 10 },
+    monthArrow: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radius.md,
+      backgroundColor: c.surfaceContainer,
+    },
+    monthArrowDisabled: { opacity: 0.4 },
+    monthCenter: { alignItems: 'center' },
+    monthName: { fontFamily: fonts.title, color: c.onSurface, fontSize: 19 },
+    monthYear: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13 },
+    summaryCard: { gap: 10 },
+    summaryLabel: {
+      fontFamily: fonts.semibold,
+      color: c.onSurfaceVariant,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    summaryAmount: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 32, letterSpacing: -0.8 },
+    summaryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    summaryRowLabel: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13 },
+    summaryRowValue: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14, flexShrink: 1 },
+    summaryHint: { fontFamily: fonts.regular, color: c.warnInk, fontSize: 12 },
+    categoriesCard: { gap: 12 },
+    sectionTitle: { fontFamily: fonts.title, color: c.onSurface, fontSize: 17 },
+    catRow: { gap: 6 },
+    catLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    catDot: { width: 8, height: 8, borderRadius: 4 },
+    catLabel: { flex: 1, fontFamily: fonts.medium, color: c.onSurface, fontSize: 13 },
+    catPercentage: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    catAmount: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 13, marginLeft: 4 },
+    catBarBg: { height: 6, backgroundColor: c.ringTrack, borderRadius: 3, overflow: 'hidden' },
+    catBarFill: { height: '100%', borderRadius: 3 },
+    expenseRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingRight: 4 },
+    expenseContent: { flex: 1, gap: 6, paddingLeft: 16 },
+    expenseTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    expenseName: { flex: 1, fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14 },
+    expenseAmount: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 14 },
+    expenseBottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    catBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+    catBadgeText: { fontFamily: fonts.semibold, fontSize: 11 },
+    expensePlace: { flexShrink: 1, fontFamily: fonts.regular, color: c.outline, fontSize: 11 },
+    expenseDate: { fontFamily: fonts.regular, color: c.outline, fontSize: 11, marginLeft: 'auto' },
+    deleteBtn: { padding: 12 },
+    fab: {
+      position: 'absolute',
+      bottom: 24,
+      right: 24,
+      width: 58,
+      height: 58,
+      borderRadius: 29,
+      backgroundColor: c.brand,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 6,
+      shadowColor: c.brand,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+    },
+  });
+
 function CategoryBar({
   label,
   total,
@@ -57,42 +136,23 @@ function CategoryBar({
   percentage: number;
   currency: string;
 }) {
-  const color = Colors.categories[label] ?? Colors.textSecondary;
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const color = Colors.categories[label] ?? colors.outline;
   return (
-    <View style={catStyles.row}>
-      <View style={catStyles.labelRow}>
-        <View style={[catStyles.dot, { backgroundColor: color }]} />
-        <Text style={catStyles.label}>{label}</Text>
-        <Text style={catStyles.percentage}>{percentage.toFixed(0)}%</Text>
-        <Text style={catStyles.amount}>{formatMoney(total, currency)}</Text>
+    <View style={styles.catRow}>
+      <View style={styles.catLabelRow}>
+        <View style={[styles.catDot, { backgroundColor: color }]} />
+        <Text style={styles.catLabel}>{label}</Text>
+        <Text style={styles.catPercentage}>{percentage.toFixed(0)}%</Text>
+        <Text style={styles.catAmount}>{formatMoney(total, currency)}</Text>
       </View>
-      <View style={catStyles.barBg}>
-        <View
-          style={[
-            catStyles.barFill,
-            { width: `${Math.max(percentage, 2)}%` as any, backgroundColor: color },
-          ]}
-        />
+      <View style={styles.catBarBg}>
+        <View style={[styles.catBarFill, { width: `${Math.max(percentage, 2)}%` as any, backgroundColor: color }]} />
       </View>
     </View>
   );
 }
-
-const catStyles = StyleSheet.create({
-  row: { gap: 4, marginBottom: 10 },
-  labelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  label: { flex: 1, color: Colors.textPrimary, fontSize: 13, fontWeight: '500' },
-  percentage: { color: Colors.textSecondary, fontSize: 12 },
-  amount: { color: Colors.textPrimary, fontSize: 13, fontWeight: '600', marginLeft: 8 },
-  barBg: {
-    height: 6,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  barFill: { height: '100%', borderRadius: 3 },
-});
 
 function ExpenseRowItem({
   item,
@@ -103,7 +163,9 @@ function ExpenseRowItem({
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
 }) {
-  const catColor = Colors.categories[item.categoria] ?? Colors.textSecondary;
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const catColor = Colors.categories[item.categoria] ?? colors.outline;
 
   const handleDelete = () => {
     if (!item.id) return;
@@ -114,60 +176,46 @@ function ExpenseRowItem({
   };
 
   return (
-    <TouchableOpacity
-      style={txStyles.card}
-      activeOpacity={item.deletable ? 0.7 : 1}
-      disabled={!item.deletable}
-      onPress={() => item.id && onEdit(item.id)}
-    >
-      <View style={[txStyles.catIndicator, { backgroundColor: catColor }]} />
-      <View style={txStyles.content}>
-        <View style={txStyles.topRow}>
-          <Text style={txStyles.concepto} numberOfLines={1}>{item.descripcion}</Text>
-          <Text style={[txStyles.monto, { color: Colors.red }]}>-{formatMoney(item.monto, item.currency)}</Text>
-        </View>
-        <View style={txStyles.bottomRow}>
-          <View style={[txStyles.catBadge, { backgroundColor: catColor + '30' }]}>
-            <Text style={[txStyles.catLabel, { color: catColor }]}>{item.categoria}</Text>
+    <Card padded={false} accent={catColor} onPress={item.deletable ? () => item.id && onEdit(item.id) : undefined}>
+      <View style={styles.expenseRow}>
+        <View style={styles.expenseContent}>
+          <View style={styles.expenseTop}>
+            <Text style={styles.expenseName} numberOfLines={1}>{item.descripcion}</Text>
+            <Text style={styles.expenseAmount}>-{formatMoney(item.monto, item.currency)}</Text>
           </View>
-          {!!item.lugar && <Text style={txStyles.metodo}>{item.lugar}</Text>}
-          <Text style={txStyles.fecha}>{item.fecha}</Text>
+          <View style={styles.expenseBottom}>
+            <View style={[styles.catBadge, { backgroundColor: catColor + '26' }]}>
+              <Text style={[styles.catBadgeText, { color: catColor }]}>{item.categoria}</Text>
+            </View>
+            {!item.deletable && <Badge label="Mercado" tone="info" />}
+            {!!item.lugar && <Text style={styles.expensePlace} numberOfLines={1}>{item.lugar}</Text>}
+            <Text style={styles.expenseDate}>{item.fecha}</Text>
+          </View>
         </View>
+        {item.deletable && (
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} accessibilityLabel="Eliminar gasto">
+            <Ionicons name="trash-outline" size={16} color={colors.outline} />
+          </TouchableOpacity>
+        )}
       </View>
-      {item.deletable && (
-        <TouchableOpacity style={txStyles.deleteBtn} onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={16} color={Colors.textMuted} />
-        </TouchableOpacity>
-      )}
-    </TouchableOpacity>
+    </Card>
   );
 }
 
-const txStyles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    marginBottom: 6,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  catIndicator: { width: 4, alignSelf: 'stretch' },
-  content: { flex: 1, paddingHorizontal: 12, paddingVertical: 10, gap: 4 },
-  topRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  concepto: { flex: 1, color: Colors.textPrimary, fontSize: 14, fontWeight: '500' },
-  monto: { fontSize: 14, fontWeight: '700' },
-  bottomRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  catBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  catLabel: { fontSize: 11, fontWeight: '600' },
-  metodo: { color: Colors.textMuted, fontSize: 11 },
-  fecha: { color: Colors.textMuted, fontSize: 11, marginLeft: 'auto' },
-  deleteBtn: { padding: 12 },
-});
+function SkeletonBlocks() {
+  return (
+    <View testID="expenses-skeleton" style={{ gap: 14 }}>
+      <Skeleton height={72} radius={radius.lg} />
+      <Skeleton height={190} radius={radius.lg} />
+      <Skeleton height={64} radius={radius.lg} />
+      <Skeleton height={64} radius={radius.lg} />
+    </View>
+  );
+}
 
 export default function ExpenseRegistryScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
   const now = new Date();
@@ -180,11 +228,13 @@ export default function ExpenseRegistryScreen() {
   const {
     data,
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: qKey,
     queryFn: () => householdExpensesService.getMonth(monthStr),
     staleTime: 0,
+    retry: 1,
   });
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
@@ -252,14 +302,11 @@ export default function ExpenseRegistryScreen() {
     return [...resumenCategoria].sort((a, b) => b.totalCUP - a.totalCUP);
   }, [resumenCategoria]);
 
-  if (isLoading) return <LoadingSpinner message="Cargando gastos..." />;
-
-  const ListHeader = (
-    <>
-      {/* Selector de mes */}
-      <View style={styles.monthSelector}>
-        <TouchableOpacity style={styles.monthArrow} onPress={prevMonth}>
-          <Ionicons name="chevron-back" size={22} color={Colors.textPrimary} />
+  const monthSelector = (
+    <Reveal index={0}>
+      <Card padded={false} style={styles.monthSelector}>
+        <TouchableOpacity style={styles.monthArrow} onPress={prevMonth} accessibilityLabel="Mes anterior">
+          <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.monthCenter}>
           <Text style={styles.monthName}>{MONTH_NAMES[month - 1]}</Text>
@@ -269,92 +316,118 @@ export default function ExpenseRegistryScreen() {
           style={[styles.monthArrow, isCurrentMonth && styles.monthArrowDisabled]}
           onPress={nextMonth}
           disabled={isCurrentMonth}
+          accessibilityLabel="Mes siguiente"
         >
-          <Ionicons
-            name="chevron-forward"
-            size={22}
-            color={isCurrentMonth ? Colors.textMuted : Colors.textPrimary}
-          />
+          <Ionicons name="chevron-forward" size={22} color={isCurrentMonth ? colors.outline : colors.onSurface} />
         </TouchableOpacity>
-      </View>
+      </Card>
+    </Reveal>
+  );
 
-      {/* Resumen del mes */}
-      <View style={styles.summaryCard}>
-        <View style={styles.summaryMain}>
+  if (isLoading) {
+    return (
+      <Screen edges={['bottom']}>
+        <SkeletonBlocks />
+      </Screen>
+    );
+  }
+
+  if (isError && !data) {
+    return (
+      <Screen edges={['bottom']} refreshing={refreshing} onRefresh={onRefresh}>
+        {monthSelector}
+        <Card>
+          <ErrorState
+            message="No se pudieron cargar los gastos. Revisa tu conexión e inténtalo de nuevo."
+            onRetry={() => refetch()}
+          />
+        </Card>
+      </Screen>
+    );
+  }
+
+  const ListHeader = (
+    <View style={styles.header}>
+      {monthSelector}
+
+      <Reveal index={1}>
+        <Card style={styles.summaryCard} accent={colors.dangerInk}>
           <Text style={styles.summaryLabel}>Total gastos del mes</Text>
-          <Text style={[styles.summaryAmount, { color: Colors.red }]}>
+          <Text style={styles.summaryAmount} numberOfLines={1} adjustsFontSizeToFit>
             -{formatMoney(total, monedaLocal)}
           </Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
-          <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, monedaLocal)}</Text>
-        </View>
-        {unconvertedItems > 0 && (
-          <Text style={styles.summaryHint}>
-            Algunos artículos no tienen tasa de cambio y no se incluyen en el total
-          </Text>
-        )}
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
-          <Text style={styles.summaryRowValue}>{formatMoney(totalSalidas, monedaLocal)}</Text>
-        </View>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryRowLabel}>Registros</Text>
-          <Text style={styles.summaryRowValue}>{rows.length}</Text>
-        </View>
-      </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
+            <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, monedaLocal)}</Text>
+          </View>
+          {unconvertedItems > 0 && (
+            <Text style={styles.summaryHint}>
+              Algunos artículos no tienen tasa de cambio y no se incluyen en el total
+            </Text>
+          )}
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
+            <Text style={styles.summaryRowValue}>{formatMoney(totalSalidas, monedaLocal)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryRowLabel}>Registros</Text>
+            <Text style={styles.summaryRowValue}>{rows.length}</Text>
+          </View>
+        </Card>
+      </Reveal>
 
-      {/* Breakdown por categoría */}
       {categoryTotals.length > 0 && (
-        <View style={styles.categoriesCard}>
-          <Text style={styles.sectionTitle}>Gastos por categoría</Text>
-          {categoryTotals.map((ct) => (
-            <CategoryBar
-              key={ct.categoria}
-              label={ct.categoria}
-              total={ct.totalCUP}
-              percentage={total > 0 ? (ct.totalCUP / total) * 100 : 0}
-              currency={monedaLocal}
-            />
-          ))}
-        </View>
+        <Reveal index={2}>
+          <Card style={styles.categoriesCard}>
+            <Text style={styles.sectionTitle}>Gastos por categoría</Text>
+            {categoryTotals.map((ct) => (
+              <CategoryBar
+                key={ct.categoria}
+                label={ct.categoria}
+                total={ct.totalCUP}
+                percentage={total > 0 ? (ct.totalCUP / total) * 100 : 0}
+                currency={monedaLocal}
+              />
+            ))}
+          </Card>
+        </Reveal>
       )}
 
-      {/* Título de la lista */}
-      {rows.length > 0 && (
-        <Text style={styles.sectionTitle}>Gastos del mes</Text>
-      )}
-    </>
+      {rows.length > 0 && <Text style={styles.sectionTitle}>Gastos del mes</Text>}
+    </View>
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <Screen scroll={false} edges={['bottom']}>
       <FlatList
         data={rows}
         keyExtractor={(item) => item.key}
-        renderItem={({ item }) => (
-          <ExpenseRowItem
-            item={item}
-            onDelete={(id) => deleteMut.mutate(id)}
-            onEdit={(id) => navigation.navigate('AddHouseholdExpense', { expenseId: id })}
-          />
+        renderItem={({ item, index }) => (
+          <Reveal index={Math.min(index, 6) + 3}>
+            <ExpenseRowItem
+              item={item}
+              onDelete={(id) => deleteMut.mutate(id)}
+              onEdit={(id) => navigation.navigate('AddHouseholdExpense', { expenseId: id })}
+            />
+          </Reveal>
         )}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
-          <EmptyState
-            icon="receipt-outline"
-            title="Sin gastos"
-            subtitle={`No hay registros para ${MONTH_NAMES[month - 1]} ${year}`}
-          />
+          <Card>
+            <EmptyState
+              icon="receipt-outline"
+              title="Sin gastos"
+              subtitle={`No hay registros para ${MONTH_NAMES[month - 1]} ${year}`}
+            />
+          </Card>
         }
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={Colors.blue}
-            colors={[Colors.blue]}
+            tintColor={colors.brand}
+            colors={[colors.brand]}
           />
         }
       />
@@ -362,106 +435,10 @@ export default function ExpenseRegistryScreen() {
         style={styles.fab}
         onPress={() => navigation.navigate('AddHouseholdExpense', undefined)}
         activeOpacity={0.85}
+        accessibilityLabel="Registrar gasto"
       >
-        <Ionicons name="add" size={28} color={Colors.white} />
+        <Ionicons name="add" size={28} color={colors.onBrand} />
       </TouchableOpacity>
-    </SafeAreaView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  listContent: { padding: 16, gap: 0, paddingBottom: 32 },
-  monthSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  monthArrow: {
-    padding: 8,
-    borderRadius: 10,
-    backgroundColor: Colors.cardAlt,
-  },
-  monthArrowDisabled: { opacity: 0.4 },
-  monthCenter: { alignItems: 'center' },
-  monthName: {
-    color: Colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  monthYear: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  summaryCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  summaryMain: { gap: 4 },
-  summaryLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  summaryAmount: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  summaryRowLabel: { color: Colors.textSecondary, fontSize: 13 },
-  summaryHint: { color: Colors.textMuted, fontSize: 12, marginTop: 4 },
-  summaryRowValue: { color: Colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  categoriesCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 14,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: Colors.blue,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: Colors.blue,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-  },
-});
