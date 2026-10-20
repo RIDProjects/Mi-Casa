@@ -7,7 +7,7 @@ import { fonts } from '../theme/tokens';
 import DashboardScreen from '../screens/DashboardScreen';
 import GastosStack from './GastosStack';
 import BudgetScreen from '../screens/BudgetScreen';
-import MetasScreen from '../screens/MetasScreen';
+import MetasStack from './MetasStack';
 import DebtsStack from './DebtsStack';
 import ProfileScreen from '../screens/ProfileScreen';
 
@@ -69,7 +69,7 @@ export default function MainTabs() {
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Expenses" component={GastosStack} />
       <Tab.Screen name="Presupuesto" component={BudgetScreen} />
-      <Tab.Screen name="Metas" component={MetasScreen} />
+      <Tab.Screen name="Metas" component={MetasStack} />
       <Tab.Screen name="Deudas" component={DebtsStack} />
       <Tab.Screen name="Perfil" component={ProfileScreen} />
     </Tab.Navigator>
