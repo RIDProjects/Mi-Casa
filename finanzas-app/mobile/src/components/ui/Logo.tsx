@@ -3,7 +3,7 @@ import { Image, Text, View } from 'react-native';
 import { fonts } from '../../theme/tokens';
 import { useTheme } from '../../theme/ThemeContext';
 
-const MARK = require('../../../assets/logo-mark@3x.png');
+const MARK = require('../../../assets/logo-mark.png');
 
 interface Props {
   size?: number;

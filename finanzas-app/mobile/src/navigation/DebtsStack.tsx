@@ -1,20 +1,23 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DebtsStackParamList } from './types';
-import { Colors } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
+import { fonts } from '../theme/tokens';
 import DebtsSummaryScreen from '../screens/debts/DebtsSummaryScreen';
 import AddDebtScreen from '../screens/debts/AddDebtScreen';
 
 const Stack = createNativeStackNavigator<DebtsStackParamList>();
 
 export default function DebtsStack() {
+  const { colors } = useTheme();
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: Colors.card },
-        headerTintColor: Colors.textPrimary,
-        headerTitleStyle: { fontWeight: '700' },
-        contentStyle: { backgroundColor: Colors.background },
+        headerStyle: { backgroundColor: colors.panel },
+        headerTintColor: colors.onSurface,
+        headerTitleStyle: { fontFamily: fonts.title, fontSize: 17 },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: colors.surface },
       }}
     >
       {/* DebtsSummaryScreen ya renderiza su propio header — sin header nativo */}
