@@ -6,6 +6,8 @@ name: Deploy backend
 #   main     -> Railway `production` (promote staging -> main with a PR; manual approval)
 # Each push runs CI, deploys that branch's environment, waits for it to be
 # healthy and smoke-tests it. See finanzas-app/docs/deploy.md.
+# The deploy steps live in this file (not a reusable workflow) because GitHub
+# does not pass environment secrets (RAILWAY_TOKEN) into called workflows.
 
 on:
   push:
@@ -31,18 +33,88 @@ jobs:
 
   deploy:
     needs: ci
-    uses: ./.github/workflows/_deploy-backend-env.yml
-    with:
-      environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
-      base_url: ${{ github.ref_name == 'main' && 'https://backend-production-0d37.up.railway.app' || github.ref_name == 'staging' && 'https://backend-staging-494d.up.railway.app' || 'https://backend-dev-2110.up.railway.app' }}
-
-  # Temporary diagnostic: does the environment secret reach a plain (non-reusable) job?
-  probe-token:
-    if: github.event_name == 'workflow_dispatch' && github.ref_name == 'dev'
     runs-on: ubuntu-latest
-    environment: dev
+    timeout-minutes: 25
+    environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      # Not RAILWAY_ENV: the Railway CLI reads that variable to pick its API host.
+      DEPLOY_ENV: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
+      BASE_URL: ${{ github.ref_name == 'main' && 'https://backend-production-0d37.up.railway.app' || github.ref_name == 'staging' && 'https://backend-staging-494d.up.railway.app' || 'https://backend-dev-2110.up.railway.app' }}
     steps:
-      - run: |
-          if [ -z "$T" ]; then echo "PROBE: secret is EMPTY in a plain job"; else echo "PROBE: secret present in a plain job (length ${#T})"; fi
-        env:
-          T: ${{ secrets.RAILWAY_TOKEN }}
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Check Railway token
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "::error::RAILWAY_TOKEN is empty in GitHub Environment '$DEPLOY_ENV' (environment secret missing, empty, or not visible to this job)"
+            exit 1
+          fi
+          echo "RAILWAY_TOKEN present (length ${#RAILWAY_TOKEN})"
+          # A project token is scoped to one environment; this proves it is valid and is the right type.
+          railway status --json | jq -r '"token ok -> project \(.name), environments: \([.environments.edges[].node.name]|join(","))"' \
+            || { echo "::error::RAILWAY_TOKEN was rejected by Railway (it must be a *project* token created for the '$DEPLOY_ENV' environment)"; exit 1; }
+
+      # The image no longer runs migrations in CMD. If the environment lacks the
+      # pre-deploy command, a deploy would silently skip them: refuse instead.
+      - name: Assert pre-deploy migration step is configured
+        run: |
+          cmd=$(railway environment config --environment "$DEPLOY_ENV" --json | jq -r '[.services[] | .deploy.preDeployCommand // empty][0] | if type == "array" then join(" ") else . end // empty')
+          case "$cmd" in
+            *"migration:run"*) echo "pre-deploy: $cmd" ;;
+            *) echo "::error::preDeployCommand missing in $DEPLOY_ENV (see finanzas-app/docs/deploy.md)"; exit 1 ;;
+          esac
+
+      - name: Record current deployment
+        id: before
+        run: |
+          prev=$(railway deployment list --service backend --environment "$DEPLOY_ENV" --limit 1 --json | jq -r '.[0].id // "none"')
+          echo "id=$prev" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy (migrations run in railway.json preDeployCommand)
+        working-directory: finanzas-app/backend
+        run: railway up --service backend --environment "$DEPLOY_ENV" --detach --message "${GITHUB_SHA::7} via GitHub Actions"
+
+      - name: Wait for the new deployment to become healthy
+        run: |
+          for i in $(seq 1 60); do
+            read -r id status < <(railway deployment list --service backend --environment "$DEPLOY_ENV" --limit 1 --json | jq -r '.[0] | "\(.id) \(.status)"')
+            echo "attempt $i: $id $status"
+            if [ "$id" != "${{ steps.before.outputs.id }}" ]; then
+              case "$status" in
+                SUCCESS) exit 0 ;;
+                FAILED|CRASHED|REMOVED) echo "::error::Deployment $id ended as $status"; exit 1 ;;
+              esac
+            fi
+            sleep 15
+          done
+          echo "::error::Timed out waiting for deployment"; exit 1
+
+      - name: Smoke test
+        run: |
+          set -eu
+          curl_code() { curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$@" || true; }
+
+          for i in $(seq 1 10); do
+            code=$(curl_code "$BASE_URL/health")
+            echo "health attempt $i: $code"
+            [ "$code" = "200" ] && break
+            [ "$i" = "10" ] && { echo "::error::/health never returned 200"; exit 1; }
+            sleep 6
+          done
+
+          body=$(curl -s --max-time 10 "$BASE_URL/health")
+          echo "$body" | jq -e '.status == "ok"' >/dev/null
+
+          # Protected route without a token must be rejected: proves the global
+          # prefix, routing and auth guard are live (no credentials needed).
+          code=$(curl_code "$BASE_URL/api/v1/debts")
+          echo "GET /api/v1/debts without token: $code"
+          [ "$code" = "401" ] || { echo "::error::expected 401, got $code"; exit 1; }
