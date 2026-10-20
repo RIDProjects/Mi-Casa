@@ -6,9 +6,9 @@ One long-lived branch per environment, promoted with pull requests: `dev` -> `st
 
 | Branch | Env | Trigger | Database | Backend URL | Frontend (Vercel) | Mobile (EAS channel) |
 |---|---|---|---|---|---|---|
-| `dev` | `dev` | push (merged PR) | own empty Postgres | https://backend-dev-2110.up.railway.app | branch preview (placeholder `https://mi-casa-dev.vercel.app`) | `development` |
-| `staging` | `staging` | push (PR `dev` -> `staging`) | own empty Postgres | https://backend-staging-494d.up.railway.app | branch preview (placeholder `https://mi-casa-staging.vercel.app`) | `preview` |
-| `main` | `production` | push (PR `staging` -> `main`), **manual approval** | production Postgres | https://backend-production-0d37.up.railway.app | production Vercel project | `production` |
+| `dev` | `dev` | push (merged PR) | own empty Postgres | https://backend-dev-2110.up.railway.app | branch preview (placeholder `https://mi-casa-dev.vercel.app`) | `development` (EAS Update) |
+| `staging` | `staging` | push (PR `dev` -> `staging`) | own empty Postgres | https://backend-staging-494d.up.railway.app | branch preview (placeholder `https://mi-casa-staging.vercel.app`) | `staging` (EAS Update) |
+| `main` | `production` | push (PR `staging` -> `main`), **manual approval** | production Postgres | https://backend-production-0d37.up.railway.app | production Vercel project | `preview` (EAS Update; the channel installed builds use) |
 
 Each Railway environment has its own `JWT_SECRET` (96 hex chars, never shared), `SEED=false`, `NODE_ENV=production`
 and no email credentials (`RESEND_API_KEY` / `SMTP_*` are absent, so email is skipped). `FRONTEND_URL` for
@@ -82,8 +82,13 @@ If a service domain is recreated, update `base_url` in `deploy-backend.yml`.
 - **Frontend (Vercel)** is deployed by Vercel's Git integration, outside this pipeline. Production = `main` build;
   the `dev` and `staging` branches get Vercel branch previews; in Vercel -> Settings -> Environment Variables set
   `NEXT_PUBLIC_API_URL` for *Preview* with the Git branch `dev` / `staging` pointing at the matching backend URL.
-- **Mobile (EAS)** uses the channels already defined in `eas.json`: `development` (branch `dev`), `preview` (branch `staging`) and `production` (branch `main`) (`eas update --branch <channel>`),
-  with `EXPO_PUBLIC_API_URL` set per EAS environment. Not automated yet.
+- **Mobile (EAS Update)** is published by `.github/workflows/deploy-mobile.yml` on every push to `dev`, `staging` or `main`
+  that touches `finanzas-app/mobile/**` (CI first; `main` waits for the `production` environment approval).
+  Channels: `dev` -> `development`, `staging` -> `staging`, `main` -> `preview` (override with the environment
+  variable `EAS_CHANNEL`, e.g. `production` once a store build exists). `EXPO_PUBLIC_API_URL` is set per branch in the workflow.
+  One-time setup: create an Expo access token (expo.dev -> Account settings -> Access tokens) and store it as the
+  `EXPO_TOKEN` secret of the GitHub Environments `dev`, `staging` and `production`.
+  OTA ships JS and assets only: a change that adds a native module needs a new `eas build` first.
 
 ## Rollback
 
