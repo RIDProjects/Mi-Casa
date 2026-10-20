@@ -9,29 +9,105 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Colors } from '../../theme/colors';
 import { purchasesService } from '../../services/purchases.service';
 import { householdExpensesService } from '../../services/household-expenses.service';
 import { PurchaseItem, CreatePurchaseItemDto, HouseholdExpensesMonth } from '../../types';
 import { formatMoney, formatCurrencyTotals } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
+import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
+import { fonts, radius } from '../../theme/tokens';
+import type { ThemeColors } from '../../theme/tokens';
+import { Button, Card, EmptyState, ErrorState, Reveal, Screen, Skeleton, TextField } from '../../components/ui';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
+
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    summary: { marginHorizontal: 16, marginTop: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+    summaryText: { flex: 1, gap: 2 },
+    totalLabel: {
+      fontFamily: fonts.semibold,
+      color: c.onSurfaceVariant,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    totalAmount: { fontFamily: fonts.title, color: c.onSurface, fontSize: 26, letterSpacing: -0.6 },
+    itemCount: { fontFamily: fonts.regular, color: c.outline, fontSize: 12 },
+    listContent: { padding: 16, paddingBottom: 24, gap: 12 },
+    storeGroup: { overflow: 'hidden' },
+    storeHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      backgroundColor: c.surfaceContainer,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+    },
+    storeTitle: { flex: 1, fontFamily: fonts.semibold, color: c.onSurface, fontSize: 13 },
+    storeTotal: { fontFamily: fonts.title, color: c.primary, fontSize: 13, flexShrink: 1, textAlign: 'right' },
+    itemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      borderBottomWidth: 1,
+      borderBottomColor: c.border,
+      gap: 8,
+    },
+    itemRowEditing: { backgroundColor: c.infoTint },
+    itemInfo: { flex: 1, gap: 2 },
+    itemName: { fontFamily: fonts.medium, color: c.onSurface, fontSize: 14 },
+    itemDetail: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    itemSubtotal: { fontFamily: fonts.title, color: c.onSurface, fontSize: 13 },
+    removeBtn: { padding: 2 },
+    inputBar: {
+      backgroundColor: c.panel,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+      padding: 12,
+      gap: 8,
+    },
+    editingBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: c.infoTint,
+      borderRadius: radius.sm,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+    },
+    editingBannerText: { fontFamily: fonts.semibold, color: c.primary, fontSize: 12 },
+    inputRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  });
+
+function SkeletonBlocks() {
+  return (
+    <View testID="shopping-skeleton" style={{ gap: 14, padding: 16 }}>
+      <Skeleton height={84} radius={radius.lg} />
+      <Skeleton height={150} radius={radius.lg} />
+      <Skeleton height={110} radius={radius.lg} />
+    </View>
+  );
+}
 
 // Los ítems agregados acá se registran directamente en la lista de compras
 // del mes (`purchases` module). Ese mismo dato alimenta automáticamente la
 // sección "Compras de Mercado" de Registro de Gastos — no hace falta un paso
 // adicional de "registrar como gasto".
 export default function ShoppingListScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
 
@@ -42,11 +118,13 @@ export default function ShoppingListScreen() {
   const {
     data: lists = [],
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: listsQKey,
     queryFn: () => purchasesService.getLists(),
     staleTime: 0,
+    retry: 1,
   });
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
@@ -196,37 +274,52 @@ export default function ShoppingListScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safe} edges={['bottom']}>
-        <View style={styles.emptyList}>
-          <ActivityIndicator size="large" color={Colors.blue} />
-        </View>
-      </SafeAreaView>
+      <Screen scroll={false} edges={['bottom']}>
+        <SkeletonBlocks />
+      </Screen>
     );
   }
 
+  if (isError && lists.length === 0) {
+    return (
+      <Screen edges={['bottom']} refreshing={refreshing} onRefresh={onRefresh}>
+        <Card>
+          <ErrorState
+            message="No se pudo cargar la lista de compras. Revisa tu conexión e inténtalo de nuevo."
+            onRetry={() => refetch()}
+          />
+        </Card>
+      </Screen>
+    );
+  }
+
+  const saving = addItemMut.isPending || updateItemMut.isPending;
+  // TextField forwards unknown props to its TextInput; React 19 passes `ref` as a prop.
+  const refProps = (ref: React.RefObject<TextInput | null>) => ({ ref } as object);
+
   return (
-    <SafeAreaView style={styles.safe} edges={['bottom']}>
+    <Screen scroll={false} edges={['bottom']}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         {/* Header con total y botón ver gastos */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.totalLabel}>Total de la compra</Text>
-            <Text style={styles.totalAmount}>{totalText}</Text>
-            <Text style={styles.itemCount}>{items.length} ítem{items.length !== 1 ? 's' : ''}</Text>
-          </View>
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              style={styles.headerBtn}
+        <Reveal index={0}>
+          <Card style={styles.summary} accent={colors.brand}>
+            <View style={styles.summaryText}>
+              <Text style={styles.totalLabel}>Total de la compra</Text>
+              <Text style={styles.totalAmount} numberOfLines={2} adjustsFontSizeToFit>{totalText}</Text>
+              <Text style={styles.itemCount}>{items.length} ítem{items.length !== 1 ? 's' : ''}</Text>
+            </View>
+            <Button
+              label="Ver gastos"
+              icon="bar-chart-outline"
+              variant="secondary"
+              small
               onPress={() => navigation.navigate('ExpenseRegistry')}
-            >
-              <Ionicons name="bar-chart-outline" size={20} color={Colors.blue} />
-              <Text style={styles.headerBtnText}>Ver gastos</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            />
+          </Card>
+        </Reveal>
 
         {/* Lista de ítems agrupados por lugar */}
         <ScrollView
@@ -237,55 +330,58 @@ export default function ShoppingListScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.blue}
-              colors={[Colors.blue]}
+              tintColor={colors.brand}
+              colors={[colors.brand]}
             />
           }
         >
           {Object.keys(grouped).length === 0 ? (
-            <View style={styles.emptyList}>
-              <Ionicons name="cart-outline" size={48} color={Colors.textMuted} />
-              <Text style={styles.emptyTitle}>Lista vacía</Text>
-              <Text style={styles.emptySubtitle}>
-                Agrega ítems usando el formulario de abajo
-              </Text>
-            </View>
+            <Card>
+              <EmptyState
+                icon="cart-outline"
+                title="Lista vacía"
+                subtitle="Agrega ítems usando el formulario de abajo"
+              />
+            </Card>
           ) : (
-            Object.entries(grouped).map(([lugar, storeItems]) => {
+            Object.entries(grouped).map(([lugar, storeItems], index) => {
               const storeTotText = formatCurrencyTotals(storeItems, monedaLocal);
               return (
-                <View key={lugar} style={styles.storeGroup}>
-                  <View style={styles.storeHeader}>
-                    <Ionicons name="storefront-outline" size={15} color={Colors.textSecondary} />
-                    <Text style={styles.storeTitle}>{lugar}</Text>
-                    <Text style={styles.storeTotal}>{storeTotText}</Text>
-                  </View>
-                  {storeItems.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={[styles.itemRow, editingItemId === item.id && styles.itemRowEditing]}
-                      activeOpacity={0.7}
-                      onPress={() => handleStartEdit(item)}
-                    >
-                      <View style={styles.itemInfo}>
-                        <Text style={styles.itemName}>{item.name}</Text>
-                        <Text style={styles.itemDetail}>
-                          {item.quantity} × {fmt(item.unitPrice, item.currency)}
-                        </Text>
-                      </View>
-                      <Text style={styles.itemSubtotal}>
-                        {fmt(Number(item.quantity || 0) * Number(item.unitPrice || 0), item.currency)}
-                      </Text>
+                <Reveal key={lugar} index={index + 1}>
+                  <Card padded={false} style={styles.storeGroup}>
+                    <View style={styles.storeHeader}>
+                      <Ionicons name="storefront-outline" size={15} color={colors.onSurfaceVariant} />
+                      <Text style={styles.storeTitle}>{lugar}</Text>
+                      <Text style={styles.storeTotal}>{storeTotText}</Text>
+                    </View>
+                    {storeItems.map((item) => (
                       <TouchableOpacity
-                        style={styles.removeBtn}
-                        onPress={() => handleRemoveItem(item.id)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        key={item.id}
+                        style={[styles.itemRow, editingItemId === item.id && styles.itemRowEditing]}
+                        activeOpacity={0.7}
+                        onPress={() => handleStartEdit(item)}
                       >
-                        <Ionicons name="close-circle" size={20} color={Colors.textMuted} />
+                        <View style={styles.itemInfo}>
+                          <Text style={styles.itemName}>{item.name}</Text>
+                          <Text style={styles.itemDetail}>
+                            {item.quantity} × {fmt(item.unitPrice, item.currency)}
+                          </Text>
+                        </View>
+                        <Text style={styles.itemSubtotal}>
+                          {fmt(Number(item.quantity || 0) * Number(item.unitPrice || 0), item.currency)}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.removeBtn}
+                          onPress={() => handleRemoveItem(item.id)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          accessibilityLabel="Eliminar producto"
+                        >
+                          <Ionicons name="close-circle" size={20} color={colors.outline} />
+                        </TouchableOpacity>
                       </TouchableOpacity>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                    ))}
+                  </Card>
+                </Reveal>
               );
             })
           )}
@@ -296,263 +392,58 @@ export default function ShoppingListScreen() {
           {editingItemId && (
             <View style={styles.editingBanner}>
               <Text style={styles.editingBannerText}>Editando producto</Text>
-              <TouchableOpacity onPress={handleCancelEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Ionicons name="close" size={16} color={Colors.textSecondary} />
+              <TouchableOpacity onPress={handleCancelEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} accessibilityLabel="Cancelar edición">
+                <Ionicons name="close" size={16} color={colors.onSurfaceVariant} />
               </TouchableOpacity>
             </View>
           )}
-          <View style={styles.inputBarTop}>
-            <TextInput
-              style={[styles.quickInput, { flex: 2 }]}
+          <View style={styles.inputRow}>
+            <TextField
+              containerStyle={{ flex: 2 }}
               value={inputProducto}
               onChangeText={setInputProducto}
               placeholder="Producto"
-              placeholderTextColor={Colors.textMuted}
               returnKeyType="next"
               onSubmitEditing={() => precioRef.current?.focus()}
             />
-            <TextInput
-              style={[styles.quickInput, { flex: 0.8 }]}
+            <TextField
+              containerStyle={{ flex: 0.8 }}
               value={inputCantidad}
               onChangeText={setInputCantidad}
               placeholder="Cant."
-              placeholderTextColor={Colors.textMuted}
               keyboardType="numeric"
               returnKeyType="next"
             />
-            <TextInput
-              ref={precioRef}
-              style={[styles.quickInput, { flex: 1 }]}
+            <TextField
+              containerStyle={{ flex: 1.1 }}
+              {...refProps(precioRef)}
               value={inputPrecio}
               onChangeText={setInputPrecio}
               placeholder={monedaLocal ? `Precio ${monedaLocal}` : 'Precio'}
-              placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
               returnKeyType="next"
               onSubmitEditing={() => tiendaRef.current?.focus()}
             />
           </View>
-          <View style={styles.inputBarBottom}>
-            <TextInput
-              ref={tiendaRef}
-              style={[styles.quickInput, { flex: 1 }]}
+          <View style={styles.inputRow}>
+            <TextField
+              containerStyle={{ flex: 1 }}
+              {...refProps(tiendaRef)}
               value={inputTienda}
               onChangeText={setInputTienda}
               placeholder="Tienda / lugar"
-              placeholderTextColor={Colors.textMuted}
               returnKeyType="done"
               onSubmitEditing={handleAddItem}
             />
-            <TouchableOpacity
-              style={[styles.addItemBtn, (addItemMut.isPending || updateItemMut.isPending) && { opacity: 0.6 }]}
+            <Button
+              label={editingItemId ? 'Guardar' : 'Agregar'}
+              icon={editingItemId ? 'checkmark' : 'add'}
               onPress={handleAddItem}
-              activeOpacity={0.8}
-              disabled={addItemMut.isPending || updateItemMut.isPending}
-            >
-              {(addItemMut.isPending || updateItemMut.isPending) ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <>
-                  <Ionicons name={editingItemId ? 'checkmark' : 'add'} size={22} color={Colors.white} />
-                  <Text style={styles.addItemText}>{editingItemId ? 'Guardar' : 'Agregar'}</Text>
-                </>
-              )}
-            </TouchableOpacity>
+              loading={saving}
+            />
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.card,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  totalLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  totalAmount: {
-    color: Colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  itemCount: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  headerActions: {
-    gap: 8,
-  },
-  headerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.blueBg,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: Colors.blue,
-  },
-  headerBtnText: {
-    color: Colors.blue,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 24,
-    gap: 12,
-  },
-  emptyList: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 8,
-  },
-  emptyTitle: {
-    color: Colors.textSecondary,
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  emptySubtitle: {
-    color: Colors.textMuted,
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  storeGroup: {
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  storeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: Colors.cardAlt,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  storeTitle: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  storeTotal: {
-    color: Colors.blue,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border + '80',
-    gap: 8,
-  },
-  itemRowEditing: {
-    backgroundColor: Colors.blueBg,
-  },
-  editingBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.blueBg,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  editingBannerText: {
-    color: Colors.blue,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  itemInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  itemName: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  itemDetail: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  itemSubtotal: {
-    color: Colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  removeBtn: {
-    padding: 2,
-  },
-  // Barra de entrada rápida
-  inputBar: {
-    backgroundColor: Colors.card,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    padding: 12,
-    gap: 8,
-  },
-  inputBarTop: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  inputBarBottom: {
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center',
-  },
-  quickInput: {
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    color: Colors.textPrimary,
-    fontSize: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    height: 42,
-  },
-  addItemBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    backgroundColor: Colors.blue,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    height: 42,
-  },
-  addItemText: {
-    color: Colors.white,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});
