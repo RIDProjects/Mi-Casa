@@ -35,3 +35,14 @@ jobs:
     with:
       environment: ${{ github.ref_name == 'main' && 'production' || github.ref_name }}
       base_url: ${{ github.ref_name == 'main' && 'https://backend-production-0d37.up.railway.app' || github.ref_name == 'staging' && 'https://backend-staging-494d.up.railway.app' || 'https://backend-dev-2110.up.railway.app' }}
+
+  # Temporary diagnostic: does the environment secret reach a plain (non-reusable) job?
+  probe-token:
+    if: github.event_name == 'workflow_dispatch' && github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - run: |
+          if [ -z "$T" ]; then echo "PROBE: secret is EMPTY in a plain job"; else echo "PROBE: secret present in a plain job (length ${#T})"; fi
+        env:
+          T: ${{ secrets.RAILWAY_TOKEN }}
