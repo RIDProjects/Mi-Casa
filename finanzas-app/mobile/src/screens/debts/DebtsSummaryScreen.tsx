@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useScreenPolling } from '../../hooks/useScreenPolling';
 import {
   View,
   Text,
@@ -119,6 +120,7 @@ function SkeletonBlocks() {
 }
 
 export default function DebtsSummaryScreen() {
+  const pollInterval = useScreenPolling();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<Nav>();
@@ -131,6 +133,7 @@ export default function DebtsSummaryScreen() {
     refetch,
   } = useQuery({
     queryKey: ['debts'],
+    refetchInterval: pollInterval,
     queryFn: debtsService.getAll,
     staleTime: 0,
   });
@@ -141,6 +144,7 @@ export default function DebtsSummaryScreen() {
     isLoading: loadingSummary,
   } = useQuery({
     queryKey: ['debtsSummary'],
+    refetchInterval: pollInterval,
     queryFn: debtsService.getSummary,
     staleTime: 0,
   });
@@ -164,7 +168,7 @@ export default function DebtsSummaryScreen() {
 
   if (isLoading || loadingSummary) {
     return (
-      <Screen>
+      <Screen edges={['bottom']}>
         <SkeletonBlocks />
       </Screen>
     );
@@ -172,7 +176,7 @@ export default function DebtsSummaryScreen() {
 
   if (isError && debts.length === 0) {
     return (
-      <Screen refreshing={refreshing} onRefresh={onRefresh}>
+      <Screen edges={['bottom']} refreshing={refreshing} onRefresh={onRefresh}>
         <PageHeader title="Deudas" subtitle="Control de deudas bidireccional" />
         <Card>
           <ErrorState
@@ -321,7 +325,7 @@ export default function DebtsSummaryScreen() {
   );
 
   return (
-    <Screen scroll={false}>
+    <Screen edges={['bottom']} scroll={false}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}

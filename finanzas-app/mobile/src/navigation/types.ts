@@ -17,14 +17,13 @@ export type RootStackParamList = {
   PrivacyPolicy: undefined;
 };
 
-// Bottom tabs (6 tabs: Dashboard, Gastos, Presupuesto, Metas, Deudas, Perfil)
+// Bottom tabs (5 tabs: Dashboard, Gastos, Presupuesto, Metas, Más)
 export type MainTabParamList = {
   Dashboard: undefined;
   Expenses: NavigatorScreenParams<GastosStackParamList>;
   Presupuesto: NavigatorScreenParams<BudgetStackParamList>;
   Metas: NavigatorScreenParams<MetasStackParamList>;
-  Deudas: NavigatorScreenParams<DebtsStackParamList>;
-  Perfil: undefined;
+  Mas: NavigatorScreenParams<MasStackParamList>;
 };
 
 // Stack anidado dentro del tab de Gastos
@@ -34,7 +33,13 @@ export type GastosStackParamList = {
   AddHouseholdExpense: { expenseId?: string } | undefined;
 };
 
-// Stack anidado dentro del tab de Deudas
+// Stack del tab "Más": hub + Deudas + Perfil (antes eran tabs)
+export type MasStackParamList = {
+  MasHome: undefined;
+  Perfil: undefined;
+} & DebtsStackParamList;
+
+// Pantallas de Deudas (ahora dentro del stack de Más)
 export type DebtsStackParamList = {
   DebtsSummary: undefined;
   AddDebt: { debtId?: string; debtType?: 'they_owe_me' | 'i_owe' } | undefined;

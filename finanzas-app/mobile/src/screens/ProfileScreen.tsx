@@ -188,7 +188,7 @@ export default function ProfileScreen() {
   const canDeleteAccount = !user?.roles?.some((r) => r.name === 'admin');
 
   return (
-    <Screen>
+    <Screen edges={['bottom']}>
       <Reveal index={0}>
         <PageHeader title="Perfil" />
       </Reveal>
