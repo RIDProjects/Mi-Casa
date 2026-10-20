@@ -24,7 +24,7 @@ export default function PageHeader({ title, subtitle, eyebrow, right }: Props) {
     <View style={styles.row}>
       <View style={{ flex: 1 }}>
         {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-        <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit>{title}</Text>
+        <Text style={styles.title} numberOfLines={2} adjustsFontSizeToFit>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
       {right}

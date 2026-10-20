@@ -11,6 +11,14 @@ import MainTabs from './MainTabs';
 import LoginScreen from '../screens/auth/LoginScreen';
 import VencimientosScreen from '../screens/VencimientosScreen';
 import NotificacionesScreen from '../screens/NotificacionesScreen';
+import MovimientosScreen from '../screens/MovimientosScreen';
+import TarjetasScreen from '../screens/TarjetasScreen';
+import FondoEmergenciaScreen from '../screens/FondoEmergenciaScreen';
+import PatrimonioScreen from '../screens/PatrimonioScreen';
+import TarjetaFormScreen from '../screens/TarjetaFormScreen';
+import CuotasScreen from '../screens/CuotasScreen';
+import CuotaFormScreen from '../screens/CuotaFormScreen';
+import MovimientoFormScreen from '../screens/MovimientoFormScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -80,6 +88,52 @@ export default function AppNavigator() {
             name="Notificaciones"
             component={NotificacionesScreen}
             options={headerOptions(colors, 'Notificaciones')}
+          />
+          <Stack.Screen
+            name="Movimientos"
+            component={MovimientosScreen}
+            options={headerOptions(colors, 'Movimientos')}
+          />
+          <Stack.Screen
+            name="MovimientoForm"
+            component={MovimientoFormScreen}
+            options={({ route }) =>
+              headerOptions(colors, route.params?.transaction ? 'Editar movimiento' : 'Registrar movimiento')
+            }
+          />
+          <Stack.Screen
+            name="Tarjetas"
+            component={TarjetasScreen}
+            options={headerOptions(colors, 'Tarjetas de crédito')}
+          />
+          <Stack.Screen
+            name="TarjetaForm"
+            component={TarjetaFormScreen}
+            options={({ route }) =>
+              headerOptions(colors, route.params?.card ? 'Editar tarjeta' : 'Nueva tarjeta')
+            }
+          />
+          <Stack.Screen
+            name="Cuotas"
+            component={CuotasScreen}
+            options={headerOptions(colors, 'Plan de cuotas')}
+          />
+          <Stack.Screen
+            name="CuotaForm"
+            component={CuotaFormScreen}
+            options={({ route }) =>
+              headerOptions(colors, route.params?.cuota ? 'Editar cuota' : 'Nueva cuota')
+            }
+          />
+          <Stack.Screen
+            name="FondoEmergencia"
+            component={FondoEmergenciaScreen}
+            options={headerOptions(colors, 'Fondo de emergencia')}
+          />
+          <Stack.Screen
+            name="Patrimonio"
+            component={PatrimonioScreen}
+            options={headerOptions(colors, 'Patrimonio')}
           />
           <Stack.Screen
             name="PrivacyPolicy"

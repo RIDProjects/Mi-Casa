@@ -1,4 +1,5 @@
 import React from 'react';
+import { Alert } from 'react-native';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MetasScreen from '../MetasScreen';
@@ -12,9 +13,16 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: any) => children,
 }));
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
-jest.mock('../../services/apiClient', () => ({ __esModule: true, default: { get: jest.fn() } }));
+jest.mock('../../services/apiClient', () => ({
+  __esModule: true,
+  default: { get: jest.fn(), put: jest.fn() },
+}));
+
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: mockNavigate }) }));
 
 const mockGet = apiClient.get as jest.Mock;
+const mockPut = apiClient.put as jest.Mock;
 
 const goal = (over: any = {}) => ({
   id: 'g1',
@@ -30,8 +38,10 @@ const goal = (over: any = {}) => ({
   ...over,
 });
 
+let client: QueryClient;
 const renderMetas = () => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  jest.spyOn(client, 'invalidateQueries');
   return render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
@@ -74,6 +84,7 @@ describe('MetasScreen', () => {
     mockGet.mockResolvedValue({ data: [] });
     renderMetas();
     expect(await screen.findByText('Sin metas registradas')).toBeTruthy();
+    expect(screen.getByText('Usa el botón de abajo para crear tu primera meta de ahorro')).toBeTruthy();
     expect(screen.queryByText('Total ahorrado')).toBeNull();
   });
 
@@ -87,5 +98,70 @@ describe('MetasScreen', () => {
     await waitFor(() => expect(mockGet.mock.calls.length).toBeGreaterThan(before));
     expect(await screen.findByText('Viaje')).toBeTruthy();
     expect(screen.queryByText('Algo salió mal')).toBeNull();
+  });
+
+  it('opens the create form from the action bar, also with no goals', async () => {
+    mockGet.mockResolvedValue({ data: [] });
+    renderMetas();
+    await screen.findByText('Sin metas registradas');
+    fireEvent.press(screen.getByText('Nueva meta'));
+    expect(mockNavigate).toHaveBeenCalledWith('GoalForm', {});
+  });
+
+  it('opens the edit form when a goal card is tapped', async () => {
+    mockGet.mockResolvedValue({ data: [goal()] });
+    renderMetas();
+    fireEvent.press(await screen.findByText('Viaje'));
+    expect(mockNavigate).toHaveBeenCalledWith('GoalForm', { goalId: 'g1' });
+  });
+
+  describe('contribution', () => {
+    let alert: jest.SpyInstance;
+    beforeEach(() => {
+      alert = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      mockGet.mockResolvedValue({ data: [goal()] });
+    });
+    afterEach(() => alert.mockRestore());
+
+    const openPrompt = async () => {
+      renderMetas();
+      await screen.findByText('Viaje');
+      fireEvent.press(screen.getByText('Aportar'));
+    };
+
+    it('adds the amount to ahorrosActuales, invalidates and closes', async () => {
+      mockPut.mockResolvedValue({ data: {} });
+      await openPrompt();
+      fireEvent.changeText(screen.getByLabelText('Monto del aporte'), '50,5');
+      fireEvent.press(screen.getByText('Guardar aporte'));
+      await waitFor(() => expect(mockPut).toHaveBeenCalledWith('/savings-goals/g1', { ahorrosActuales: 300.5 }));
+      await waitFor(() => expect(client.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['savings-goals'] }));
+      expect(client.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['summary'] });
+      await waitFor(() => expect(screen.queryByLabelText('Monto del aporte')).toBeNull());
+    });
+
+    it.each([[''], ['0'], ['-5'], ['abc']])('rejects the amount %p without calling the API', async (amount) => {
+      await openPrompt();
+      fireEvent.changeText(screen.getByLabelText('Monto del aporte'), amount);
+      fireEvent.press(screen.getByText('Guardar aporte'));
+      expect(screen.getByText('Ingresa un monto mayor a cero.')).toBeTruthy();
+      expect(mockPut).not.toHaveBeenCalled();
+    });
+
+    it('shows an alert on a server error and keeps the prompt open', async () => {
+      mockPut.mockRejectedValue({ response: { data: { message: 'falló' } } });
+      await openPrompt();
+      fireEvent.changeText(screen.getByLabelText('Monto del aporte'), '10');
+      fireEvent.press(screen.getByText('Guardar aporte'));
+      await waitFor(() => expect(alert).toHaveBeenCalledWith('Error', 'falló'));
+      expect(screen.getByLabelText('Monto del aporte')).toBeTruthy();
+    });
+
+    it('closes the prompt on cancel without calling the API', async () => {
+      await openPrompt();
+      fireEvent.press(screen.getByText('Cancelar'));
+      await waitFor(() => expect(screen.queryByLabelText('Monto del aporte')).toBeNull());
+      expect(mockPut).not.toHaveBeenCalled();
+    });
   });
 });

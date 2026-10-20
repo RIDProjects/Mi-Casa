@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useScreenPolling } from '../../hooks/useScreenPolling';
 import {
   View,
   Text,
@@ -198,6 +199,7 @@ function SkeletonBlocks() {
 }
 
 export default function ExpenseRegistryScreen() {
+  const pollInterval = useScreenPolling();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<Nav>();
@@ -216,6 +218,7 @@ export default function ExpenseRegistryScreen() {
     refetch,
   } = useQuery({
     queryKey: qKey,
+    refetchInterval: pollInterval,
     queryFn: () => householdExpensesService.getMonth(monthStr),
     staleTime: 0,
     retry: 1,
