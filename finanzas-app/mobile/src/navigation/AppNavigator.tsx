@@ -14,6 +14,8 @@ import NotificacionesScreen from '../screens/NotificacionesScreen';
 import MovimientosScreen from '../screens/MovimientosScreen';
 import TarjetasScreen from '../screens/TarjetasScreen';
 import TarjetaFormScreen from '../screens/TarjetaFormScreen';
+import CuotasScreen from '../screens/CuotasScreen';
+import CuotaFormScreen from '../screens/CuotaFormScreen';
 import MovimientoFormScreen from '../screens/MovimientoFormScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
@@ -107,6 +109,18 @@ export default function AppNavigator() {
             component={TarjetaFormScreen}
             options={({ route }) =>
               headerOptions(colors, route.params?.card ? 'Editar tarjeta' : 'Nueva tarjeta')
+            }
+          />
+          <Stack.Screen
+            name="Cuotas"
+            component={CuotasScreen}
+            options={headerOptions(colors, 'Plan de cuotas')}
+          />
+          <Stack.Screen
+            name="CuotaForm"
+            component={CuotaFormScreen}
+            options={({ route }) =>
+              headerOptions(colors, route.params?.cuota ? 'Editar cuota' : 'Nueva cuota')
             }
           />
           <Stack.Screen
