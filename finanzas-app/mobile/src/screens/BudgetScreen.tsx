@@ -1,22 +1,15 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Colors } from '../theme/colors';
 import { budgetService } from '../services/budget.service';
 import { BudgetCategory, Periodicity } from '../types';
 import { formatMoney } from '../utils/currency';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
 import { useManualRefresh } from '../hooks/useManualRefresh';
+import { useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { fonts, radius, Tone, toneInk, toneTint } from '../theme/tokens';
+import type { ThemeColors } from '../theme/tokens';
+import { Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
 
 const fmt = formatMoney;
 
@@ -36,60 +29,99 @@ const PERIODICITY_FACTOR: Record<Periodicity, number> = {
 const toMonthly = (amount: number, periodicity: Periodicity) =>
   Number(amount) / PERIODICITY_FACTOR[periodicity];
 
-function CategoryRow({ cat }: { cat: BudgetCategory }) {
-  const monthlyTotal = cat.expenses.reduce(
-    (s, e) => s + toMonthly(e.amount, e.periodicity),
-    0,
-  );
+const categoryMonthlyTotal = (cat: BudgetCategory) =>
+  cat.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
+
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    alertBanner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: radius.md,
+      borderWidth: 1,
+    },
+    alertText: { flex: 1, fontFamily: fonts.medium, fontSize: 13, lineHeight: 18 },
+    heroRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    heroText: { flex: 1, gap: 4 },
+    eyebrow: {
+      fontFamily: fonts.semibold,
+      color: c.onSurfaceVariant,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    heroAmount: { fontFamily: fonts.title, color: c.onSurface, fontSize: 30, letterSpacing: -0.8 },
+    ringValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 18 },
+    ringCaption: { fontFamily: fonts.medium, color: c.outline, fontSize: 10 },
+    legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 14 },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    legendText: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12, flexShrink: 1 },
+    availableRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginTop: 14,
+      paddingTop: 14,
+      borderTopWidth: 1,
+      borderTopColor: c.border,
+    },
+    availableLabel: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 13 },
+    availableValue: { fontFamily: fonts.title, fontSize: 17, flexShrink: 1 },
+    section: { gap: 10 },
+    sectionTitle: { fontFamily: fonts.title, color: c.onSurface, fontSize: 17 },
+    list: { gap: 10 },
+    catCard: { gap: 10 },
+    catHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    catName: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14, flex: 1 },
+    catTotal: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15 },
+    catFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    catFooterText: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+  });
+
+function CategoryCard({ cat, total }: { cat: BudgetCategory; total: number }) {
+  const styles = useThemedStyles(createStyles);
+  const monthlyTotal = categoryMonthlyTotal(cat);
+  const share = total > 0 ? monthlyTotal / total : 0;
 
   return (
-    <View style={catStyles.row}>
-      <View style={catStyles.header}>
-        <Text style={catStyles.name}>{cat.name}</Text>
-        <Text style={catStyles.budgeted}>{fmt(monthlyTotal)}/mes</Text>
+    <Card style={styles.catCard}>
+      <View style={styles.catHeader}>
+        <Text style={styles.catName} numberOfLines={1}>{cat.name}</Text>
+        <Text style={styles.catTotal}>{fmt(monthlyTotal)}/mes</Text>
       </View>
-      <Text style={catStyles.count}>
-        {cat.expenses.length} {cat.expenses.length === 1 ? 'gasto' : 'gastos'}
-      </Text>
+      <ProgressBar value={share} tone="info" height={6} />
+      <View style={styles.catFooter}>
+        <Text style={styles.catFooterText}>
+          {cat.expenses.length} {cat.expenses.length === 1 ? 'gasto' : 'gastos'}
+        </Text>
+        <Text style={styles.catFooterText}>{(share * 100).toFixed(0)}% del total</Text>
+      </View>
+    </Card>
+  );
+}
+
+function SkeletonBlocks() {
+  return (
+    <View testID="budget-skeleton" style={{ gap: 14 }}>
+      <Skeleton height={150} radius={radius.lg} />
+      <Skeleton height={86} radius={radius.lg} />
+      <Skeleton height={86} radius={radius.lg} />
     </View>
   );
 }
 
-const catStyles = StyleSheet.create({
-  row: {
-    backgroundColor: Colors.card,
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  name: {
-    color: Colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-  },
-  budgeted: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  count: {
-    color: Colors.textMuted,
-    fontSize: 12,
-  },
-});
-
 export default function BudgetScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const {
     data: budget,
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: ['budget'],
@@ -100,212 +132,135 @@ export default function BudgetScreen() {
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
-  if (isLoading) return <LoadingSpinner message="Cargando presupuesto..." />;
+  const header = (
+    <Reveal index={0}>
+      <PageHeader
+        title="Presupuesto"
+        subtitle={budget ? `${budget.name}${budget.year ? ` — ${budget.year}` : ''}` : undefined}
+      />
+    </Reveal>
+  );
+
+  if (isLoading) {
+    return (
+      <Screen>
+        {header}
+        <SkeletonBlocks />
+      </Screen>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Screen refreshing={refreshing} onRefresh={onRefresh}>
+        {header}
+        <Reveal index={1}>
+          <Card>
+            <ErrorState
+              message="No se pudo cargar el presupuesto. Revisa tu conexión e inténtalo de nuevo."
+              onRetry={() => refetch()}
+            />
+          </Card>
+        </Reveal>
+      </Screen>
+    );
+  }
 
   if (!budget) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
-        <StatusBar style="light" />
-        <View style={styles.header}>
-          <Text style={styles.title}>Presupuesto</Text>
-        </View>
-        <EmptyState
-          icon="pie-chart-outline"
-          title="Sin presupuesto activo"
-          subtitle="Crea un presupuesto desde la app web para verlo acá"
-        />
-      </SafeAreaView>
+      <Screen refreshing={refreshing} onRefresh={onRefresh}>
+        {header}
+        <Reveal index={1}>
+          <Card>
+            <EmptyState
+              icon="pie-chart-outline"
+              title="Sin presupuesto activo"
+              subtitle="Crea un presupuesto desde la app web para verlo acá"
+            />
+          </Card>
+        </Reveal>
+      </Screen>
     );
   }
 
   const { summary } = budget;
   const overBudget = summary?.alerts?.overBudget ?? false;
-  const pctGlobal = (summary?.totalMonthlyIncome ?? 0) > 0
-    ? Math.min(100, ((summary?.totalMonthlyExpenses ?? 0) / summary.totalMonthlyIncome) * 100)
-    : 0;
+  const income = summary?.totalMonthlyIncome ?? 0;
+  const expenses = summary?.totalMonthlyExpenses ?? 0;
+  const available = summary?.available ?? 0;
+  const usedRatio = income > 0 ? Math.min(1, expenses / income) : 0;
+  const usedPct = Math.round(usedRatio * 100);
+  const heroTone: Tone = overBudget ? 'danger' : usedRatio > 0.8 ? 'warn' : 'ok';
+  const categories = budget.categories ?? [];
+  const categoriesTotal = categories.reduce((s, cat) => s + categoryMonthlyTotal(cat), 0);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar style="light" />
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.blue}
-            colors={[Colors.blue]}
-          />
-        }
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Presupuesto</Text>
-            <Text style={styles.subtitle}>
-              {budget.name}{budget.year ? ` — ${budget.year}` : ''}
+    <Screen refreshing={refreshing} onRefresh={onRefresh}>
+      {header}
+
+      {overBudget && (
+        <Reveal index={1}>
+          <View
+            style={[
+              styles.alertBanner,
+              { backgroundColor: toneTint(colors, 'danger'), borderColor: toneInk(colors, 'danger') + '40' },
+            ]}
+          >
+            <Ionicons name="warning-outline" size={20} color={toneInk(colors, 'danger')} />
+            <Text style={[styles.alertText, { color: toneInk(colors, 'danger') }]}>
+              Los gastos superan los ingresos
             </Text>
           </View>
-        </View>
+        </Reveal>
+      )}
 
-        {/* Alerta de excedido */}
-        {overBudget && (
-          <View style={styles.alertBanner}>
-            <Ionicons name="warning-outline" size={18} color={Colors.red} />
-            <Text style={styles.alertText}>Los gastos superan los ingresos</Text>
+      <Reveal index={2}>
+        <Card accent={toneInk(colors, heroTone)}>
+          <View style={styles.heroRow}>
+            <View style={styles.heroText}>
+              <Text style={styles.eyebrow}>Total presupuestado (mensual)</Text>
+              <Text style={styles.heroAmount} numberOfLines={1} adjustsFontSizeToFit>
+                {fmt(expenses)}
+              </Text>
+            </View>
+            <ProgressRing value={usedRatio} size={84} thickness={9} color={toneInk(colors, heroTone)}>
+              <Text style={styles.ringValue}>{usedPct}%</Text>
+              <Text style={styles.ringCaption}>de ingresos</Text>
+            </ProgressRing>
           </View>
-        )}
-
-        {/* Resumen global */}
-        <View style={styles.summaryCard}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total presupuestado (mensual)</Text>
-            <Text style={styles.summaryValue}>{fmt(summary?.totalMonthlyExpenses ?? 0)}</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${pctGlobal}%` as any,
-                  backgroundColor: overBudget ? Colors.red : Colors.blue,
-                },
-              ]}
-            />
-          </View>
-          <View style={styles.summaryRow}>
+          <View style={styles.legend}>
             <View style={styles.legendItem}>
-              <View style={[styles.dot, { backgroundColor: Colors.green }]} />
-              <Text style={styles.legendText}>Ingresos: {fmt(summary?.totalMonthlyIncome ?? 0)}</Text>
+              <View style={[styles.legendDot, { backgroundColor: colors.okInk }]} />
+              <Text style={styles.legendText}>Ingresos: {fmt(income)}</Text>
             </View>
             <View style={styles.legendItem}>
-              <View style={[styles.dot, { backgroundColor: Colors.red }]} />
-              <Text style={styles.legendText}>Gastos: {fmt(summary?.totalMonthlyExpenses ?? 0)}</Text>
+              <View style={[styles.legendDot, { backgroundColor: colors.dangerInk }]} />
+              <Text style={styles.legendText}>Gastos: {fmt(expenses)}</Text>
             </View>
           </View>
-          <View style={[styles.summaryRow, styles.borderTop]}>
-            <Text style={styles.summaryLabel}>Disponible</Text>
-            <Text style={[
-              styles.summaryValue,
-              {
-                color: (summary?.available ?? 0) >= 0
-                  ? Colors.green
-                  : Colors.red,
-              },
-            ]}>
-              {fmt(summary?.available ?? 0)}
+          <View style={styles.availableRow}>
+            <Text style={styles.availableLabel}>Disponible</Text>
+            <Text
+              style={[styles.availableValue, { color: toneInk(colors, available >= 0 ? 'ok' : 'danger') }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
+              {fmt(available)}
             </Text>
           </View>
-        </View>
+        </Card>
+      </Reveal>
 
-        {/* Categorías */}
-        {budget.categories?.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Categorías</Text>
-            <View style={styles.categoriesList}>
-              {budget.categories.map((cat) => (
-                <CategoryRow key={cat.id} cat={cat} />
-              ))}
-            </View>
+      {categories.length > 0 && (
+        <Reveal index={3} style={styles.section}>
+          <Text style={styles.sectionTitle}>Categorías</Text>
+          <View style={styles.list}>
+            {categories.map((cat) => (
+              <CategoryCard key={cat.id} cat={cat} total={categoriesTotal} />
+            ))}
           </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+        </Reveal>
+      )}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  scroll: { padding: 16, paddingBottom: 32 },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  alertBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.redBg,
-    borderWidth: 1,
-    borderColor: Colors.red,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 14,
-  },
-  alertText: {
-    color: Colors.red,
-    fontSize: 13,
-    fontWeight: '600',
-    flex: 1,
-  },
-  summaryCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 12,
-    marginBottom: 20,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  summaryLabel: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
-  summaryValue: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  borderTop: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingTop: 12,
-  },
-  section: { gap: 12 },
-  sectionTitle: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  categoriesList: { gap: 8 },
-});

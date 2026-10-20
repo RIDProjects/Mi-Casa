@@ -3,6 +3,10 @@ import { Text } from 'react-native';
 import { render, fireEvent, screen } from '@testing-library/react-native';
 import { ErrorBoundary } from '../ErrorBoundary';
 
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
 jest.mock('@sentry/react-native', () => ({
   captureException: jest.fn(),
 }));

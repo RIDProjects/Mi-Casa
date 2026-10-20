@@ -1,43 +1,80 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { Colors } from '../theme/colors';
 import { savingsService } from '../services/savings.service';
 import { SavingsGoal } from '../types';
 import { formatMoney } from '../utils/currency';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
 import { useManualRefresh } from '../hooks/useManualRefresh';
+import { useTheme, useThemedStyles } from '../theme/ThemeContext';
+import { fonts, radius, Tone, toneInk, toneTint } from '../theme/tokens';
+import type { ThemeColors } from '../theme/tokens';
+import { Badge, Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
 
 const fmt = formatMoney;
 
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    heroRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    heroText: { flex: 1, gap: 4 },
+    eyebrow: {
+      fontFamily: fonts.semibold,
+      color: c.onSurfaceVariant,
+      fontSize: 11,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    heroAmount: { fontFamily: fonts.title, fontSize: 30, letterSpacing: -0.8 },
+    heroMeta: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13 },
+    ringValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 18 },
+    ringCaption: { fontFamily: fonts.medium, color: c.outline, fontSize: 10 },
+    statsRow: { flexDirection: 'row', gap: 12 },
+    statBox: { flex: 1, gap: 4 },
+    statLabel: {
+      fontFamily: fonts.semibold,
+      color: c.onSurfaceVariant,
+      fontSize: 10.5,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    statValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 21, letterSpacing: -0.5 },
+    section: { gap: 10 },
+    sectionTitle: { fontFamily: fonts.title, color: c.onSurface, fontSize: 17 },
+    list: { gap: 10 },
+    goalCard: { gap: 12 },
+    goalHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    goalIconWrap: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    goalTitleBlock: { flex: 1, gap: 2 },
+    goalName: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 15 },
+    goalDeadline: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    goalPct: { fontFamily: fonts.title, fontSize: 17 },
+    goalAmounts: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
+    amountBlock: { flexShrink: 1 },
+    amountBlockEnd: { flexShrink: 1, alignItems: 'flex-end' },
+    amountLabel: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 12, marginBottom: 2 },
+    amountValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 16 },
+  });
+
 function GoalCard({ goal }: { goal: SavingsGoal }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const pct = goal.progress ?? (
     goal.montoMeta > 0
       ? Math.min(100, (goal.ahorrosActuales / goal.montoMeta) * 100)
       : 0
   );
   const isComplete = pct >= 100;
-  const fillColor = isComplete ? Colors.green : Colors.blue;
+  const tone: Tone = isComplete ? 'ok' : 'info';
+  const ink = toneInk(colors, tone);
 
   return (
-    <View style={[styles.goalCard, isComplete && styles.goalCardComplete]}>
-      {/* Title row */}
+    <Card accent={isComplete ? ink : undefined} style={styles.goalCard}>
       <View style={styles.goalHeader}>
-        <View style={[styles.goalIconWrap, { backgroundColor: isComplete ? Colors.greenBg : Colors.blueBg }]}>
+        <View style={[styles.goalIconWrap, { backgroundColor: toneTint(colors, tone) }]}>
           <Ionicons
             name={isComplete ? 'checkmark-circle-outline' : 'trophy-outline'}
-            size={18}
-            color={fillColor}
+            size={19}
+            color={ink}
           />
         </View>
         <View style={styles.goalTitleBlock}>
@@ -50,50 +87,46 @@ function GoalCard({ goal }: { goal: SavingsGoal }) {
             </Text>
           )}
         </View>
-        <View style={[styles.pctBadge, { backgroundColor: isComplete ? Colors.greenBg : Colors.blueBg }]}>
-          <Text style={[styles.pctText, { color: fillColor }]}>{pct.toFixed(0)}%</Text>
-        </View>
+        <Text style={[styles.goalPct, { color: ink }]}>{pct.toFixed(0)}%</Text>
       </View>
 
-      {/* Progress bar */}
-      <View style={styles.barBg}>
-        <View
-          style={[
-            styles.barFill,
-            { width: `${pct}%` as any, backgroundColor: fillColor },
-          ]}
-        />
-      </View>
+      <ProgressBar value={pct / 100} tone={tone} />
 
-      {/* Amounts */}
       <View style={styles.goalAmounts}>
-        <View>
+        <View style={styles.amountBlock}>
           <Text style={styles.amountLabel}>Ahorrado</Text>
-          <Text style={[styles.amountValue, { color: Colors.green }]}>
+          <Text style={[styles.amountValue, { color: toneInk(colors, 'ok') }]} numberOfLines={1} adjustsFontSizeToFit>
             {fmt(goal.ahorrosActuales)}
           </Text>
         </View>
-        <View style={styles.amountDivider} />
-        <View style={{ alignItems: 'flex-end' }}>
+        <View style={styles.amountBlockEnd}>
           <Text style={styles.amountLabel}>Objetivo</Text>
-          <Text style={styles.amountValue}>{fmt(goal.montoMeta)}</Text>
+          <Text style={styles.amountValue} numberOfLines={1} adjustsFontSizeToFit>{fmt(goal.montoMeta)}</Text>
         </View>
       </View>
 
-      {isComplete && (
-        <View style={styles.completeBanner}>
-          <Ionicons name="checkmark-circle" size={15} color={Colors.green} />
-          <Text style={styles.completeText}>Meta alcanzada</Text>
-        </View>
-      )}
+      {isComplete && <Badge label="Meta alcanzada" tone="ok" />}
+    </Card>
+  );
+}
+
+function SkeletonBlocks() {
+  return (
+    <View testID="metas-skeleton" style={{ gap: 14 }}>
+      <Skeleton height={190} radius={radius.lg} />
+      <Skeleton height={130} radius={radius.lg} />
+      <Skeleton height={130} radius={radius.lg} />
     </View>
   );
 }
 
 export default function MetasScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const {
     data: goals = [],
     isLoading,
+    isError,
     refetch,
   } = useQuery({
     queryKey: ['savings-goals'],
@@ -104,235 +137,91 @@ export default function MetasScreen() {
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
-  if (isLoading) return <LoadingSpinner message="Cargando metas..." />;
-
   const completed = goals.filter((g) => g.progress >= 100).length;
   const totalTarget = goals.reduce((s, g) => s + Number(g.montoMeta), 0);
   const totalSaved = goals.reduce((s, g) => s + Number(g.ahorrosActuales), 0);
+  const globalRatio = totalTarget > 0 ? Math.min(1, totalSaved / totalTarget) : 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <StatusBar style="light" />
-      <FlatList
-        data={goals}
-        keyExtractor={(g) => g.id}
-        renderItem={({ item }) => <GoalCard goal={item} />}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.blue}
-            colors={[Colors.blue]}
-          />
-        }
-        ListHeaderComponent={
-          <View style={styles.topSection}>
-            <Text style={styles.screenTitle}>Metas de Ahorro</Text>
-            {goals.length > 0 && (
-              <View style={styles.summaryCard}>
-                <View style={styles.summaryRow}>
-                  <View style={styles.summaryItem}>
-                    <Text style={styles.summaryLabel}>Metas activas</Text>
-                    <Text style={styles.summaryValue}>{goals.length - completed}</Text>
-                  </View>
-                  <View style={styles.summaryDivider} />
-                  <View style={styles.summaryItem}>
-                    <Text style={styles.summaryLabel}>Completadas</Text>
-                    <Text style={[styles.summaryValue, { color: Colors.green }]}>{completed}</Text>
-                  </View>
-                  <View style={styles.summaryDivider} />
-                  <View style={styles.summaryItem}>
-                    <Text style={styles.summaryLabel}>Total ahorrado</Text>
-                    <Text style={[styles.summaryValue, { color: Colors.blue }]}>
-                      {fmt(totalSaved)}
+    <Screen refreshing={refreshing} onRefresh={onRefresh}>
+      <Reveal index={0}>
+        <PageHeader title="Metas de Ahorro" />
+      </Reveal>
+
+      {isLoading && <SkeletonBlocks />}
+
+      {!isLoading && isError && (
+        <Reveal index={1}>
+          <Card>
+            <ErrorState
+              message="No se pudieron cargar tus metas. Revisa tu conexión e inténtalo de nuevo."
+              onRetry={() => refetch()}
+            />
+          </Card>
+        </Reveal>
+      )}
+
+      {!isLoading && !isError && goals.length === 0 && (
+        <Reveal index={1}>
+          <Card>
+            <EmptyState
+              icon="trophy-outline"
+              title="Sin metas registradas"
+              subtitle="Crea tus metas de ahorro desde la app web"
+            />
+          </Card>
+        </Reveal>
+      )}
+
+      {!isLoading && !isError && goals.length > 0 && (
+        <>
+          <Reveal index={1}>
+            <Card accent={toneInk(colors, 'info')}>
+              <View style={styles.heroRow}>
+                <View style={styles.heroText}>
+                  <Text style={styles.eyebrow}>Total ahorrado</Text>
+                  <Text style={[styles.heroAmount, { color: toneInk(colors, 'info') }]} numberOfLines={1} adjustsFontSizeToFit>
+                    {fmt(totalSaved)}
+                  </Text>
+                  {totalTarget > 0 && (
+                    <Text style={styles.heroMeta}>
+                      {Math.min(100, (totalSaved / totalTarget) * 100).toFixed(1)}% del objetivo total: {fmt(totalTarget)}
                     </Text>
-                  </View>
+                  )}
                 </View>
                 {totalTarget > 0 && (
-                  <>
-                    <View style={styles.globalBarBg}>
-                      <View
-                        style={[
-                          styles.globalBarFill,
-                          { width: `${Math.min(100, (totalSaved / totalTarget) * 100)}%` as any },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.globalPct}>
-                      {Math.min(100, ((totalSaved / totalTarget) * 100)).toFixed(1)}% del objetivo total: {fmt(totalTarget)}
-                    </Text>
-                  </>
+                  <ProgressRing value={globalRatio} size={84} thickness={9} color={toneInk(colors, 'info')}>
+                    <Text style={styles.ringValue}>{Math.round(globalRatio * 100)}%</Text>
+                    <Text style={styles.ringCaption}>del objetivo</Text>
+                  </ProgressRing>
                 )}
               </View>
-            )}
-          </View>
-        }
-        ListEmptyComponent={
-          <EmptyState
-            icon="trophy-outline"
-            title="Sin metas registradas"
-            subtitle="Crea tus metas de ahorro desde la app web"
-          />
-        }
-      />
-    </SafeAreaView>
+            </Card>
+          </Reveal>
+
+          <Reveal index={2}>
+            <View style={styles.statsRow}>
+              <Card style={styles.statBox}>
+                <Text style={styles.statLabel}>Metas activas</Text>
+                <Text style={styles.statValue}>{goals.length - completed}</Text>
+              </Card>
+              <Card style={styles.statBox}>
+                <Text style={styles.statLabel}>Completadas</Text>
+                <Text style={[styles.statValue, { color: toneInk(colors, 'ok') }]}>{completed}</Text>
+              </Card>
+            </View>
+          </Reveal>
+
+          <Reveal index={3} style={styles.section}>
+            <Text style={styles.sectionTitle}>Tus metas</Text>
+            <View style={styles.list}>
+              {goals.map((goal) => (
+                <GoalCard key={goal.id} goal={goal} />
+              ))}
+            </View>
+          </Reveal>
+        </>
+      )}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.background },
-  listContent: { padding: 16, paddingBottom: 40 },
-  topSection: { marginBottom: 16, gap: 14 },
-  screenTitle: {
-    color: Colors.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  summaryCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 10,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  summaryItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 3,
-  },
-  summaryLabel: {
-    color: Colors.textSecondary,
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  summaryValue: {
-    color: Colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  summaryDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: Colors.border,
-  },
-  globalBarBg: {
-    height: 6,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  globalBarFill: {
-    height: '100%',
-    borderRadius: 3,
-    backgroundColor: Colors.blue,
-  },
-  globalPct: {
-    color: Colors.textMuted,
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  // Goal card
-  goalCard: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: 12,
-    gap: 10,
-  },
-  goalCardComplete: {
-    borderColor: Colors.green + '50',
-  },
-  goalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  goalIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goalTitleBlock: {
-    flex: 1,
-    gap: 2,
-  },
-  goalName: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  goalDeadline: {
-    color: Colors.textMuted,
-    fontSize: 12,
-  },
-  pctBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  pctText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  goalDesc: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  barBg: {
-    height: 8,
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  goalAmounts: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 4,
-  },
-  amountLabel: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  amountValue: {
-    color: Colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  amountDivider: {
-    flex: 1,
-  },
-  completeBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: Colors.greenBg,
-    borderRadius: 8,
-    paddingVertical: 8,
-  },
-  completeText: {
-    color: Colors.green,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-});

@@ -2,17 +2,13 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { householdExpensesService } from '../../services/household-expenses.service';
@@ -25,10 +21,34 @@ import {
 import { GastosStackParamList } from '../../navigation/types';
 import { currentMonthLocal, todayLocalISO } from '../../utils/dates';
 import { resolveCurrency } from '../../utils/currency';
+import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
+import { fonts, radius } from '../../theme/tokens';
+import type { ThemeColors } from '../../theme/tokens';
+import { Button, Card, Reveal, Screen, TextField } from '../../components/ui';
 
 type RouteT = RouteProp<GastosStackParamList, 'AddHouseholdExpense'>;
 
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    form: { gap: 16 },
+    fieldLabel: { fontFamily: fonts.semibold, fontSize: 12, color: c.onSurfaceVariant, marginBottom: 8, letterSpacing: 0.3 },
+    chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    chip: {
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surfaceContainer,
+    },
+    chipText: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13 },
+    actions: { flexDirection: 'row', gap: 12 },
+  });
+
 export default function AddHouseholdExpenseScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const navigation = useNavigation();
   const route = useRoute<RouteT>();
   const qc = useQueryClient();
@@ -137,185 +157,105 @@ export default function AddHouseholdExpenseScreen() {
     }
   };
 
+  const isDisabled = isPending || !effectiveMoneda;
+  const currencyCodes = monedas.length > 0 ? monedas.map((m) => m.code) : monedaLocal ? [monedaLocal] : [];
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Descripción</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="document-text-outline" size={18} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
+      <Screen edges={['bottom']} contentStyle={{ padding: 20 }}>
+        <Reveal index={0}>
+          <Card style={styles.form}>
+            <TextField
+              label="Descripción"
+              icon="document-text-outline"
               value={descripcion}
               onChangeText={setDescripcion}
               placeholder="Ej: Cena afuera, Uber..."
-              placeholderTextColor={Colors.textMuted}
               editable={!isPending}
               returnKeyType="next"
             />
-          </View>
-        </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Monto</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="cash-outline" size={18} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
+            <TextField
+              label="Monto"
+              icon="cash-outline"
               value={monto}
               onChangeText={setMonto}
               placeholder="0.00"
-              placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
               editable={!isPending}
               returnKeyType="next"
             />
-          </View>
-        </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Moneda</Text>
-          <View style={styles.catRow}>
-            {(monedas.length > 0 ? monedas.map((m) => m.code) : monedaLocal ? [monedaLocal] : []).map((code) => {
-              const active = effectiveMoneda === code;
-              return (
-                <TouchableOpacity
-                  key={code}
-                  style={[
-                    styles.catChip,
-                    active && { backgroundColor: Colors.blue + '30', borderColor: Colors.blue },
-                  ]}
-                  onPress={() => setMoneda(code)}
-                  disabled={isPending}
-                >
-                  <Text style={[styles.catChipText, active && { color: Colors.blue }]}>{code}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+            <View>
+              <Text style={styles.fieldLabel}>Moneda</Text>
+              <View style={styles.chipRow}>
+                {currencyCodes.map((code) => {
+                  const active = effectiveMoneda === code;
+                  return (
+                    <TouchableOpacity
+                      key={code}
+                      style={[styles.chip, active && { backgroundColor: colors.infoTint, borderColor: colors.brand }]}
+                      onPress={() => setMoneda(code)}
+                      disabled={isPending}
+                    >
+                      <Text style={[styles.chipText, active && { color: colors.primary }]}>{code}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Lugar (opcional)</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="location-outline" size={18} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
+            <TextField
+              label="Lugar (opcional)"
+              icon="location-outline"
               value={lugar}
               onChangeText={setLugar}
               placeholder="Ej: Restaurante X"
-              placeholderTextColor={Colors.textMuted}
               editable={!isPending}
             />
-          </View>
-        </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Categoría</Text>
-          <View style={styles.catRow}>
-            {TRANSACTION_CATEGORIES.map((c) => {
-              const active = categoria === c;
-              const color = Colors.categories[c] ?? Colors.blue;
-              return (
-                <TouchableOpacity
-                  key={c}
-                  style={[
-                    styles.catChip,
-                    active && { backgroundColor: color + '30', borderColor: color },
-                  ]}
-                  onPress={() => setCategoria(c)}
-                >
-                  <Text style={[styles.catChipText, active && { color }]}>{c}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
+            <View>
+              <Text style={styles.fieldLabel}>Categoría</Text>
+              <View style={styles.chipRow}>
+                {TRANSACTION_CATEGORIES.map((c) => {
+                  const active = categoria === c;
+                  const color = Colors.categories[c] ?? colors.brand;
+                  return (
+                    <TouchableOpacity
+                      key={c}
+                      style={[styles.chip, active && { backgroundColor: color + '26', borderColor: color }]}
+                      onPress={() => setCategoria(c)}
+                    >
+                      <Text style={[styles.chipText, active && { color: colors.onSurface }]}>{c}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          </Card>
+        </Reveal>
 
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.cancelBtn}
+        <Reveal index={1} style={styles.actions}>
+          <Button
+            label="Cancelar"
+            variant="secondary"
             onPress={() => navigation.goBack()}
             disabled={isPending}
-          >
-            <Text style={styles.cancelBtnText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.saveBtn, (isPending || !effectiveMoneda) && styles.disabled]}
+            style={{ flex: 1 }}
+          />
+          <Button
+            label={isEditing ? 'Guardar cambios' : 'Registrar gasto'}
+            icon="checkmark-outline"
             onPress={handleSubmit}
-            disabled={isPending || !effectiveMoneda}
-            activeOpacity={0.85}
-          >
-            {isPending ? (
-              <ActivityIndicator size="small" color={Colors.white} />
-            ) : (
-              <>
-                <Ionicons name="checkmark-outline" size={18} color={Colors.white} />
-                <Text style={styles.saveBtnText}>{isEditing ? 'Guardar cambios' : 'Registrar gasto'}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            loading={isPending}
+            disabled={isDisabled}
+            style={{ flex: 2 }}
+          />
+        </Reveal>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.background },
-  container: { padding: 20, gap: 16, paddingBottom: 40 },
-  fieldGroup: { gap: 6 },
-  label: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 12,
-    height: 50,
-  },
-  inputIcon: { marginRight: 8 },
-  input: { flex: 1, color: Colors.textPrimary, fontSize: 15 },
-  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  catChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  catChipText: { color: Colors.textSecondary, fontSize: 13, fontWeight: '600' },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  cancelBtn: {
-    flex: 1,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  cancelBtnText: { color: Colors.textSecondary, fontSize: 15, fontWeight: '600' },
-  saveBtn: {
-    flex: 2,
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    gap: 8,
-    backgroundColor: Colors.blue,
-  },
-  saveBtnText: { color: Colors.white, fontSize: 15, fontWeight: '700' },
-  disabled: { opacity: 0.6 },
-});
