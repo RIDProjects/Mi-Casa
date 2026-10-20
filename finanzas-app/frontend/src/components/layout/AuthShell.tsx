@@ -20,9 +20,9 @@ export default function AuthShell({ subtitle, children, onBack, backLabel = 'Vol
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] bg-surface text-on-surface">
+    <div className="min-h-screen app-bg grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] bg-surface text-on-surface">
       {/* Brand panel (always dark) */}
-      <aside className="auth-brand hidden lg:flex flex-col justify-between p-12 xl:p-16 text-white relative overflow-hidden">
+      <aside className="auth-brand hidden lg:flex flex-col justify-between p-12 xl:p-16 text-white relative z-[1] overflow-hidden">
         <MiCasaProLogo size={40} tone="light" />
 
         <div className="relative z-10 max-w-md">
@@ -48,7 +48,7 @@ export default function AuthShell({ subtitle, children, onBack, backLabel = 'Vol
       </aside>
 
       {/* Form panel */}
-      <main className="relative flex flex-col items-center justify-center px-4 py-12 sm:px-8">
+      <main className="relative z-[1] flex flex-col items-center justify-center px-4 py-12 sm:px-8">
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
           {onBack ? (
             <button
