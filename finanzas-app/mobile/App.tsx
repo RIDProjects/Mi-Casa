@@ -3,9 +3,8 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, AppState, AppStateStatus, Platform } from 'react-native';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, Inter_800ExtraBold } from '@expo-google-fonts/inter';
-import { WorkSans_600SemiBold, WorkSans_700Bold } from '@expo-google-fonts/work-sans';
 import { ThemeProvider } from './src/theme/ThemeContext';
+import { useAppFonts } from './src/theme/useAppFonts';
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
@@ -46,23 +45,15 @@ function onAppStateChange(status: AppStateStatus) {
 }
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-    Inter_800ExtraBold,
-    WorkSans_600SemiBold,
-    WorkSans_700Bold,
-  });
+  const fontsReady = useAppFonts();
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', onAppStateChange);
     return () => subscription.remove();
   }, []);
 
-  // Keep the native splash up until the fonts are ready (avoids a flash of system text).
-  if (!fontsLoaded) return null;
+  // Wait briefly for the fonts (avoids a flash of system text); useAppFonts never blocks forever.
+  if (!fontsReady) return null;
 
   return (
     <ThemeProvider>
