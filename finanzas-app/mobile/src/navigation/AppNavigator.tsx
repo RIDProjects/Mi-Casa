@@ -11,6 +11,8 @@ import MainTabs from './MainTabs';
 import LoginScreen from '../screens/auth/LoginScreen';
 import VencimientosScreen from '../screens/VencimientosScreen';
 import NotificacionesScreen from '../screens/NotificacionesScreen';
+import MovimientosScreen from '../screens/MovimientosScreen';
+import MovimientoFormScreen from '../screens/MovimientoFormScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -80,6 +82,18 @@ export default function AppNavigator() {
             name="Notificaciones"
             component={NotificacionesScreen}
             options={headerOptions(colors, 'Notificaciones')}
+          />
+          <Stack.Screen
+            name="Movimientos"
+            component={MovimientosScreen}
+            options={headerOptions(colors, 'Movimientos')}
+          />
+          <Stack.Screen
+            name="MovimientoForm"
+            component={MovimientoFormScreen}
+            options={({ route }) =>
+              headerOptions(colors, route.params?.transaction ? 'Editar movimiento' : 'Registrar movimiento')
+            }
           />
           <Stack.Screen
             name="PrivacyPolicy"
