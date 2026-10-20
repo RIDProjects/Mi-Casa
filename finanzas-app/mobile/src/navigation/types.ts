@@ -12,6 +12,8 @@ export type RootStackParamList = {
   TarjetaForm: { card?: CreditCard } | undefined;
   Cuotas: undefined;
   CuotaForm: { cuota?: Cuota } | undefined;
+  FondoEmergencia: undefined;
+  Patrimonio: undefined;
   PrivacyPolicy: undefined;
 };
 

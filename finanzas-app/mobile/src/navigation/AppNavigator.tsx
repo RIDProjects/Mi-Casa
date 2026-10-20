@@ -13,6 +13,8 @@ import VencimientosScreen from '../screens/VencimientosScreen';
 import NotificacionesScreen from '../screens/NotificacionesScreen';
 import MovimientosScreen from '../screens/MovimientosScreen';
 import TarjetasScreen from '../screens/TarjetasScreen';
+import FondoEmergenciaScreen from '../screens/FondoEmergenciaScreen';
+import PatrimonioScreen from '../screens/PatrimonioScreen';
 import TarjetaFormScreen from '../screens/TarjetaFormScreen';
 import CuotasScreen from '../screens/CuotasScreen';
 import CuotaFormScreen from '../screens/CuotaFormScreen';
@@ -122,6 +124,16 @@ export default function AppNavigator() {
             options={({ route }) =>
               headerOptions(colors, route.params?.cuota ? 'Editar cuota' : 'Nueva cuota')
             }
+          />
+          <Stack.Screen
+            name="FondoEmergencia"
+            component={FondoEmergenciaScreen}
+            options={headerOptions(colors, 'Fondo de emergencia')}
+          />
+          <Stack.Screen
+            name="Patrimonio"
+            component={PatrimonioScreen}
+            options={headerOptions(colors, 'Patrimonio')}
           />
           <Stack.Screen
             name="PrivacyPolicy"
