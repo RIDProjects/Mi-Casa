@@ -78,15 +78,31 @@ export const TRANSACTION_CATEGORIES: TransactionCategory[] = [
   'Otros',
 ];
 
+// Backend (transactions.service.ts `toFrontend`) returns Spanish field names.
+// `monto` comes from a decimal column and may arrive as a string; `categoria`
+// is one of the web's expense categories (free string, empty for income).
 export interface Transaction {
   id: string;
   tipo: TransactionType;
   concepto: string;
-  categoria: TransactionCategory;
+  categoria?: string | null;
+  monto: number | string;
+  metodoPago?: PaymentMethod | null;
+  nombreTarjeta?: string | null;
+  fecha: string;
+  notas?: string | null;
+  createdAt?: string;
+}
+
+export interface TransactionPayload {
+  tipo: TransactionType;
+  concepto: string;
+  categoria: string;
   monto: number;
   metodoPago: PaymentMethod;
+  nombreTarjeta: string;
   fecha: string;
-  createdAt: string;
+  notas: string;
 }
 
 export interface CreateTransactionDto {

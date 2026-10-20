@@ -1,10 +1,13 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
+import type { Transaction } from '../types';
 
 // Stack raíz (sobre los tabs — para modales y pantallas secundarias)
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   Vencimientos: undefined;
   Notificaciones: undefined;
+  Movimientos: undefined;
+  MovimientoForm: { transaction?: Transaction } | undefined;
   PrivacyPolicy: undefined;
 };
 
