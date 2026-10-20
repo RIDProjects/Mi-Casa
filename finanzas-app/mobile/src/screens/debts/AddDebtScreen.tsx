@@ -2,31 +2,58 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Colors } from '../../theme/colors';
 import { debtsService } from '../../services/debts.service';
 import { CreateDebtDto, Debt, DebtType } from '../../types';
 import { DebtsStackParamList } from '../../navigation/types';
+import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
+import { fonts, radius, toneInk, toneTint } from '../../theme/tokens';
+import type { ThemeColors, Tone } from '../../theme/tokens';
+import { Button, Card, Reveal, Screen, TextField } from '../../components/ui';
 
 type RouteT = RouteProp<DebtsStackParamList, 'AddDebt'>;
 
-const TYPES: { value: DebtType; label: string; icon: string }[] = [
-  { value: 'they_owe_me', label: 'ME DEBEN', icon: '💙' },
-  { value: 'i_owe', label: 'LES DEBO', icon: '❤️' },
+const TYPES: { value: DebtType; label: string; icon: string; tone: Tone }[] = [
+  { value: 'they_owe_me', label: 'ME DEBEN', icon: '💙', tone: 'info' },
+  { value: 'i_owe', label: 'LES DEBO', icon: '❤️', tone: 'danger' },
 ];
 
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    flex: { flex: 1 },
+    form: { gap: 16 },
+    typeToggle: { flexDirection: 'row', gap: 10 },
+    typeBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      backgroundColor: c.surfaceContainer,
+    },
+    typeIcon: { fontSize: 18 },
+    typeLabel: { fontFamily: fonts.bold, color: c.onSurfaceVariant, fontSize: 13, letterSpacing: 0.5 },
+    hint: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.md },
+    hintText: { fontFamily: fonts.semibold, fontSize: 13, textAlign: 'center' },
+    actions: { flexDirection: 'row', gap: 12, marginTop: 8 },
+    cancel: { flex: 1 },
+    save: { flex: 2 },
+  });
+
 export default function AddDebtScreen() {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const navigation = useNavigation();
   const route = useRoute<RouteT>();
   const qc = useQueryClient();
@@ -101,240 +128,101 @@ export default function AddDebtScreen() {
   };
 
   const isTheyOweMe = debtType === 'they_owe_me';
-  const accentColor = isTheyOweMe ? Colors.blue : Colors.red;
-  const accentBg = isTheyOweMe ? Colors.blueBg : Colors.redBg;
+  const accentTone: Tone = isTheyOweMe ? 'info' : 'danger';
 
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Toggle de tipo */}
-        <View style={styles.typeToggle}>
-          {TYPES.map(({ value, label, icon }) => {
-            const active = debtType === value;
-            const color = value === 'they_owe_me' ? Colors.blue : Colors.red;
-            const bg = value === 'they_owe_me' ? Colors.blueBg : Colors.redBg;
-            return (
-              <TouchableOpacity
-                key={value}
-                style={[
-                  styles.typeBtn,
-                  active && { backgroundColor: bg, borderColor: color },
-                ]}
-                onPress={() => setDebtType(value)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.typeIcon}>{icon}</Text>
-                <Text style={[styles.typeLabel, active && { color }]}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+      <Screen edges={['bottom']}>
+        <Reveal index={0}>
+          <Card style={styles.form}>
+            {/* Toggle de tipo */}
+            <View style={styles.typeToggle}>
+              {TYPES.map(({ value, label, icon, tone }) => {
+                const active = debtType === value;
+                return (
+                  <TouchableOpacity
+                    key={value}
+                    style={[
+                      styles.typeBtn,
+                      active && { backgroundColor: toneTint(colors, tone), borderColor: toneInk(colors, tone) },
+                    ]}
+                    onPress={() => setDebtType(value)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                  >
+                    <Text style={styles.typeIcon}>{icon}</Text>
+                    <Text style={[styles.typeLabel, active && { color: toneInk(colors, tone) }]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-        {/* Resumen de lo que significa */}
-        <View style={[styles.hint, { backgroundColor: accentBg, borderColor: accentColor }]}>
-          <Text style={[styles.hintText, { color: accentColor }]}>
-            {isTheyOweMe
-              ? 'Alguien te debe dinero a ti'
-              : 'Tú le debes dinero a alguien'}
-          </Text>
-        </View>
+            {/* Resumen de lo que significa */}
+            <View style={[styles.hint, { backgroundColor: toneTint(colors, accentTone) }]}>
+              <Text style={[styles.hintText, { color: toneInk(colors, accentTone) }]}>
+                {isTheyOweMe
+                  ? 'Alguien te debe dinero a ti'
+                  : 'Tú le debes dinero a alguien'}
+              </Text>
+            </View>
 
-        {/* Campos */}
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Nombre de la persona</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="person-outline" size={18} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
+            {/* Campos */}
+            <TextField
+              label="Nombre de la persona"
+              icon="person-outline"
               value={personName}
               onChangeText={setPersonName}
               placeholder="Ej: Juan, Papá, Empresa X..."
-              placeholderTextColor={Colors.textMuted}
               editable={!isPending}
               returnKeyType="next"
             />
-          </View>
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Monto</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons name="cash-outline" size={18} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
+            <TextField
+              label="Monto"
+              icon="cash-outline"
               value={amount}
               onChangeText={setAmount}
               placeholder="0.00"
-              placeholderTextColor={Colors.textMuted}
               keyboardType="decimal-pad"
               editable={!isPending}
               returnKeyType="next"
             />
-          </View>
-        </View>
-
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Nota (opcional)</Text>
-          <View style={[styles.inputWrapper, { height: 80, alignItems: 'flex-start', paddingTop: 12 }]}>
-            <Ionicons name="document-text-outline" size={18} color={Colors.textSecondary} style={[styles.inputIcon, { marginTop: 2 }]} />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
+            <TextField
+              label="Nota (opcional)"
+              icon="document-text-outline"
               value={note}
               onChangeText={setNote}
               placeholder="Descripción adicional..."
-              placeholderTextColor={Colors.textMuted}
               multiline
               numberOfLines={3}
               editable={!isPending}
             />
-          </View>
-        </View>
 
-        {/* Botones */}
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => navigation.goBack()}
-            disabled={isPending}
-          >
-            <Text style={styles.cancelBtnText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.saveBtn, { backgroundColor: accentColor }, isPending && styles.disabled]}
-            onPress={handleSubmit}
-            disabled={isPending}
-            activeOpacity={0.85}
-          >
-            {isPending ? (
-              <ActivityIndicator size="small" color={Colors.white} />
-            ) : (
-              <>
-                <Ionicons name="checkmark-outline" size={18} color={Colors.white} />
-                <Text style={styles.saveBtnText}>{isEditing ? 'Guardar cambios' : 'Registrar deuda'}</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            {/* Botones */}
+            <View style={styles.actions}>
+              <Button
+                label="Cancelar"
+                variant="secondary"
+                onPress={() => navigation.goBack()}
+                disabled={isPending}
+                style={styles.cancel}
+              />
+              <Button
+                label={isEditing ? 'Guardar cambios' : 'Registrar deuda'}
+                icon="checkmark-outline"
+                onPress={handleSubmit}
+                loading={isPending}
+                style={styles.save}
+              />
+            </View>
+          </Card>
+        </Reveal>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  container: {
-    padding: 20,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  typeToggle: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  typeBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  typeIcon: {
-    fontSize: 18,
-  },
-  typeLabel: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  hint: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  hintText: {
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  fieldGroup: {
-    gap: 6,
-  },
-  label: {
-    color: Colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.cardAlt,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 12,
-    height: 50,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    color: Colors.textPrimary,
-    fontSize: 15,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  cancelBtn: {
-    flex: 1,
-    height: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.card,
-  },
-  cancelBtnText: {
-    color: Colors.textSecondary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  saveBtn: {
-    flex: 2,
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 12,
-    gap: 8,
-  },
-  saveBtnText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  disabled: {
-    opacity: 0.6,
-  },
-});

@@ -9,7 +9,10 @@ import {
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../theme/colors';
+import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
+import { fonts, radius } from '../../theme/tokens';
+import type { ThemeColors } from '../../theme/tokens';
+import { Badge, Card } from '../ui';
 import { Debt } from '../../types';
 import { formatMoney } from '../../utils/currency';
 
@@ -22,7 +25,34 @@ interface Props {
 
 const fmt = formatMoney;
 
+const createStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center' },
+    content: { flex: 1, paddingVertical: 14, paddingLeft: 18, paddingRight: 8, gap: 6 },
+    top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    name: { flex: 1, fontFamily: fonts.semibold, color: c.onSurface, fontSize: 15 },
+    amount: { fontFamily: fonts.title, fontSize: 16 },
+    bottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    note: { flex: 1, fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    paidIconBtn: { paddingHorizontal: 6 },
+    swipeHint: { paddingRight: 12 },
+    actionsContainer: { flexDirection: 'row', alignItems: 'center', marginLeft: 8, gap: 6 },
+    actionBtn: {
+      width: 64,
+      paddingVertical: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      borderRadius: radius.md,
+    },
+    paidBtn: { backgroundColor: c.okInk },
+    deleteBtn: { backgroundColor: c.dangerInk },
+    actionText: { fontFamily: fonts.bold, color: c.surface, fontSize: 10 },
+  });
+
 export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
   const swipeableRef = useRef<Swipeable>(null);
   const isTheyOweMe = debt.type === 'they_owe_me';
 
@@ -76,7 +106,7 @@ export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) 
             onPress={handleMarkPaid}
             activeOpacity={0.8}
           >
-            <Ionicons name="checkmark-circle-outline" size={20} color={Colors.white} />
+            <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
             <Text style={styles.actionText}>Pagada</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -86,7 +116,7 @@ export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) 
             onPress={handleDelete}
             activeOpacity={0.8}
           >
-            <Ionicons name="trash-outline" size={20} color={Colors.white} />
+            <Ionicons name="trash-outline" size={20} color={colors.surface} />
             <Text style={styles.actionText}>Eliminar</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -101,129 +131,42 @@ export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) 
       rightThreshold={40}
       friction={2}
     >
-      <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.7}
+      <Card
+        padded={false}
+        accent={isTheyOweMe ? colors.brand : colors.dangerInk}
         onPress={() => onEdit(debt.id)}
       >
-        <View style={[styles.indicator, { backgroundColor: isTheyOweMe ? Colors.blue : Colors.red }]} />
-        <View style={styles.content}>
-          <View style={styles.row}>
-            <Text style={styles.name}>{debt.personName}</Text>
-            <Text
-              style={[
-                styles.amount,
-                { color: isTheyOweMe ? Colors.green : Colors.red },
-              ]}
-            >
-              {isTheyOweMe ? '+' : '-'} {fmt(debt.amount)}
-            </Text>
+        <View style={styles.row}>
+          <View style={styles.content}>
+            <View style={styles.top}>
+              <Text style={styles.name} numberOfLines={1}>{debt.personName}</Text>
+              <Text style={[styles.amount, { color: isTheyOweMe ? colors.okInk : colors.dangerInk }]}>
+                {isTheyOweMe ? '+' : '-'} {fmt(debt.amount)}
+              </Text>
+            </View>
+            <View style={styles.bottom}>
+              <Badge label={isTheyOweMe ? 'Me deben' : 'Les debo'} tone={isTheyOweMe ? 'info' : 'danger'} />
+              {debt.note ? (
+                <Text style={styles.note} numberOfLines={1}>
+                  {debt.note}
+                </Text>
+              ) : null}
+            </View>
           </View>
-          {debt.note ? (
-            <Text style={styles.note} numberOfLines={1}>
-              {debt.note}
-            </Text>
-          ) : null}
+          <TouchableOpacity
+            style={styles.paidIconBtn}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleMarkPaid();
+            }}
+            accessibilityLabel={`Marcar como pagada la deuda de ${debt.personName}`}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="checkmark-circle-outline" size={22} color={colors.okInk} />
+          </TouchableOpacity>
+          <Ionicons name="create-outline" size={16} color={colors.outline} style={styles.swipeHint} />
         </View>
-        <TouchableOpacity
-          style={styles.paidIconBtn}
-          onPress={(e) => {
-            e.stopPropagation();
-            handleMarkPaid();
-          }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="checkmark-circle-outline" size={22} color={Colors.green} />
-        </TouchableOpacity>
-        <Ionicons
-          name="create-outline"
-          size={16}
-          color={Colors.textMuted}
-          style={styles.swipeHint}
-        />
-      </TouchableOpacity>
+      </Card>
     </Swipeable>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    marginHorizontal: 16,
-    marginVertical: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-  },
-  indicator: {
-    width: 4,
-    alignSelf: 'stretch',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 4,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  name: {
-    color: Colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    flex: 1,
-  },
-  amount: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  note: {
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  paidIconBtn: {
-    paddingHorizontal: 6,
-  },
-  swipeHint: {
-    paddingRight: 10,
-    opacity: 0.5,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-    marginRight: 16,
-    gap: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  actionBtn: {
-    width: 64,
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    borderRadius: 10,
-  },
-  paidBtn: {
-    backgroundColor: Colors.green,
-  },
-  deleteBtn: {
-    backgroundColor: Colors.red,
-  },
-  actionText: {
-    color: Colors.white,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-});
