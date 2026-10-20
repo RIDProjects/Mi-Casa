@@ -82,13 +82,14 @@ If a service domain is recreated, update `base_url` in `deploy-backend.yml`.
 - **Frontend (Vercel)** is deployed by Vercel's Git integration, outside this pipeline. Production = `main` build;
   the `dev` and `staging` branches get Vercel branch previews; in Vercel -> Settings -> Environment Variables set
   `NEXT_PUBLIC_API_URL` for *Preview* with the Git branch `dev` / `staging` pointing at the matching backend URL.
-- **Mobile (EAS Update)** is published only from `main`, by `.github/workflows/deploy-mobile.yml`, when a push touches
-  `finanzas-app/mobile/**` (mobile CI first, then the manual approval of the `production` environment). It publishes
-  to the `preview` channel (the one installed builds listen to; set the environment variable `EAS_CHANNEL` to
-  `production` once a store build exists) with `EXPO_PUBLIC_API_URL` pointing at the production backend.
-  `dev` and `staging` do not publish updates.
-  One-time setup: create an Expo access token (expo.dev -> Account settings -> Access tokens) and store it as the
-  `EXPO_TOKEN` secret of the GitHub Environment `production`.
+- **Mobile (EAS Update)** is published only from `main` by an EAS Workflow
+  (`finanzas-app/mobile/.eas/workflows/publish-update.yml`), run by Expo through its GitHub app connected to this
+  repository: a push to `main` that touches `finanzas-app/mobile/**` starts it, it waits for a manual approval in
+  the EAS dashboard (`require-approval` job), then publishes to the `preview` channel (the one installed builds
+  listen to; switch to `production` once a store build exists). `EXPO_PUBLIC_API_URL` comes from the EAS
+  `production` environment variables (`eas env:list production`). `dev` and `staging` do not publish updates.
+  No token is stored in GitHub. If the workflow never starts: the project must be linked to the repository and the
+  base directory set to `finanzas-app/mobile` in expo.dev -> Project -> GitHub settings.
   OTA ships JS and assets only: a change that adds a native module needs a new `eas build` first.
 
 ## Rollback
