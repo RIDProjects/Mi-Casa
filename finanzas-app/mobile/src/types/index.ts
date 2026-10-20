@@ -397,6 +397,19 @@ export interface CreditCard {
   advisory: string;
 }
 
+// Body of POST/PUT /credit-cards (CreateCreditCardDto). fechaCorte/fechaPago
+// are day-of-month strings.
+export interface CreditCardPayload {
+  banco: string;
+  nombreTarjeta: string;
+  tasaAnual: number;
+  saldoActual: number;
+  lineaCredito: number;
+  fechaCorte?: string;
+  fechaPago?: string;
+  tipoPago: CardPaymentType;
+}
+
 // ─── Cuotas ──────────────────────────────────────────────────────────────────
 
 export interface Cuota {
@@ -413,4 +426,23 @@ export interface Cuota {
   interestRate: number;
   createdAt: string;
   updatedAt: string;
+  // Computed by the backend (CuotasService.computeFields).
+  remainingInstallments?: number;
+  remainingAmount?: number;
+  nextPaymentDate?: string;
+  isCompleted?: boolean;
+}
+
+// Body of POST/PUT /cuotas (CreateCuotaDto). The backend reads cardLastFour
+// but returns the column as cardLast4.
+export interface CuotaPayload {
+  description: string;
+  store?: string;
+  totalAmount: number;
+  totalInstallments: number;
+  installmentAmount: number;
+  startDate: string;
+  withInterest: boolean;
+  interestRate?: number;
+  cardLastFour?: string;
 }
