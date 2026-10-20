@@ -13,7 +13,7 @@ interface Props {
 
 /**
  * Circular progress without SVG (so it ships over the air): two clipped half rings,
- * the right one fills for the first 50 %, the left one for the rest.
+ * the right one fills for the first 50 %, the left one for the rest (each is omitted while empty to avoid a stray tick).
  */
 export default function ProgressRing({ value, size = 96, thickness = 10, color, children }: Props) {
   const { colors } = useTheme();
@@ -34,12 +34,16 @@ export default function ProgressRing({ value, size = 96, thickness = 10, color, 
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <View style={[circle, { borderColor: colors.ringTrack }]} />
-      <View style={{ position: 'absolute', left: half, width: half, height: size, overflow: 'hidden' }}>
-        <View style={[circle, { left: -half, borderTopColor: ink, borderRightColor: ink, transform: [{ rotate: `${rightDeg}deg` }] }]} />
-      </View>
-      <View style={{ position: 'absolute', left: 0, width: half, height: size, overflow: 'hidden' }}>
-        <View style={[circle, { left: 0, borderBottomColor: ink, borderLeftColor: ink, transform: [{ rotate: `${leftDeg}deg` }] }]} />
-      </View>
+      {pct > 0 ? (
+        <View style={{ position: 'absolute', left: half, width: half, height: size, overflow: 'hidden' }}>
+          <View style={[circle, { left: -half, borderTopColor: ink, borderRightColor: ink, transform: [{ rotate: `${rightDeg}deg` }] }]} />
+        </View>
+      ) : null}
+      {pct > 50 ? (
+        <View style={{ position: 'absolute', left: 0, width: half, height: size, overflow: 'hidden' }}>
+          <View style={[circle, { left: 0, borderBottomColor: ink, borderLeftColor: ink, transform: [{ rotate: `${leftDeg}deg` }] }]} />
+        </View>
+      ) : null}
       {children}
     </View>
   );

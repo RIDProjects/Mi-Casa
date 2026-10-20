@@ -79,7 +79,7 @@ describe('ProgressRing', () => {
 
   it('rotates only the right half for the first 50 %', () => {
     wrap(<ProgressRing value={0.25} />);
-    expect(rotations()).toEqual(['-45deg', '-135deg']);
+    expect(rotations()).toEqual(['-45deg']);
   });
 
   it('fills the right half and rotates the left one past 50 %', () => {
@@ -89,7 +89,7 @@ describe('ProgressRing', () => {
 
   it('clamps NaN to empty and values above 1 to full', () => {
     wrap(<ProgressRing value={NaN} />);
-    expect(rotations()).toEqual(['-135deg', '-135deg']);
+    expect(rotations()).toEqual([]);
     screen.unmount();
     wrap(<ProgressRing value={5} />);
     expect(rotations()).toEqual(['45deg', '45deg']);
