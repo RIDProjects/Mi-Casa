@@ -5,7 +5,7 @@ import { transactionsAPI } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, LineChart, Line } from 'recharts';
 import { BarChart2, Printer } from 'lucide-react';
 import { fmt, MONTH_NAMES } from '../lib/format';
-import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const ANT_THRESHOLD = 500;
 
@@ -241,7 +241,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={52} />
-              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} itemStyle={CHART_TOOLTIP_ITEM} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
               <ReferenceLine y={avgExpenses} stroke={CHART_COLORS.expense} strokeDasharray="4 4" label={{ value: 'Prom.', fontSize: 10, fill: 'var(--ds-on-surface-variant)' }} />
               <Bar animationDuration={1200} animationEasing="ease-out" dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
               <Bar animationDuration={1200} animationEasing="ease-out" dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
@@ -264,7 +264,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={52} />
-              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} itemStyle={CHART_TOOLTIP_ITEM} cursor={CHART_CURSOR} formatter={(v: number) => `$${fmt(v)}`} />
               <Bar animationDuration={1200} animationEasing="ease-out" dataKey={String(selectedYear - 1)} fill={CHART_COLORS.previous} radius={[5, 5, 0, 0]} maxBarSize={26} />
               <Bar animationDuration={1200} animationEasing="ease-out" dataKey={String(selectedYear)} fill={CHART_COLORS.current} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>
@@ -304,7 +304,7 @@ export default function AnalyticsPage() {
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={44} />
-              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(v: number) => [`$${fmt(v)}`, 'Gastos hormiga']} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} itemStyle={CHART_TOOLTIP_ITEM} cursor={CHART_CURSOR} formatter={(v: number) => [`$${fmt(v)}`, 'Gastos hormiga']} />
               <Line animationDuration={1200} animationEasing="ease-out" type="monotone" dataKey="Hormiga" stroke={CHART_COLORS.ant} strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>

@@ -14,6 +14,9 @@ export const CHART_TOOLTIP = {
 
 export const CHART_TOOLTIP_LABEL = { color: 'var(--ds-on-surface)', fontWeight: 600 } as const;
 
+/** Recharts paints each tooltip row in the series colour, or black when it has none (pie slices): force the theme ink. */
+export const CHART_TOOLTIP_ITEM = { color: 'var(--ds-on-surface)' } as const;
+
 export const CHART_CURSOR = { fill: 'var(--ds-surface-low)' } as const;
 
 export const CHART_COLORS = {

@@ -16,7 +16,7 @@ import {
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { fmt } from '../lib/format';
 import { getErrorMessage } from '../utils/errors';
-import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const safeNum = (n: unknown): number => {
   const v = Number(n);
@@ -297,6 +297,10 @@ export default function PatrimonioPage() {
                 width={60}
               />
               <Tooltip
+                contentStyle={CHART_TOOLTIP}
+                labelStyle={CHART_TOOLTIP_LABEL}
+                itemStyle={CHART_TOOLTIP_ITEM}
+                cursor={CHART_CURSOR}
                 formatter={(value: number, name: string) => {
                   const labels: Record<string, string> = {
                     netWorth: 'Patrimonio',
