@@ -12,6 +12,8 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import VencimientosScreen from '../screens/VencimientosScreen';
 import NotificacionesScreen from '../screens/NotificacionesScreen';
 import MovimientosScreen from '../screens/MovimientosScreen';
+import TarjetasScreen from '../screens/TarjetasScreen';
+import TarjetaFormScreen from '../screens/TarjetaFormScreen';
 import MovimientoFormScreen from '../screens/MovimientoFormScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
@@ -93,6 +95,18 @@ export default function AppNavigator() {
             component={MovimientoFormScreen}
             options={({ route }) =>
               headerOptions(colors, route.params?.transaction ? 'Editar movimiento' : 'Registrar movimiento')
+            }
+          />
+          <Stack.Screen
+            name="Tarjetas"
+            component={TarjetasScreen}
+            options={headerOptions(colors, 'Tarjetas de crédito')}
+          />
+          <Stack.Screen
+            name="TarjetaForm"
+            component={TarjetaFormScreen}
+            options={({ route }) =>
+              headerOptions(colors, route.params?.card ? 'Editar tarjeta' : 'Nueva tarjeta')
             }
           />
           <Stack.Screen

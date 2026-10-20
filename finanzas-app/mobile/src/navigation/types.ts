@@ -1,5 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
-import type { Transaction } from '../types';
+import type { CreditCard, Transaction } from '../types';
 
 // Stack raíz (sobre los tabs — para modales y pantallas secundarias)
 export type RootStackParamList = {
@@ -8,6 +8,8 @@ export type RootStackParamList = {
   Notificaciones: undefined;
   Movimientos: undefined;
   MovimientoForm: { transaction?: Transaction } | undefined;
+  Tarjetas: undefined;
+  TarjetaForm: { card?: CreditCard } | undefined;
   PrivacyPolicy: undefined;
 };
 
