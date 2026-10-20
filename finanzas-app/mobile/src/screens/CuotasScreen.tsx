@@ -32,6 +32,7 @@ const createStyles = (c: ThemeColors) =>
     summaryCard: { gap: 12 },
     summaryRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
     summaryCell: { flex: 1, gap: 2 },
+    summaryInline: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
     label: {
       fontFamily: fonts.semibold,
       color: c.onSurfaceVariant,
@@ -91,7 +92,7 @@ function CuotaRow({
       <View style={styles.cardBody}>
         <View style={styles.cardTop}>
           <View style={styles.cardTitles}>
-            <Text style={styles.title} numberOfLines={1}>{item.description}</Text>
+            <Text style={styles.title} numberOfLines={2}>{item.description}</Text>
             {!!item.store && <Text style={styles.store} numberOfLines={1}>{item.store}</Text>}
           </View>
           <Badge label={completed ? 'Completada' : 'En curso'} tone={completed ? 'ok' : 'info'} />
@@ -246,15 +247,15 @@ export default function CuotasScreen() {
                 </Text>
               </View>
               <View style={styles.summaryCell}>
-                <Text style={styles.label}>Cuotas activas</Text>
-                <Text style={[styles.summaryValue, { color: colors.primary }]}>{String(activeCount)}</Text>
-              </View>
-              <View style={styles.summaryCell}>
                 <Text style={styles.label}>Deuda total restante</Text>
                 <Text style={[styles.summaryValue, { color: colors.warnInk }]} numberOfLines={1} adjustsFontSizeToFit>
                   {formatMoney(remainingDebt)}
                 </Text>
               </View>
+            </View>
+            <View style={styles.summaryInline}>
+              <Text style={styles.label}>Cuotas activas</Text>
+              <Text style={[styles.summaryValue, { color: colors.primary }]}>{String(activeCount)}</Text>
             </View>
           </Card>
         </Reveal>

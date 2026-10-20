@@ -120,7 +120,7 @@ export default function IncomeSourcesScreen() {
                 <Card key={income.id} onPress={() => setForm({ open: true, income })}>
                   <View style={styles.row}>
                     <View style={styles.rowText}>
-                      <Text style={styles.name} numberOfLines={1}>{income.name}</Text>
+                      <Text style={styles.name} numberOfLines={2}>{income.name}</Text>
                       <Badge label={INCOME_TYPE_LABELS[income.type] ?? income.type} tone="ok" />
                     </View>
                     <Text style={styles.amount}>{fmt(Number(income.amount))}</Text>

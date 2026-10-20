@@ -84,7 +84,7 @@ function CategoryCard({ cat, total, onPress }: { cat: BudgetCategory; total: num
   return (
     <Card style={styles.catCard} onPress={onPress}>
       <View style={styles.catHeader}>
-        <Text style={styles.catName} numberOfLines={1}>{cat.name}</Text>
+        <Text style={styles.catName} numberOfLines={2}>{cat.name}</Text>
         <Text style={styles.catTotal}>{fmt(monthlyTotal)}/mes</Text>
       </View>
       <ProgressBar value={share} tone="info" height={6} />

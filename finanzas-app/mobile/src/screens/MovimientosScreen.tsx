@@ -105,7 +105,7 @@ function TransactionRow({
       <View style={styles.itemRow}>
         <View style={styles.itemContent}>
           <View style={styles.itemTop}>
-            <Text style={styles.itemName} numberOfLines={1}>{item.concepto}</Text>
+            <Text style={styles.itemName} numberOfLines={2}>{item.concepto}</Text>
             <Text style={[styles.itemAmount, { color: ink }]}>
               {isIncome ? '+' : '-'}{formatMoney(Number(item.monto))}
             </Text>

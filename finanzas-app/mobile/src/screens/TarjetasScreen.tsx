@@ -17,8 +17,8 @@ import { ActionBar, Badge, Card, EmptyState, ErrorState, ProgressBar, Reveal, Sc
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 const ADVISORY: Record<CardPaymentType, { label: string; tone: Tone }> = {
-  full: { label: 'Pagás saldo completo', tone: 'ok' },
-  minimum: { label: 'Pagás mínimo', tone: 'warn' },
+  full: { label: 'Pagas saldo completo', tone: 'ok' },
+  minimum: { label: 'Pagas mínimo', tone: 'warn' },
   stopped: { label: 'Dejaste de pagar', tone: 'danger' },
   partial: { label: 'Pago parcial', tone: 'info' },
 };
@@ -50,6 +50,7 @@ const createStyles = (c: ThemeColors) =>
     summaryCard: { gap: 12 },
     summaryRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
     summaryCell: { flex: 1, gap: 2 },
+    summaryInline: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 },
     label: {
       fontFamily: fonts.semibold,
       color: c.onSurfaceVariant,
@@ -100,8 +101,8 @@ function CardRow({
       <View style={styles.cardBody}>
         <View style={styles.cardTop}>
           <View style={styles.cardTitles}>
-            <Text style={styles.bank} numberOfLines={1}>{item.banco}</Text>
-            <Text style={styles.cardName} numberOfLines={1}>{item.nombreTarjeta}</Text>
+            <Text style={styles.bank} numberOfLines={2}>{item.banco}</Text>
+            <Text style={styles.cardName} numberOfLines={2}>{item.nombreTarjeta}</Text>
           </View>
           <Badge label={`${cardLabel(util)} ${util.toFixed(0)}%`} tone={tone} />
           <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item)} accessibilityLabel="Eliminar tarjeta">
@@ -233,10 +234,10 @@ export default function TarjetasScreen() {
                   {formatMoney(totalLimite)}
                 </Text>
               </View>
-              <View style={styles.summaryCell}>
-                <Text style={styles.label}>Utilización</Text>
-                <Text style={[styles.summaryValue, { color: utilInk }]}>{`${totalUtil.toFixed(1)}%`}</Text>
-              </View>
+            </View>
+            <View style={styles.summaryInline}>
+              <Text style={styles.label}>Utilización</Text>
+              <Text style={[styles.summaryValue, { color: utilInk }]}>{`${totalUtil.toFixed(1)}%`}</Text>
             </View>
             {totalLimite > 0 && <ProgressBar value={totalUtil / 100} tone={globalTone(totalUtil)} />}
           </Card>

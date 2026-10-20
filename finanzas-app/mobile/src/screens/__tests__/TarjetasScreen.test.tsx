@@ -94,7 +94,7 @@ describe('TarjetasScreen', () => {
     expect(screen.getByText('24%')).toBeTruthy();
     expect(screen.getByText('Corte: día 15 · Pago: día 5')).toBeTruthy();
     expect(screen.getByText(/^Pago en \d+d$/)).toBeTruthy();
-    expect(screen.getByText('Pagás saldo completo')).toBeTruthy();
+    expect(screen.getByText('Pagas saldo completo')).toBeTruthy();
     expect(screen.getByText('Dejaste de pagar')).toBeTruthy();
   });
 
