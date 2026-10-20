@@ -16,7 +16,7 @@ interface Props {
 }
 
 const createStyles = (c: ThemeColors) => ({
-  card: { flex: 1, gap: 4, padding: 14 },
+  card: { flex: 1 },
   icon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center' as const, justifyContent: 'center' as const, marginBottom: 4 },
   title: { fontFamily: fonts.semibold, fontSize: 10.5, color: c.onSurfaceVariant, textTransform: 'uppercase' as const, letterSpacing: 0.8 },
   value: { fontFamily: fonts.title, fontSize: 21, letterSpacing: -0.5 },
