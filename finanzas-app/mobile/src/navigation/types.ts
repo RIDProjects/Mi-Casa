@@ -15,7 +15,7 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Dashboard: undefined;
   Expenses: NavigatorScreenParams<GastosStackParamList>;
-  Presupuesto: undefined;
+  Presupuesto: NavigatorScreenParams<BudgetStackParamList>;
   Metas: NavigatorScreenParams<MetasStackParamList>;
   Deudas: NavigatorScreenParams<DebtsStackParamList>;
   Perfil: undefined;
@@ -32,6 +32,13 @@ export type GastosStackParamList = {
 export type DebtsStackParamList = {
   DebtsSummary: undefined;
   AddDebt: { debtId?: string; debtType?: 'they_owe_me' | 'i_owe' } | undefined;
+};
+
+// Stack anidado dentro del tab de Presupuesto
+export type BudgetStackParamList = {
+  BudgetHome: undefined;
+  CategoryDetail: { categoryId: string };
+  IncomeSources: undefined;
 };
 
 // Stack anidado dentro del tab de Metas
