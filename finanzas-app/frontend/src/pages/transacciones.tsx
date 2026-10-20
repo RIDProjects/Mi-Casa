@@ -12,7 +12,7 @@ import { MONTH_NAMES } from '../lib/format';
 import { useCurrencyFormatter } from '../lib/currency';
 import { parseLocalDate, todayLocalISO } from '../lib/dates';
 import { getErrorMessage } from '../utils/errors';
-import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const CATEGORIES = [
   'Casa', 'Comida', 'Familia', 'Transporte', 'Viajes',
@@ -625,7 +625,7 @@ export default function TransaccionesPage() {
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_STROKE} vertical={false} />
               <XAxis dataKey="name" tick={{ ...CHART_TICK, fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ ...CHART_TICK, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => formatAxisMoney(v)} width={50} />
-              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} cursor={CHART_CURSOR} formatter={(value: number) => cfmt(value)} />
+              <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} itemStyle={CHART_TOOLTIP_ITEM} cursor={CHART_CURSOR} formatter={(value: number) => cfmt(value)} />
               <Bar animationDuration={1200} animationEasing="ease-out" dataKey="Ingresos" fill={CHART_COLORS.income} radius={[5, 5, 0, 0]} maxBarSize={26} />
               <Bar animationDuration={1200} animationEasing="ease-out" dataKey="Gastos" fill={CHART_COLORS.expense} radius={[5, 5, 0, 0]} maxBarSize={26} />
             </BarChart>

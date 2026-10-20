@@ -1,3 +1,4 @@
+import { CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM } from '../lib/chart';
 import { useState, useMemo } from 'react';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -170,7 +171,7 @@ export default function MetasPage() {
             <ResponsiveContainer width="100%" height={220}>
               <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="100%" data={progressChartData} startAngle={90} endAngle={-270}>
                 <RadialBar dataKey="value" cornerRadius={4} background={{ fill: '#f0f3ff' }} />
-                <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
+                <Tooltip contentStyle={CHART_TOOLTIP} labelStyle={CHART_TOOLTIP_LABEL} itemStyle={CHART_TOOLTIP_ITEM} formatter={(v: number) => `${v.toFixed(1)}%`} />
               </RadialBarChart>
             </ResponsiveContainer>
           ) : (
