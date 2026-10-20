@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useScreenPolling } from '../hooks/useScreenPolling';
 import { View, Text, StyleSheet, Modal, Alert, ScrollView, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -213,6 +214,7 @@ function SkeletonBlocks() {
 }
 
 export default function MetasScreen() {
+  const pollInterval = useScreenPolling();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<NativeStackNavigationProp<MetasStackParamList>>();
@@ -224,6 +226,7 @@ export default function MetasScreen() {
     refetch,
   } = useQuery({
     queryKey: ['savings-goals'],
+    refetchInterval: pollInterval,
     queryFn: savingsService.getAll,
     staleTime: 0,
     retry: 1,

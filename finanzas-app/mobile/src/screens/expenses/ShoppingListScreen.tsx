@@ -1,4 +1,5 @@
 import React, { useRef, useMemo } from 'react';
+import { useScreenPolling } from '../../hooks/useScreenPolling';
 import {
   View,
   Text,
@@ -106,6 +107,7 @@ function SkeletonBlocks() {
 // sección "Compras de Mercado" de Registro de Gastos — no hace falta un paso
 // adicional de "registrar como gasto".
 export default function ShoppingListScreen() {
+  const pollInterval = useScreenPolling();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<Nav>();
@@ -122,6 +124,7 @@ export default function ShoppingListScreen() {
     refetch,
   } = useQuery({
     queryKey: listsQKey,
+    refetchInterval: pollInterval,
     queryFn: () => purchasesService.getLists(),
     staleTime: 0,
     retry: 1,
@@ -138,6 +141,7 @@ export default function ShoppingListScreen() {
   // (same query/key the expense screens use); the list's own code is a fallback.
   const { data: monthData } = useQuery<HouseholdExpensesMonth>({
     queryKey: ['household-expenses', monthStr],
+    refetchInterval: pollInterval,
     queryFn: () => householdExpensesService.getMonth(monthStr),
   });
   const monedaLocal = monthData?.monedaLocal ?? selectedList?.localCurrencyCode ?? '';

@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { useScreenPolling } from '../hooks/useScreenPolling';
 import {
   View,
   Text,
@@ -100,6 +101,7 @@ function SkeletonBlocks() {
 }
 
 export default function NotificacionesScreen() {
+  const pollInterval = useScreenPolling();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const qc = useQueryClient();
@@ -111,6 +113,7 @@ export default function NotificacionesScreen() {
     refetch,
   } = useQuery({
     queryKey: ['notifications'],
+    refetchInterval: pollInterval,
     queryFn: notificationsService.getAll,
     staleTime: 0,
     retry: 1,

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScreenPolling } from '../hooks/useScreenPolling';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
@@ -129,6 +130,7 @@ function SkeletonBlocks() {
 }
 
 export default function DashboardScreen() {
+  const pollInterval = useScreenPolling();
   const { user } = useAuth();
   const navigation = useNavigation<Nav>();
   const { colors } = useTheme();
@@ -143,6 +145,7 @@ export default function DashboardScreen() {
     refetch,
   } = useQuery({
     queryKey: ['summary'],
+    refetchInterval: pollInterval,
     queryFn: summaryService.get,
     staleTime: 0,
     retry: 1,
@@ -150,6 +153,7 @@ export default function DashboardScreen() {
 
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications'],
+    refetchInterval: pollInterval,
     queryFn: notificationsService.getAll,
     staleTime: 0,
     retry: 1,
@@ -157,6 +161,7 @@ export default function DashboardScreen() {
 
   const { data: creditCards = [] } = useQuery({
     queryKey: ['credit-cards'],
+    refetchInterval: pollInterval,
     queryFn: creditCardsService.getAll,
     staleTime: 0,
     retry: 1,
@@ -164,6 +169,7 @@ export default function DashboardScreen() {
 
   const { data: cuotas = [] } = useQuery({
     queryKey: ['cuotas'],
+    refetchInterval: pollInterval,
     queryFn: cuotasService.getAll,
     staleTime: 0,
     retry: 1,
