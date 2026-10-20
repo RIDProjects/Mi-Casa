@@ -122,3 +122,12 @@ describe('FondoEmergenciaScreen', () => {
     expect(screen.queryByText('Cobertura crítica')).toBeNull();
   });
 });
+
+describe('monthsLabel', () => {
+  it('uses the singular only for exactly one month', () => {
+    const { monthsLabel } = require('../FondoEmergenciaScreen');
+    expect(monthsLabel(1)).toBe('1 mes');
+    expect(monthsLabel(6)).toBe('6 meses');
+    expect(monthsLabel(1.5)).toBe('1.5 meses');
+  });
+});

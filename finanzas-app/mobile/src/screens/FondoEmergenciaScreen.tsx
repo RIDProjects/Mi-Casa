@@ -31,6 +31,9 @@ const getCalculations = (fund: EmergencyFund): EmergencyFundCalculations => {
   return { totalMonthlyExpenses, optimalFund, minimumFund, monthlySavingsRequired, monthsToOptimal: 0 };
 };
 
+/** "1 mes" / "3 meses" (the coverage figures can be fractional). */
+export const monthsLabel = (n: number) => `${n} ${n === 1 ? 'mes' : 'meses'}`;
+
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     coverageRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
@@ -86,7 +89,7 @@ function CoverageCard({ coverage }: { coverage: EmergencyFundCoverage }) {
           <View>
             <Badge label={status.label} tone={status.tone} />
           </View>
-          <Text style={styles.meta}>{`Meta: ${target} meses`}</Text>
+          <Text style={styles.meta}>{`Meta: ${monthsLabel(target)}`}</Text>
           <Text style={styles.meta}>{`Gastos promedio: ${formatMoney(toNumber(coverage.monthlyExpenses))}/mes`}</Text>
         </View>
       </View>
@@ -122,11 +125,11 @@ function FundCard({ fund }: { fund: EmergencyFund }) {
 
         <View style={styles.figures}>
           <View style={styles.figureRow}>
-            <Text style={styles.figureLabel}>{`Monto óptimo (${fund.targetMonths} meses)`}</Text>
+            <Text style={styles.figureLabel}>{`Monto óptimo (${monthsLabel(fund.targetMonths)})`}</Text>
             <Text style={[styles.figureValue, { color: colors.okInk }]}>{formatMoney(optimal)}</Text>
           </View>
           <View style={styles.figureRow}>
-            <Text style={styles.figureLabel}>{`Monto mínimo (${fund.minimumMonths} meses)`}</Text>
+            <Text style={styles.figureLabel}>{`Monto mínimo (${monthsLabel(fund.minimumMonths)})`}</Text>
             <Text style={[styles.figureValue, { color: colors.warnInk }]}>{formatMoney(toNumber(calc.minimumFund))}</Text>
           </View>
           <View style={styles.figureRow}>

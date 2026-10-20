@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { render, fireEvent, screen } from '@testing-library/react-native';
-import { ActionBar, Button, EmptyState, ErrorState, ProgressRing, StatCard, TextField } from '..';
+import { ActionBar, Button, EmptyState, ErrorState, PageHeader, ProgressRing, StatCard, TextField } from '..';
 import { ThemeProvider } from '../../../theme/ThemeContext';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -125,5 +125,12 @@ describe('TextField multiline', () => {
   it('keeps a single-line field centred', () => {
     wrap(<TextField icon="mail-outline" placeholder="nota" value="" onChangeText={() => undefined} />);
     expect(fieldStyle().alignItems).toBe('center');
+  });
+});
+
+describe('PageHeader', () => {
+  it('lets a long title wrap onto two lines instead of truncating it', () => {
+    wrap(<PageHeader title="Servicios y suscripciones del hogar" />);
+    expect(screen.getByText('Servicios y suscripciones del hogar').props.numberOfLines).toBe(2);
   });
 });

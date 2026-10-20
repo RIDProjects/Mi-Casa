@@ -95,7 +95,7 @@ function GoalCard({ goal, onEdit, onContribute }: { goal: SavingsGoal; onEdit: (
           />
         </View>
         <View style={styles.goalTitleBlock}>
-          <Text style={styles.goalName} numberOfLines={1}>
+          <Text style={styles.goalName} numberOfLines={2}>
             {goal.emoji ? `${goal.emoji} ` : ''}{goal.nombre}
           </Text>
           {goal.mesesParaAhorrarla > 0 && (

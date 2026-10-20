@@ -51,7 +51,7 @@ function ExpenseCard({ expense, onPress }: { expense: BudgetExpense; onPress: ()
   return (
     <Card style={styles.expenseCard} onPress={onPress}>
       <View style={styles.expenseHeader}>
-        <Text style={styles.expenseName} numberOfLines={1}>{expense.name}</Text>
+        <Text style={styles.expenseName} numberOfLines={2}>{expense.name}</Text>
         <Text style={styles.expenseMonthly}>{fmt(toMonthly(expense.amount, expense.periodicity))}/mes</Text>
       </View>
       <Text style={styles.expenseMeta}>
