@@ -191,7 +191,7 @@ export default function NotificacionesScreen() {
                 Marcar todas como leídas ({unreadCount})
               </Text>
             </TouchableOpacity>
-          ) : null
+          ) : undefined
         }
         ListEmptyComponent={
           <Card>

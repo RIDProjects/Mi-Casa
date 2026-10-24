@@ -260,7 +260,7 @@ export default function TarjetasScreen() {
             />
           </Reveal>
         )}
-        ListHeaderComponent={ListHeader}
+        ListHeaderComponent={ListHeader ?? undefined}
         ListEmptyComponent={
           <Card>
             <EmptyState
