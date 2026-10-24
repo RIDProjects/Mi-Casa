@@ -156,8 +156,8 @@ export default function ShoppingListScreen() {
   const [inputPrecio, setInputPrecio] = React.useState('');
   const [inputTienda, setInputTienda] = React.useState('');
 
-  const precioRef = useRef<TextInput>(null);
-  const tiendaRef = useRef<TextInput>(null);
+  const precioRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  const tiendaRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Items can be in different currencies and mobile has no rates: show
   // per-currency subtotals rather than one mislabeled total.
@@ -299,7 +299,7 @@ export default function ShoppingListScreen() {
 
   const saving = addItemMut.isPending || updateItemMut.isPending;
   // TextField forwards unknown props to its TextInput; React 19 passes `ref` as a prop.
-  const refProps = (ref: React.RefObject<TextInput | null>) => ({ ref } as object);
+  const refProps = (ref: React.RefObject<React.ComponentRef<typeof TextInput> | null>) => ({ ref } as object);
 
   return (
     <Screen scroll={false} edges={['bottom']}>

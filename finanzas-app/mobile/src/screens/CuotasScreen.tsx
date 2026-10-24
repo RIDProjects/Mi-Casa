@@ -279,7 +279,7 @@ export default function CuotasScreen() {
             />
           </Reveal>
         )}
-        ListHeaderComponent={ListHeader}
+        ListHeaderComponent={ListHeader ?? undefined}
         ListEmptyComponent={
           <Card>
             <EmptyState
