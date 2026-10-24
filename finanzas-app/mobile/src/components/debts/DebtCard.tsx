@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   Alert,
 } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import Swipeable, { type SwipeableMethods } from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
@@ -50,10 +50,47 @@ const createStyles = (c: ThemeColors) =>
     actionText: { fontFamily: fonts.bold, color: c.surface, fontSize: 10 },
   });
 
+type DebtCardStyles = ReturnType<typeof createStyles>;
+
+function RightActions({
+  translation,
+  styles,
+  iconColor,
+  onMarkPaid,
+  onDelete,
+}: {
+  translation: SharedValue<number>;
+  styles: DebtCardStyles;
+  iconColor: string;
+  onMarkPaid: () => void;
+  onDelete: () => void;
+}) {
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: interpolate(translation.value, [-140, 0], [1, 0.8], Extrapolation.CLAMP) }],
+  }));
+
+  return (
+    <View style={styles.actionsContainer}>
+      <Animated.View style={animatedStyle}>
+        <TouchableOpacity style={[styles.actionBtn, styles.paidBtn]} onPress={onMarkPaid} activeOpacity={0.8}>
+          <Ionicons name="checkmark-circle-outline" size={20} color={iconColor} />
+          <Text style={styles.actionText}>Pagada</Text>
+        </TouchableOpacity>
+      </Animated.View>
+      <Animated.View style={animatedStyle}>
+        <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={onDelete} activeOpacity={0.8}>
+          <Ionicons name="trash-outline" size={20} color={iconColor} />
+          <Text style={styles.actionText}>Eliminar</Text>
+        </TouchableOpacity>
+      </Animated.View>
+    </View>
+  );
+}
+
 export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
-  const swipeableRef = useRef<Swipeable>(null);
+  const swipeableRef = useRef<SwipeableMethods>(null);
   const isTheyOweMe = debt.type === 'they_owe_me';
 
   const handleMarkPaid = () => {
@@ -88,41 +125,15 @@ export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) 
     );
   };
 
-  const renderRightActions = (
-    _progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
-  ) => {
-    const scale = dragX.interpolate({
-      inputRange: [-140, 0],
-      outputRange: [1, 0.8],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <View style={styles.actionsContainer}>
-        <Animated.View style={{ transform: [{ scale }] }}>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.paidBtn]}
-            onPress={handleMarkPaid}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="checkmark-circle-outline" size={20} color={colors.surface} />
-            <Text style={styles.actionText}>Pagada</Text>
-          </TouchableOpacity>
-        </Animated.View>
-        <Animated.View style={{ transform: [{ scale }] }}>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.deleteBtn]}
-            onPress={handleDelete}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="trash-outline" size={20} color={colors.surface} />
-            <Text style={styles.actionText}>Eliminar</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    );
-  };
+  const renderRightActions = (_progress: SharedValue<number>, translation: SharedValue<number>) => (
+    <RightActions
+      translation={translation}
+      styles={styles}
+      iconColor={colors.surface}
+      onMarkPaid={handleMarkPaid}
+      onDelete={handleDelete}
+    />
+  );
 
   return (
     <Swipeable
