@@ -1,6 +1,7 @@
 import { ForbiddenException } from '@nestjs/common';
 import { HouseCurrenciesController } from './house-currencies.controller';
 import { HouseCurrenciesService } from './house-currencies.service';
+import { ElToqueRatesService } from './eltoque-rates.service';
 
 /**
  * Regression tests for the IDOR fix on house-currencies.
@@ -17,6 +18,7 @@ import { HouseCurrenciesService } from './house-currencies.service';
 describe('HouseCurrenciesController (IDOR regression)', () => {
   let controller: HouseCurrenciesController;
   let svc: jest.Mocked<HouseCurrenciesService>;
+  let eltoque: jest.Mocked<ElToqueRatesService>;
 
   const HOUSE_A = 'house-a-id';
   const HOUSE_B = 'house-b-id';
@@ -52,7 +54,31 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
       remove: jest.fn().mockResolvedValue({ message: 'ok' }),
     } as unknown as jest.Mocked<HouseCurrenciesService>;
 
-    controller = new HouseCurrenciesController(svc);
+    eltoque = {
+      getStatus: jest.fn().mockResolvedValue({ enabled: true, available: true }),
+      setAuto: jest.fn().mockResolvedValue(undefined),
+      refreshHouse: jest.fn().mockResolvedValue({ updated: ['USD'] }),
+    } as unknown as jest.Mocked<ElToqueRatesService>;
+
+    controller = new HouseCurrenciesController(svc, eltoque);
+  });
+
+  describe('elToque automatic rates', () => {
+    it('blocks a foreign house and non-admin members from changing or refreshing', async () => {
+      expect(() => controller.getAutoRates(HOUSE_B, { user: userOfHouseA } as any)).toThrow(ForbiddenException);
+      await expect(
+        controller.setAutoRates(HOUSE_A, { enabled: false }, { user: userOfHouseA } as any),
+      ).rejects.toThrow(ForbiddenException);
+      expect(() => controller.refreshRates(HOUSE_A, { user: userOfHouseA } as any)).toThrow(ForbiddenException);
+      expect(eltoque.setAuto).not.toHaveBeenCalled();
+      expect(eltoque.refreshHouse).not.toHaveBeenCalled();
+    });
+
+    it('lets a house admin toggle the flag and trigger a refresh', async () => {
+      await controller.setAutoRates(HOUSE_A, { enabled: false }, { user: houseAdminOfHouseA } as any);
+      expect(eltoque.setAuto).toHaveBeenCalledWith(HOUSE_A, false);
+      expect(await controller.refreshRates(HOUSE_A, { user: houseAdminOfHouseA } as any)).toEqual({ updated: ['USD'] });
+    });
   });
 
   describe('cross-house access is blocked', () => {

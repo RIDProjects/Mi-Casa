@@ -9,6 +9,9 @@ export class House {
 
   @Column({ select: false }) password: string;
 
+  /** Keep USD/EUR/MLC → CUP rates in sync with elToque (daily job). */
+  @Column({ default: true }) autoExchangeRates: boolean;
+
   @CreateDateColumn() createdAt: Date;
 
   @ManyToMany(() => User, user => user.houses)

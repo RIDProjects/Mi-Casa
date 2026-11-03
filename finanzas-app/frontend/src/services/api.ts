@@ -265,6 +265,9 @@ export const houseCurrenciesAPI = {
   remove: (houseId: string, currencyId: string) => api.delete(`/houses/${houseId}/currencies/${currencyId}`),
   getRates: (houseId: string) => api.get(`/houses/${houseId}/currencies/rates`),
   upsertRate: (houseId: string, data: any) => api.post(`/houses/${houseId}/currencies/rates`, data),
+  getAutoRates: (houseId: string) => api.get(`/houses/${houseId}/currencies/auto-rates`),
+  setAutoRates: (houseId: string, enabled: boolean) => api.put(`/houses/${houseId}/currencies/auto-rates`, { enabled }),
+  refreshRates: (houseId: string) => api.post(`/houses/${houseId}/currencies/rates/refresh`, {}),
 };
 
 export const pushAPI = {
