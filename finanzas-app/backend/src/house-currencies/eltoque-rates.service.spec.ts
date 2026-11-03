@@ -75,6 +75,35 @@ describe('ElToqueRatesService', () => {
     houses.findOne.mockResolvedValue({ id: HOUSE, autoExchangeRates: false });
     await service.setAuto(HOUSE, false);
     expect(houses.update).toHaveBeenCalledWith({ id: HOUSE }, { autoExchangeRates: false });
-    expect(await service.getStatus(HOUSE)).toEqual({ enabled: false, available: true });
+    expect(await service.getStatus(HOUSE)).toEqual({ enabled: false, available: true, managedCodes: [] });
+  });
+
+  describe('isManaged (manual edits blocked while elToque keeps the rate)', () => {
+    beforeEach(() => houses.findOne.mockResolvedValue({ id: HOUSE, autoExchangeRates: true }));
+
+    it.each(['USD', 'EUR', 'MLC'])('is managed for %s → CUP when auto is on and the token exists', async (code) => {
+      expect(await service.isManaged(HOUSE, code, 'CUP')).toBe(true);
+    });
+
+    it('is not managed for other currencies or other targets', async () => {
+      expect(await service.isManaged(HOUSE, 'ARS', 'CUP')).toBe(false);
+      expect(await service.isManaged(HOUSE, 'USD', 'EUR')).toBe(false);
+    });
+
+    it('is not managed when auto is off', async () => {
+      houses.findOne.mockResolvedValue({ id: HOUSE, autoExchangeRates: false });
+      expect(await service.isManaged(HOUSE, 'USD', 'CUP')).toBe(false);
+    });
+
+    it('is not managed without the token (auto does nothing, so manual must stay possible)', async () => {
+      delete process.env.ELTOQUE_API_KEY;
+      expect(await service.isManaged(HOUSE, 'USD', 'CUP')).toBe(false);
+    });
+
+    it('getStatus lists the managed codes only while auto is effective', async () => {
+      expect(await service.getStatus(HOUSE)).toEqual({
+        enabled: true, available: true, managedCodes: ['USD', 'EUR', 'MLC'],
+      });
+    });
   });
 });

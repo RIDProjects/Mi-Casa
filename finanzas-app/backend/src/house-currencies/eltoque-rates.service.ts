@@ -93,8 +93,23 @@ export class ElToqueRatesService {
     await this.houses.update({ id: houseId }, { autoExchangeRates: enabled });
   }
 
-  async getStatus(houseId: string): Promise<{ enabled: boolean; available: boolean }> {
+  /** Currencies whose `→ CUP` rate elToque keeps up to date (so manual edits are blocked). */
+  private async managedCodes(houseId: string): Promise<{ enabled: boolean; codes: string[] }> {
     const house = await this.houses.findOne({ where: { id: houseId } });
-    return { enabled: house?.autoExchangeRates ?? true, available: this.available };
+    const enabled = house?.autoExchangeRates ?? true;
+    return { enabled, codes: enabled && this.available ? Object.values(KEY_TO_ISO) : [] };
+  }
+
+  /** True while the daily sync owns `from → to`: auto on, token configured, CUP target, quoted currency. */
+  async isManaged(houseId: string, from: string, to: string): Promise<boolean> {
+    if (to !== LOCAL_CODE) return false;
+    return (await this.managedCodes(houseId)).codes.includes(from);
+  }
+
+  async getStatus(
+    houseId: string,
+  ): Promise<{ enabled: boolean; available: boolean; managedCodes: string[] }> {
+    const { enabled, codes } = await this.managedCodes(houseId);
+    return { enabled, available: this.available, managedCodes: codes };
   }
 }
