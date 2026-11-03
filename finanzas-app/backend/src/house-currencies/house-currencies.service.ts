@@ -79,11 +79,12 @@ export class HouseCurrenciesService {
    * Makes `currencyId` the house's local currency (N), re-basing everything
    * that was expressed in the previous local currency (O), atomically:
    *
-   *  - rate(N→O) is required (or its inverse O→N); otherwise 400.
+   *  - when rate(N→O) (or its inverse O→N) exists:
    *  - every other active currency X with an X→O rate gets X→N =
    *    rate(X→O) / rate(N→O), and O→N = 1 / rate(N→O), dated today.
    *  - the house's `household_expenses` snapshots are converted to N.
-   *  - `isLocal` flags are flipped.
+   *  - without that rate the re-base is skipped and only the `isLocal`
+   *    flags are flipped (a rate is no longer a precondition).
    *
    * Rates are stored with scale 4 (numeric 15,4). A converted rate that would
    * round to 0 (e.g. a very strong N against X) is clamped to the smallest
@@ -140,11 +141,10 @@ export class HouseCurrenciesService {
   ): Promise<void> {
     // rate(N→O): direct, or the inverse of O→N.
     const rateNO = await this.latestRateOrInverse(manager, houseId, newCode, oldCode);
-    if (rateNO === null) {
-      throw new BadRequestException(
-        `Configura primero la tasa de cambio ${newCode} → ${oldCode} para poder cambiar la moneda local`,
-      );
-    }
+    // Without a rate there is nothing to re-base with: the switch still goes
+    // through (rates are optional and may be filled in, or fetched
+    // automatically, afterwards) and existing snapshots stay untouched.
+    if (rateNO === null) return;
 
     const today = todayInAppTimezone();
 
@@ -349,6 +349,7 @@ export class HouseCurrenciesService {
       toCurrency: string;
       rate: number;
       rateType?: string;
+      source?: string;
     },
   ): Promise<ExchangeRate> {
     const today = todayInAppTimezone();
@@ -365,6 +366,7 @@ export class HouseCurrenciesService {
     if (existing) {
       existing.rate = dto.rate;
       existing.rateType = dto.rateType ?? existing.rateType;
+      existing.source = dto.source ?? existing.source;
       return this.ratesRepo.save(existing);
     }
 
