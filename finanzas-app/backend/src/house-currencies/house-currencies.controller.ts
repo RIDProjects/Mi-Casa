@@ -9,6 +9,7 @@ import {
   Request,
   UseGuards,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -92,7 +93,16 @@ export class HouseCurrenciesController {
   ) {
     const verifiedHouseId = assertHouseAccess(req.user, houseId);
     assertHouseAdmin(req.user);
-    return this.svc.upsertRate(verifiedHouseId, dto);
+    return this.eltoque
+      .isManaged(verifiedHouseId, dto.fromCurrency, dto.toCurrency)
+      .then((managed) => {
+        if (managed) {
+          throw new BadRequestException(
+            'Esta tasa se actualiza automáticamente desde elToque. Desactiva las tasas automáticas para editarla a mano',
+          );
+        }
+        return this.svc.upsertRate(verifiedHouseId, dto);
+      });
   }
 
   @Get()

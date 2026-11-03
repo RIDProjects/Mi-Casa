@@ -44,7 +44,7 @@ export default function MonedasPage() {
   const [rateInputs, setRateInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
 
-  const [autoRates, setAutoRates] = useState<{ enabled: boolean; available: boolean } | null>(null);
+  const [autoRates, setAutoRates] = useState<{ enabled: boolean; available: boolean; managedCodes: string[] } | null>(null);
 
   const localCurrency = currencies.find(c => c.isLocal);
 
@@ -62,6 +62,7 @@ export default function MonedasPage() {
       const res = await houseCurrenciesAPI.setAutoRates(houseId, !autoRates.enabled);
       setAutoRates(res.data);
       toast.success(res.data.enabled ? 'Tasas automáticas activadas' : 'Tasas automáticas desactivadas');
+      if (res.data.enabled && res.data.managedCodes.length > 0) await handleRefreshAuto();
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? 'Error al cambiar las tasas automáticas');
     } finally {
@@ -220,7 +221,7 @@ export default function MonedasPage() {
             <p className="font-semibold text-on-surface">Tasas automáticas (elToque)</p>
             <p className="text-xs text-on-surface-variant">
               {autoRates.available
-                ? 'USD, EUR y MLC se actualizan cada día con la tasa informal de elToque (solo con CUP como moneda local). Podés editarlas a mano; la próxima actualización diaria las reemplaza.'
+                ? 'USD, EUR y MLC se actualizan cada día con la tasa informal de elToque (solo con CUP como moneda local). Mientras esté activo no se pueden editar a mano: desactivalo para cargarlas manualmente.'
                 : 'El servidor no tiene configurado el acceso a elToque (ELTOQUE_API_KEY). Mientras tanto cargá las tasas a mano.'}
             </p>
           </div>
@@ -255,6 +256,9 @@ export default function MonedasPage() {
           {currencies.map(currency => {
             const currentRate = rates[currency.currencyCode];
             const rateInput = rateInputs[currency.currencyCode] ?? '';
+            const isAutoManaged =
+              localCurrency?.currencyCode === 'CUP' &&
+              !!autoRates?.managedCodes.includes(currency.currencyCode);
 
             return (
               <div
@@ -281,7 +285,13 @@ export default function MonedasPage() {
                   </div>
 
                   {/* Rate field — only for non-base currencies */}
-                  {!currency.isLocal && localCurrency && (
+                  {!currency.isLocal && localCurrency && isAutoManaged && (
+                    <p className="text-xs text-on-surface-variant sm:text-right">
+                      1 {currency.currencyCode} = {currentRate ?? '—'} {localCurrency.currencyCode}
+                      <span className="block text-outline">Automática (elToque)</span>
+                    </p>
+                  )}
+                  {!currency.isLocal && localCurrency && !isAutoManaged && (
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-on-surface-variant whitespace-nowrap">
                         1 {currency.currencyCode} =
@@ -333,7 +343,7 @@ export default function MonedasPage() {
                 </div>
 
                 {/* Current rate display */}
-                {!currency.isLocal && currentRate && !rateInput && (
+                {!currency.isLocal && !isAutoManaged && currentRate && !rateInput && (
                   <p className="text-xs text-outline mt-2 pl-13">
                     Tasa actual: 1 {currency.currencyCode} = {currentRate} {localCurrency?.currencyCode}
                   </p>
