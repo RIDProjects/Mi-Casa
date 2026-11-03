@@ -12,9 +12,11 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ElToqueRatesService } from './eltoque-rates.service';
 import { HouseCurrenciesService } from './house-currencies.service';
 import { resolveHouseId } from '../common/utils/resolve-house-id';
 import { UpsertRateDto } from './dto/upsert-rate.dto';
+import { SetAutoRatesDto } from './dto/set-auto-rates.dto';
 import { AddCurrencyDto } from './dto/add-currency.dto';
 
 function assertHouseAccess(user: any, pathHouseId: string): string {
@@ -47,7 +49,34 @@ function assertHouseAdmin(user: any): void {
 @Controller('houses/:houseId/currencies')
 @UseGuards(JwtAuthGuard)
 export class HouseCurrenciesController {
-  constructor(private readonly svc: HouseCurrenciesService) {}
+  constructor(
+    private readonly svc: HouseCurrenciesService,
+    private readonly eltoque: ElToqueRatesService,
+  ) {}
+
+  @Get('auto-rates')
+  getAutoRates(@Param('houseId') houseId: string, @Request() req) {
+    return this.eltoque.getStatus(assertHouseAccess(req.user, houseId));
+  }
+
+  @Put('auto-rates')
+  async setAutoRates(
+    @Param('houseId') houseId: string,
+    @Body() dto: SetAutoRatesDto,
+    @Request() req,
+  ) {
+    const verifiedHouseId = assertHouseAccess(req.user, houseId);
+    assertHouseAdmin(req.user);
+    await this.eltoque.setAuto(verifiedHouseId, dto.enabled);
+    return this.eltoque.getStatus(verifiedHouseId);
+  }
+
+  @Post('rates/refresh')
+  refreshRates(@Param('houseId') houseId: string, @Request() req) {
+    const verifiedHouseId = assertHouseAccess(req.user, houseId);
+    assertHouseAdmin(req.user);
+    return this.eltoque.refreshHouse(verifiedHouseId);
+  }
 
   @Get('rates')
   getRates(@Param('houseId') houseId: string, @Request() req) {

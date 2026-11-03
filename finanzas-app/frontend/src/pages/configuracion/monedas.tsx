@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from 'react-query';
 import Layout from '../../components/layout/Layout';
 import PageHeader from '../../components/ui/PageHeader';
@@ -9,7 +9,7 @@ import { useCurrencyStore, HouseCurrency } from '../../store/currency.store';
 import { useAuthStore } from '../../store/auth.store';
 import { houseCurrenciesAPI } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Coins, Plus, Trash2, Star, ArrowLeftRight } from 'lucide-react';
+import { Coins, Plus, Trash2, Star, ArrowLeftRight, RefreshCw } from 'lucide-react';
 
 const COMMON_CURRENCIES = [
   { code: 'CUP', name: 'Peso Cubano',                   symbol: '$',    locale: 'es-CU' },
@@ -44,7 +44,49 @@ export default function MonedasPage() {
   const [rateInputs, setRateInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
 
+  const [autoRates, setAutoRates] = useState<{ enabled: boolean; available: boolean } | null>(null);
+
   const localCurrency = currencies.find(c => c.isLocal);
+
+  useEffect(() => {
+    if (!houseId) return;
+    houseCurrenciesAPI.getAutoRates(houseId)
+      .then(res => setAutoRates(res.data))
+      .catch(() => setAutoRates(null));
+  }, [houseId]);
+
+  const handleToggleAuto = async () => {
+    if (!houseId || !autoRates) return;
+    setLoading(l => ({ ...l, auto: true }));
+    try {
+      const res = await houseCurrenciesAPI.setAutoRates(houseId, !autoRates.enabled);
+      setAutoRates(res.data);
+      toast.success(res.data.enabled ? 'Tasas automáticas activadas' : 'Tasas automáticas desactivadas');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'Error al cambiar las tasas automáticas');
+    } finally {
+      setLoading(l => ({ ...l, auto: false }));
+    }
+  };
+
+  const handleRefreshAuto = async () => {
+    if (!houseId) return;
+    setLoading(l => ({ ...l, refresh: true }));
+    try {
+      const res = await houseCurrenciesAPI.refreshRates(houseId);
+      const updated: string[] = res.data?.updated ?? [];
+      if (updated.length > 0) {
+        toast.success(`Tasas actualizadas: ${updated.join(', ')}`);
+        await reload();
+      } else {
+        toast('No hay tasas para actualizar (solo aplica con CUP como moneda local)');
+      }
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? 'No se pudo consultar elToque');
+    } finally {
+      setLoading(l => ({ ...l, refresh: false }));
+    }
+  };
 
   const reload = async () => {
     if (!houseId) return;
@@ -161,7 +203,7 @@ export default function MonedasPage() {
     <Layout>
       <PageHeader
         title={<><Coins size={24} /> Monedas del hogar</>}
-        subtitle="Configura las monedas que usa tu hogar y sus tasas de cambio"
+        subtitle="Configura las monedas que usa tu hogar. Las tasas de cambio son opcionales"
         action={
           <button
             onClick={() => setShowAddModal(true)}
@@ -171,6 +213,35 @@ export default function MonedasPage() {
           </button>
         }
       />
+
+      {autoRates && (
+        <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 shadow-sm mb-3 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-on-surface">Tasas automáticas (elToque)</p>
+            <p className="text-xs text-on-surface-variant">
+              {autoRates.available
+                ? 'USD, EUR y MLC se actualizan cada día con la tasa informal de elToque (solo con CUP como moneda local). Podés editarlas a mano; la próxima actualización diaria las reemplaza.'
+                : 'El servidor no tiene configurado el acceso a elToque (ELTOQUE_API_KEY). Mientras tanto cargá las tasas a mano.'}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleRefreshAuto}
+              disabled={!autoRates.available || loading.refresh}
+              className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5 disabled:opacity-50"
+            >
+              <RefreshCw size={13} className={loading.refresh ? 'animate-spin' : ''} /> Actualizar ahora
+            </button>
+            <button
+              onClick={handleToggleAuto}
+              disabled={loading.auto}
+              className="btn-primary text-xs py-1.5 px-3 disabled:opacity-50"
+            >
+              {autoRates.enabled ? 'Desactivar' : 'Activar'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {currencies.length === 0 ? (
         <EmptyState
