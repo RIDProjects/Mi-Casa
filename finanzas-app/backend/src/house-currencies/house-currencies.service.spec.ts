@@ -353,12 +353,22 @@ describe('HouseCurrenciesService.setLocal', () => {
     expect(Number(otherCall[1][2])).toBeCloseTo(0.0025, 8);
   });
 
-  it('throws a clear 400 and changes nothing when no N↔O rate exists', async () => {
+  it('switches the local currency without a rate: flips flags and leaves rates and expense snapshots untouched', async () => {
     rates.push({ fromCurrency: 'EUR', toCurrency: 'USD', rate: 1.1, date: '2026-01-01' });
 
-    await expect(service.setLocal(HOUSE_ID, 'c')).rejects.toThrow(BadRequestException);
-    await expect(service.setLocal(HOUSE_ID, 'c')).rejects.toThrow(/CUP → USD/);
-    expect(manager.update).not.toHaveBeenCalled();
+    const result = await service.setLocal(HOUSE_ID, 'c');
+
+    expect(result.isLocal).toBe(true);
+    expect(manager.update).toHaveBeenCalledWith(
+      HouseCurrency,
+      { house: { id: HOUSE_ID } },
+      { isLocal: false },
+    );
+    expect(manager.update).toHaveBeenCalledWith(
+      HouseCurrency,
+      { id: 'c', house: { id: HOUSE_ID } },
+      { isLocal: true },
+    );
     expect(manager.query).not.toHaveBeenCalled();
     expect(manager.save).not.toHaveBeenCalled();
   });
