@@ -6,7 +6,10 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hint?: string;
 }
 
-export function Input({ label, error, hint, id, className, ...props }: InputProps) {
+export function Input({ label, error, hint, id: idProp, className, ...props }: InputProps) {
+  // Falls back to a generated id so the label is always tied to its control.
+  const autoId = React.useId();
+  const id = idProp ?? autoId;
   return (
     <div className="space-y-1">
       {label && (
