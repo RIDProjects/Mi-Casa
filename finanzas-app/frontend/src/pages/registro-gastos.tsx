@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { householdExpensesAPI } from '../services/api';
@@ -42,6 +43,149 @@ function buildDefaultForm(monedaLocal: string) {
   };
 }
 
+interface ManualCardProps {
+  title: string;
+  tone: 'warn' | 'neutral';
+  items: any[];
+  subtotalLabel: string;
+  subtotal: number;
+  newLabel: string;
+  emptyText: string;
+  onNew: () => void;
+  onEdit: (item: any) => void;
+  onDelete: (id: string) => void;
+  monedaLocal: string;
+  fmtLocal: (n: number) => string;
+  header?: React.ReactNode;
+}
+
+function ManualExpensesCard({
+  title, tone, items, subtotalLabel, subtotal, newLabel, emptyText, onNew, onEdit, onDelete, monedaLocal, fmtLocal, header,
+}: ManualCardProps) {
+  const warn = tone === 'warn';
+  return (
+    <section aria-label={title} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+      <div className={`px-4 py-3 border-b border-outline-variant flex items-center gap-2 ${warn ? 'bg-warning/10' : 'bg-surface-container-low'}`}>
+        <BookOpen size={16} className={warn ? 'text-warn-ink' : 'text-on-surface-variant'} />
+        <h2 className={`text-sm font-semibold ${warn ? 'text-warn-ink' : 'text-on-surface'}`}>{title}</h2>
+        <button
+          onClick={onNew}
+          className={`ml-auto flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors ${warn ? 'text-warn-ink bg-warning/15 hover:bg-warning/20' : 'text-on-surface bg-surface-container hover:bg-surface-high'}`}
+        >
+          <Plus size={13} /> {newLabel}
+        </button>
+      </div>
+      {header}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
+            <tr>
+              <th className="px-3 py-2 text-left">Fecha</th>
+              <th className="px-3 py-2 text-left">Descripción</th>
+              <th className="px-3 py-2 text-left">Categoría</th>
+              <th className="px-3 py-2 text-left">Lugar</th>
+              <th className="px-3 py-2 text-right">Monto</th>
+              <th className="px-3 py-2 text-center">Acc.</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant">
+            {items.length === 0 ? (
+              <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">{emptyText}</td></tr>
+            ) : (
+              items.map((s: any) => (
+                <tr key={s.id} className="hover:bg-surface-gray">
+                  <td className="px-3 py-2 text-on-surface-variant text-xs">{s.fecha}</td>
+                  <td className="px-3 py-2 text-on-surface font-medium">{s.descripcion}</td>
+                  <td className="px-3 py-2">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CAT_COLORS[s.categoria as Category] ?? CAT_COLORS['Otros']}`}>
+                      {s.categoria}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-on-surface-variant text-xs">{s.lugar || '—'}</td>
+                  <td className="px-3 py-2 text-right">
+                    <div className="font-semibold text-on-surface">{fmt(s.monto ?? s.montoCUP)} {s.moneda ?? monedaLocal}</div>
+                    {s.moneda && s.moneda !== monedaLocal && (
+                      <div className="text-xs text-on-surface-variant">≈ {fmtLocal(s.montoLocal ?? s.montoCUP)}</div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button aria-label="Editar" onClick={() => onEdit(s)} className="p-1.5 text-info-ink hover:text-info-ink rounded hover:bg-primary-container/10">
+                        <Edit2 size={13} />
+                      </button>
+                      <button aria-label="Eliminar" onClick={() => onDelete(s.id)} className="p-1.5 text-danger-ink hover:text-danger-ink rounded hover:bg-danger/10">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+          {items.length > 0 && (
+            <tfoot className={warn ? 'bg-warning/10' : 'bg-surface-container-low'}>
+              <tr>
+                <td colSpan={4} className={`px-3 py-2 text-xs font-bold ${warn ? 'text-warn-ink' : 'text-on-surface-variant'}`}>{subtotalLabel}</td>
+                <td className={`px-3 py-2 text-right text-sm font-bold ${warn ? 'text-warn-ink' : 'text-on-surface'}`}>{fmtLocal(subtotal)}</td>
+                <td />
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function OutingsBudgetHeader({ outings, fmtLocal }: { outings: any; fmtLocal: (n: number) => string }) {
+  const { total, budget, remaining, exceeded } = outings;
+  if (budget == null) {
+    return (
+      <div className="px-4 py-3 border-b border-outline-variant bg-surface-gray">
+        <p className="text-xs text-on-surface-variant">
+          Sin límite: define el gasto «Salidas» en la categoría Comida de{' '}
+          <Link href="/presupuesto" className="text-primary hover:underline">Presupuesto</Link>.
+        </p>
+      </div>
+    );
+  }
+  const pct = budget > 0 ? Math.min(100, Math.round((total / budget) * 100)) : 100;
+  return (
+    <div className="px-4 py-3 border-b border-outline-variant bg-surface-gray">
+      <div className="flex items-baseline justify-between gap-3">
+        <div>
+          <p className="font-label-upper text-label-upper text-on-surface-variant">PRESUPUESTO DE SALIDAS DEL MES</p>
+          <p className="text-xl font-extrabold text-on-surface">
+            {fmtLocal(total)} <span className="text-xs font-medium text-outline">de {fmtLocal(budget)}</span>
+          </p>
+        </div>
+        <p className={`text-sm font-bold ${exceeded ? 'text-danger-ink' : 'text-ok-ink'}`}>
+          {exceeded ? `Te pasaste por ${fmtLocal(Math.abs(remaining))}` : `Te quedan ${fmtLocal(remaining)}`}
+        </p>
+      </div>
+      <div
+        role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Gastado en salidas"
+        className="mt-2 h-2.5 rounded-full bg-surface-container overflow-hidden"
+      >
+        <div className={`h-full rounded-full ${exceeded ? 'bg-danger' : 'bg-success'}`} style={{ width: `${pct}%` }} />
+      </div>
+      {exceeded && (
+        <div role="alert" className="mt-3 flex items-start gap-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger-ink">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <div>
+            <b>Superaste el presupuesto de Salidas</b>
+            <p className="text-xs">Puedes seguir registrando; el presupuesto no se modifica desde aquí.</p>
+          </div>
+        </div>
+      )}
+      <p className="mt-2 text-xs text-on-surface-variant">
+        Límite tomado de «Salidas» en Comida, dentro de{' '}
+        <Link href="/presupuesto" className="text-primary hover:underline">Presupuesto</Link>.
+      </p>
+    </div>
+  );
+}
+
 export default function RegistroGastosPage() {
   const qc = useQueryClient();
   const now = new Date();
@@ -50,7 +194,7 @@ export default function RegistroGastosPage() {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
 
-  const { currencies } = useCurrencyStore();
+  const { currencies, rates } = useCurrencyStore();
   const { fmt: fmtLocal } = useCurrencyFormatter();
   const localCurrency = currencies.find(c => c.isLocal);
   const monedaLocal = localCurrency?.currencyCode ?? '';
@@ -72,15 +216,23 @@ export default function RegistroGastosPage() {
   const totalCompras: number    = data?.totalCompras     ?? 0;
   const totalSalidas: number    = data?.totalSalidas     ?? 0;
   const total: number           = data?.total            ?? 0;
+  const outings: any            = data?.outings;
+  const otros: any              = data?.otros;
   const unconvertedItems: number = data?.unconvertedItems ?? 0;
 
+
+  const notifyOverBudget = (res: any) => {
+    const w = res?.data?.budgetWarning;
+    if (w) toast(`Superaste el presupuesto de Salidas por ${fmtLocal(w.exceededBy)}`, { icon: '⚠️' });
+  };
+
   const createMut = useMutation((d: any) => householdExpensesAPI.create(d), {
-    onSuccess: () => { toast.success('Gasto registrado'); setShowModal(false); setForm(buildDefaultForm(monedaLocal)); qc.invalidateQueries(qKey); },
+    onSuccess: (res: any) => { toast.success('Gasto registrado'); notifyOverBudget(res); setShowModal(false); setForm(buildDefaultForm(monedaLocal)); qc.invalidateQueries(qKey); },
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
   const updateMut = useMutation((d: any) => householdExpensesAPI.update(editItem?.id, d), {
-    onSuccess: () => { toast.success('Gasto actualizado'); setShowModal(false); setEditItem(null); qc.invalidateQueries(qKey); },
+    onSuccess: (res: any) => { toast.success('Gasto actualizado'); notifyOverBudget(res); setShowModal(false); setEditItem(null); qc.invalidateQueries(qKey); },
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
 
@@ -91,6 +243,12 @@ export default function RegistroGastosPage() {
 
   const prevMonth = () => { if (month === 1) { setMonth(12); setYear(y => y - 1); } else setMonth(m => m - 1); };
   const nextMonth = () => { if (month === 12) { setMonth(1); setYear(y => y + 1); } else setMonth(m => m + 1); };
+
+  const openNew = (categoria: Category) => {
+    setForm({ ...buildDefaultForm(monedaLocal), categoria });
+    setEditItem(null);
+    setShowModal(true);
+  };
 
   const handleEdit = (item: any) => {
     setForm({
@@ -104,6 +262,21 @@ export default function RegistroGastosPage() {
     setEditItem(item);
     setShowModal(true);
   };
+
+
+  // Live preview of the outings limit for the expense being typed (informs, never blocks).
+  const projectedOverBudget = (() => {
+    if (!outings || outings.budget == null || form.categoria !== 'Salidas') return null;
+    const amount = Number(form.monto);
+    if (!amount || amount <= 0) return null;
+    const rate = form.moneda === monedaLocal ? 1 : rates?.[form.moneda];
+    if (!rate || rate <= 0) return null;
+    const replaced = editItem && editItem.categoria === 'Salidas' ? Number(editItem.montoLocal ?? editItem.montoCUP ?? 0) : 0;
+    const projected = Number(outings.total) - replaced + amount * rate;
+    return projected > outings.budget
+      ? { spent: Number(outings.total) - replaced, budget: Number(outings.budget), over: projected - outings.budget }
+      : null;
+  })();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,78 +383,34 @@ export default function RegistroGastosPage() {
             </div>
           </div>
 
-          {/* Section 2: Salidas y Otros Gastos */}
-          <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-            <div className="px-4 py-3 border-b border-outline-variant bg-warning/10 flex items-center gap-2">
-              <BookOpen size={16} className="text-warn-ink" />
-              <h2 className="text-sm font-semibold text-warn-ink">
-                Salidas y Otros Gastos
-              </h2>
-              <button
-                onClick={() => { setForm(buildDefaultForm(monedaLocal)); setEditItem(null); setShowModal(true); }}
-                className="ml-auto flex items-center gap-1 text-xs font-medium text-warn-ink hover:text-warn-ink bg-warning/15 hover:bg-warning/20 px-2.5 py-1.5 rounded-lg transition-colors"
-              >
-                <Plus size={13} /> Nueva salida
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Fecha</th>
-                    <th className="px-3 py-2 text-left">Descripción</th>
-                    <th className="px-3 py-2 text-left">Categoría</th>
-                    <th className="px-3 py-2 text-left">Lugar</th>
-                    <th className="px-3 py-2 text-right">Monto</th>
-                    <th className="px-3 py-2 text-center">Acc.</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant">
-                  {salidas.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">Sin salidas registradas — usa el botón &quot;Nueva salida&quot;</td></tr>
-                  ) : (
-                    salidas.map((s: any) => (
-                      <tr key={s.id} className="hover:bg-surface-gray">
-                        <td className="px-3 py-2 text-on-surface-variant text-xs">{s.fecha}</td>
-                        <td className="px-3 py-2 text-on-surface font-medium">{s.descripcion}</td>
-                        <td className="px-3 py-2">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${CAT_COLORS[s.categoria as Category] ?? CAT_COLORS['Otros']}`}>
-                            {s.categoria}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-on-surface-variant text-xs">{s.lugar || '—'}</td>
-                        <td className="px-3 py-2 text-right">
-                          <div className="font-semibold text-on-surface">{fmt(s.monto ?? s.montoCUP)} {s.moneda ?? monedaLocal}</div>
-                          {s.moneda && s.moneda !== monedaLocal && (
-                            <div className="text-xs text-on-surface-variant">≈ {fmtLocal(s.montoLocal ?? s.montoCUP)}</div>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => handleEdit(s)} className="p-1.5 text-info-ink hover:text-info-ink rounded hover:bg-primary-container/10">
-                              <Edit2 size={13} />
-                            </button>
-                            <button onClick={() => deleteMut.mutate(s.id)} className="p-1.5 text-danger-ink hover:text-danger-ink rounded hover:bg-danger/10">
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-                {salidas.length > 0 && (
-                  <tfoot className="bg-warning/10">
-                    <tr>
-                      <td colSpan={4} className="px-3 py-2 text-xs font-bold text-warn-ink">Subtotal Salidas</td>
-                      <td className="px-3 py-2 text-right text-sm font-bold text-warn-ink">{fmtLocal(totalSalidas)}</td>
-                      <td />
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
-            </div>
-          </div>
+          {/* Section 2: Salidas and Otros gastos (single list for servers without the split) */}
+          {outings ? (
+            <>
+              <ManualExpensesCard
+                title="Salidas" tone="warn" items={outings.items ?? []}
+                subtotalLabel="Subtotal Salidas" subtotal={outings.total ?? 0}
+                newLabel="Nueva salida" emptyText="Sin salidas registradas — usa el botón &quot;Nueva salida&quot;"
+                onNew={() => openNew('Salidas')} onEdit={handleEdit} onDelete={(id) => deleteMut.mutate(id)}
+                monedaLocal={monedaLocal} fmtLocal={fmtLocal}
+                header={<OutingsBudgetHeader outings={outings} fmtLocal={fmtLocal} />}
+              />
+              <ManualExpensesCard
+                title="Otros gastos" tone="neutral" items={otros?.items ?? []}
+                subtotalLabel="Subtotal Otros gastos" subtotal={otros?.total ?? 0}
+                newLabel="Nuevo gasto" emptyText="Sin otros gastos este mes"
+                onNew={() => openNew('Otros')} onEdit={handleEdit} onDelete={(id) => deleteMut.mutate(id)}
+                monedaLocal={monedaLocal} fmtLocal={fmtLocal}
+              />
+            </>
+          ) : (
+            <ManualExpensesCard
+              title="Salidas y Otros Gastos" tone="warn" items={salidas}
+              subtotalLabel="Subtotal Salidas" subtotal={totalSalidas}
+              newLabel="Nueva salida" emptyText="Sin salidas registradas — usa el botón &quot;Nueva salida&quot;"
+              onNew={() => openNew('Otros')} onEdit={handleEdit} onDelete={(id) => deleteMut.mutate(id)}
+              monedaLocal={monedaLocal} fmtLocal={fmtLocal}
+            />
+          )}
         </div>
 
         {/* Right: Summary */}
@@ -314,9 +443,15 @@ export default function RegistroGastosPage() {
                 </p>
               )}
               <div className="flex justify-between text-sm text-on-surface-variant">
-                <span>Subtotal Salidas</span>
-                <span className="font-medium text-warn-ink">{fmtLocal(totalSalidas)}</span>
+                <span>{outings ? 'Salidas' : 'Subtotal Salidas'}</span>
+                <span className="font-medium text-warn-ink">{fmtLocal(outings ? outings.total : totalSalidas)}</span>
               </div>
+              {outings && (
+                <div className="flex justify-between text-sm text-on-surface-variant">
+                  <span>Otros gastos</span>
+                  <span className="font-medium text-on-surface">{fmtLocal(otros?.total ?? 0)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-bold text-on-surface border-t border-outline-variant pt-2 mt-1">
                 <span>TOTAL</span>
                 <span>{fmtLocal(total)}</span>
@@ -384,6 +519,17 @@ export default function RegistroGastosPage() {
                 onChange={e => setForm({ ...form, lugar: e.target.value })}
                 placeholder="Dónde fue..."
               />
+              {projectedOverBudget && (
+                <div role="status" className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warn-ink">
+                  <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                  <div>
+                    <b>Con esta salida superarías el presupuesto</b>
+                    <p className="text-xs">
+                      Llevas {fmtLocal(projectedOverBudget.spent)} de {fmtLocal(projectedOverBudget.budget)}; quedarías {fmtLocal(projectedOverBudget.over)} por encima. Puedes guardarla igualmente.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={() => { setShowModal(false); setEditItem(null); }} className="btn-secondary">
                   Cancelar

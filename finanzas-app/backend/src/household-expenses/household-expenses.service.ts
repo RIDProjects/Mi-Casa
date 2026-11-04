@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HouseholdExpense, HouseholdCategory } from '../database/entities/household-expense.entity';
@@ -6,8 +6,11 @@ import { PurchaseList } from '../database/entities/purchase-list.entity';
 import { PurchaseItem } from '../database/entities/purchase-item.entity';
 import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 import { todayInAppTimezone } from '../common/dates';
+import { BudgetService } from '../budget/budget.service';
 
 const CATEGORIES = Object.values(HouseholdCategory);
+const OUTINGS_CATEGORY = 'Salidas';
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 @Injectable()
 export class HouseholdExpensesService {
@@ -15,6 +18,8 @@ export class HouseholdExpensesService {
     @InjectRepository(HouseholdExpense) private repo: Repository<HouseholdExpense>,
     @InjectRepository(PurchaseList) private listRepo: Repository<PurchaseList>,
     private houseCurrenciesService: HouseCurrenciesService,
+    // Optional so lightweight constructions (tests) keep working; read-only use.
+    @Optional() private budgetService?: BudgetService,
   ) {}
 
   async getMonthData(houseId: string, month: string) {
@@ -45,6 +50,14 @@ export class HouseholdExpensesService {
 
     const resumenCategoria = this.calcResumen(salidas, totalCompras);
 
+    // Outings (category Salidas) are compared with the budget's "Salidas" expense; everything
+    // else goes to "other expenses". `salidas`/`totalSalidas` keep covering every manual expense
+    // so older clients are unaffected.
+    const outingRows = salidas.filter(e => e.category === OUTINGS_CATEGORY);
+    const otherRows = salidas.filter(e => e.category !== OUTINGS_CATEGORY);
+    const outingsTotal = round2(outingRows.reduce((s, e) => s + Number(e.amountLocal), 0));
+    const outingsBudget = (await this.budgetService?.getOutingsBudget(houseId)) ?? null;
+
     // `monedas`: currency picker options for clients (mobile has no direct
     // houseId to call /houses/:houseId/currencies — see design.md "Currency
     // options on mobile").
@@ -52,6 +65,17 @@ export class HouseholdExpensesService {
       month,
       comprasMercado: comprasPorLugar,
       salidas: salidas.map(e => this.toFrontend(e)),
+      outings: {
+        items: outingRows.map(e => this.toFrontend(e)),
+        total: outingsTotal,
+        budget: outingsBudget,
+        remaining: outingsBudget == null ? null : round2(outingsBudget - outingsTotal),
+        exceeded: outingsBudget != null && outingsTotal > outingsBudget,
+      },
+      otros: {
+        items: otherRows.map(e => this.toFrontend(e)),
+        total: round2(otherRows.reduce((s, e) => s + Number(e.amountLocal), 0)),
+      },
       resumenCategoria,
       totalCompras: Math.round(totalCompras * 100) / 100,
       totalSalidas: Math.round(totalSalidas * 100) / 100,
@@ -82,7 +106,8 @@ export class HouseholdExpensesService {
       month:         dto.mes,
       house:         { id: houseId } as any,
     });
-    return this.toFrontend(await this.repo.save(expense));
+    const saved = await this.repo.save(expense);
+    return { ...this.toFrontend(saved), budgetWarning: await this.outingsWarning(saved, houseId) };
   }
 
   async update(id: string, houseId: string, dto: any) {
@@ -117,7 +142,30 @@ export class HouseholdExpensesService {
       place:       dto.lugar        ?? expense.place,
       month:       dto.mes          ?? expense.month,
     });
-    return this.toFrontend(await this.repo.save(expense));
+    const saved = await this.repo.save(expense);
+    return { ...this.toFrontend(saved), budgetWarning: await this.outingsWarning(saved, houseId) };
+  }
+
+  /**
+   * Set when an outing leaves the month's outings above the budget's "Salidas" limit. It only
+   * informs: the expense is always saved and the budget is never modified from here.
+   */
+  private async outingsWarning(
+    expense: HouseholdExpense,
+    houseId: string,
+  ): Promise<{ budget: number; spent: number; exceededBy: number } | null> {
+    if (expense.category !== OUTINGS_CATEGORY || !this.budgetService) return null;
+    try {
+      const budget = await this.budgetService.getOutingsBudget(houseId);
+      if (budget == null) return null;
+      const rows = await this.repo.find({ where: { house: { id: houseId }, month: expense.month } });
+      const spent = round2(
+        rows.filter(e => e.category === OUTINGS_CATEGORY).reduce((s, e) => s + Number(e.amountLocal), 0),
+      );
+      return spent > budget ? { budget, spent, exceededBy: round2(spent - budget) } : null;
+    } catch {
+      return null;
+    }
   }
 
   async remove(id: string, houseId: string) {
@@ -240,6 +288,8 @@ export class HouseholdExpensesService {
   private emptyMonth(month: string) {
     return {
       month, comprasMercado: [], salidas: [], resumenCategoria: [],
+      outings: { items: [], total: 0, budget: null, remaining: null, exceeded: false },
+      otros: { items: [], total: 0 },
       totalCompras: 0, totalSalidas: 0, total: 0, unconvertedItems: 0,
       monedaLocal: 'CUP', monedas: [],
     };

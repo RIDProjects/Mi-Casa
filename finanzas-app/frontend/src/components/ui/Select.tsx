@@ -8,7 +8,10 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
 }
 
-export function Select({ label, error, hint, placeholder, id, className, children, ...props }: SelectProps) {
+export function Select({ label, error, hint, placeholder, id: idProp, className, children, ...props }: SelectProps) {
+  // Falls back to a generated id so the label is always tied to its control.
+  const autoId = React.useId();
+  const id = idProp ?? autoId;
   return (
     <div className="space-y-1">
       {label && (

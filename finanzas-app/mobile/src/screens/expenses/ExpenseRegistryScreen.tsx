@@ -15,14 +15,14 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Colors } from '../../theme/colors';
 import { householdExpensesService } from '../../services/household-expenses.service';
-import { HouseholdResumenCategoria } from '../../types';
+import { HouseholdExpense, HouseholdOutings, HouseholdResumenCategoria } from '../../types';
 import { formatMoney } from '../../utils/currency';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { GastosStackParamList } from '../../navigation/types';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
-import { ActionBar, Badge, Card, EmptyState, ErrorState, Reveal, Screen, Skeleton } from '../../components/ui';
+import { ActionBar, Badge, Card, EmptyState, ErrorState, ProgressBar, Reveal, Screen, Skeleton } from '../../components/ui';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
 
@@ -108,6 +108,30 @@ const createStyles = (c: ThemeColors) =>
     expensePlace: { flexShrink: 1, fontFamily: fonts.regular, color: c.outline, fontSize: 11 },
     expenseDate: { fontFamily: fonts.regular, color: c.outline, fontSize: 11, marginLeft: 'auto' },
     deleteBtn: { padding: 12 },
+    flex: { flex: 1 },
+    section: { gap: 10 },
+    sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    sectionSubtotal: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13 },
+    budgetCard: { gap: 8 },
+    budgetLine: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
+    budgetLabel: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 },
+    budgetSpent: { fontFamily: fonts.title, color: c.onSurface, fontSize: 18 },
+    budgetOf: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13 },
+    budgetRemaining: { fontFamily: fonts.semibold, fontSize: 13 },
+    budgetHint: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
+    alertBox: {
+      flexDirection: 'row',
+      gap: 8,
+      alignItems: 'flex-start',
+      padding: 10,
+      borderRadius: radius.md,
+      backgroundColor: c.dangerTint,
+    },
+    alertText: { fontFamily: fonts.medium, color: c.dangerInk, fontSize: 13 },
+    emptyHint: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13, paddingVertical: 4 },
+    totalRow: { borderTopWidth: 1, borderTopColor: c.border, paddingTop: 10 },
+    totalLabel: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15 },
+    totalValue: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 15 },
   });
 
 function CategoryBar({
@@ -187,6 +211,66 @@ function ExpenseRowItem({
   );
 }
 
+function toRow(s: HouseholdExpense, currency: string): ExpenseRow {
+  return {
+    key: s.id,
+    id: s.id,
+    descripcion: s.descripcion,
+    categoria: s.categoria,
+    fecha: s.fecha,
+    lugar: s.lugar,
+    monto: s.montoLocal ?? s.montoCUP,
+    currency,
+    deletable: true,
+  };
+}
+
+function OutingsBudgetCard({ outings, currency }: { outings: HouseholdOutings; currency: string }) {
+  const { colors } = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { budget, total, remaining, exceeded } = outings;
+
+  if (budget == null) {
+    return (
+      <Card style={styles.budgetCard}>
+        <View style={styles.budgetLine}>
+          <Text style={styles.budgetLabel}>Gastado en salidas</Text>
+          <Text style={styles.budgetSpent}>{formatMoney(total, currency)}</Text>
+        </View>
+        <Text style={styles.budgetHint}>
+          El límite sale del gasto 'Salidas' dentro de Comida en Presupuesto. Agrégalo ahí para ver tu avance.
+        </Text>
+      </Card>
+    );
+  }
+
+  const left = remaining ?? budget - total;
+  const message = exceeded ? `Te pasaste por ${formatMoney(Math.abs(left), currency)}` : `Te quedan ${formatMoney(left, currency)}`;
+  return (
+    <Card style={styles.budgetCard}>
+      <View style={styles.budgetLine}>
+        <Text style={styles.budgetLabel}>Presupuesto del mes</Text>
+        <Text style={styles.budgetOf}>
+          <Text style={styles.budgetSpent}>{formatMoney(total, currency)}</Text> de {formatMoney(budget, currency)}
+        </Text>
+      </View>
+      <View testID="outings-budget-bar">
+        <ProgressBar value={budget > 0 ? total / budget : 1} tone={exceeded ? 'danger' : 'ok'} height={10} />
+      </View>
+      <Text style={[styles.budgetRemaining, { color: exceeded ? colors.dangerInk : colors.okInk }]}>{message}</Text>
+      {exceeded && (
+        <View testID="outings-exceeded-alert" style={styles.alertBox}>
+          <Ionicons name="warning-outline" size={16} color={colors.dangerInk} />
+          <View style={styles.flex}>
+            <Text style={styles.alertText}>Superaste el presupuesto de salidas.</Text>
+            <Text style={styles.alertText}>Puedes seguir registrando.</Text>
+          </View>
+        </View>
+      )}
+    </Card>
+  );
+}
+
 function SkeletonBlocks() {
   return (
     <View testID="expenses-skeleton" style={{ gap: 14 }}>
@@ -230,6 +314,9 @@ export default function ExpenseRegistryScreen() {
   const resumenCategoria = data?.resumenCategoria ?? [];
   const totalCompras = data?.totalCompras ?? 0;
   const totalSalidas = data?.totalSalidas ?? 0;
+  const outings = data?.outings;
+  const otros = data?.otros;
+  const hasSections = !!outings && !!otros;
   const total = data?.total ?? 0;
   const unconvertedItems = data?.unconvertedItems ?? 0;
   // House base currency — salidas (manual expenses) are already snapshotted
@@ -271,19 +358,27 @@ export default function ExpenseRegistryScreen() {
       currency: monedaLocal,
       deletable: false,
     }));
-    const salidaRows: ExpenseRow[] = salidas.map((s) => ({
-      key: s.id,
-      id: s.id,
-      descripcion: s.descripcion,
-      categoria: s.categoria,
-      fecha: s.fecha,
-      lugar: s.lugar,
-      monto: s.montoLocal ?? s.montoCUP,
-      currency: monedaLocal,
-      deletable: true,
-    }));
-    return [...salidaRows, ...compraRows];
-  }, [comprasMercado, salidas, monedaLocal]);
+    // With the two-section layout the manual expenses render in their own
+    // sections; the list below only carries the market purchases.
+    if (hasSections) return compraRows;
+    return [...salidas.map((s) => toRow(s, monedaLocal)), ...compraRows];
+  }, [comprasMercado, salidas, monedaLocal, hasSections]);
+
+  const onDeleteRow = (id: string) => deleteMut.mutate(id);
+  const onEditRow = (id: string) => navigation.navigate('AddHouseholdExpense', { expenseId: id });
+  const renderSection = (testID: string, title: string, items: HouseholdExpense[], subtotal: number, emptyText: string) => (
+    <View testID={testID} style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.sectionSubtotal}>{formatMoney(subtotal, monedaLocal)}</Text>
+      </View>
+      {title === 'Salidas' && outings && <OutingsBudgetCard outings={outings} currency={monedaLocal} />}
+      {items.length === 0 && <Text style={styles.emptyHint}>{emptyText}</Text>}
+      {items.map((s) => (
+        <ExpenseRowItem key={s.id} item={toRow(s, monedaLocal)} onDelete={onDeleteRow} onEdit={onEditRow} />
+      ))}
+    </View>
+  );
 
   const categoryTotals = useMemo((): HouseholdResumenCategoria[] => {
     return [...resumenCategoria].sort((a, b) => b.totalCUP - a.totalCUP);
@@ -344,7 +439,7 @@ export default function ExpenseRegistryScreen() {
             -{formatMoney(total, monedaLocal)}
           </Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryRowLabel}>Compras de mercado</Text>
+            <Text style={styles.summaryRowLabel}>{hasSections ? 'Compras' : 'Compras de mercado'}</Text>
             <Text style={styles.summaryRowValue}>{formatMoney(totalCompras, monedaLocal)}</Text>
           </View>
           {unconvertedItems > 0 && (
@@ -352,14 +447,33 @@ export default function ExpenseRegistryScreen() {
               Algunos artículos no tienen tasa de cambio y no se incluyen en el total
             </Text>
           )}
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
-            <Text style={styles.summaryRowValue}>{formatMoney(totalSalidas, monedaLocal)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryRowLabel}>Registros</Text>
-            <Text style={styles.summaryRowValue}>{rows.length}</Text>
-          </View>
+          {hasSections ? (
+            <>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryRowLabel}>Salidas</Text>
+                <Text style={styles.summaryRowValue}>{formatMoney(outings!.total, monedaLocal)}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryRowLabel}>Otros gastos</Text>
+                <Text style={styles.summaryRowValue}>{formatMoney(otros!.total, monedaLocal)}</Text>
+              </View>
+              <View style={[styles.summaryRow, styles.totalRow]}>
+                <Text style={styles.totalLabel}>TOTAL</Text>
+                <Text style={styles.totalValue}>{formatMoney(total, monedaLocal)}</Text>
+              </View>
+            </>
+          ) : (
+            <>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryRowLabel}>Salidas y otros gastos</Text>
+                <Text style={styles.summaryRowValue}>{formatMoney(totalSalidas, monedaLocal)}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryRowLabel}>Registros</Text>
+                <Text style={styles.summaryRowValue}>{rows.length}</Text>
+              </View>
+            </>
+          )}
         </Card>
       </Reveal>
 
@@ -380,7 +494,10 @@ export default function ExpenseRegistryScreen() {
         </Reveal>
       )}
 
-      {rows.length > 0 && <Text style={styles.sectionTitle}>Gastos del mes</Text>}
+      {hasSections && renderSection('section-salidas', 'Salidas', outings!.items, outings!.total, 'Sin salidas este mes')}
+      {hasSections && renderSection('section-otros', 'Otros gastos', otros!.items, otros!.total, 'Sin otros gastos este mes')}
+
+      {rows.length > 0 && <Text style={styles.sectionTitle}>{hasSections ? 'Compras del mercado' : 'Gastos del mes'}</Text>}
     </View>
   );
 
@@ -393,13 +510,14 @@ export default function ExpenseRegistryScreen() {
           <Reveal index={Math.min(index, 6) + 3}>
             <ExpenseRowItem
               item={item}
-              onDelete={(id) => deleteMut.mutate(id)}
-              onEdit={(id) => navigation.navigate('AddHouseholdExpense', { expenseId: id })}
+              onDelete={onDeleteRow}
+              onEdit={onEditRow}
             />
           </Reveal>
         )}
         ListHeaderComponent={ListHeader}
         ListEmptyComponent={
+          hasSections && outings!.items.length + otros!.items.length > 0 ? undefined : (
           <Card>
             <EmptyState
               icon="receipt-outline"
@@ -407,6 +525,7 @@ export default function ExpenseRegistryScreen() {
               subtitle={`No hay registros para ${MONTH_NAMES[month - 1]} ${year}`}
             />
           </Card>
+          )
         }
         contentContainerStyle={styles.listContent}
         refreshControl={

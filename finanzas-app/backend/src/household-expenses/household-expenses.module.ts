@@ -7,12 +7,14 @@ import { PurchaseList } from '../database/entities/purchase-list.entity';
 import { PurchaseItem } from '../database/entities/purchase-item.entity';
 import { AuthModule } from '../auth/auth.module';
 import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
+import { BudgetModule } from '../budget/budget.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([HouseholdExpense, PurchaseList, PurchaseItem]),
     AuthModule,
     HouseCurrenciesModule,
+    BudgetModule,
   ],
   controllers: [HouseholdExpensesController],
   providers: [HouseholdExpensesService],
