@@ -14,6 +14,7 @@ import { InAppNotificationsService } from '../notifications/in-app-notifications
 import { HousesService } from '../houses/houses.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
+const DEFAULT_FI_MULTIPLIER = 150;
 
 // Monthly normalization: a month has 52/12 weeks (not 4), and "quincenal"
 // means every 15 days, i.e. 365/15 payments a year spread over 12 months.
@@ -41,6 +42,12 @@ interface UpdateBudgetDto {
   year?: number;
   savingsTargetPercent?: number;
   rule?: string;
+  // Plan overrides: null resets a value to its default.
+  fiMultiplier?: number | null;
+  minInvestmentPercent?: number | null;
+  emergencyFundMonths?: number | null;
+  entertainmentPercent?: number | null;
+  fixedExpensesCapPercent?: number | null;
 }
 
 interface AddIncomeDto {
@@ -122,6 +129,55 @@ export class BudgetService {
     return Number(amount) / PERIODICITY_FACTOR[periodicity];
   }
 
+  /**
+   * Live basis for the emergency fund: fixed expenses as monthly lines plus the
+   * budget's emergency fund months. Reads the repository directly so it has none
+   * of the notification side effects of findByHouse/findOne.
+   */
+  async getEmergencyFundBasis(houseId: string): Promise<{
+    lines: { name: string; monthlyAmount: number }[];
+    emergencyFundMonths: number | null;
+  } | null> {
+    const budget = await this.budgetRepo.findOne({
+      where: { house: { id: houseId } },
+      order: { createdAt: 'DESC' },
+      relations: ['categories', 'categories.expenses'],
+    });
+    if (!budget) return null;
+
+    const lines = (budget.categories ?? [])
+      .flatMap((c) => c.expenses ?? [])
+      .filter((e) => e.isFixed === true)
+      .map((e) => ({
+        name: e.name,
+        monthlyAmount: Math.round(this.computeMonthlyAmount(Number(e.amount), e.periodicity) * 100) / 100,
+      }));
+
+    return {
+      lines,
+      emergencyFundMonths: budget.emergencyFundMonths != null ? Number(budget.emergencyFundMonths) : null,
+    };
+  }
+
+  /**
+   * Live monthly amount of the budget expense flagged as the shopping budget.
+   * Reads the repository directly: no notification side effects.
+   */
+  async getShoppingBudget(houseId: string): Promise<number | null> {
+    const [budget] = await this.budgetRepo.find({
+      where: { house: { id: houseId } },
+      order: { createdAt: 'DESC' },
+      take: 1,
+      relations: ['categories', 'categories.expenses'],
+    });
+    if (!budget) return null;
+    const flagged = budget.categories
+      ?.flatMap((c) => c.expenses ?? [])
+      .find((e) => e.isShoppingBudget === true);
+    if (!flagged) return null;
+    return Math.round(this.computeMonthlyAmount(Number(flagged.amount), flagged.periodicity) * 100) / 100;
+  }
+
   private computeSummary(budget: Budget) {
     const totalMonthlyIncome =
       budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
@@ -160,11 +216,11 @@ export class BudgetService {
     const round2 = (n: number) => Math.round(n * 100) / 100;
     const plan = totalMonthlyIncome > 0 ? {
       rule,
-      fiTarget:             round2(totalMonthlyIncome * 150),
-      minMonthlyInvestment: round2(totalMonthlyIncome * 0.20),
-      emergencyFundTarget:  round2(totalMonthlyIncome * 6),
-      entertainmentBudget:  round2(totalMonthlyIncome * (isFifty ? 0.30 : 0.10)),
-      fixedExpensesCap:     round2(totalMonthlyIncome * (isFifty ? 0.50 : 0.70)),
+      fiTarget:             round2(totalMonthlyIncome * (budget.fiMultiplier != null ? Number(budget.fiMultiplier) : DEFAULT_FI_MULTIPLIER)),
+      minMonthlyInvestment: round2(totalMonthlyIncome * (budget.minInvestmentPercent != null ? Number(budget.minInvestmentPercent) / 100 : 0.20)),
+      emergencyFundTarget:  round2(totalMonthlyIncome * (budget.emergencyFundMonths != null ? Number(budget.emergencyFundMonths) : 6)),
+      entertainmentBudget:  round2(totalMonthlyIncome * (budget.entertainmentPercent != null ? Number(budget.entertainmentPercent) / 100 : isFifty ? 0.30 : 0.10)),
+      fixedExpensesCap:     round2(totalMonthlyIncome * (budget.fixedExpensesCapPercent != null ? Number(budget.fixedExpensesCapPercent) / 100 : isFifty ? 0.50 : 0.70)),
     } : null;
 
     return {
@@ -284,8 +340,14 @@ export class BudgetService {
     if (dto.savingsTargetPercent !== undefined)
       budget.savingsTargetPercent = dto.savingsTargetPercent;
     if (dto.rule !== undefined) budget.rule = dto.rule;
+    if (dto.fiMultiplier !== undefined) budget.fiMultiplier = dto.fiMultiplier;
+    if (dto.minInvestmentPercent !== undefined) budget.minInvestmentPercent = dto.minInvestmentPercent;
+    if (dto.emergencyFundMonths !== undefined) budget.emergencyFundMonths = dto.emergencyFundMonths;
+    if (dto.entertainmentPercent !== undefined) budget.entertainmentPercent = dto.entertainmentPercent;
+    if (dto.fixedExpensesCapPercent !== undefined) budget.fixedExpensesCapPercent = dto.fixedExpensesCapPercent;
 
     await this.budgetRepo.save(budget);
+    if (dto.fiMultiplier !== undefined) await this.refreshFiGoalIfExists(id, houseId);
     return this.findOne(id, houseId);
   }
 
@@ -305,7 +367,9 @@ export class BudgetService {
       ...dto,
       budget: { id: budgetId } as any,
     });
-    return this.incomeRepo.save(income);
+    const saved = await this.incomeRepo.save(income);
+    await this.refreshFiGoalIfExists(budgetId, houseId);
+    return saved;
   }
 
   async updateIncome(id: string, houseId: string, dto: UpdateIncomeDto) {
@@ -314,10 +378,13 @@ export class BudgetService {
       .innerJoin('i.budget', 'budget')
       .innerJoin('budget.house', 'house')
       .where('i.id = :id AND house.id = :houseId', { id, houseId })
+      .leftJoinAndSelect('i.budget', 'b')
       .getOne();
     if (!income) throw new NotFoundException('Fuente de ingreso no encontrada');
     Object.assign(income, dto);
-    return this.incomeRepo.save(income);
+    const saved = await this.incomeRepo.save(income);
+    await this.refreshFiGoalIfExists(income.budget?.id ?? (saved as any)?.budget?.id, houseId);
+    return saved;
   }
 
   async removeIncome(id: string, houseId: string) {
@@ -326,9 +393,12 @@ export class BudgetService {
       .innerJoin('i.budget', 'budget')
       .innerJoin('budget.house', 'house')
       .where('i.id = :id AND house.id = :houseId', { id, houseId })
+      .leftJoinAndSelect('i.budget', 'b')
       .getOne();
     if (!income) throw new NotFoundException('Fuente de ingreso no encontrada');
+    const budgetId = income.budget?.id;
     await this.incomeRepo.remove(income);
+    await this.refreshFiGoalIfExists(budgetId, houseId);
     return { message: 'Ingreso eliminado' };
   }
 
@@ -375,13 +445,26 @@ export class BudgetService {
   async addExpense(categoryId: string, houseId: string, dto: AddExpenseDto) {
     const cat = await this.categoryRepo
       .createQueryBuilder('c')
-      .innerJoin('c.budget', 'budget')
+      .innerJoinAndSelect('c.budget', 'budget')
       .innerJoin('budget.house', 'house')
       .where('c.id = :id AND house.id = :houseId', { id: categoryId, houseId })
       .getOne();
     if (!cat) throw new NotFoundException('Categoría no encontrada');
+    // The first expense of the food category feeds the shopping list budget.
+    let shopping: Partial<BudgetExpense> = {};
+    if (cat.name?.trim().toLowerCase() === 'comida') {
+      const inCategory = await this.expenseRepo.count({ where: { category: { id: categoryId } } });
+      const flagged = inCategory
+        ? 0
+        : await this.expenseRepo.count({
+            where: { isShoppingBudget: true, category: { budget: { id: cat.budget.id } } },
+          });
+      if (!inCategory && !flagged) shopping = { isShoppingBudget: true, name: 'Presupuesto compra' };
+    }
+    const { isShoppingBudget: _ignored, ...safeDto } = dto as AddExpenseDto & { isShoppingBudget?: boolean };
     const expense = this.expenseRepo.create({
-      ...dto,
+      ...safeDto,
+      ...shopping,
       category: { id: categoryId } as any,
     });
     return this.expenseRepo.save(expense);
@@ -396,7 +479,8 @@ export class BudgetService {
       .where('e.id = :id AND house.id = :houseId', { id, houseId })
       .getOne();
     if (!expense) throw new NotFoundException('Gasto no encontrado');
-    Object.assign(expense, dto);
+    const { isShoppingBudget: _ignored, ...safeDto } = dto as UpdateExpenseDto & { isShoppingBudget?: boolean };
+    Object.assign(expense, safeDto);
     return this.expenseRepo.save(expense);
   }
 
@@ -441,7 +525,32 @@ export class BudgetService {
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     const totalMonthlyIncome = budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
     if (totalMonthlyIncome === 0) throw new BadRequestException('El presupuesto no tiene ingresos registrados');
-    const fiTarget = Math.round(totalMonthlyIncome * 150 * 100) / 100;
+    const multiplier = budget.fiMultiplier != null ? Number(budget.fiMultiplier) : DEFAULT_FI_MULTIPLIER;
+    const fiTarget = Math.round(totalMonthlyIncome * multiplier * 100) / 100;
     return this.syncFiGoal(houseId, fiTarget);
+  }
+
+  /** Keeps an existing FI goal in line with the budget. Never creates it and never fails the caller. */
+  private async refreshFiGoalIfExists(budgetId: string, houseId: string): Promise<void> {
+    try {
+      if (!budgetId) return;
+      const budget = await this.budgetRepo.findOne({
+        where: { id: budgetId, house: { id: houseId } },
+        relations: ['incomeSources'],
+      });
+      if (!budget) return;
+      const totalMonthlyIncome = budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
+      if (totalMonthlyIncome === 0) return;
+      const multiplier = budget.fiMultiplier != null ? Number(budget.fiMultiplier) : DEFAULT_FI_MULTIPLIER;
+      const fiTarget = Math.round(totalMonthlyIncome * multiplier * 100) / 100;
+      const goal = await this.savingsGoalRepo.findOne({
+        where: { name: FI_GOAL_NAME, house: { id: houseId } },
+      });
+      if (!goal) return;
+      goal.goalAmount = fiTarget;
+      await this.savingsGoalRepo.save(goal);
+    } catch (err) {
+      this.logger.warn(`Could not refresh FI goal for budget ${budgetId}: ${(err as Error)?.message}`);
+    }
   }
 }

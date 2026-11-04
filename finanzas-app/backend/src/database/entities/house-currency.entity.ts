@@ -17,9 +17,9 @@ import { House } from './house.entity';
 export class HouseCurrency {
   @PrimaryGeneratedColumn('uuid') id: string;
 
-  @Column() currencyCode: string;   // 'USD', 'EUR', 'CUP', 'MLC', 'ARS', 'MXN', etc.
+  @Column() currencyCode: string;   // 'USD', 'EUR', 'CUP', 'ARS', 'MXN', etc.
   @Column() currencyName: string;   // 'Dólar estadounidense', 'Euro', 'Peso Cubano'
-  @Column() symbol: string;         // '$', '€', 'CUP$', 'MLC$'
+  @Column() symbol: string;         // '$', '€', 'CUP$'
   @Column({ default: 'en-US' }) locale: string; // for Intl.NumberFormat
 
   @Column({ default: false }) isLocal: boolean;  // exactly ONE per house is local

@@ -302,6 +302,22 @@ describe('HouseCurrenciesService.setLocal', () => {
   const newRate = (from: string, to: string) =>
     rates.find((r) => r.fromCurrency === from && r.toCurrency === to && r.date === TODAY);
 
+  it('keeps the precision of a small inverse rate when re-basing (1 / 915 is not rounded to 0.0011)', async () => {
+    // New local N = CUP, old local O = USD, rate(N→O) = 915 → O→N must be 1 / 915 = 0.0010928961...
+    rates.push({ fromCurrency: 'CUP', toCurrency: 'USD', rate: 915, date: '2026-01-01' });
+
+    await service.setLocal(HOUSE_ID, 'c');
+
+    expect(Number(newRate('USD', 'CUP').rate)).toBeCloseTo(1 / 915, 10);
+  });
+
+  it('re-basing the household expense snapshots keeps 12 decimals of precision', async () => {
+    rates.push({ fromCurrency: 'CUP', toCurrency: 'USD', rate: 0.0025, date: '2026-01-01' });
+    await service.setLocal(HOUSE_ID, 'c');
+    const sql = manager.query.mock.calls.map((c: any[]) => String(c[0])).join('\n');
+    expect(sql).toMatch(/ROUND\("exchangeRate" \/ \$3::numeric, 12\)/);
+  });
+
   it('switching USD → CUP with a CUP→USD rate creates X→CUP and O→N rates, rebases expenses and flips flags in one transaction', async () => {
     // 1 CUP = 0.0025 USD (so 1 USD = 400 CUP); 1 EUR = 1.1 USD
     rates.push({ fromCurrency: 'CUP', toCurrency: 'USD', rate: 0.0025, date: '2026-01-01' });

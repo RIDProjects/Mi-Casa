@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import { useAuthStore } from '../store/auth.store';
 import { purchasesAPI } from '../services/api';
 import { useCurrencyStore } from '../store/currency.store';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Edit2, ShoppingCart, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw, Settings } from 'lucide-react';
+import { Plus, Trash2, Edit2, ShoppingCart, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw } from 'lucide-react';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
@@ -13,7 +14,6 @@ import { useCurrencyFormatter, toLocalAmount } from '../lib/currency';
 import { ProgressBar } from '../components/ui/ProgressBar';
 
 const defaultItemForm = { name: '', quantity: 1, unitPrice: 0, currency: '', lugar: '' };
-const defaultConfigForm = { budget: 0 };
 
 export default function PurchasesPage() {
   const qc = useQueryClient();
@@ -28,10 +28,8 @@ export default function PurchasesPage() {
   const [year, setYear]                       = useState(now.getFullYear());
   const [month, setMonth]                     = useState(now.getMonth() + 1);
   const [showItemModal, setShowItemModal]     = useState(false);
-  const [showConfigModal, setShowConfigModal] = useState(false);
   const [editItem, setEditItem]               = useState<any>(null);
   const [itemForm, setItemForm]               = useState<any>(defaultItemForm);
-  const [configForm, setConfigForm]           = useState(defaultConfigForm);
   const [deleteItemId, setDeleteItemId]       = useState<string | null>(null);
 
   const monthStr = `${year}-${String(month).padStart(2, '0')}`;
@@ -43,7 +41,7 @@ export default function PurchasesPage() {
 
   const selectedList = (lists as any[]).find((l: any) => l.name === monthStr) ?? null;
   const items: any[] = selectedList?.items ?? [];
-  const budget = Number(selectedList?.budget ?? configForm.budget) || 0;
+  const budget = Number(selectedList?.budget) || 0;
 
   const toLocal = (amount: number, currencyCode: string | null | undefined): number =>
     toLocalAmount(amount, currencyCode, localCurrency?.currencyCode, rates);
@@ -108,7 +106,6 @@ export default function PurchasesPage() {
     if (!selectedList) {
       createListMut.mutate({
         name: monthStr,
-        budget: configForm.budget,
         localCurrencyCode: localCurrency?.currencyCode ?? null,
       });
       toast('Lista del mes creada. Agrega tu producto.');
@@ -143,15 +140,6 @@ export default function PurchasesPage() {
     setShowItemModal(true);
   };
 
-  const handleSaveConfig = () => {
-    const payload = { budget: configForm.budget, localCurrencyCode: localCurrency?.currencyCode ?? null };
-    if (!selectedList) {
-      createListMut.mutate({ name: monthStr, ...payload });
-    } else {
-      updateListMut.mutate({ id: selectedList.id, d: payload });
-    }
-    setShowConfigModal(false);
-  };
 
   const getCurrencySymbol = (code: string | null | undefined): string => {
     if (!code) return localCurrency?.symbol ?? '$';
@@ -191,12 +179,6 @@ export default function PurchasesPage() {
           <p className="text-on-surface-variant mt-1">Control de compras del mercado por mes</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => { setConfigForm({ budget: Number(selectedList?.budget) || 0 }); setShowConfigModal(true); }}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <Settings size={16} /> Configurar mes
-          </button>
           {canCreate && (
             <button onClick={handleOpenAdd} className="btn-primary flex items-center gap-2">
               <Plus size={18} /> Agregar producto
@@ -352,6 +334,12 @@ export default function PurchasesPage() {
           </div>
 
           {/* Presupuesto */}
+          {budget === 0 && selectedList && (
+            <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 text-sm text-on-surface-variant">
+              Sin presupuesto de compra. Define el gasto «Presupuesto compra» en la categoría Comida de{' '}
+              <Link href="/presupuesto" className="text-primary hover:underline">Presupuesto</Link>.
+            </div>
+          )}
           {budget > 0 && (
             <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-4 space-y-3">
               <h3 className="text-sm font-semibold text-on-surface">Presupuesto del mes</h3>
@@ -481,32 +469,6 @@ export default function PurchasesPage() {
         loading={deleteItemMut.isLoading}
       />
 
-      {/* Modal: configuración */}
-      {showConfigModal && (
-        <div className="fixed inset-0 bg-slate-950/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-lowest rounded-xl p-6 w-full max-w-sm">
-            <h3 className="text-lg font-semibold mb-4 text-on-surface">Configuración del mes</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="label">Presupuesto ({localCurrency?.symbol ?? '$'}{localCurrency?.currencyCode ?? ''})</label>
-                <input
-                  className="input"
-                  type="number"
-                  min="0"
-                  value={configForm.budget}
-                  onChange={e => setConfigForm({ budget: Number(e.target.value) })}
-                  placeholder="0 = sin límite"
-                />
-                <p className="text-xs text-outline mt-1">Los precios en otras monedas se convierten automáticamente usando las tasas configuradas.</p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowConfigModal(false)} className="btn-secondary">Cancelar</button>
-              <button onClick={handleSaveConfig} className="btn-primary">Guardar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </Layout>
   );
 }

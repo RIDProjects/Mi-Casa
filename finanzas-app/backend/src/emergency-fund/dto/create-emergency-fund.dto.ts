@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, IsNumber, Min, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, IsNumber, Min, IsArray, IsBoolean, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateExpenseCategoryDto } from './create-expense-category.dto';
 
@@ -12,6 +12,8 @@ export class CreateEmergencyFundDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) savingPeriodMonths?: number;
 
   @IsOptional() @Type(() => Number) @IsNumber() @Min(0) currentBalance?: number;
+
+  @IsOptional() @IsBoolean() syncWithBudget?: boolean;
 
   @IsOptional()
   @IsArray()

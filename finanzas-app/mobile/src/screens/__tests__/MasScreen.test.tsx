@@ -28,7 +28,7 @@ describe('MasScreen', () => {
 
   it.each([
     ['Movimientos', 'Movimientos'],
-    ['Deudas', 'DebtsSummary'],
+    ['Metas', 'MetasList'],
     ['Tarjetas de crédito', 'Tarjetas'],
     ['Cuotas', 'Cuotas'],
     ['Fondo de emergencia', 'FondoEmergencia'],

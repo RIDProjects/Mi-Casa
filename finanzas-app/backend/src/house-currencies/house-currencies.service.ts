@@ -10,12 +10,14 @@ import { ExchangeRate } from '../database/entities/exchange-rate.entity';
 import { House } from '../database/entities/house.entity';
 import { todayInAppTimezone } from '../common/dates';
 
+/** Smallest storable rate (column scale is 12). */
+const MIN_RATE = 0.000000000001;
+
 export const CURRENCY_META: Record<
   string,
   { name: string; symbol: string; locale: string }
 > = {
   CUP: { name: 'Peso Cubano', symbol: '$', locale: 'es-CU' },
-  MLC: { name: 'Moneda Libremente Convertible', symbol: 'MLC$', locale: 'es-CU' },
   USD: { name: 'Dólar Estadounidense', symbol: 'US$', locale: 'en-US' },
   EUR: { name: 'Euro', symbol: '€', locale: 'es-ES' },
   ARS: { name: 'Peso Argentino', symbol: '$', locale: 'es-AR' },
@@ -86,10 +88,10 @@ export class HouseCurrenciesService {
    *  - without that rate the re-base is skipped and only the `isLocal`
    *    flags are flipped (a rate is no longer a precondition).
    *
-   * Rates are stored with scale 4 (numeric 15,4). A converted rate that would
-   * round to 0 (e.g. a very strong N against X) is clamped to the smallest
-   * representable value, 0.0001, because a 0 rate would zero out amounts and
-   * break divisions; that is the most precision the column can hold.
+   * Rates are stored with scale 12 (numeric 24,12), so small inverse rates
+   * (1 CUP = 0.001092896175 USD) keep their precision. A converted rate that
+   * would round to 0 is clamped to the smallest representable value,
+   * 0.000000000001, because a 0 rate would zero out amounts and break divisions.
    */
   async setLocal(houseId: string, currencyId: string): Promise<HouseCurrency> {
     return this.dataSource.transaction(async (manager) => {
@@ -171,7 +173,7 @@ export class HouseCurrenciesService {
     await manager.query(
       `UPDATE "household_expenses"
          SET "amountLocal" = ROUND("amountLocal" / $3::numeric, 2),
-             "exchangeRate" = GREATEST(ROUND("exchangeRate" / $3::numeric, 4), 0.0001)
+             "exchangeRate" = GREATEST(ROUND("exchangeRate" / $3::numeric, 12), 0.000000000001)
        WHERE "house_id" = $1 AND "currencyCode" <> $2`,
       [houseId, newCode, rateNO],
     );
@@ -205,7 +207,7 @@ export class HouseCurrenciesService {
     rate: number,
     date: string,
   ): Promise<void> {
-    const rounded = Math.max(Math.round(rate * 10000) / 10000, 0.0001);
+    const rounded = Math.max(Number(rate.toFixed(12)), MIN_RATE);
     const existing = await manager.findOne(ExchangeRate, {
       where: { house: { id: houseId }, fromCurrency: from, toCurrency: to, date },
     });

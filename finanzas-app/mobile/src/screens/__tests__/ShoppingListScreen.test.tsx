@@ -157,4 +157,30 @@ describe('ShoppingListScreen', () => {
     await waitFor(() => expect(mockGetLists.mock.calls.length).toBeGreaterThan(before));
     expect(await screen.findByText('Arroz')).toBeTruthy();
   });
+
+  describe('month budget', () => {
+    const withBudget = (budget: number, remaining: number | null) => ({
+      ...list([item('i1', 'Arroz', 2, 3, 'Mercado')]),
+      budget,
+      budgetSynced: true,
+      summary: { total: 6, budget, remaining, status: 'ok', purchased: 0, pending: 1, count: 1 },
+    });
+
+    it('shows the budget and what remains when the budget is defined', async () => {
+      mockGetLists.mockResolvedValue([withBudget(200, 194)]);
+      renderShopping();
+      expect(await screen.findByText('Presupuesto')).toBeTruthy();
+      expect(screen.getByText('US$ 200.00')).toBeTruthy();
+      expect(screen.getByText('Restante')).toBeTruthy();
+      expect(screen.getByText('US$ 194.00')).toBeTruthy();
+      expect(screen.queryByText(/Define «Presupuesto compra»/)).toBeNull();
+    });
+
+    it('shows a hint when there is no budget', async () => {
+      mockGetLists.mockResolvedValue([list([item('i1', 'Arroz', 2, 3, 'Mercado')])]);
+      renderShopping();
+      expect(await screen.findByText('Define «Presupuesto compra» en Presupuesto → Comida.')).toBeTruthy();
+      expect(screen.queryByText('Restante')).toBeNull();
+    });
+  });
 });

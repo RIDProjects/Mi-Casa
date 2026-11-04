@@ -25,7 +25,7 @@ import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
-import { Button, Card, EmptyState, ErrorState, Reveal, Screen, Skeleton, TextField } from '../../components/ui';
+import { Button, Card, EmptyState, ErrorState, ProgressBar, Reveal, Screen, Skeleton, TextField } from '../../components/ui';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
 
@@ -42,6 +42,11 @@ const createStyles = (c: ThemeColors) =>
       letterSpacing: 0.8,
     },
     totalAmount: { fontFamily: fonts.title, color: c.onSurface, fontSize: 26, letterSpacing: -0.6 },
+    budgetCard: { marginHorizontal: 16, marginTop: 12, gap: 8 },
+    budgetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    budgetLabel: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 13 },
+    budgetValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15, flexShrink: 1 },
+    budgetHint: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
     itemCount: { fontFamily: fonts.regular, color: c.outline, fontSize: 12 },
     listContent: { padding: 16, paddingBottom: 24, gap: 12 },
     storeGroup: { overflow: 'hidden' },
@@ -297,6 +302,12 @@ export default function ShoppingListScreen() {
     );
   }
 
+  // The budget is owned by the Budget module ("Presupuesto compra" in Comida); read-only here.
+  const monthBudget = Number(selectedList?.summary?.budget ?? selectedList?.budget ?? 0);
+  const monthTotal = Number(selectedList?.summary?.total ?? 0);
+  const monthRemaining = Number(selectedList?.summary?.remaining ?? monthBudget - monthTotal);
+  const budgetRatio = monthBudget > 0 ? Math.min(1, monthTotal / monthBudget) : 0;
+
   const saving = addItemMut.isPending || updateItemMut.isPending;
   // TextField forwards unknown props to its TextInput; React 19 passes `ref` as a prop.
   const refProps = (ref: React.RefObject<React.ComponentRef<typeof TextInput> | null>) => ({ ref } as object);
@@ -324,6 +335,24 @@ export default function ShoppingListScreen() {
             />
           </Card>
         </Reveal>
+
+        <Card style={styles.budgetCard}>
+          {monthBudget > 0 ? (
+            <>
+              <View style={styles.budgetRow}>
+                <Text style={styles.budgetLabel}>Presupuesto</Text>
+                <Text style={styles.budgetValue} numberOfLines={1}>{fmt(monthBudget)}</Text>
+              </View>
+              <ProgressBar value={budgetRatio} tone={monthRemaining < 0 ? 'danger' : 'info'} height={6} />
+              <View style={styles.budgetRow}>
+                <Text style={styles.budgetLabel}>Restante</Text>
+                <Text style={styles.budgetValue} numberOfLines={1}>{fmt(monthRemaining)}</Text>
+              </View>
+            </>
+          ) : (
+            <Text style={styles.budgetHint}>Define «Presupuesto compra» en Presupuesto → Comida.</Text>
+          )}
+        </Card>
 
         {/* Lista de ítems agrupados por lugar */}
         <ScrollView
