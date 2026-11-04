@@ -396,7 +396,7 @@ describe('BudgetService FI goal auto-refresh', () => {
     const savingsGoalRepo: any = {
       findOne: opts.goalRepoFails
         ? jest.fn().mockRejectedValue(new Error('db down'))
-        : jest.fn().mockResolvedValue(opts.goal ?? null),
+        : jest.fn(async ({ where }: any) => (where?.name === 'Independencia Financiera' ? opts.goal ?? null : null)),
       save: jest.fn(async (g) => g),
       create: jest.fn(),
     };
@@ -587,8 +587,8 @@ describe('BudgetService shopping budget expense', () => {
 });
 
 describe('BudgetService auto-creates the fund and FI goal on the first income', () => {
-  function build(opts: { incomeCount?: number; funds?: number; goal?: any; fail?: boolean } = {}) {
-    const budget = { id: 'b1', incomeSources: [{ amount: 1000 }] };
+  function build(opts: { incomeCount?: number; funds?: number; goal?: any; savingsGoal?: any; fail?: boolean } = {}) {
+    const budget = { id: 'b1', savingsTargetPercent: 20, incomeSources: [{ amount: 1000 }] };
     const budgetRepo: any = { findOne: jest.fn().mockResolvedValue(budget) };
     const incomeRepo: any = {
       create: jest.fn((x) => x),
@@ -596,7 +596,8 @@ describe('BudgetService auto-creates the fund and FI goal on the first income', 
       count: jest.fn().mockResolvedValue(opts.incomeCount ?? 0),
     };
     const savingsGoalRepo: any = {
-      findOne: jest.fn().mockResolvedValue(opts.goal ?? null),
+      findOne: jest.fn(async ({ where }: any) =>
+        where?.name === 'Meta de ahorro' ? opts.savingsGoal ?? null : opts.goal ?? null),
       save: jest.fn(async (g) => g),
       create: jest.fn((x) => x),
     };
@@ -640,12 +641,61 @@ describe('BudgetService auto-creates the fund and FI goal on the first income', 
     const goal = { name: 'Independencia Financiera', goalAmount: 1 };
     const { service, savingsGoalRepo } = build({ goal });
     await add(service);
-    expect(savingsGoalRepo.create).not.toHaveBeenCalled();
+    expect(savingsGoalRepo.create).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'Independencia Financiera' }));
     expect(goal.goalAmount).toBe(150000);
   });
 
   it('a failure while creating the plan does not fail addIncome', async () => {
     const { service } = build({ fail: true });
     await expect(add(service)).resolves.toBeDefined();
+  });
+});
+
+describe('BudgetService annual savings goal', () => {
+  function build(opts: { savingsGoal?: any; percent?: number | null } = {}) {
+    const budget: any = { id: 'b1', savingsTargetPercent: opts.percent === undefined ? 20 : opts.percent, incomeSources: [{ amount: 1000 }] };
+    const budgetRepo: any = { findOne: jest.fn().mockResolvedValue(budget), save: jest.fn(async (b) => b) };
+    const incomeRepo: any = { create: jest.fn((x) => x), save: jest.fn(async (x) => x), count: jest.fn().mockResolvedValue(opts.savingsGoal ? 1 : 0) };
+    const savingsGoalRepo: any = {
+      findOne: jest.fn(async ({ where }: any) => (where?.name === 'Meta de ahorro' ? opts.savingsGoal ?? null : null)),
+      save: jest.fn(async (g) => g),
+      create: jest.fn((x) => x),
+    };
+    const fundRepo: any = { count: jest.fn().mockResolvedValue(1), save: jest.fn(), create: jest.fn((x) => x) };
+    const noop = {} as any;
+    const service = new BudgetService(budgetRepo, noop, noop, incomeRepo, savingsGoalRepo, noop, noop, noop, fundRepo);
+    jest.spyOn(service, 'findOne').mockResolvedValue({} as any);
+    return { service, savingsGoalRepo };
+  }
+
+  it('creates "Meta de ahorro" = monthly savings x 12 over 12 months with the plan', async () => {
+    const { service, savingsGoalRepo } = build();
+    await service.addIncome('b1', 'h1', { name: 'x', amount: 1000 } as any);
+    expect(savingsGoalRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Meta de ahorro', goalAmount: 2400, months: 12 }),
+    );
+  });
+
+  it('follows the income: later incomes update the existing goal', async () => {
+    const goal = { name: 'Meta de ahorro', goalAmount: 1 };
+    const { service } = build({ savingsGoal: goal });
+    await service.addIncome('b1', 'h1', { name: 'x', amount: 1000 } as any);
+    expect(goal.goalAmount).toBe(2400);
+  });
+
+  it('follows the percentage: changing savingsTargetPercent updates the goal', async () => {
+    const goal = { name: 'Meta de ahorro', goalAmount: 1 };
+    const { service } = build({ savingsGoal: goal, percent: 30 });
+    await service.update('b1', 'h1', { savingsTargetPercent: 30 } as any);
+    expect(goal.goalAmount).toBe(3600);
+  });
+
+  it('never creates the goal on updates when it does not exist, and skips a missing percentage', async () => {
+    const a = build();
+    await a.service.update('b1', 'h1', { savingsTargetPercent: 30 } as any);
+    expect(a.savingsGoalRepo.create).not.toHaveBeenCalled();
+    const b = build({ percent: null });
+    await b.service.addIncome('b1', 'h1', { name: 'x', amount: 1000 } as any);
+    expect(b.savingsGoalRepo.save).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'Meta de ahorro' }));
   });
 });
