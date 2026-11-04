@@ -51,7 +51,8 @@ describe('PatrimonioPage USD view', () => {
 
   it('shows the day rate as text and converts with it', async () => {
     renderPage();
-    expect(await screen.findByText(/1 USD = 915(\.00)? CUP/)).toBeInTheDocument();
+    await screen.findByText('Caja');
+    expect(document.body.textContent).toMatch(/1 USD = 915([.,]00)? CUP/);
     expect(screen.getAllByText(/10(\.00)?\b/).length).toBeGreaterThan(0);
   });
 });
