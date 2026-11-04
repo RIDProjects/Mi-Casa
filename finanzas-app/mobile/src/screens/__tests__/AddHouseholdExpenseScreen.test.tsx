@@ -100,4 +100,37 @@ describe('AddHouseholdExpenseScreen', () => {
     fireEvent.press(screen.getByText('Cancelar'));
     expect(mockGoBack).toHaveBeenCalled();
   });
+  describe('Salidas budget warning', () => {
+    const budgetMonth = (total: number) => ({
+      monedaLocal: 'USD',
+      monedas: [{ code: 'USD', symbol: '$' }],
+      outings: { items: [], total, budget: 120, remaining: 120 - total, exceeded: total > 120 },
+    });
+
+    it('warns live with the exceed amount but still saves, then alerts with budgetWarning', async () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      mockGetMonth.mockResolvedValue(budgetMonth(100));
+      mockCreate.mockResolvedValue({ budgetWarning: { budget: 120, spent: 138, exceededBy: 18 } });
+      renderForm();
+      await screen.findByText('USD');
+      fireEvent.press(screen.getByText('Salidas'));
+      fireEvent.changeText(screen.getByPlaceholderText('Ej: Cena afuera, Uber...'), 'Cena');
+      expect(screen.queryByText(/Con esta salida superarías el presupuesto/)).toBeNull();
+      fireEvent.changeText(screen.getByPlaceholderText('0.00'), '38');
+      expect(screen.getByText(/Con esta salida superarías el presupuesto/)).toBeTruthy();
+      expect(screen.getByText(/US\$ 18\.00/)).toBeTruthy();
+      fireEvent.press(screen.getByText('Registrar gasto'));
+      await waitFor(() => expect(mockCreate).toHaveBeenCalled());
+      await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
+      expect(alertSpy).toHaveBeenCalledWith('Presupuesto de salidas superado', expect.stringContaining('US$ 18.00'));
+    });
+
+    it('does not warn for other categories', async () => {
+      mockGetMonth.mockResolvedValue(budgetMonth(100));
+      renderForm();
+      await screen.findByText('USD');
+      fireEvent.changeText(screen.getByPlaceholderText('0.00'), '38');
+      expect(screen.queryByText(/Con esta salida superarías/)).toBeNull();
+    });
+  });
 });

@@ -175,6 +175,31 @@ export interface HouseholdResumenCategoria {
   totalCUP: number;
 }
 
+/** Present on create/update responses when a Salidas expense pushes the month over its budget. */
+export interface HouseholdBudgetWarning {
+  budget: number;
+  spent: number;
+  exceededBy: number;
+}
+
+export type HouseholdExpenseSaved = HouseholdExpense & {
+  budgetWarning?: HouseholdBudgetWarning | null;
+};
+
+/** Outings (category Salidas) block with the read-only monthly budget. */
+export interface HouseholdOutings {
+  items: HouseholdExpense[];
+  total: number;
+  budget: number | null;
+  remaining: number | null;
+  exceeded: boolean;
+}
+
+export interface HouseholdOtros {
+  items: HouseholdExpense[];
+  total: number;
+}
+
 export interface HouseholdExpensesMonth {
   month: string;
   comprasMercado: HouseholdComprasPorLugar[];
@@ -183,6 +208,10 @@ export interface HouseholdExpensesMonth {
   totalCompras: number;
   totalSalidas: number;
   total: number;
+  /** Absent on backends predating the outings budget. */
+  outings?: HouseholdOutings;
+  /** Absent on backends predating the outings budget. */
+  otros?: HouseholdOtros;
   /** Market purchase items excluded from totals for lack of an exchange rate. */
   unconvertedItems?: number;
   /** House's local currency code (e.g. 'CUP'). Absent on responses from

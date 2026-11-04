@@ -651,6 +651,34 @@ describe('BudgetService auto-creates the fund and FI goal on the first income', 
   });
 });
 
+describe('BudgetService.getOutingsBudget', () => {
+  const build = (budget: any) => {
+    const budgetRepo: any = { find: jest.fn().mockResolvedValue(budget ? [budget] : []) };
+    const noop = {} as any;
+    return new BudgetService(budgetRepo, noop, noop, noop, noop, noop, noop, noop);
+  };
+  const withExpense = (catName: string, e: any) => ({
+    id: 'b1',
+    categories: [{ name: catName, expenses: [e] }],
+  });
+
+  it('returns the monthly amount of the "Salidas" expense in the Comida category', async () => {
+    const svc = build(withExpense('Comida', { name: 'Salidas', amount: 120, periodicity: 'monthly' }));
+    expect(await svc.getOutingsBudget('h1')).toBe(120);
+  });
+
+  it('matches the name ignoring case and spaces, and converts other periodicities to monthly', async () => {
+    const svc = build(withExpense(' comida ', { name: '  SALIDAS ', amount: 1200, periodicity: 'annual' }));
+    expect(await svc.getOutingsBudget('h1')).toBe(100);
+  });
+
+  it('is null without a budget, without the expense, or when it is in another category', async () => {
+    expect(await build(null).getOutingsBudget('h1')).toBeNull();
+    expect(await build(withExpense('Comida', { name: 'Mercado', amount: 50, periodicity: 'monthly' })).getOutingsBudget('h1')).toBeNull();
+    expect(await build(withExpense('Casa', { name: 'Salidas', amount: 50, periodicity: 'monthly' })).getOutingsBudget('h1')).toBeNull();
+  });
+});
+
 describe('BudgetService annual savings goal', () => {
   function build(opts: { savingsGoal?: any; percent?: number | null } = {}) {
     const budget: any = { id: 'b1', savingsTargetPercent: opts.percent === undefined ? 20 : opts.percent, incomeSources: [{ amount: 1000 }] };
