@@ -16,6 +16,7 @@ import { HousesService } from '../houses/houses.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
 const EMERGENCY_FUND_NAME = 'Fondo de Emergencia';
+const SAVINGS_GOAL_NAME = 'Meta de ahorro';
 const DEFAULT_FI_MULTIPLIER = 150;
 
 // Monthly normalization: a month has 52/12 weeks (not 4), and "quincenal"
@@ -353,7 +354,9 @@ export class BudgetService {
     if (dto.fixedExpensesCapPercent !== undefined) budget.fixedExpensesCapPercent = dto.fixedExpensesCapPercent;
 
     await this.budgetRepo.save(budget);
-    if (dto.fiMultiplier !== undefined) await this.refreshFiGoalIfExists(id, houseId);
+    if (dto.fiMultiplier !== undefined || dto.savingsTargetPercent !== undefined) {
+      await this.refreshFiGoalIfExists(id, houseId);
+    }
     return this.findOne(id, houseId);
   }
 
@@ -538,6 +541,34 @@ export class BudgetService {
     return this.syncFiGoal(houseId, fiTarget);
   }
 
+  /** Savings the budget plans for a year: monthly income x savings target % x 12. Null when the % is unset. */
+  private annualSavingsAmount(budget: Budget, totalMonthlyIncome: number): number | null {
+    const percent = Number(budget.savingsTargetPercent);
+    if (budget.savingsTargetPercent == null || !Number.isFinite(percent)) return null;
+    return Math.round(totalMonthlyIncome * (percent / 100) * 12 * 100) / 100;
+  }
+
+  private async syncSavingsGoal(houseId: string, goalAmount: number): Promise<SavingsGoal> {
+    const goal = await this.savingsGoalRepo.findOne({
+      where: { name: SAVINGS_GOAL_NAME, house: { id: houseId } },
+    });
+    if (goal) {
+      goal.goalAmount = goalAmount;
+      return this.savingsGoalRepo.save(goal);
+    }
+    return this.savingsGoalRepo.save(
+      this.savingsGoalRepo.create({
+        name: SAVINGS_GOAL_NAME,
+        goalAmount,
+        currentSavings: 0,
+        months: 12,
+        annualInterestRate: 0,
+        emoji: '💰',
+        house: { id: houseId } as any,
+      }),
+    );
+  }
+
   private async hasNoIncome(budgetId: string): Promise<boolean> {
     try {
       return (await this.incomeRepo.count({ where: { budget: { id: budgetId } } })) === 0;
@@ -563,6 +594,9 @@ export class BudgetService {
       if (totalMonthlyIncome === 0) return;
       const multiplier = budget.fiMultiplier != null ? Number(budget.fiMultiplier) : DEFAULT_FI_MULTIPLIER;
       await this.syncFiGoal(houseId, Math.round(totalMonthlyIncome * multiplier * 100) / 100);
+
+      const savingsGoalAmount = this.annualSavingsAmount(budget, totalMonthlyIncome);
+      if (savingsGoalAmount != null) await this.syncSavingsGoal(houseId, savingsGoalAmount);
 
       if (this.fundRepo && (await this.fundRepo.count({ where: { house: { id: houseId } } })) === 0) {
         await this.fundRepo.save(
@@ -595,9 +629,19 @@ export class BudgetService {
       const goal = await this.savingsGoalRepo.findOne({
         where: { name: FI_GOAL_NAME, house: { id: houseId } },
       });
-      if (!goal) return;
-      goal.goalAmount = fiTarget;
-      await this.savingsGoalRepo.save(goal);
+      if (goal) {
+        goal.goalAmount = fiTarget;
+        await this.savingsGoalRepo.save(goal);
+      }
+
+      const savingsAmount = this.annualSavingsAmount(budget, totalMonthlyIncome);
+      const savingsGoal = savingsAmount != null
+        ? await this.savingsGoalRepo.findOne({ where: { name: SAVINGS_GOAL_NAME, house: { id: houseId } } })
+        : null;
+      if (savingsGoal) {
+        savingsGoal.goalAmount = savingsAmount;
+        await this.savingsGoalRepo.save(savingsGoal);
+      }
     } catch (err) {
       this.logger.warn(`Could not refresh FI goal for budget ${budgetId}: ${(err as Error)?.message}`);
     }
