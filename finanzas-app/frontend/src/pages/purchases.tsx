@@ -406,7 +406,7 @@ export default function PurchasesPage() {
                   >
                     {currencies.filter(c => c.isActive).map(c => (
                       <option key={c.currencyCode} value={c.currencyCode}>
-                        {c.symbol} {c.currencyCode}
+                        {c.currencyCode}
                       </option>
                     ))}
                   </select>
