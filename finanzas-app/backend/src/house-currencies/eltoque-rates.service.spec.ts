@@ -65,6 +65,15 @@ describe('ElToqueRatesService', () => {
     expect(currencies.upsertRate).not.toHaveBeenCalled();
   });
 
+  it('refreshes the rates when the server starts, without blocking or throwing', async () => {
+    houses.find.mockResolvedValue([{ id: 'a' }]);
+    await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
+    await new Promise((r) => setImmediate(r));
+    expect(currencies.upsertRate).toHaveBeenCalledWith('a', expect.objectContaining({ fromCurrency: 'USD' }));
+    houses.find.mockRejectedValue(new Error('db down'));
+    await expect(service.onApplicationBootstrap()).resolves.toBeUndefined();
+  });
+
   it('does nothing when ELTOQUE_API_KEY is not configured', async () => {
     delete process.env.ELTOQUE_API_KEY;
     expect(await service.refreshHouse(HOUSE)).toEqual({ updated: [] });

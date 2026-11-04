@@ -9,11 +9,13 @@ import {
   Periodicity,
 } from '../database/entities/budget.entity';
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
+import { EmergencyFund } from '../database/entities/emergency-fund.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
 import { HousesService } from '../houses/houses.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
+const EMERGENCY_FUND_NAME = 'Fondo de Emergencia';
 const DEFAULT_FI_MULTIPLIER = 150;
 
 // Monthly normalization: a month has 52/12 weeks (not 4), and "quincenal"
@@ -120,6 +122,10 @@ export class BudgetService {
     private readonly notificationsService: NotificationsService,
     private readonly inAppNotificationsService: InAppNotificationsService,
     private readonly housesService: HousesService,
+
+    // Optional so lightweight constructions (tests) keep working.
+    @InjectRepository(EmergencyFund)
+    private fundRepo?: Repository<EmergencyFund>,
   ) {}
 
   private computeMonthlyAmount(
@@ -363,12 +369,14 @@ export class BudgetService {
   async addIncome(budgetId: string, houseId: string, dto: AddIncomeDto) {
     const budget = await this.budgetRepo.findOne({ where: { id: budgetId, house: { id: houseId } } });
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
+    const isFirstIncome = await this.hasNoIncome(budgetId);
     const income = this.incomeRepo.create({
       ...dto,
       budget: { id: budgetId } as any,
     });
     const saved = await this.incomeRepo.save(income);
-    await this.refreshFiGoalIfExists(budgetId, houseId);
+    if (isFirstIncome) await this.ensureDerivedPlan(budgetId, houseId);
+    else await this.refreshFiGoalIfExists(budgetId, houseId);
     return saved;
   }
 
@@ -528,6 +536,47 @@ export class BudgetService {
     const multiplier = budget.fiMultiplier != null ? Number(budget.fiMultiplier) : DEFAULT_FI_MULTIPLIER;
     const fiTarget = Math.round(totalMonthlyIncome * multiplier * 100) / 100;
     return this.syncFiGoal(houseId, fiTarget);
+  }
+
+  private async hasNoIncome(budgetId: string): Promise<boolean> {
+    try {
+      return (await this.incomeRepo.count({ where: { budget: { id: budgetId } } })) === 0;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Runs once, when a budget receives its first income: gives the house the plan that follows
+   * from the budget — the FI goal and, if the house has no emergency fund at all, a fund synced
+   * with the budget. Later incomes never recreate them, so a fund the user deleted stays deleted.
+   * Never fails the caller.
+   */
+  private async ensureDerivedPlan(budgetId: string, houseId: string): Promise<void> {
+    try {
+      const budget = await this.budgetRepo.findOne({
+        where: { id: budgetId, house: { id: houseId } },
+        relations: ['incomeSources'],
+      });
+      if (!budget) return;
+      const totalMonthlyIncome = budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
+      if (totalMonthlyIncome === 0) return;
+      const multiplier = budget.fiMultiplier != null ? Number(budget.fiMultiplier) : DEFAULT_FI_MULTIPLIER;
+      await this.syncFiGoal(houseId, Math.round(totalMonthlyIncome * multiplier * 100) / 100);
+
+      if (this.fundRepo && (await this.fundRepo.count({ where: { house: { id: houseId } } })) === 0) {
+        await this.fundRepo.save(
+          this.fundRepo.create({
+            name: EMERGENCY_FUND_NAME,
+            targetMonths: budget.emergencyFundMonths != null ? Math.round(Number(budget.emergencyFundMonths)) : 6,
+            syncWithBudget: true,
+            house: { id: houseId } as any,
+          }),
+        );
+      }
+    } catch (err) {
+      this.logger.warn(`Could not create the derived plan for budget ${budgetId}: ${(err as Error)?.message}`);
+    }
   }
 
   /** Keeps an existing FI goal in line with the budget. Never creates it and never fails the caller. */
