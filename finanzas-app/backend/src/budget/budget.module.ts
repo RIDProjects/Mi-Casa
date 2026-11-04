@@ -9,13 +9,14 @@ import {
   IncomeSource,
 } from '../database/entities/budget.entity';
 import { SavingsGoal } from '../database/entities/savings-goal.entity';
+import { EmergencyFund } from '../database/entities/emergency-fund.entity';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { HousesModule } from '../houses/houses.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Budget, BudgetCategory, BudgetExpense, IncomeSource, SavingsGoal]),
+    TypeOrmModule.forFeature([Budget, BudgetCategory, BudgetExpense, IncomeSource, SavingsGoal, EmergencyFund]),
     AuthModule,
     NotificationsModule,
     HousesModule,

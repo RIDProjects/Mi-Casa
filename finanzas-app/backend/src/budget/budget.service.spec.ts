@@ -585,3 +585,67 @@ describe('BudgetService shopping budget expense', () => {
     });
   });
 });
+
+describe('BudgetService auto-creates the fund and FI goal on the first income', () => {
+  function build(opts: { incomeCount?: number; funds?: number; goal?: any; fail?: boolean } = {}) {
+    const budget = { id: 'b1', incomeSources: [{ amount: 1000 }] };
+    const budgetRepo: any = { findOne: jest.fn().mockResolvedValue(budget) };
+    const incomeRepo: any = {
+      create: jest.fn((x) => x),
+      save: jest.fn(async (x) => x),
+      count: jest.fn().mockResolvedValue(opts.incomeCount ?? 0),
+    };
+    const savingsGoalRepo: any = {
+      findOne: jest.fn().mockResolvedValue(opts.goal ?? null),
+      save: jest.fn(async (g) => g),
+      create: jest.fn((x) => x),
+    };
+    const fundRepo: any = {
+      count: opts.fail ? jest.fn().mockRejectedValue(new Error('db down')) : jest.fn().mockResolvedValue(opts.funds ?? 0),
+      save: jest.fn(async (f) => f),
+      create: jest.fn((x) => x),
+    };
+    const noop = {} as any;
+    const service = new BudgetService(budgetRepo, noop, noop, incomeRepo, savingsGoalRepo, noop, noop, noop, fundRepo);
+    return { service, savingsGoalRepo, fundRepo };
+  }
+  const add = (s: BudgetService) => s.addIncome('b1', 'h1', { name: 'x', amount: 1000 } as any);
+
+  it('creates a budget-synced emergency fund and the FI goal', async () => {
+    const { service, savingsGoalRepo, fundRepo } = build();
+    await add(service);
+    expect(fundRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ syncWithBudget: true, house: { id: 'h1' } }),
+    );
+    expect(savingsGoalRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Independencia Financiera', goalAmount: 150000 }),
+    );
+  });
+
+  it('does nothing on later incomes (a fund or goal the user deleted stays deleted)', async () => {
+    const { service, savingsGoalRepo, fundRepo } = build({ incomeCount: 1 });
+    await add(service);
+    expect(fundRepo.save).not.toHaveBeenCalled();
+    expect(savingsGoalRepo.create).not.toHaveBeenCalled();
+  });
+
+  it('never creates a second fund when the house already has one', async () => {
+    const { service, savingsGoalRepo, fundRepo } = build({ funds: 1 });
+    await add(service);
+    expect(fundRepo.save).not.toHaveBeenCalled();
+    expect(savingsGoalRepo.save).toHaveBeenCalled();
+  });
+
+  it('updates the existing FI goal instead of duplicating it', async () => {
+    const goal = { name: 'Independencia Financiera', goalAmount: 1 };
+    const { service, savingsGoalRepo } = build({ goal });
+    await add(service);
+    expect(savingsGoalRepo.create).not.toHaveBeenCalled();
+    expect(goal.goalAmount).toBe(150000);
+  });
+
+  it('a failure while creating the plan does not fail addIncome', async () => {
+    const { service } = build({ fail: true });
+    await expect(add(service)).resolves.toBeDefined();
+  });
+});
