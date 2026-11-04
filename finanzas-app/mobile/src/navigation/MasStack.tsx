@@ -4,15 +4,15 @@ import { MasStackParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
 import MasScreen from '../screens/MasScreen';
-import DebtsSummaryScreen from '../screens/debts/DebtsSummaryScreen';
-import AddDebtScreen from '../screens/debts/AddDebtScreen';
+import MetasScreen from '../screens/MetasScreen';
+import GoalFormScreen from '../screens/GoalFormScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator<MasStackParamList>();
 
 /**
- * Stack of the "Más" tab: the hub plus the screens that used to be tabs (Deudas, Perfil).
- * The native header only provides the back arrow there (empty title): both screens keep
+ * Stack of the "Más" tab: the hub plus Metas and Perfil.
+ * The native header only provides the back arrow there (empty title): the screens keep
  * their own large title in the body.
  */
 export default function MasStack() {
@@ -28,13 +28,14 @@ export default function MasStack() {
       }}
     >
       <Stack.Screen name="MasHome" component={MasScreen} options={{ headerShown: false }} />
-      <Stack.Screen name="DebtsSummary" component={DebtsSummaryScreen} options={{ headerTitle: '' }} />
+      {/* MetasScreen ya renderiza su propio header */}
+      <Stack.Screen name="MetasList" component={MetasScreen} options={{ headerTitle: '' }} />
       <Stack.Screen
-        name="AddDebt"
-        component={AddDebtScreen}
+        name="GoalForm"
+        component={GoalFormScreen}
         options={({ route }) => ({
           presentation: 'modal',
-          headerTitle: route.params?.debtId ? 'Editar Deuda' : 'Registrar Deuda',
+          headerTitle: route.params?.goalId ? 'Editar meta' : 'Nueva meta de ahorro',
         })}
       />
       <Stack.Screen name="Perfil" component={ProfileScreen} options={{ headerTitle: '' }} />

@@ -111,6 +111,7 @@ function FundCard({ fund }: { fund: EmergencyFund }) {
     <Card>
       <View style={styles.fundBody}>
         <Text style={styles.fundTitle}>{fund.name}</Text>
+        {fund.budgetSynced && <Badge label="Sincronizado con el presupuesto" tone="info" />}
 
         <View style={styles.savedRow}>
           <View>

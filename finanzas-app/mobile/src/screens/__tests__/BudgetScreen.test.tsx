@@ -182,4 +182,48 @@ describe('BudgetScreen', () => {
     await screen.findByText('Sin presupuesto activo');
     expect(screen.queryByText('Nueva categoría')).toBeNull();
   });
+
+  describe('plan financiero', () => {
+    const plan = {
+      rule: '50-30-20',
+      fiTarget: 60000,
+      minMonthlyInvestment: 80,
+      emergencyFundTarget: 960,
+      entertainmentBudget: 120,
+      fixedExpensesCap: 200,
+    };
+    const withPlan = (p: any) => budget({ summary: { ...budget().summary, plan: p } });
+
+    it('shows the plan values when the budget has a plan', async () => {
+      mockGet.mockResolvedValue({ data: [withPlan(plan)] });
+      renderBudget();
+      expect(await screen.findByText('Plan financiero')).toBeTruthy();
+      expect(screen.getByText('Meta FI')).toBeTruthy();
+      expect(screen.getByText('US$ 60,000.00')).toBeTruthy();
+      expect(screen.getByText('Inversión mín./mes')).toBeTruthy();
+      expect(screen.getByText('US$ 80.00')).toBeTruthy();
+      expect(screen.getByText('Fondo de emergencia')).toBeTruthy();
+      expect(screen.getByText('US$ 960.00')).toBeTruthy();
+      expect(screen.getByText('Ocio/mes')).toBeTruthy();
+      expect(screen.getByText('US$ 120.00')).toBeTruthy();
+      expect(screen.getByText('Tope gastos fijos')).toBeTruthy();
+      expect(screen.getByText('US$ 200.00')).toBeTruthy();
+    });
+
+    it('hides the plan card when there is no plan', async () => {
+      mockGet.mockResolvedValue({ data: [withPlan(null)] });
+      renderBudget();
+      await screen.findByText('Servicios');
+      expect(screen.queryByText('Plan financiero')).toBeNull();
+      expect(screen.queryByText('Editar parámetros')).toBeNull();
+    });
+
+    it('opens the parameters modal from the edit button', async () => {
+      mockGet.mockResolvedValue({ data: [withPlan(plan)] });
+      renderBudget();
+      fireEvent.press(await screen.findByText('Editar parámetros'));
+      expect(screen.getByLabelText('Meta FI (× ingreso mensual)').props.value).toBe('150');
+      expect(screen.getByText('Restablecer valores')).toBeTruthy();
+    });
+  });
 });

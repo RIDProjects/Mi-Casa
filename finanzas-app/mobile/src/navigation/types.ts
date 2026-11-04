@@ -17,12 +17,12 @@ export type RootStackParamList = {
   PrivacyPolicy: undefined;
 };
 
-// Bottom tabs (5 tabs: Dashboard, Gastos, Presupuesto, Metas, Más)
+// Bottom tabs (5 tabs: Inicio, Gastos, Presupuesto, Deudas, Más)
 export type MainTabParamList = {
   Dashboard: undefined;
   Expenses: NavigatorScreenParams<GastosStackParamList>;
   Presupuesto: NavigatorScreenParams<BudgetStackParamList>;
-  Metas: NavigatorScreenParams<MetasStackParamList>;
+  Deudas: NavigatorScreenParams<DebtsStackParamList>;
   Mas: NavigatorScreenParams<MasStackParamList>;
 };
 
@@ -33,13 +33,13 @@ export type GastosStackParamList = {
   AddHouseholdExpense: { expenseId?: string } | undefined;
 };
 
-// Stack del tab "Más": hub + Deudas + Perfil (antes eran tabs)
+// Stack del tab "Más": hub + Metas + Perfil
 export type MasStackParamList = {
   MasHome: undefined;
   Perfil: undefined;
-} & DebtsStackParamList;
+} & MetasStackParamList;
 
-// Pantallas de Deudas (ahora dentro del stack de Más)
+// Stack del tab de Deudas
 export type DebtsStackParamList = {
   DebtsSummary: undefined;
   AddDebt: { debtId?: string; debtType?: 'they_owe_me' | 'i_owe' } | undefined;
@@ -52,7 +52,7 @@ export type BudgetStackParamList = {
   IncomeSources: undefined;
 };
 
-// Stack anidado dentro del tab de Metas
+// Pantallas de Metas (dentro del stack de Más)
 export type MetasStackParamList = {
   MetasList: undefined;
   GoalForm: { goalId?: string } | undefined;

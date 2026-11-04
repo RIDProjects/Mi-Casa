@@ -20,11 +20,26 @@ export interface ExpensePayload {
   isAntExpense?: boolean;
 }
 
+export type PlanParamKey =
+  | 'fiMultiplier'
+  | 'minInvestmentPercent'
+  | 'emergencyFundMonths'
+  | 'entertainmentPercent'
+  | 'fixedExpensesCapPercent';
+
+/** A null value resets that parameter to its default. */
+export type PlanPatch = Partial<Record<PlanParamKey, number | null>>;
+
 export const budgetService = {
   getCurrent: async (): Promise<Budget | null> => {
     const res = await apiClient.get<Budget[]>('/budget');
     const list = Array.isArray(res.data) ? res.data : [];
     return list[0] ?? null;
+  },
+
+  updatePlan: async (id: string, patch: PlanPatch) => {
+    const res = await apiClient.put(`/budget/${id}`, patch);
+    return res.data;
   },
 
   addIncome: async (budgetId: string, data: IncomePayload) => {
