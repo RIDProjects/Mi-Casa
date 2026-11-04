@@ -15,12 +15,13 @@ import { householdExpensesService } from '../../services/household-expenses.serv
 import {
   HouseholdExpense,
   HouseholdExpensesMonth,
+  HouseholdExpenseSaved,
   TransactionCategory,
   TRANSACTION_CATEGORIES,
 } from '../../types';
 import { GastosStackParamList } from '../../navigation/types';
 import { currentMonthLocal, todayLocalISO } from '../../utils/dates';
-import { resolveCurrency } from '../../utils/currency';
+import { resolveCurrency, formatMoney } from '../../utils/currency';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
@@ -43,6 +44,7 @@ const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surfaceContainer,
     },
     chipText: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13 },
+    warning: { fontFamily: fonts.medium, fontSize: 13, color: c.warnInk, backgroundColor: c.warnTint, borderRadius: radius.md, padding: 10 },
     actions: { flexDirection: 'row', gap: 12 },
   });
 
@@ -87,6 +89,25 @@ export default function AddHouseholdExpenseScreen() {
   // currency applies (resolved once the month data loads).
   const effectiveMoneda = resolveCurrency(moneda, monedaLocal);
 
+  // Live, non-blocking warning: only for new outings (an edit already counts
+  // in outings.total) when the month has a budget.
+  const outings = monthData?.outings;
+  const parsedAmount = parseFloat(monto.replace(',', '.'));
+  const exceedBy =
+    categoria === 'Salidas' && !isEditing && outings?.budget != null && parsedAmount > 0 && effectiveMoneda === monedaLocal
+      ? outings.total + parsedAmount - outings.budget
+      : 0;
+
+  const notifyBudgetWarning = (saved?: HouseholdExpenseSaved) => {
+    const warning = saved?.budgetWarning;
+    if (warning) {
+      Alert.alert(
+        'Presupuesto de salidas superado',
+        `Te pasaste por ${formatMoney(warning.exceededBy, monedaLocal)} del presupuesto de salidas. El gasto se guardó.`,
+      );
+    }
+  };
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['household-expenses'] });
   };
@@ -102,9 +123,10 @@ export default function AddHouseholdExpenseScreen() {
         lugar: lugar.trim() || undefined,
         mes: monthStr,
       }),
-    onSuccess: () => {
+    onSuccess: (saved: HouseholdExpenseSaved) => {
       invalidate();
       navigation.goBack();
+      notifyBudgetWarning(saved);
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.message || err?.message || 'Error al guardar';
@@ -123,9 +145,10 @@ export default function AddHouseholdExpenseScreen() {
         lugar: lugar.trim() || undefined,
         mes: monthStr,
       }),
-    onSuccess: () => {
+    onSuccess: (saved: HouseholdExpenseSaved) => {
       invalidate();
       navigation.goBack();
+      notifyBudgetWarning(saved);
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.message || err?.message || 'Error al guardar';
@@ -235,6 +258,12 @@ export default function AddHouseholdExpenseScreen() {
                 })}
               </View>
             </View>
+
+            {exceedBy > 0 && (
+              <Text style={styles.warning}>
+                Con esta salida superarías el presupuesto por {formatMoney(exceedBy, monedaLocal)}. Puedes guardarla igualmente.
+              </Text>
+            )}
           </Card>
         </Reveal>
 

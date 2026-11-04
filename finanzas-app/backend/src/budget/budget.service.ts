@@ -167,6 +167,28 @@ export class BudgetService {
   }
 
   /**
+   * Live monthly amount of the "Salidas" expense inside the "Comida" category: the limit the
+   * household expense registry compares outings against. Matched by name (case and spacing
+   * ignored), so it needs no flag or migration. Null when the budget or the expense is missing.
+   */
+  async getOutingsBudget(houseId: string): Promise<number | null> {
+    const [budget] = await this.budgetRepo.find({
+      where: { house: { id: houseId } },
+      order: { createdAt: 'DESC' },
+      take: 1,
+      relations: ['categories', 'categories.expenses'],
+    });
+    if (!budget) return null;
+    const norm = (v?: string) => (v ?? '').trim().toLowerCase();
+    const outings = budget.categories
+      ?.filter((c) => norm(c.name) === 'comida')
+      .flatMap((c) => c.expenses ?? [])
+      .find((e) => norm(e.name) === 'salidas');
+    if (!outings) return null;
+    return Math.round(this.computeMonthlyAmount(Number(outings.amount), outings.periodicity) * 100) / 100;
+  }
+
+  /**
    * Live monthly amount of the budget expense flagged as the shopping budget.
    * Reads the repository directly: no notification side effects.
    */

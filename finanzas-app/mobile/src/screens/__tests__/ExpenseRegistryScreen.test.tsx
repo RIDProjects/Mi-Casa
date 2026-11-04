@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ExpenseRegistryScreen from '../expenses/ExpenseRegistryScreen';
 import { ThemeProvider } from '../../theme/ThemeContext';
@@ -129,5 +129,49 @@ describe('ExpenseRegistryScreen', () => {
     await waitFor(() => expect(mockGetMonth.mock.calls.length).toBeGreaterThan(before));
     expect(await screen.findByText('Cena afuera')).toBeTruthy();
     expect(screen.queryByText('Algo salió mal')).toBeNull();
+  });
+  describe('Salidas / Otros gastos sections', () => {
+    const outing = { id: 's1', fecha: '2026-10-05', descripcion: 'Cena afuera', categoria: 'Salidas', monto: 50, moneda: 'USD', montoLocal: 50, tasaCambio: 1, montoCUP: 50, lugar: null, mes: '2026-10', createdAt: '' };
+    const other = { id: 'o1', fecha: '2026-10-06', descripcion: 'Gasolina', categoria: 'Transporte', monto: 30, moneda: 'USD', montoLocal: 30, tasaCambio: 1, montoCUP: 30, lugar: null, mes: '2026-10', createdAt: '' };
+    const split = (outings: any) =>
+      month({
+        salidas: [outing, other],
+        totalSalidas: 80,
+        total: 180,
+        outings: { items: [outing], total: 50, budget: null, remaining: null, exceeded: false, ...outings },
+        otros: { items: [other], total: 30 },
+      });
+
+    it('renders Salidas and Otros gastos as separate sections with a four-line summary', async () => {
+      mockGetMonth.mockResolvedValue(split({ budget: 120, remaining: 70 }));
+      renderRegistry();
+      const salidas = await screen.findByTestId('section-salidas');
+      const otros = screen.getByTestId('section-otros');
+      expect(within(salidas).getByText('Cena afuera')).toBeTruthy();
+      expect(within(salidas).queryByText('Gasolina')).toBeNull();
+      expect(within(otros).getByText('Gasolina')).toBeTruthy();
+      expect(within(otros).getByText('Otros gastos')).toBeTruthy();
+      expect(screen.getByText('Compras')).toBeTruthy();
+      expect(screen.getByText('TOTAL')).toBeTruthy();
+      expect(screen.getByText('Te quedan US$ 70.00')).toBeTruthy();
+      expect(screen.getByTestId('outings-budget-bar')).toBeTruthy();
+      expect(screen.queryByTestId('outings-exceeded-alert')).toBeNull();
+    });
+
+    it('shows a danger alert and "Te pasaste por" when exceeded', async () => {
+      mockGetMonth.mockResolvedValue(split({ total: 138, budget: 120, remaining: -18, exceeded: true }));
+      renderRegistry();
+      expect(await screen.findByTestId('outings-exceeded-alert')).toBeTruthy();
+      expect(screen.getAllByText('Te pasaste por US$ 18.00').length).toBeGreaterThan(0);
+      expect(screen.getByText('Puedes seguir registrando.')).toBeTruthy();
+    });
+
+    it('shows no bar and a hint when there is no budget', async () => {
+      mockGetMonth.mockResolvedValue(split({ budget: null }));
+      renderRegistry();
+      expect(await screen.findByText(/Salidas.*Comida.*Presupuesto/)).toBeTruthy();
+      expect(screen.queryByTestId('outings-budget-bar')).toBeNull();
+      expect(screen.queryByTestId('outings-exceeded-alert')).toBeNull();
+    });
   });
 });
