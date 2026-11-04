@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Repository } from 'typeorm';
@@ -40,7 +40,7 @@ const defaultFetcher: ElToqueFetcher = async () => {
  * automated clients, so scraping it is not an option.
  */
 @Injectable()
-export class ElToqueRatesService {
+export class ElToqueRatesService implements OnApplicationBootstrap {
   private readonly logger = new Logger(ElToqueRatesService.name);
 
   constructor(
@@ -53,6 +53,11 @@ export class ElToqueRatesService {
 
   private get available(): boolean {
     return !!process.env.ELTOQUE_API_KEY;
+  }
+
+  /** Refreshes in the background on every start, so a deploy does not wait for the 6am job. */
+  async onApplicationBootstrap(): Promise<void> {
+    void this.refreshAll().catch((e) => this.logger.error(`Actualización inicial de tasas fallida: ${e.message}`));
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_6AM)
