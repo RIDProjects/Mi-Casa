@@ -316,7 +316,7 @@ export default function InversionesPage() {
               >
                 {currencies.filter(c => c.isActive).map(c => (
                   <option key={c.currencyCode} value={c.currencyCode}>
-                    {c.symbol} {c.currencyCode} — {c.currencyName}
+                    {c.currencyCode} — {c.currencyName}
                   </option>
                 ))}
               </select>
