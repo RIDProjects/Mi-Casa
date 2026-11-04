@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import Layout from '../components/layout/Layout';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -26,7 +26,7 @@ interface IncomeSource { id: string; name: string; type: string; amount: number;
 interface Expense { id: string; name: string; amount: number; periodicity: Periodicity; isFixed: boolean; isCreditCard: boolean; isAntExpense: boolean; }
 interface Category { id: string; name: string; sortOrder: number; isDefault: boolean; expenses: Expense[]; }
 interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; plan: BudgetPlan | null; }
-interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; incomeSources: IncomeSource[]; categories: Category[]; summary: BudgetSummary; }
+interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; fiMultiplier?: number | null; minInvestmentPercent?: number | null; emergencyFundMonths?: number | null; entertainmentPercent?: number | null; fixedExpensesCapPercent?: number | null; incomeSources: IncomeSource[]; categories: Category[]; summary: BudgetSummary; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getErr = (e: any) => e?.response?.data?.message || e?.message || 'Error';
@@ -81,6 +81,79 @@ const defaultCategoryForm = { name: '' };
 const defaultExpenseForm = { name: '', amount: '', periodicity: 'monthly' as Periodicity, isFixed: false, isAntExpense: false, isCreditCard: false };
 
 // ─── CategorySection ──────────────────────────────────────────────────────────
+type PlanParams = { fiMultiplier: number; minInvestmentPercent: number; emergencyFundMonths: number; entertainmentPercent: number; fixedExpensesCapPercent: number };
+type PlanParamsForm = Record<keyof PlanParams, string>;
+
+const PLAN_PARAM_FIELDS: { key: keyof PlanParams; label: string; hint: string; max: number }[] = [
+  { key: 'fiMultiplier',            label: 'Meta FI (× ingreso mensual)',   hint: 'Veces tu ingreso mensual',  max: 1000 },
+  { key: 'minInvestmentPercent',    label: 'Inversión mínima (%)',          hint: '% del ingreso al mes',      max: 100 },
+  { key: 'emergencyFundMonths',     label: 'Fondo de emergencia (meses)',   hint: 'Meses de ingreso',          max: 120 },
+  { key: 'entertainmentPercent',    label: 'Ocio (%)',                      hint: '% del ingreso al mes',      max: 100 },
+  { key: 'fixedExpensesCapPercent', label: 'Tope gastos fijos (%)',         hint: '% del ingreso al mes',      max: 100 },
+];
+
+// Effective plan parameters: the stored override, or the default the backend applies for the rule.
+function effectivePlanParams(b: Budget): PlanParams {
+  const isFifty = b.rule === '50-30-20';
+  return {
+    fiMultiplier:            b.fiMultiplier != null ? Number(b.fiMultiplier) : 150,
+    minInvestmentPercent:    b.minInvestmentPercent != null ? Number(b.minInvestmentPercent) : 20,
+    emergencyFundMonths:     b.emergencyFundMonths != null ? Number(b.emergencyFundMonths) : 6,
+    entertainmentPercent:    b.entertainmentPercent != null ? Number(b.entertainmentPercent) : isFifty ? 30 : 10,
+    fixedExpensesCapPercent: b.fixedExpensesCapPercent != null ? Number(b.fixedExpensesCapPercent) : isFifty ? 50 : 70,
+  };
+}
+
+// Click-to-edit value: Enter or blur saves, Escape cancels. Empty/unchanged/invalid input is ignored.
+function InlineEdit({ label, value, display, type, align = 'left', onSave }: {
+  label: string; value: string | number; display: string; type: 'text' | 'number'; align?: 'left' | 'right'; onSave: (value: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value));
+  const cancelled = useRef(false);
+
+  const start = () => { cancelled.current = false; setDraft(String(value)); setEditing(true); };
+  const commit = () => {
+    if (cancelled.current) return;
+    setEditing(false);
+    const next = draft.trim();
+    if (next === '' || next === String(value)) return;
+    if (type === 'number' && (Number.isNaN(Number(next)) || Number(next) < 0)) return;
+    onSave(next);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        aria-label={label}
+        type={type}
+        step={type === 'number' ? '0.01' : undefined}
+        min={type === 'number' ? 0 : undefined}
+        value={draft}
+        onChange={ev => setDraft(ev.target.value)}
+        onBlur={commit}
+        onKeyDown={ev => {
+          if (ev.key === 'Enter') commit();
+          if (ev.key === 'Escape') { cancelled.current = true; setEditing(false); }
+        }}
+        className={`input py-1 px-2 w-full min-w-[6rem] ${align === 'right' ? 'text-right' : ''}`}
+      />
+    );
+  }
+  return (
+    <button
+      type="button"
+      aria-label={`Editar ${label.toLowerCase()}`}
+      title="Editar"
+      onClick={start}
+      className={`w-full rounded px-2 py-1 -mx-2 hover:bg-surface-container focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
+    >
+      {display}
+    </button>
+  );
+}
+
 function CategorySection({ category, onRefresh, onDeleteCategory }: { category: Category; onRefresh: () => void; onDeleteCategory: () => void; }) {
   const [open, setOpen] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -161,8 +234,25 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
               <tbody className="divide-y divide-outline-variant">
                 {category.expenses.map(e => (
                   <tr key={e.id} className="hover:bg-surface-gray transition-colors">
-                    <td className="px-6 py-3 font-body-default text-on-surface">{e.name}</td>
-                    <td className="px-4 py-3 text-right font-body-default text-on-surface">${fmt(e.amount)}</td>
+                    <td className="px-6 py-3 font-body-default text-on-surface">
+                      <InlineEdit
+                        label={`Nombre de ${e.name}`}
+                        value={e.name}
+                        display={e.name}
+                        type="text"
+                        onSave={v => updMut.mutate({ id: e.id, data: { name: v } })}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-right font-body-default text-on-surface">
+                      <InlineEdit
+                        label={`Monto de ${e.name}`}
+                        value={e.amount}
+                        display={`$${fmt(e.amount)}`}
+                        type="number"
+                        align="right"
+                        onSave={v => updMut.mutate({ id: e.id, data: { amount: parseFloat(v) } })}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(toMonthly(e.amount, e.periodicity))}</td>
                     <td className="px-4 py-3 text-center">
                       <select
@@ -302,6 +392,8 @@ export default function PresupuestoPage() {
   const [incomeForm, setIncomeForm]             = useState({ ...defaultIncomeForm });
   const [categoryForm, setCategoryForm]         = useState({ ...defaultCategoryForm });
   const [showSavingsModal, setShowSavingsModal] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [planForm, setPlanForm] = useState<PlanParamsForm | null>(null);
   const [savingsTargetEdit, setSavingsTargetEdit] = useState(20);
   const [showNameModal, setShowNameModal] = useState(false);
   const [nameEdit, setNameEdit] = useState('');
@@ -324,6 +416,11 @@ export default function PresupuestoPage() {
     qc.invalidateQueries('budgetDashboard');
     qc.invalidateQueries('globalSummary');
     qc.invalidateQueries('transactionsDashboard');
+    // Modules derived from the budget (one-way: budget -> these, never the reverse).
+    qc.invalidateQueries('emergencyFunds');
+    qc.invalidateQueries('emergencyFundCoverage');
+    qc.invalidateQueries('savings-goals');
+    qc.invalidateQueries('purchaseLists');
   };
 
   // PUT /budget/:id already returns the full updated budget (with summary and
@@ -366,6 +463,26 @@ export default function PresupuestoPage() {
     onSuccess: (res: any) => { toast.success('Nombre actualizado'); setShowNameModal(false); applyUpdatedBudget(res.data); refresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
+  const updatePlanMut = useMutation((patch: Partial<Record<keyof PlanParams, number | null>>) => budgetAPI.update(activeBudgetId!, patch), {
+    onSuccess: (res: any) => { toast.success('Parámetros del plan actualizados'); setShowPlanModal(false); applyUpdatedBudget(res.data); refresh(); },
+    onError: (e: any) => { toast.error(getErr(e)); },
+  });
+  const openPlanModal = () => {
+    const eff = effectivePlanParams(budget);
+    setPlanForm(Object.fromEntries(PLAN_PARAM_FIELDS.map(f => [f.key, String(eff[f.key])])) as PlanParamsForm);
+    setShowPlanModal(true);
+  };
+  const handleSavePlan = () => {
+    const patch: any = {};
+    for (const f of PLAN_PARAM_FIELDS) {
+      const raw = planForm![f.key].trim();
+      const n = Number(raw);
+      if (raw === '' || Number.isNaN(n) || n < 0 || n > f.max) { toast.error(`Valor inválido: ${f.label}`); return; }
+      patch[f.key] = n;
+    }
+    updatePlanMut.mutate(patch);
+  };
+  const handleResetPlan = () => updatePlanMut.mutate({ fiMultiplier: null, minInvestmentPercent: null, emergencyFundMonths: null, entertainmentPercent: null, fixedExpensesCapPercent: null });
   const handleSaveName = () => {
     const name = nameEdit.trim();
     if (!name) { toast.error('El nombre no puede estar vacío'); return; }
@@ -779,7 +896,14 @@ export default function PresupuestoPage() {
         <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden mb-6">
           <div className="p-4 border-b border-outline-variant bg-surface-gray flex justify-between items-center">
             <h3 className="font-section-title text-section-title text-on-surface">Plan Financiero</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={openPlanModal}
+                className="flex items-center gap-1.5 px-3 py-1 font-label-upper text-label-upper text-primary border border-primary/30 hover:bg-primary/5 rounded-full transition-colors"
+              >
+                <Pencil size={11} /> Editar parámetros
+              </button>
               {(['50-30-20', '70-20-10'] as BudgetRule[]).map(r => (
                 <button
                   key={r}
@@ -926,6 +1050,33 @@ export default function PresupuestoPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      <Modal isOpen={showPlanModal} onClose={() => setShowPlanModal(false)} title="Editar parámetros del plan">
+        {planForm && (
+          <form onSubmit={e => { e.preventDefault(); handleSavePlan(); }} className="space-y-4">
+            {PLAN_PARAM_FIELDS.map(f => (
+              <div key={f.key}>
+                <label className="label" htmlFor={`plan-${f.key}`}>{f.label}</label>
+                <input
+                  id={`plan-${f.key}`}
+                  type="number" step="0.01" min="0" max={f.max}
+                  className="input"
+                  value={planForm[f.key]}
+                  onChange={e => setPlanForm({ ...planForm, [f.key]: e.target.value })}
+                />
+                <p className="font-caption text-caption text-outline mt-1">{f.hint}</p>
+              </div>
+            ))}
+            <div className="flex justify-between gap-3 pt-2">
+              <button type="button" onClick={handleResetPlan} disabled={updatePlanMut.isLoading} className="btn-secondary">Restablecer valores</button>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowPlanModal(false)} className="btn-secondary">Cancelar</button>
+                <button type="submit" disabled={updatePlanMut.isLoading} className="btn-primary">{updatePlanMut.isLoading ? 'Guardando...' : 'Guardar'}</button>
+              </div>
+            </div>
+          </form>
+        )}
       </Modal>
 
       <Modal isOpen={showSavingsModal} onClose={() => setShowSavingsModal(false)} title="Editar meta de ahorro">

@@ -250,3 +250,338 @@ describe('BudgetService.findByHouse limit', () => {
     expect(find.mock.calls[1][0]).toMatchObject({ take: 1, order: { createdAt: 'DESC' } });
   });
 });
+
+describe('BudgetService plan parameters', () => {
+  const incomeSources = [{ amount: 1000 }];
+  const build = (budget: any) => {
+    const budgetRepo: any = {
+      findOne: jest.fn().mockResolvedValue(budget),
+      save: jest.fn(async (b) => b),
+    };
+    const noop = {} as any;
+    return { service: new BudgetService(budgetRepo, noop, noop, noop, noop, noop, noop, noop), budgetRepo };
+  };
+
+  it('keeps the previous plan numbers when no overrides are set', () => {
+    const { service } = build(null);
+    const { plan } = (service as any).computeSummary({ incomeSources, categories: [], savingsTargetPercent: 20, rule: '50-30-20' });
+    expect(plan).toEqual({
+      rule: '50-30-20',
+      fiTarget: 150000,
+      minMonthlyInvestment: 200,
+      emergencyFundTarget: 6000,
+      entertainmentBudget: 300,
+      fixedExpensesCap: 500,
+    });
+  });
+
+  it('uses the overrides stored on the budget', () => {
+    const { service } = build(null);
+    const { plan } = (service as any).computeSummary({
+      incomeSources, categories: [], savingsTargetPercent: 20, rule: '50-30-20',
+      fiMultiplier: 100, minInvestmentPercent: 10, emergencyFundMonths: 3,
+      entertainmentPercent: 15, fixedExpensesCapPercent: 40,
+    });
+    expect(plan).toMatchObject({
+      fiTarget: 100000, minMonthlyInvestment: 100, emergencyFundTarget: 3000,
+      entertainmentBudget: 150, fixedExpensesCap: 400,
+    });
+  });
+
+  it('update persists the plan parameters and null resets one to its default', async () => {
+    const budget: any = { id: 'b1', fiMultiplier: 100 };
+    const { service, budgetRepo } = build(budget);
+    jest.spyOn(service, 'findOne').mockResolvedValue({} as any);
+    await service.update('b1', 'h1', { fiMultiplier: null, emergencyFundMonths: 9 } as any);
+    expect(budgetRepo.save).toHaveBeenCalledWith(expect.objectContaining({ fiMultiplier: null, emergencyFundMonths: 9 }));
+  });
+
+  it('syncFiGoalForBudget uses the budget multiplier', async () => {
+    const { service } = build({ id: 'b1', incomeSources, fiMultiplier: 100 });
+    const spy = jest.spyOn(service as any, 'syncFiGoal').mockResolvedValue({} as any);
+    await service.syncFiGoalForBudget('b1', 'h1');
+    expect(spy).toHaveBeenCalledWith('h1', 100000);
+  });
+});
+
+describe('BudgetService.getEmergencyFundBasis', () => {
+  function build(budget: any) {
+    const budgetRepo = { findOne: jest.fn().mockResolvedValue(budget) };
+    const sendBudgetAlert = jest.fn();
+    const createIfNotRecent = jest.fn();
+    const noop = {} as any;
+    const service = new BudgetService(
+      budgetRepo as any,
+      noop,
+      noop,
+      noop,
+      noop,
+      { sendBudgetAlert } as any,
+      { createIfNotRecent } as any,
+      { getHouseAdminEmails: jest.fn().mockResolvedValue([]) } as any,
+    );
+    return { service, budgetRepo, sendBudgetAlert, createIfNotRecent };
+  }
+
+  it('returns only fixed expenses converted to monthly amounts', async () => {
+    const { service, budgetRepo } = build({
+      emergencyFundMonths: '9.00',
+      categories: [
+        {
+          expenses: [
+            { name: 'Rent', amount: '1000', periodicity: 'monthly', isFixed: true },
+            { name: 'Insurance', amount: '1200', periodicity: 'annual', isFixed: true },
+            { name: 'Gym', amount: '100', periodicity: 'weekly', isFixed: true },
+            { name: 'Cinema', amount: '50', periodicity: 'monthly', isFixed: false },
+          ],
+        },
+      ],
+    });
+
+    const basis = await service.getEmergencyFundBasis('h1');
+
+    expect(budgetRepo.findOne).toHaveBeenCalledWith({
+      where: { house: { id: 'h1' } },
+      order: { createdAt: 'DESC' },
+      relations: ['categories', 'categories.expenses'],
+    });
+    expect(basis).toEqual({
+      lines: [
+        { name: 'Rent', monthlyAmount: 1000 },
+        { name: 'Insurance', monthlyAmount: 100 },
+        { name: 'Gym', monthlyAmount: 433.33 },
+      ],
+      emergencyFundMonths: 9,
+    });
+  });
+
+  it('returns null when the house has no budget', async () => {
+    const { service } = build(null);
+    expect(await service.getEmergencyFundBasis('h1')).toBeNull();
+  });
+
+  it('returns null emergencyFundMonths when unset', async () => {
+    const { service } = build({ emergencyFundMonths: null, categories: [] });
+    expect(await service.getEmergencyFundBasis('h1')).toEqual({ lines: [], emergencyFundMonths: null });
+  });
+
+  it('does not trigger notification side effects', async () => {
+    const { service, sendBudgetAlert, createIfNotRecent } = build({ categories: [] });
+    await service.getEmergencyFundBasis('h1');
+    expect(sendBudgetAlert).not.toHaveBeenCalled();
+    expect(createIfNotRecent).not.toHaveBeenCalled();
+  });
+});
+
+describe('BudgetService FI goal auto-refresh', () => {
+  const build = (opts: { budget?: any; goal?: any; goalRepoFails?: boolean } = {}) => {
+    const budget = opts.budget === undefined ? { id: 'b1', fiMultiplier: null, incomeSources: [{ amount: 400 }, { amount: 600 }] } : opts.budget;
+    const budgetRepo: any = {
+      findOne: jest.fn().mockResolvedValue(budget),
+      save: jest.fn(async (b) => b),
+    };
+    const income: any = { id: 'i1', amount: 1, budget: { id: 'b1' } };
+    const qb: any = {
+      innerJoin: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(income),
+    };
+    const incomeRepo: any = {
+      create: jest.fn((x) => x),
+      save: jest.fn(async (x) => x),
+      remove: jest.fn(async (x) => x),
+      createQueryBuilder: jest.fn(() => qb),
+    };
+    const savingsGoalRepo: any = {
+      findOne: opts.goalRepoFails
+        ? jest.fn().mockRejectedValue(new Error('db down'))
+        : jest.fn().mockResolvedValue(opts.goal ?? null),
+      save: jest.fn(async (g) => g),
+      create: jest.fn(),
+    };
+    const noop = {} as any;
+    const service = new BudgetService(budgetRepo, noop, noop, incomeRepo, savingsGoalRepo, noop, noop, noop);
+    jest.spyOn(service, 'findOne').mockResolvedValue({} as any);
+    return { service, savingsGoalRepo, budgetRepo };
+  };
+
+  it.each([
+    ['addIncome', (s: BudgetService) => s.addIncome('b1', 'h1', { name: 'x', amount: 1 } as any)],
+    ['updateIncome', (s: BudgetService) => s.updateIncome('i1', 'h1', { amount: 1 } as any)],
+    ['removeIncome', (s: BudgetService) => s.removeIncome('i1', 'h1')],
+  ])('%s updates an existing FI goal amount', async (_n, run) => {
+    const goal = { name: 'Independencia Financiera', goalAmount: 1 };
+    const { service, savingsGoalRepo } = build({ goal });
+    await run(service);
+    expect(savingsGoalRepo.save).toHaveBeenCalledWith(expect.objectContaining({ goalAmount: 150000 }));
+  });
+
+  it('uses the budget multiplier', async () => {
+    const goal = { name: 'Independencia Financiera', goalAmount: 1 };
+    const { service, savingsGoalRepo } = build({
+      goal,
+      budget: { id: 'b1', fiMultiplier: 100, incomeSources: [{ amount: 1000 }] },
+    });
+    await service.addIncome('b1', 'h1', { name: 'x', amount: 1 } as any);
+    expect(savingsGoalRepo.save).toHaveBeenCalledWith(expect.objectContaining({ goalAmount: 100000 }));
+  });
+
+  it('never creates the goal when it does not exist', async () => {
+    const { service, savingsGoalRepo } = build({ goal: null });
+    await service.addIncome('b1', 'h1', { name: 'x', amount: 1 } as any);
+    expect(savingsGoalRepo.save).not.toHaveBeenCalled();
+    expect(savingsGoalRepo.create).not.toHaveBeenCalled();
+  });
+
+  it('leaves the goal untouched when total income is 0', async () => {
+    const goal = { name: 'Independencia Financiera', goalAmount: 5 };
+    const { service, savingsGoalRepo } = build({ goal, budget: { id: 'b1', incomeSources: [] } });
+    await service.removeIncome('i1', 'h1');
+    expect(savingsGoalRepo.save).not.toHaveBeenCalled();
+    expect(goal.goalAmount).toBe(5);
+  });
+
+  it('update with fiMultiplier refreshes the goal', async () => {
+    const goal = { name: 'Independencia Financiera', goalAmount: 1 };
+    const { service, savingsGoalRepo } = build({ goal });
+    await service.update('b1', 'h1', { fiMultiplier: 100 } as any);
+    expect(savingsGoalRepo.save).toHaveBeenCalledWith(expect.objectContaining({ goalAmount: 100000 }));
+  });
+
+  it('update without fiMultiplier does not touch the savings goal repo', async () => {
+    const { service, savingsGoalRepo } = build({ goal: { goalAmount: 1 } });
+    await service.update('b1', 'h1', { name: 'New' } as any);
+    expect(savingsGoalRepo.findOne).not.toHaveBeenCalled();
+    expect(savingsGoalRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('a failing savings goal repo does not fail addIncome', async () => {
+    const { service } = build({ goalRepoFails: true });
+    await expect(service.addIncome('b1', 'h1', { name: 'x', amount: 1 } as any)).resolves.toBeDefined();
+  });
+});
+
+describe('BudgetService shopping budget expense', () => {
+  function build(opts: { catName?: string; categoryCount?: number; flaggedCount?: number; budget?: any } = {}) {
+    const cat = { id: 'c1', name: opts.catName ?? 'Comida', budget: { id: 'b1' } };
+    const qb: any = {
+      innerJoin: jest.fn().mockReturnThis(),
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(cat),
+    };
+    const categoryRepo = { createQueryBuilder: jest.fn(() => qb) };
+    const expenseRepo: any = {
+      create: jest.fn((x) => x),
+      save: jest.fn(async (x) => x),
+      count: jest.fn(async (arg: any) =>
+        arg?.where?.isShoppingBudget ? opts.flaggedCount ?? 0 : opts.categoryCount ?? 0,
+      ),
+      createQueryBuilder: jest.fn(() => ({
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue({ id: 'e1', name: 'x' }),
+      })),
+    };
+    const budgetRepo = { find: jest.fn().mockResolvedValue(opts.budget ? [opts.budget] : []) };
+    const sendBudgetAlert = jest.fn();
+    const createIfNotRecent = jest.fn();
+    const noop = {} as any;
+    const service = new BudgetService(
+      budgetRepo as any,
+      categoryRepo as any,
+      expenseRepo,
+      noop,
+      noop,
+      { sendBudgetAlert } as any,
+      { createIfNotRecent } as any,
+      { getHouseAdminEmails: jest.fn().mockResolvedValue([]) } as any,
+    );
+    return { service, expenseRepo, budgetRepo, sendBudgetAlert, createIfNotRecent };
+  }
+
+  const dto: any = { name: 'Super', amount: 100 };
+
+  it.each(['Comida', ' comida '])('flags the first expense in category "%s"', async (catName) => {
+    const { service, expenseRepo } = build({ catName });
+    await service.addExpense('c1', 'h1', dto);
+    expect(expenseRepo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ isShoppingBudget: true, name: 'Presupuesto compra', amount: 100 }),
+    );
+  });
+
+  it('does not flag the second expense in Comida', async () => {
+    const { service, expenseRepo } = build({ categoryCount: 1 });
+    await service.addExpense('c1', 'h1', dto);
+    const saved = expenseRepo.save.mock.calls[0][0];
+    expect(saved.isShoppingBudget).toBeFalsy();
+    expect(saved.name).toBe('Super');
+  });
+
+  it('does not flag the first expense in another category', async () => {
+    const { service, expenseRepo } = build({ catName: 'Hogar' });
+    await service.addExpense('c1', 'h1', dto);
+    const saved = expenseRepo.save.mock.calls[0][0];
+    expect(saved.isShoppingBudget).toBeFalsy();
+    expect(saved.name).toBe('Super');
+  });
+
+  it('does not flag when the budget already has a flagged expense', async () => {
+    const { service, expenseRepo } = build({ flaggedCount: 1 });
+    await service.addExpense('c1', 'h1', dto);
+    const saved = expenseRepo.save.mock.calls[0][0];
+    expect(saved.isShoppingBudget).toBeFalsy();
+    expect(saved.name).toBe('Super');
+  });
+
+  it('updateExpense cannot set isShoppingBudget', async () => {
+    const { service, expenseRepo } = build();
+    await service.updateExpense('e1', 'h1', { name: 'y', isShoppingBudget: true } as any);
+    const saved = expenseRepo.save.mock.calls[0][0];
+    expect(saved.name).toBe('y');
+    expect(saved.isShoppingBudget).toBeUndefined();
+  });
+
+  it('addExpense ignores a client-sent isShoppingBudget', async () => {
+    const { service, expenseRepo } = build({ catName: 'Hogar' });
+    await service.addExpense('c1', 'h1', { ...dto, isShoppingBudget: true });
+    expect(expenseRepo.save.mock.calls[0][0].isShoppingBudget).toBeFalsy();
+  });
+
+  describe('getShoppingBudget', () => {
+    it('returns the monthly amount of the flagged expense', async () => {
+      const { service, budgetRepo } = build({
+        budget: {
+          categories: [
+            { expenses: [{ amount: '5', periodicity: 'monthly' }, { amount: '100', periodicity: 'weekly', isShoppingBudget: true }] },
+          ],
+        },
+      });
+      expect(await service.getShoppingBudget('h1')).toBe(433.33);
+      expect(budgetRepo.find).toHaveBeenCalledWith({
+        where: { house: { id: 'h1' } },
+        order: { createdAt: 'DESC' },
+        take: 1,
+        relations: ['categories', 'categories.expenses'],
+      });
+    });
+
+    it('returns null without a budget', async () => {
+      const { service } = build({ budget: null });
+      expect(await service.getShoppingBudget('h1')).toBeNull();
+    });
+
+    it('returns null when no expense is flagged', async () => {
+      const { service } = build({ budget: { categories: [{ expenses: [{ amount: '5', periodicity: 'monthly' }] }] } });
+      expect(await service.getShoppingBudget('h1')).toBeNull();
+    });
+
+    it('has no notification side effects', async () => {
+      const { service, sendBudgetAlert, createIfNotRecent } = build({ budget: { categories: [] } });
+      await service.getShoppingBudget('h1');
+      expect(sendBudgetAlert).not.toHaveBeenCalled();
+      expect(createIfNotRecent).not.toHaveBeenCalled();
+    });
+  });
+});

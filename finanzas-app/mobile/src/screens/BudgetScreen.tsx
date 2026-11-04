@@ -10,8 +10,9 @@ import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
 import { fonts, radius, Tone, toneInk, toneTint } from '../theme/tokens';
 import type { ThemeColors } from '../theme/tokens';
-import { ActionBar, Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
+import { ActionBar, Button, Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
 import CategoryNameModal from './budget/CategoryNameModal';
+import PlanParamsModal from './budget/PlanParamsModal';
 import { categoryMonthlyTotal } from './budget/shared';
 import { useBudgetQuery } from './budget/useBudgetQuery';
 
@@ -74,6 +75,10 @@ const createStyles = (c: ThemeColors) =>
     incomeTitle: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 15 },
     incomeMeta: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
     incomeTotal: { fontFamily: fonts.title, fontSize: 16 },
+    planCard: { gap: 12 },
+    planRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    planLabel: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 13, flex: 1 },
+    planValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15, flexShrink: 1 },
   });
 
 function CategoryCard({ cat, total, onPress }: { cat: BudgetCategory; total: number; onPress: () => void }) {
@@ -113,6 +118,7 @@ export default function BudgetScreen() {
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<NativeStackNavigationProp<BudgetStackParamList>>();
   const [addingCategory, setAddingCategory] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(false);
   const { data: budget, isLoading, isError, refetch } = useBudgetQuery();
 
   const { refreshing, onRefresh } = useManualRefresh(refetch);
@@ -179,6 +185,16 @@ export default function BudgetScreen() {
   const categories = budget.categories ?? [];
   const incomeSources = budget.incomeSources ?? [];
   const incomeSourcesTotal = incomeSources.reduce((sum, i) => sum + Number(i.amount), 0);
+  const plan = summary?.plan ?? null;
+  const planRows: { label: string; value: number }[] = plan
+    ? [
+        { label: 'Meta FI', value: plan.fiTarget },
+        { label: 'Inversión mín./mes', value: plan.minMonthlyInvestment },
+        { label: 'Fondo de emergencia', value: plan.emergencyFundTarget },
+        { label: 'Ocio/mes', value: plan.entertainmentBudget },
+        { label: 'Tope gastos fijos', value: plan.fixedExpensesCap },
+      ]
+    : [];
   const categoriesTotal = categories.reduce((s, cat) => s + categoryMonthlyTotal(cat), 0);
 
   return (
@@ -264,8 +280,23 @@ export default function BudgetScreen() {
         </Card>
       </Reveal>
 
+      {plan && (
+        <Reveal index={4}>
+          <Card style={styles.planCard}>
+            <Text style={styles.sectionTitle}>Plan financiero</Text>
+            {planRows.map((row) => (
+              <View key={row.label} style={styles.planRow}>
+                <Text style={styles.planLabel}>{row.label}</Text>
+                <Text style={styles.planValue} numberOfLines={1} adjustsFontSizeToFit>{fmt(row.value)}</Text>
+              </View>
+            ))}
+            <Button label="Editar parámetros" icon="options-outline" variant="secondary" onPress={() => setEditingPlan(true)} />
+          </Card>
+        </Reveal>
+      )}
+
       {categories.length > 0 && (
-        <Reveal index={4} style={styles.section}>
+        <Reveal index={5} style={styles.section}>
           <Text style={styles.sectionTitle}>Categorías</Text>
           <View style={styles.list}>
             {categories.map((cat) => (
@@ -283,6 +314,7 @@ export default function BudgetScreen() {
 
       <ActionBar label="Nueva categoría" onPress={() => setAddingCategory(true)} />
       <CategoryNameModal visible={addingCategory} budgetId={budget.id} onClose={() => setAddingCategory(false)} />
+      {plan && <PlanParamsModal visible={editingPlan} budget={budget} onClose={() => setEditingPlan(false)} />}
     </Screen>
   );
 }

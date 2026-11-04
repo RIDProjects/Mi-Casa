@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { HouseCurrenciesController } from './house-currencies.controller';
 import { HouseCurrenciesService } from './house-currencies.service';
 import { ElToqueRatesService } from './eltoque-rates.service';
@@ -58,12 +58,23 @@ describe('HouseCurrenciesController (IDOR regression)', () => {
       getStatus: jest.fn().mockResolvedValue({ enabled: true, available: true }),
       setAuto: jest.fn().mockResolvedValue(undefined),
       refreshHouse: jest.fn().mockResolvedValue({ updated: ['USD'] }),
+      isManaged: jest.fn().mockResolvedValue(false),
     } as unknown as jest.Mocked<ElToqueRatesService>;
 
     controller = new HouseCurrenciesController(svc, eltoque);
   });
 
   describe('elToque automatic rates', () => {
+    it('upsertRate rejects with 400 while elToque manages that pair, and saves nothing', async () => {
+      eltoque.isManaged.mockResolvedValue(true);
+      const dto = { fromCurrency: 'USD', toCurrency: 'CUP', rate: 500 } as any;
+      await expect(
+        controller.upsertRate(HOUSE_A, dto, { user: houseAdminOfHouseA } as any),
+      ).rejects.toThrow(BadRequestException);
+      expect(eltoque.isManaged).toHaveBeenCalledWith(HOUSE_A, 'USD', 'CUP');
+      expect(svc.upsertRate).not.toHaveBeenCalled();
+    });
+
     it('blocks a foreign house and non-admin members from changing or refreshing', async () => {
       expect(() => controller.getAutoRates(HOUSE_B, { user: userOfHouseA } as any)).toThrow(ForbiddenException);
       await expect(

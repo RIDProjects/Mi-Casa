@@ -7,7 +7,7 @@ import { fonts } from '../theme/tokens';
 import DashboardScreen from '../screens/DashboardScreen';
 import GastosStack from './GastosStack';
 import BudgetStack from './BudgetStack';
-import MetasStack from './MetasStack';
+import DebtsStack from './DebtsStack';
 import MasStack from './MasStack';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -18,7 +18,7 @@ const ICONS: Record<TabName, { outline: keyof typeof Ionicons.glyphMap; filled: 
   Dashboard:   { outline: 'home-outline',      filled: 'home' },
   Expenses:    { outline: 'cart-outline',       filled: 'cart' },
   Presupuesto: { outline: 'pie-chart-outline',  filled: 'pie-chart' },
-  Metas:       { outline: 'trophy-outline',     filled: 'trophy' },
+  Deudas:      { outline: 'people-outline',     filled: 'people' },
   Mas:         { outline: 'ellipsis-horizontal-circle-outline', filled: 'ellipsis-horizontal-circle' },
 };
 
@@ -26,7 +26,7 @@ const TAB_LABELS: Record<TabName, string> = {
   Dashboard:   'Inicio',
   Expenses:    'Gastos',
   Presupuesto: 'Presupuesto',
-  Metas:       'Metas',
+  Deudas:      'Deudas',
   Mas:         'Más',
 };
 
@@ -66,7 +66,7 @@ export default function MainTabs() {
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Expenses" component={GastosStack} />
       <Tab.Screen name="Presupuesto" component={BudgetStack} />
-      <Tab.Screen name="Metas" component={MetasStack} />
+      <Tab.Screen name="Deudas" component={DebtsStack} />
       <Tab.Screen name="Mas" component={MasStack} />
     </Tab.Navigator>
   );

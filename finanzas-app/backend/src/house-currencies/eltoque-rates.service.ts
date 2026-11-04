@@ -9,7 +9,7 @@ import { HouseCurrenciesService } from './house-currencies.service';
 const ELTOQUE_URL = 'https://tasas.eltoque.com/v1/trmi';
 const LOCAL_CODE = 'CUP';
 // elToque quotes the euro as "ECU"; every other key we use is already ISO.
-const KEY_TO_ISO: Record<string, string> = { USD: 'USD', ECU: 'EUR', MLC: 'MLC' };
+const KEY_TO_ISO: Record<string, string> = { USD: 'USD', ECU: 'EUR' };
 
 export const ELTOQUE_FETCHER = 'ELTOQUE_FETCHER';
 export type ElToqueFetcher = () => Promise<unknown>;
@@ -71,12 +71,13 @@ export class ElToqueRatesService {
   async refreshHouse(houseId: string): Promise<{ updated: string[] }> {
     if (!this.available) return { updated: [] };
     const active = await this.currencies.findByHouse(houseId);
-    const local = active.find((c) => c.isLocal);
-    if (local?.currencyCode !== LOCAL_CODE) return { updated: [] };
+    // CUP has to be an active currency, but not necessarily the local one: when another currency
+    // (e.g. USD) is local, `X → CUP` is still stored and `CUP → X` is derived as its inverse.
+    if (!active.some((c) => c.currencyCode === LOCAL_CODE)) return { updated: [] };
 
     const rates = parseElToqueRates(await this.fetchPayload());
     const updated: string[] = [];
-    for (const c of active.filter((x) => !x.isLocal && rates[x.currencyCode])) {
+    for (const c of active.filter((x) => x.currencyCode !== LOCAL_CODE && rates[x.currencyCode])) {
       await this.currencies.upsertRate(houseId, {
         fromCurrency: c.currencyCode,
         toCurrency: LOCAL_CODE,
@@ -93,8 +94,25 @@ export class ElToqueRatesService {
     await this.houses.update({ id: houseId }, { autoExchangeRates: enabled });
   }
 
-  async getStatus(houseId: string): Promise<{ enabled: boolean; available: boolean }> {
+  /** Currencies whose `→ CUP` rate elToque keeps up to date (so manual edits are blocked). */
+  private async managedCodes(houseId: string): Promise<{ enabled: boolean; codes: string[] }> {
     const house = await this.houses.findOne({ where: { id: houseId } });
-    return { enabled: house?.autoExchangeRates ?? true, available: this.available };
+    const enabled = house?.autoExchangeRates ?? true;
+    return { enabled, codes: enabled && this.available ? Object.values(KEY_TO_ISO) : [] };
+  }
+
+  /** True while the daily sync owns `from → to`: auto on, token configured, CUP target, quoted currency. */
+  async isManaged(houseId: string, from: string, to: string): Promise<boolean> {
+    const { codes } = await this.managedCodes(houseId);
+    if (to === LOCAL_CODE) return codes.includes(from);
+    // The inverse `CUP → X` is derived from the stored `X → CUP`, so it is managed too.
+    return from === LOCAL_CODE && codes.includes(to);
+  }
+
+  async getStatus(
+    houseId: string,
+  ): Promise<{ enabled: boolean; available: boolean; managedCodes: string[] }> {
+    const { enabled, codes } = await this.managedCodes(houseId);
+    return { enabled, available: this.available, managedCodes: codes };
   }
 }

@@ -69,4 +69,9 @@ export const parseAmount = (raw: string): number => (raw.trim() === '' ? NaN : N
 export const invalidateBudget = (qc: QueryClient) => {
   qc.invalidateQueries({ queryKey: ['budget'] });
   qc.invalidateQueries({ queryKey: ['summary'] });
+  // Modules derived from the budget (one-way: budget -> these, never the reverse).
+  qc.invalidateQueries({ queryKey: ['emergency-fund'] });
+  qc.invalidateQueries({ queryKey: ['emergency-fund-coverage'] });
+  qc.invalidateQueries({ queryKey: ['savings-goals'] });
+  qc.invalidateQueries({ queryKey: ['purchaseLists'] });
 };
