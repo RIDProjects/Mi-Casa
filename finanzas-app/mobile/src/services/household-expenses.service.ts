@@ -1,6 +1,6 @@
 import apiClient from './apiClient';
 import {
-  HouseholdExpense,
+  HouseholdExpenseSaved,
   CreateHouseholdExpenseDto,
   HouseholdExpensesMonth,
 } from '../types';
@@ -13,16 +13,16 @@ export const householdExpensesService = {
     return res.data;
   },
 
-  create: async (data: CreateHouseholdExpenseDto): Promise<HouseholdExpense> => {
-    const res = await apiClient.post<HouseholdExpense>('/household-expenses', data);
+  create: async (data: CreateHouseholdExpenseDto): Promise<HouseholdExpenseSaved> => {
+    const res = await apiClient.post<HouseholdExpenseSaved>('/household-expenses', data);
     return res.data;
   },
 
   update: async (
     id: string,
     data: Partial<CreateHouseholdExpenseDto>,
-  ): Promise<HouseholdExpense> => {
-    const res = await apiClient.put<HouseholdExpense>(`/household-expenses/${id}`, data);
+  ): Promise<HouseholdExpenseSaved> => {
+    const res = await apiClient.put<HouseholdExpenseSaved>(`/household-expenses/${id}`, data);
     return res.data;
   },
 
