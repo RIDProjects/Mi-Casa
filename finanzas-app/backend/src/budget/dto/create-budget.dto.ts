@@ -14,4 +14,15 @@ export class CreateBudgetDto {
   @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100) savingsTargetPercent?: number;
 
   @IsOptional() @IsString() rule?: string;
+
+  // Plan overrides: null resets a value to its default.
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(1) @Max(1000) fiMultiplier?: number | null;
+
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100) minInvestmentPercent?: number | null;
+
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(120) emergencyFundMonths?: number | null;
+
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100) entertainmentPercent?: number | null;
+
+  @IsOptional() @Type(() => Number) @IsNumber() @Min(0) @Max(100) fixedExpensesCapPercent?: number | null;
 }

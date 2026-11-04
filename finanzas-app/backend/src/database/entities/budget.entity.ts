@@ -40,6 +40,22 @@ export class Budget {
   @Column({ type: 'varchar', length: 16, default: '50-30-20' })
   rule: string;
 
+  // Financial plan overrides. NULL = use the default derived from the income / rule.
+  @Column('decimal', { precision: 7, scale: 2, nullable: true })
+  fiMultiplier: number | null;
+
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
+  minInvestmentPercent: number | null;
+
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
+  emergencyFundMonths: number | null;
+
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
+  entertainmentPercent: number | null;
+
+  @Column('decimal', { precision: 5, scale: 2, nullable: true })
+  fixedExpensesCapPercent: number | null;
+
   @Index()
   @ManyToOne(() => House, { nullable: true })
   @JoinColumn({ name: 'house_id' })
@@ -109,6 +125,9 @@ export class BudgetExpense {
 
   @Column({ default: false })
   isAntExpense: boolean;
+
+  @Column({ default: false })
+  isShoppingBudget: boolean;
 
   @Index()
   @ManyToOne(() => BudgetCategory, cat => cat.expenses, { onDelete: 'CASCADE' })
