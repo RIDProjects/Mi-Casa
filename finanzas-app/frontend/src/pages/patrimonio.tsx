@@ -51,8 +51,6 @@ export default function PatrimonioPage() {
   const { activeCurrencyCode, rates, currencies } = useCurrencyStore();
   const localCurrency = currencies.find(c => c.isLocal);
   const activeCurrency = currencies.find(c => c.currencyCode === activeCurrencyCode) ?? localCurrency;
-  // Manual USD quote override; empty = use the configured house rate.
-  const [usdRate, setUsdRate] = useState<number | null>(null);
   const [historyMonths, setHistoryMonths] = useState(12);
 
   const { data: cards = [], isLoading: loadingCards, isError: isErrorCards } = useQuery(
@@ -94,12 +92,8 @@ export default function PatrimonioPage() {
   // no usable rate, show the amounts unconverted in the local currency.
   const requestedCode = activeCurrency?.currencyCode ?? localCurrency?.currencyCode ?? '';
   const localCode = localCurrency?.currencyCode ?? '';
-  const resolvedRate = resolveRate(
-    requestedCode,
-    localCode,
-    rates,
-    requestedCode === 'USD' ? usdRate : null,
-  );
+  // The rate is the house's day rate (kept up to date from elToque); it is never typed in here.
+  const resolvedRate = resolveRate(requestedCode, localCode, rates);
   const canConvert = resolvedRate !== null;
   const divider = resolvedRate ?? 1;
   const displayCurrency = canConvert ? activeCurrency : localCurrency ?? activeCurrency;
@@ -182,18 +176,10 @@ export default function PatrimonioPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencyToggle />
-          {requestedCode === 'USD' && requestedCode !== localCode && (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-on-surface-variant">Cotización:</span>
-              <input
-                type="number"
-                min="1"
-                className="input py-1.5 text-sm w-28"
-                value={usdRate ?? rates['USD'] ?? ''}
-                placeholder="Sin cotización"
-                onChange={e => setUsdRate(Number(e.target.value) || null)}
-              />
-            </div>
+          {canConvert && requestedCode !== localCode && (
+            <span className="text-xs text-on-surface-variant">
+              Tasa del día: 1 {requestedCode} = {fmt(resolvedRate)} {localCode}
+            </span>
           )}
           <button
             onClick={() => window.print()}
