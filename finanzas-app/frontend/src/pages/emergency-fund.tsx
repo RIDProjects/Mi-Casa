@@ -78,6 +78,12 @@ export default function EmergencyFundPage() {
     onSettled: () => { qc.invalidateQueries('emergencyFunds'); },
   });
 
+  const syncMut = useMutation((id: string) => emergencyFundAPI.update(id, { syncWithBudget: true }), {
+    onSuccess: () => { toast.success('Fondo sincronizado con el presupuesto'); },
+    onError: (e: any) => { toast.error(getErrorMessage(e)); },
+    onSettled: () => { qc.invalidateQueries('emergencyFunds'); },
+  });
+
   const updateBalanceMut = useMutation(
     ({ id, balance }: { id: string; balance: number }) => emergencyFundAPI.update(id, { currentBalance: balance }),
     {
@@ -187,6 +193,14 @@ export default function EmergencyFundPage() {
                     )}
                   </div>
                 </div>
+                {!f.budgetSynced && canEdit && (
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-surface-container px-3 py-2" onClick={e => e.stopPropagation()}>
+                    <p className="text-xs text-on-surface-variant">Este fondo usa categorías manuales. Puedes tomarlas de los gastos fijos del presupuesto.</p>
+                    <button type="button" disabled={syncMut.isLoading} onClick={() => syncMut.mutate(f.id)} className="btn-secondary text-xs py-1.5 px-3 shrink-0 disabled:opacity-50">
+                      Sincronizar con el presupuesto
+                    </button>
+                  </div>
+                )}
                 {fCalc && (
                   <div className="mt-2 text-xs text-outline">
                     <p>Óptimo: <strong className="text-on-surface">{cfmt(fCalc.optimalFund)}</strong></p>

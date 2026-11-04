@@ -51,6 +51,20 @@ describe('EmergencyFundPage budget sync', () => {
     ));
   });
 
+  it('offers to sync a manual fund with one click and changes nothing else', async () => {
+    (emergencyFundAPI.getAll as jest.Mock).mockResolvedValue({ data: [fund()] });
+    renderPage();
+    await userEvent.click(await screen.findByRole('button', { name: /sincronizar con el presupuesto/i }));
+    await waitFor(() => expect(emergencyFundAPI.update).toHaveBeenCalledWith('f1', { syncWithBudget: true }));
+  });
+
+  it('does not offer the sync on a fund that is already synced', async () => {
+    (emergencyFundAPI.getAll as jest.Mock).mockResolvedValue({ data: [fund({ syncWithBudget: true, budgetSynced: true })] });
+    renderPage();
+    await screen.findByText(/Sincronizado con el presupuesto/i);
+    expect(screen.queryByRole('button', { name: /sincronizar con el presupuesto/i })).toBeNull();
+  });
+
   it('makes the categories read-only and shows a badge while synced', async () => {
     (emergencyFundAPI.getAll as jest.Mock).mockResolvedValue({
       data: [fund({ syncWithBudget: true, budgetSynced: true })],
