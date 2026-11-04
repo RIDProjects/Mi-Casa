@@ -15,7 +15,7 @@ export class ExchangeRate {
   @PrimaryGeneratedColumn('uuid') id: string;
   @Column() fromCurrency: string;
   @Column() toCurrency: string;
-  @Column('decimal', { precision: 15, scale: 4 }) rate: number;
+  @Column('decimal', { precision: 24, scale: 12 }) rate: number;
   @Column({ type: 'date' }) date: string;
   @Column({ nullable: true }) source: string | null;
   @Column({ default: 'oficial' }) rateType: string; // 'oficial' | 'informal' | 'cadeca'

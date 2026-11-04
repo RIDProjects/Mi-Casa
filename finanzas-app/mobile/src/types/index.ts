@@ -225,6 +225,9 @@ export interface PurchaseList {
   description: string | null;
   budget: number;
   localCurrencyCode: string | null;
+  syncWithBudget?: boolean;
+  /** True when the budget is derived live from the budget module. */
+  budgetSynced?: boolean;
   items: PurchaseItem[];
   createdAt: string;
   updatedAt: string;
@@ -330,6 +333,12 @@ export interface Budget {
   year: number | null;
   savingsTargetPercent: number;
   rule: '50-30-20' | '70-20-10';
+  /** Plan overrides; null means "use the default". May arrive as decimal strings. */
+  fiMultiplier?: number | string | null;
+  minInvestmentPercent?: number | string | null;
+  emergencyFundMonths?: number | string | null;
+  entertainmentPercent?: number | string | null;
+  fixedExpensesCapPercent?: number | string | null;
   incomeSources: BudgetIncomeSource[];
   categories: BudgetCategory[];
   summary: BudgetSummary;
@@ -470,6 +479,9 @@ export interface EmergencyFund {
   minimumMonths: number;
   savingPeriodMonths: number;
   currentBalance?: number | string | null;
+  syncWithBudget?: boolean;
+  /** True when categories and target months are derived live from the budget. */
+  budgetSynced?: boolean;
   categories?: EmergencyFundCategory[];
   calculations?: EmergencyFundCalculations;
 }

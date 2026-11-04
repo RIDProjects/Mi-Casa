@@ -73,6 +73,21 @@ describe('FondoEmergenciaScreen', () => {
     expect(await screen.findByText('Mi Fondo de Emergencia')).toBeTruthy();
   });
 
+  it('flags a fund that is synced with the budget', async () => {
+    svc.getAll.mockResolvedValue([{ ...fund, budgetSynced: true }]);
+    svc.getCoverage.mockResolvedValue(coverage);
+    renderScreen();
+    expect(await screen.findByText('Sincronizado con el presupuesto')).toBeTruthy();
+  });
+
+  it('does not show the budget badge for a manual fund', async () => {
+    svc.getAll.mockResolvedValue([fund]);
+    svc.getCoverage.mockResolvedValue(coverage);
+    renderScreen();
+    await screen.findByText('Mi Fondo de Emergencia');
+    expect(screen.queryByText('Sincronizado con el presupuesto')).toBeNull();
+  });
+
   it('shows the empty state when there is no calculator', async () => {
     svc.getAll.mockResolvedValue([]);
     svc.getCoverage.mockResolvedValue({ ...coverage, balance: 0, monthsCovered: 0, status: 'critical' });

@@ -28,6 +28,8 @@ interface Props {
   /** Optional destructive action shown under the form (edit mode). */
   onDelete?: () => void;
   deleteLabel?: string;
+  /** Neutral styling for non-destructive actions in the delete slot (e.g. restoring defaults). */
+  deleteTone?: 'danger' | 'neutral';
   children: React.ReactNode;
 }
 
@@ -42,6 +44,7 @@ export default function FormModal({
   onClose,
   onDelete,
   deleteLabel = 'Eliminar',
+  deleteTone = 'danger',
   children,
 }: Props) {
   const styles = useThemedStyles(createStyles);
@@ -62,7 +65,13 @@ export default function FormModal({
               <Button label={submitLabel} icon="checkmark-outline" onPress={onSubmit} loading={submitting} style={styles.action} />
             </View>
             {onDelete ? (
-              <Button label={deleteLabel} icon="trash-outline" variant="danger" onPress={onDelete} disabled={submitting} />
+              <Button
+                label={deleteLabel}
+                icon={deleteTone === 'danger' ? 'trash-outline' : 'refresh-outline'}
+                variant={deleteTone === 'danger' ? 'danger' : 'secondary'}
+                onPress={onDelete}
+                disabled={submitting}
+              />
             ) : null}
           </Card>
         </View>

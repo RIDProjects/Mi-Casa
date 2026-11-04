@@ -32,6 +32,7 @@ const defaultForm = {
   targetMonths: 6,
   minimumMonths: 3,
   savingPeriodMonths: 24,
+  syncWithBudget: false,
   categories: DEFAULT_CATEGORIES,
 };
 
@@ -97,6 +98,7 @@ export default function EmergencyFundPage() {
       targetMonths: fund.targetMonths,
       minimumMonths: fund.minimumMonths,
       savingPeriodMonths: fund.savingPeriodMonths,
+      syncWithBudget: !!fund.syncWithBudget,
       categories: fund.categories?.map((c: any) => ({ name: c.name, monthlyAmount: Number(c.monthlyAmount) })) || DEFAULT_CATEGORIES,
     });
     setEditFund(fund);
@@ -166,6 +168,11 @@ export default function EmergencyFundPage() {
                   <div className="flex items-center gap-2">
                     <PiggyBank size={18} className="text-primary" />
                     <span className="text-sm font-semibold text-on-surface">{f.name}</span>
+                    {f.budgetSynced && (
+                      <span className="ml-2 px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-upper text-label-upper">
+                        Sincronizado con el presupuesto
+                      </span>
+                    )}
                   </div>
                   <div onClick={e => e.stopPropagation()}>
                     {(canEdit || canDelete) ? (
@@ -346,9 +353,12 @@ export default function EmergencyFundPage() {
           />
           <div className="grid grid-cols-3 gap-4">
             <Input
+              id="fund-target-months"
               label="Meses óptimo"
               type="number"
               min="1"
+              disabled={!!form.syncWithBudget}
+              hint={form.syncWithBudget ? 'Se toma del presupuesto' : undefined}
               value={form.targetMonths}
               onChange={e => setForm({ ...form, targetMonths: Number(e.target.value) })}
             />
@@ -368,17 +378,35 @@ export default function EmergencyFundPage() {
             />
           </div>
 
+          <div className="flex items-start gap-3 rounded-xl border border-outline-variant p-3">
+            <input
+              id="fund-sync-budget"
+              type="checkbox"
+              className="mt-1 accent-primary"
+              checked={!!form.syncWithBudget}
+              onChange={e => setForm({ ...form, syncWithBudget: e.target.checked })}
+            />
+            <label htmlFor="fund-sync-budget" className="text-sm text-on-surface">
+              Sincronizar con el presupuesto
+              <span className="block text-xs text-on-surface-variant">
+                Los gastos fijos del presupuesto reemplazan las categorías y se actualizan solos. Tus categorías manuales se conservan si lo desactivas.
+              </span>
+            </label>
+          </div>
+
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-on-surface">Gastos mensuales por categoría</label>
-              <button type="button" onClick={addCategory} className="text-sm text-primary hover:text-info-ink font-medium">+ Agregar</button>
+              {!form.syncWithBudget && (
+                <button type="button" onClick={addCategory} className="text-sm text-primary hover:text-info-ink font-medium">+ Agregar</button>
+              )}
             </div>
             <div className="space-y-2 max-h-72 overflow-y-auto border border-outline-variant rounded-xl p-3">
               {form.categories.map((cat: any, idx: number) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <input className="input flex-1 text-sm" placeholder="Categoría" value={cat.name} onChange={e => updateCategory(idx, 'name', e.target.value)} />
-                  <input type="number" step="0.01" min="0" className="input w-32 text-sm" placeholder="0.00" value={cat.monthlyAmount} onChange={e => updateCategory(idx, 'monthlyAmount', Number(e.target.value))} />
-                  <button type="button" onClick={() => removeCategory(idx)} className="text-danger-ink hover:text-danger-ink shrink-0 p-1">✕</button>
+                  <input disabled={!!form.syncWithBudget} className="input flex-1 text-sm" placeholder="Categoría" value={cat.name} onChange={e => updateCategory(idx, 'name', e.target.value)} />
+                  <input disabled={!!form.syncWithBudget} type="number" step="0.01" min="0" className="input w-32 text-sm" placeholder="0.00" value={cat.monthlyAmount} onChange={e => updateCategory(idx, 'monthlyAmount', Number(e.target.value))} />
+                  <button type="button" disabled={!!form.syncWithBudget} onClick={() => removeCategory(idx)} className="text-danger-ink hover:text-danger-ink shrink-0 p-1 disabled:opacity-40">✕</button>
                 </div>
               ))}
             </div>

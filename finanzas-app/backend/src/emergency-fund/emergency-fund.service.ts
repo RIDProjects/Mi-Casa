@@ -2,8 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EmergencyFund, ExpenseCategory } from '../database/entities/emergency-fund.entity';
+import { BudgetService } from '../budget/budget.service';
 import { TransactionsService } from '../transactions/transactions.service';
 import { TransactionType } from '../database/entities/transaction.entity';
+
+const DEFAULT_EMERGENCY_FUND_MONTHS = 6;
 
 @Injectable()
 export class EmergencyFundService {
@@ -11,6 +14,7 @@ export class EmergencyFundService {
     @InjectRepository(EmergencyFund) private fundRepo: Repository<EmergencyFund>,
     @InjectRepository(ExpenseCategory) private catRepo: Repository<ExpenseCategory>,
     private readonly transactionsService: TransactionsService,
+    private readonly budgetService: BudgetService,
   ) {}
 
   async findAll(houseId?: string) {
@@ -20,7 +24,10 @@ export class EmergencyFundService {
       relations: ['categories'],
       order: { createdAt: 'DESC' },
     });
-    return funds.map(f => ({ ...f, calculations: this.calculate(f) }));
+    const basis = funds.some(f => f.syncWithBudget)
+      ? await this.budgetService.getEmergencyFundBasis(houseId)
+      : null;
+    return funds.map(f => this.withBudgetSync(f, basis));
   }
 
   async findOne(id: string, houseId: string) {
@@ -29,7 +36,10 @@ export class EmergencyFundService {
       relations: ['categories'],
     });
     if (!fund) throw new NotFoundException('Fondo no encontrado');
-    return { ...fund, calculations: this.calculate(fund) };
+    const basis = fund.syncWithBudget
+      ? await this.budgetService.getEmergencyFundBasis(houseId)
+      : null;
+    return this.withBudgetSync(fund, basis);
   }
 
   async create(dto: any, houseId: string) {
@@ -53,7 +63,8 @@ export class EmergencyFundService {
     Object.assign(fund, fundData);
     await this.fundRepo.save(fund);
 
-    if (categories) {
+    // Synced funds derive their categories from the budget; stored ones are left untouched.
+    if (categories && !fund.syncWithBudget) {
       await this.catRepo.delete({ fund: { id } });
       const cats = categories.map((c, i) =>
         this.catRepo.create({ ...c, fund, sortOrder: i })
@@ -113,6 +124,22 @@ export class EmergencyFundService {
       targetMonths: 6,
       status,
     };
+  }
+
+  /** Overlays budget-derived categories/target months on a synced fund without touching stored data. */
+  private withBudgetSync(
+    fund: EmergencyFund,
+    basis: Awaited<ReturnType<BudgetService['getEmergencyFundBasis']>>,
+  ) {
+    if (!fund.syncWithBudget || !basis || basis.lines.length === 0) {
+      return { ...fund, budgetSynced: false, calculations: this.calculate(fund) };
+    }
+    const resolved = {
+      ...fund,
+      categories: basis.lines.map(l => ({ name: l.name, monthlyAmount: l.monthlyAmount })),
+      targetMonths: Math.max(1, Math.round(basis.emergencyFundMonths ?? DEFAULT_EMERGENCY_FUND_MONTHS)),
+    } as EmergencyFund;
+    return { ...resolved, budgetSynced: true, calculations: this.calculate(resolved) };
   }
 
   // Core business logic replicating Excel formulas:

@@ -5,7 +5,6 @@ describe('parseElToqueRates', () => {
     expect(parseElToqueRates({ tasas: { USD: 520, ECU: 560.5, MLC: 400, BTC: 'x', TRX: 0 } })).toEqual({
       USD: 520,
       EUR: 560.5,
-      MLC: 400,
     });
   });
 
@@ -50,7 +49,16 @@ describe('ElToqueRatesService', () => {
     expect(result).toEqual({ updated: ['USD', 'EUR'] });
   });
 
-  it('does nothing when the local currency is not CUP', async () => {
+  it('keeps syncing <foreign> → CUP when another currency (USD) is local, as long as CUP is active', async () => {
+    currencies.findByHouse.mockResolvedValue([cur('USD', true), cur('CUP'), cur('EUR')]);
+    expect(await service.refreshHouse(HOUSE)).toEqual({ updated: ['USD', 'EUR'] });
+    expect(currencies.upsertRate).toHaveBeenCalledWith(HOUSE, {
+      fromCurrency: 'USD', toCurrency: 'CUP', rate: 520, rateType: 'informal', source: 'eltoque',
+    });
+    expect(currencies.upsertRate).not.toHaveBeenCalledWith(HOUSE, expect.objectContaining({ fromCurrency: 'CUP' }));
+  });
+
+  it('does nothing when CUP is not an active currency of the house', async () => {
     currencies.findByHouse.mockResolvedValue([cur('USD', true), cur('EUR')]);
     expect(await service.refreshHouse(HOUSE)).toEqual({ updated: [] });
     expect(fetchPayload).not.toHaveBeenCalled();
@@ -75,6 +83,39 @@ describe('ElToqueRatesService', () => {
     houses.findOne.mockResolvedValue({ id: HOUSE, autoExchangeRates: false });
     await service.setAuto(HOUSE, false);
     expect(houses.update).toHaveBeenCalledWith({ id: HOUSE }, { autoExchangeRates: false });
-    expect(await service.getStatus(HOUSE)).toEqual({ enabled: false, available: true });
+    expect(await service.getStatus(HOUSE)).toEqual({ enabled: false, available: true, managedCodes: [] });
+  });
+
+  describe('isManaged (manual edits blocked while elToque keeps the rate)', () => {
+    beforeEach(() => houses.findOne.mockResolvedValue({ id: HOUSE, autoExchangeRates: true }));
+
+    it.each(['USD', 'EUR'])('is managed for %s → CUP when auto is on and the token exists', async (code) => {
+      expect(await service.isManaged(HOUSE, code, 'CUP')).toBe(true);
+    });
+
+    it.each(['USD', 'EUR'])('also blocks the inverse CUP → %s (CUP kept in sync even when USD is local)', async (code) => {
+      expect(await service.isManaged(HOUSE, 'CUP', code)).toBe(true);
+    });
+
+    it('is not managed for other currencies or other targets', async () => {
+      expect(await service.isManaged(HOUSE, 'ARS', 'CUP')).toBe(false);
+      expect(await service.isManaged(HOUSE, 'USD', 'EUR')).toBe(false);
+    });
+
+    it('is not managed when auto is off', async () => {
+      houses.findOne.mockResolvedValue({ id: HOUSE, autoExchangeRates: false });
+      expect(await service.isManaged(HOUSE, 'USD', 'CUP')).toBe(false);
+    });
+
+    it('is not managed without the token (auto does nothing, so manual must stay possible)', async () => {
+      delete process.env.ELTOQUE_API_KEY;
+      expect(await service.isManaged(HOUSE, 'USD', 'CUP')).toBe(false);
+    });
+
+    it('getStatus lists the managed codes only while auto is effective', async () => {
+      expect(await service.getStatus(HOUSE)).toEqual({
+        enabled: true, available: true, managedCodes: ['USD', 'EUR'],
+      });
+    });
   });
 });
