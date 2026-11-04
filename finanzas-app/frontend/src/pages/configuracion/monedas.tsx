@@ -192,9 +192,12 @@ export default function MonedasPage() {
           {currencies.map(currency => {
             const currentRate = rates[currency.currencyCode];
             const rateInput = rateInputs[currency.currencyCode] ?? '';
+            // elToque keeps `X → CUP` for the managed codes; `CUP → X` is its inverse, so with X as
+            // the local currency the CUP row is automatic too.
+            const managed = autoRates?.managedCodes ?? [];
             const isAutoManaged =
-              localCurrency?.currencyCode === 'CUP' &&
-              !!autoRates?.managedCodes.includes(currency.currencyCode);
+              (localCurrency?.currencyCode === 'CUP' && managed.includes(currency.currencyCode)) ||
+              (currency.currencyCode === 'CUP' && !!localCurrency && managed.includes(localCurrency.currencyCode));
 
             return (
               <div
@@ -204,19 +207,18 @@ export default function MonedasPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   {/* Currency info */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-primary-container/15 /30 flex items-center justify-center text-sm font-bold text-info-ink shrink-0">
-                      {currency.symbol}
+                    <div className="w-10 h-10 rounded-full bg-primary-container/15 /30 flex items-center justify-center text-[11px] font-bold text-info-ink shrink-0">
+                      {currency.currencyCode}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-on-surface">
-                          {currency.currencyCode}
+                          {currency.currencyName}
                         </span>
                         {currency.isLocal && (
                           <Badge variant="green">Local</Badge>
                         )}
                       </div>
-                      <p className="text-xs text-on-surface-variant truncate">{currency.currencyName}</p>
                     </div>
                   </div>
 
