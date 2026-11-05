@@ -7,6 +7,7 @@ import MasScreen from '../screens/MasScreen';
 import MetasScreen from '../screens/MetasScreen';
 import GoalFormScreen from '../screens/GoalFormScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import BudgetStack from './BudgetStack';
 
 const Stack = createNativeStackNavigator<MasStackParamList>();
 
@@ -28,6 +29,8 @@ export default function MasStack() {
       }}
     >
       <Stack.Screen name="MasHome" component={MasScreen} options={{ headerShown: false }} />
+      {/* BudgetStack brings its own navigator and headers */}
+      <Stack.Screen name="Presupuesto" component={BudgetStack} options={{ headerShown: false }} />
       {/* MetasScreen ya renderiza su propio header */}
       <Stack.Screen name="MetasList" component={MetasScreen} options={{ headerTitle: '' }} />
       <Stack.Screen
