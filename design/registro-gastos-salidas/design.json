@@ -1,0 +1,27 @@
+{
+  "title": "Registro de gastos: Salidas y Otros gastos",
+  "brief": "Separar el registro de gastos en dos apartados, Salidas y Otros gastos, con el presupuesto de Salidas (gasto «Salidas» de la categoría Comida) y aviso al excederlo, sin bloquear.",
+  "artboards": [
+    {
+      "file": "01-dentro-del-presupuesto.html",
+      "title": "Web — dentro del presupuesto",
+      "tradeoff": "Tres bloques apilados y resumen lateral; el límite se ve de un vistazo en la cabecera de Salidas",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "02-excedido-y-aviso.html",
+      "title": "Web — excedido y aviso al guardar",
+      "tradeoff": "Barra roja, alerta fija y aviso en el formulario; avisa sin bloquear",
+      "width": 1440,
+      "height": 1000
+    },
+    {
+      "file": "03-movil-excedido.html",
+      "title": "Móvil — excedido",
+      "tradeoff": "Misma estructura en una columna; listas en lugar de tablas",
+      "width": 390,
+      "height": 1000
+    }
+  ]
+}
