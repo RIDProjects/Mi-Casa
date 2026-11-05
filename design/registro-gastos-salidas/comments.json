@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "comments": [
+    {
+      "id": "zgq33a6a",
+      "file": "01-dentro-del-presupuesto.html",
+      "selector": "body > main > div > aside",
+      "excerpt": "RESUMEN DEL MES Compras del mercado $96.00 Salidas $82.00 Otros gastos $52.15 TOTAL $230.15",
+      "comment": "esto puedes o dejarlo pequenno o rellenar con mas data aunqeu creoq eu pequenno esta bien",
+      "createdAt": "2026-11-04T23:20:14.001Z",
+      "status": "resolved",
+      "sentAt": "2026-11-04T23:20:14.011Z",
+      "resolvedAt": "2026-11-04T23:20:23.579Z"
+    }
+  ]
+}
