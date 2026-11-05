@@ -17,11 +17,11 @@ export type RootStackParamList = {
   PrivacyPolicy: undefined;
 };
 
-// Bottom tabs (5 tabs: Inicio, Gastos, Presupuesto, Deudas, Más)
+// Bottom tabs (5 tabs: Inicio, Gastos, Movimientos, Deudas, Más)
 export type MainTabParamList = {
   Dashboard: undefined;
   Expenses: NavigatorScreenParams<GastosStackParamList>;
-  Presupuesto: NavigatorScreenParams<BudgetStackParamList>;
+  Movimientos: undefined;
   Deudas: NavigatorScreenParams<DebtsStackParamList>;
   Mas: NavigatorScreenParams<MasStackParamList>;
 };
@@ -33,9 +33,10 @@ export type GastosStackParamList = {
   AddHouseholdExpense: { expenseId?: string } | undefined;
 };
 
-// Stack del tab "Más": hub + Metas + Perfil
+// Stack del tab "Más": hub + Presupuesto + Metas + Perfil
 export type MasStackParamList = {
   MasHome: undefined;
+  Presupuesto: NavigatorScreenParams<BudgetStackParamList>;
   Perfil: undefined;
 } & MetasStackParamList;
 
