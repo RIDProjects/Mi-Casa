@@ -3,6 +3,7 @@ import { parseCsv } from './csv.util';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Transaction, TransactionType, PaymentMethod } from '../database/entities/transaction.entity';
+import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 
 export type Thermometer = 'on_track' | 'near_limit' | 'over_budget';
 
@@ -19,6 +20,7 @@ export class TransactionsService {
   constructor(
     @InjectRepository(Transaction)
     private txRepo: Repository<Transaction>,
+    private houseCurrenciesService: HouseCurrenciesService,
   ) {}
 
   private toFrontend(tx: Transaction) {
@@ -28,6 +30,9 @@ export class TransactionsService {
       concepto:      tx.concept,
       categoria:     tx.category,
       monto:         tx.amount,
+      moneda:        tx.currencyCode ?? null,
+      montoOriginal: tx.originalAmount ?? null,
+      tasaCambio:    tx.exchangeRate ?? null,
       metodoPago:    tx.paymentMethod,
       nombreTarjeta: tx.cardName,
       fecha:         tx.date,
@@ -41,11 +46,36 @@ export class TransactionsService {
       type:          dto.tipo,
       concept:       dto.concepto,
       category:      dto.categoria,
-      amount:        dto.monto,
       paymentMethod: dto.metodoPago,
       cardName:      dto.nombreTarjeta,
       date:          dto.fecha,
       notes:         dto.notas,
+    };
+  }
+
+  /**
+   * Resolves the amount columns for a write. `dto.monto` is expressed in
+   * `dto.moneda` (local currency when omitted); `amount` is always stored in
+   * local currency, converted with the rate of the transaction date. A
+   * missing rate rejects the write, so nothing is persisted.
+   */
+  private async resolveAmounts(dto: any, houseId: string): Promise<Partial<Transaction>> {
+    if (!dto.moneda) {
+      return { amount: dto.monto, originalAmount: null, currencyCode: null, exchangeRate: null };
+    }
+    const { localCode, rate } = await this.houseCurrenciesService.resolveRateToLocal(
+      houseId,
+      dto.moneda,
+      dto.fecha,
+    );
+    if (dto.moneda === localCode) {
+      return { amount: dto.monto, originalAmount: null, currencyCode: null, exchangeRate: null };
+    }
+    return {
+      amount:         Math.round(Number(dto.monto) * rate * 100) / 100,
+      originalAmount: dto.monto,
+      currencyCode:   dto.moneda,
+      exchangeRate:   rate,
     };
   }
 
@@ -86,8 +116,10 @@ export class TransactionsService {
   }
 
   async create(dto: any, houseId: string): Promise<any> {
+    const amounts = await this.resolveAmounts(dto, houseId);
     const tx = this.txRepo.create({
       ...this.fromFrontend(dto),
+      ...amounts,
       house: { id: houseId } as any,
     });
     return this.toFrontend(await this.txRepo.save(tx));
@@ -96,7 +128,8 @@ export class TransactionsService {
   async update(id: string, houseId: string, dto: any): Promise<any> {
     const tx = await this.txRepo.findOne({ where: { id, house: { id: houseId } } });
     if (!tx) throw new NotFoundException('Transacción no encontrada');
-    Object.assign(tx, this.fromFrontend(dto));
+    const amounts = await this.resolveAmounts(dto, houseId);
+    Object.assign(tx, this.fromFrontend(dto), amounts);
     return this.toFrontend(await this.txRepo.save(tx));
   }
 

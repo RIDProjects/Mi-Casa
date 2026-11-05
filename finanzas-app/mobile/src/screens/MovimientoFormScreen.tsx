@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { transactionsService } from '../services/transactions.service';
+import { householdExpensesService } from '../services/household-expenses.service';
+import { resolveCurrency } from '../utils/currency';
 import { PaymentMethod, TransactionPayload, TransactionType } from '../types';
 import { RootStackParamList } from '../navigation/types';
 import { parseLocalDate, todayLocalISO } from '../utils/dates';
@@ -121,7 +123,20 @@ export default function MovimientoFormScreen() {
 
   const [tipo, setTipo] = useState<TransactionType>(existing?.tipo ?? 'gasto');
   const [concepto, setConcepto] = useState(existing?.concepto ?? '');
-  const [monto, setMonto] = useState(existing ? String(Number(existing.monto)) : '');
+  // A foreign-currency row is edited in the currency it was spent in.
+  const [monto, setMonto] = useState(existing ? String(Number(existing.montoOriginal ?? existing.monto)) : '');
+  const [moneda, setMoneda] = useState(existing?.moneda ?? '');
+
+  // The house's currency picker options travel with the household month query
+  // (the same source AddHouseholdExpenseScreen uses). Without them the picker
+  // is hidden and the amount is sent in the local currency, as before.
+  const { data: monthData } = useQuery({
+    queryKey: ['household-expenses', todayLocalISO().slice(0, 7)],
+    queryFn: () => householdExpensesService.getMonth(todayLocalISO().slice(0, 7)),
+  });
+  const monedaLocal = monthData?.monedaLocal ?? '';
+  const currencyCodes = (monthData?.monedas ?? []).map((m) => m.code);
+  const effectiveMoneda = resolveCurrency(moneda, monedaLocal);
   const [categoria, setCategoria] = useState(existing?.categoria ?? '');
   const [metodoPago, setMetodoPago] = useState<PaymentMethod>(existing?.metodoPago ?? 'efectivo');
   const [nombreTarjeta, setNombreTarjeta] = useState(existing?.nombreTarjeta ?? '');
@@ -164,6 +179,7 @@ export default function MovimientoFormScreen() {
       concepto: concepto.trim(),
       categoria: isExpense ? categoria : '',
       monto: amount,
+      moneda: effectiveMoneda || undefined,
       metodoPago,
       nombreTarjeta: metodoPago === 'tarjeta' ? nombreTarjeta.trim() : '',
       fecha: fecha.trim(),
@@ -212,6 +228,18 @@ export default function MovimientoFormScreen() {
               error={errors.monto}
               editable={!isPending}
             />
+
+            {currencyCodes.length > 1 && (
+              <View>
+                <Text style={styles.label}>Moneda</Text>
+                <Chips
+                  options={currencyCodes.map((code) => ({ value: code, label: code }))}
+                  value={effectiveMoneda}
+                  onChange={setMoneda}
+                  disabled={isPending}
+                />
+              </View>
+            )}
 
             {isExpense && (
               <View>
