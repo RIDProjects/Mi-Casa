@@ -6,7 +6,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
 import DashboardScreen from '../screens/DashboardScreen';
 import GastosStack from './GastosStack';
-import BudgetStack from './BudgetStack';
+import MovimientosScreen from '../screens/MovimientosScreen';
 import DebtsStack from './DebtsStack';
 import MasStack from './MasStack';
 
@@ -17,7 +17,7 @@ type TabName = keyof MainTabParamList;
 const ICONS: Record<TabName, { outline: keyof typeof Ionicons.glyphMap; filled: keyof typeof Ionicons.glyphMap }> = {
   Dashboard:   { outline: 'home-outline',      filled: 'home' },
   Expenses:    { outline: 'cart-outline',       filled: 'cart' },
-  Presupuesto: { outline: 'pie-chart-outline',  filled: 'pie-chart' },
+  Movimientos: { outline: 'swap-horizontal-outline', filled: 'swap-horizontal' },
   Deudas:      { outline: 'people-outline',     filled: 'people' },
   Mas:         { outline: 'ellipsis-horizontal-circle-outline', filled: 'ellipsis-horizontal-circle' },
 };
@@ -25,7 +25,7 @@ const ICONS: Record<TabName, { outline: keyof typeof Ionicons.glyphMap; filled: 
 const TAB_LABELS: Record<TabName, string> = {
   Dashboard:   'Inicio',
   Expenses:    'Gastos',
-  Presupuesto: 'Presupuesto',
+  Movimientos: 'Movimientos',
   Deudas:      'Deudas',
   Mas:         'Más',
 };
@@ -65,7 +65,18 @@ export default function MainTabs() {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Expenses" component={GastosStack} />
-      <Tab.Screen name="Presupuesto" component={BudgetStack} />
+      <Tab.Screen
+        name="Movimientos"
+        component={MovimientosScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Movimientos',
+          headerStyle: { backgroundColor: colors.panel },
+          headerTintColor: colors.onSurface,
+          headerTitleStyle: { fontFamily: fonts.title, fontSize: 17 },
+          headerShadowVisible: false,
+        }}
+      />
       <Tab.Screen name="Deudas" component={DebtsStack} />
       <Tab.Screen name="Mas" component={MasStack} />
     </Tab.Navigator>
