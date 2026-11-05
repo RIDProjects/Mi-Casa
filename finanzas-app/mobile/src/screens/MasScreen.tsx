@@ -30,7 +30,7 @@ export const MAS_GROUPS: Group[] = [
   {
     title: 'Finanzas',
     entries: [
-      { label: 'Movimientos', hint: 'Ingresos y gastos del mes', icon: 'swap-horizontal-outline', to: 'Movimientos' },
+      { label: 'Presupuesto', hint: 'Ingresos, categorías y metas del mes', icon: 'pie-chart-outline', to: 'Presupuesto' },
       { label: 'Metas', hint: 'Tus metas de ahorro', icon: 'trophy-outline', to: 'MetasList' },
       { label: 'Tarjetas de crédito', hint: 'Límites, saldos y uso', icon: 'card-outline', to: 'Tarjetas' },
       { label: 'Cuotas', hint: 'Compras a plazos', icon: 'layers-outline', to: 'Cuotas' },
