@@ -9,7 +9,8 @@ import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, ChevronLeft, ChevronRight, AlertTriangle, RefreshCw, Download, Upload, TrendingUp, DollarSign, ShoppingCart, Home, Car, Coffee, Search, Filter, ArrowUpRight, ArrowDownRight, Laptop, Calendar, Repeat, Zap, Construction } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { MONTH_NAMES } from '../lib/format';
-import { useCurrencyFormatter } from '../lib/currency';
+import { useCurrencyFormatter, formatNumber } from '../lib/currency';
+import { useCurrencyStore } from '../store/currency.store';
 import { parseLocalDate, todayLocalISO } from '../lib/dates';
 import { getErrorMessage } from '../utils/errors';
 import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
@@ -36,6 +37,7 @@ const defaultForm = {
   concepto: '',
   categoria: '',
   monto: '',
+  moneda: '',
   metodoPago: 'efectivo',
   nombreTarjeta: '',
   fecha: todayLocalISO(),
@@ -104,6 +106,8 @@ const STATUS_LABELS: Record<string, string> = { EN_META: 'En meta', 'ATENCIÓN':
 export default function TransaccionesPage() {
   const qc = useQueryClient();
   const { fmt: cfmt } = useCurrencyFormatter();
+  const { currencies, rates } = useCurrencyStore();
+  const monedaLocal = currencies.find(c => c.isLocal)?.currencyCode ?? '';
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -266,7 +270,9 @@ export default function TransaccionesPage() {
       tipo: t.tipo,
       concepto: t.concepto,
       categoria: t.categoria || '',
-      monto: t.monto,
+      // A foreign-currency row is edited in the currency it was spent in.
+      monto: t.montoOriginal ?? t.monto,
+      moneda: t.moneda ?? monedaLocal,
       metodoPago: t.metodoPago,
       nombreTarjeta: t.nombreTarjeta || '',
       fecha: t.fecha?.split('T')[0] ?? defaultForm.fecha,
@@ -277,8 +283,13 @@ export default function TransaccionesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    editItem ? updateMut.mutate(form) : createMut.mutate(form);
+    const dto = { ...form, moneda: form.moneda || monedaLocal || undefined };
+    editItem ? updateMut.mutate(dto) : createMut.mutate(dto);
   };
+
+  // Live preview of the local equivalent (today's rate; the saved one uses the transaction date).
+  const previewRate = form.moneda && form.moneda !== monedaLocal ? rates?.[form.moneda] : null;
+  const previewLocal = previewRate && Number(form.monto) > 0 ? Number(form.monto) * previewRate : null;
 
   // KPIs
   const ingresos = useMemo(
@@ -746,6 +757,11 @@ export default function TransaccionesPage() {
                     </td>
                     <td className={`px-6 py-4 text-right font-card-title text-card-title ${isIncome ? 'text-primary' : 'text-warn-ink'}`}>
                       {isIncome ? '+' : '-'}{cfmt(t.monto)}
+                      {t.moneda && t.montoOriginal != null && (
+                        <span className="block font-caption text-caption text-outline font-normal">
+                          {formatNumber(Number(t.montoOriginal))} {t.moneda}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <ActionButtons
@@ -883,19 +899,39 @@ export default function TransaccionesPage() {
             </div>
           )}
 
-          <div>
-            <label className="label" htmlFor="tx-monto">Monto</label>
-            <input
-              id="tx-monto"
-              type="number"
-              step="0.01"
-              min="0"
-              className="input"
-              value={form.monto}
-              onChange={e => setForm({ ...form, monto: e.target.value })}
-              placeholder="0.00"
-              required
-            />
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <label className="label" htmlFor="tx-monto">Monto</label>
+              <input
+                id="tx-monto"
+                type="number"
+                step="0.01"
+                min="0"
+                className="input"
+                value={form.monto}
+                onChange={e => setForm({ ...form, monto: e.target.value })}
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div>
+              <label className="label" htmlFor="tx-moneda">Moneda</label>
+              <select
+                id="tx-moneda"
+                className="input"
+                value={form.moneda || monedaLocal}
+                onChange={e => setForm({ ...form, moneda: e.target.value })}
+              >
+                {(currencies.length > 0 ? currencies : [{ currencyCode: monedaLocal }]).map(c => (
+                  <option key={c.currencyCode} value={c.currencyCode}>{c.currencyCode}</option>
+                ))}
+              </select>
+            </div>
+            {previewLocal != null && (
+              <p className="col-span-3 -mt-1 font-caption text-caption text-on-surface-variant">
+                ≈ {formatNumber(previewLocal)} {monedaLocal} (tasa del día de la transacción al guardar)
+              </p>
+            )}
           </div>
 
           <div>
