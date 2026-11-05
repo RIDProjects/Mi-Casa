@@ -44,7 +44,7 @@ const PERIODICITY_LABELS: Record<Periodicity, string> = {
 };
 
 const PERIOD_DIVISOR: Record<Periodicity, number> = {
-  daily: 1/30, weekly: 12/52, biweekly: (12*15)/365,
+  daily: 1/30, weekly: 12/52, biweekly: 1/2,
   monthly: 1, bimonthly: 2, quarterly: 3,
   fourmonthly: 4, semiannual: 6, annual: 12,
 };
@@ -674,10 +674,10 @@ export default function PresupuestoPage() {
       )}
 
       {/* ── TOP SECTION: Ingresos + Right panel ── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
 
         {/* LEFT (2 cols): Ingresos + Proyección Anual */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="xl:col-span-2 flex flex-col gap-6">
           <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-x-auto">
             <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
               <h3 className="font-section-title text-section-title text-on-surface">Ingresos Promedio Mensuales</h3>
@@ -751,7 +751,7 @@ export default function PresupuestoPage() {
             </table>
           </div>
 
-          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden flex-1">
             <div className="p-4 border-b border-outline-variant bg-surface-gray">
               <h3 className="font-section-title text-section-title text-on-surface">Proyección Anual</h3>
             </div>
@@ -803,7 +803,7 @@ export default function PresupuestoPage() {
         </div>
 
         {/* RIGHT (1 col): Meta de Ahorro + Budget Advisory AI + Gastos Hormiga */}
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           {/* Meta de ahorro card */}
           <div className="bg-surface-container-lowest p-4 rounded-xl border border-border-light">
             <div className="flex justify-between items-start mb-4">
@@ -853,7 +853,7 @@ export default function PresupuestoPage() {
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+          <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden flex-1">
             <div className="p-4 border-b border-outline-variant bg-surface-gray flex justify-between items-center">
               <h3 className="font-section-title text-section-title text-on-surface">Gastos Hormiga</h3>
               <span className="px-2.5 py-1 bg-error-container text-on-error-container rounded-full font-label-upper text-label-upper">
