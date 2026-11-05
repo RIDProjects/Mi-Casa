@@ -228,8 +228,8 @@ describe('BudgetService monthly normalization', () => {
     expect(monthly(1000, Periodicity.WEEKLY)).toBeCloseTo((1000 * 52) / 12, 2);
   });
 
-  it('biweekly means every 15 days: 365 / 15 / 12 payments per month', () => {
-    expect(monthly(1000, Periodicity.BIWEEKLY)).toBeCloseTo((1000 * 365) / 15 / 12, 2);
+  it('biweekly means two payments per month so whole amounts stay whole', () => {
+    expect(monthly(5, Periodicity.BIWEEKLY)).toBe(10);
   });
 
   it('monthly is unchanged', () => {

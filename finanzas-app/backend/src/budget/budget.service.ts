@@ -20,11 +20,11 @@ const SAVINGS_GOAL_NAME = 'Meta de ahorro';
 const DEFAULT_FI_MULTIPLIER = 150;
 
 // Monthly normalization: a month has 52/12 weeks (not 4), and "quincenal"
-// means every 15 days, i.e. 365/15 payments a year spread over 12 months.
+// is exactly two payments per month so whole amounts stay whole.
 const PERIODICITY_FACTOR: Record<Periodicity, number> = {
   [Periodicity.DAILY]:       1 / 30,
   [Periodicity.WEEKLY]:      12 / 52,       // 52 weeks a year -> ~4.33 per month
-  [Periodicity.BIWEEKLY]:    (12 * 15) / 365, // every 15 days -> ~2.03 per month
+  [Periodicity.BIWEEKLY]:    1 / 2,            // twice a month
   [Periodicity.MONTHLY]:     1,
   [Periodicity.BIMONTHLY]:   2,
   [Periodicity.QUARTERLY]:   3,

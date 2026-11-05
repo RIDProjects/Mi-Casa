@@ -5,7 +5,7 @@ import { BudgetCategory, Periodicity } from '../../types';
 export const PERIODICITY_FACTOR: Record<Periodicity, number> = {
   daily: 1 / 30,
   weekly: 12 / 52,
-  biweekly: (12 * 15) / 365,
+  biweekly: 1 / 2,
   monthly: 1,
   bimonthly: 2,
   quarterly: 3,
