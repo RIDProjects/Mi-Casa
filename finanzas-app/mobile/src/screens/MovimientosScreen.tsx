@@ -109,6 +109,9 @@ function TransactionRow({
             <Text style={[styles.itemAmount, { color: ink }]}>
               {isIncome ? '+' : '-'}{formatMoney(Number(item.monto))}
             </Text>
+            {!!item.moneda && item.montoOriginal != null && (
+              <Text style={styles.itemMeta}>{formatMoney(Number(item.montoOriginal), item.moneda)}</Text>
+            )}
           </View>
           <View style={styles.itemBottom}>
             <Badge label={labelOf(TIPO_OPTIONS, item.tipo)} tone={isIncome ? 'ok' : 'danger'} />

@@ -4,9 +4,10 @@ import { TransactionsController } from './transactions.controller';
 import { TransactionsService } from './transactions.service';
 import { Transaction } from '../database/entities/transaction.entity';
 import { AuthModule } from '../auth/auth.module';
+import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Transaction]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Transaction]), AuthModule, HouseCurrenciesModule],
   controllers: [TransactionsController],
   providers: [TransactionsService],
   exports: [TransactionsService],

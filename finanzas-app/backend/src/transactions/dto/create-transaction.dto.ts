@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsDateString, IsEnum, IsOptional, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsDateString, IsEnum, IsOptional, Min, Max, Length } from 'class-validator';
 import { Type } from 'class-transformer';
 import { TransactionType, PaymentMethod } from '../../database/entities/transaction.entity';
 
@@ -19,6 +19,9 @@ export class CreateTransactionDto {
   // lo convierte antes de que @IsNumber() lo valide (ValidationPipe ya
   // tiene transform:true, pero eso solo dispara la conversión declarada acá).
   @Type(() => Number) @IsNumber() @Min(0) @Max(9999999999.99) monto: number;
+
+  // Currency the amount was spent in; omitted means the house local currency.
+  @IsOptional() @IsString() @Length(3, 3) moneda?: string;
 
   @IsOptional() @IsEnum(PaymentMethod) metodoPago?: PaymentMethod;
 

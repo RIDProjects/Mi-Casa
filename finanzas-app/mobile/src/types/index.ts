@@ -87,6 +87,10 @@ export interface Transaction {
   concepto: string;
   categoria?: string | null;
   monto: number | string;
+  /** Set only for foreign-currency rows; `monto` is always the local-currency value. */
+  moneda?: string | null;
+  montoOriginal?: number | string | null;
+  tasaCambio?: number | string | null;
   metodoPago?: PaymentMethod | null;
   nombreTarjeta?: string | null;
   fecha: string;
@@ -99,6 +103,8 @@ export interface TransactionPayload {
   concepto: string;
   categoria: string;
   monto: number;
+  /** Currency of `monto`; omitted means the house local currency. */
+  moneda?: string;
   metodoPago: PaymentMethod;
   nombreTarjeta: string;
   fecha: string;
