@@ -45,7 +45,7 @@ describe('CSV import/export', () => {
 
     const saved: any[] = [];
     const txRepo: any = { create: jest.fn((d) => d), save: jest.fn(async (t) => saved.push(t)) };
-    const service = new TransactionsService(txRepo);
+    const service = new TransactionsService(txRepo, {} as any);
     const result = await service.importFromCsv(Buffer.from(csv, 'utf-8'), 'h1');
 
     expect(result).toEqual({ imported: 1, errors: [] });
