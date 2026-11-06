@@ -13,7 +13,7 @@ Branch: feat/debt-health (from dev). Option chosen by the user: automatic catego
 ## Tasks
 - [x] T1 (S3,S4) backend debt-lines service: monthly debt service lines from debts/loans/cuotas/cards + tests. Route: inline. Done: 7 tests GREEN (RED: suite failed to load), tsc clean. Commit: pending (committed with T2)
 - [x] T2 (S3) budget integration: BudgetService adds the automatic lines to the "Deudas" category and to summary totals + tests. Route: inline. Done: 4 new tests (RED: TS errors, no autoDebtLines) -> GREEN, backend 338/338, tsc clean. Commit: see git log (feat(budget): automatic debt lines)
-- [ ] T3 (S2,S5) backend debt-health endpoint: DTI, free margin, payoff horizon, verdict + tests. Route: inline. Commit: pending
+- [x] T3 (S2,S5) backend debt-health endpoint GET /summary/debt-health: DTI, free margin, payoff horizon, verdict + tests. Route: inline. Done: 12 new tests (RED: module missing) -> GREEN, backend 350/350, tsc clean. Commit: see git log (feat(summary): debt health)
 - [ ] T4 (S2,S3) web: dashboard card + automatic lines in the budget Deudas category. Route: inline. Commit: pending
 - [ ] T5 (S2,S3) mobile: dashboard card + budget lines. Route: inline. Commit: pending
 - [ ] T6 guide/docs update. Route: inline. Commit: pending

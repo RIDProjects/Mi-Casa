@@ -35,7 +35,7 @@ describe('DebtLinesService', () => {
     const lines = await service.getLines(HOUSE);
 
     expect(lines).toEqual([
-      { source: 'debt', id: 'd1', label: 'Ana', monthlyAmount: 80, balance: 1000, estimated: false },
+      { source: 'debt', id: 'd1', label: 'Ana', monthlyAmount: 80, balance: 1000, estimated: false, interestRate: 0 },
     ]);
   });
 
@@ -59,7 +59,7 @@ describe('DebtLinesService', () => {
     const lines = await service.getLines(HOUSE);
 
     expect(lines).toEqual([
-      { source: 'loan', id: 'l1', label: 'Hipoteca - Banco A', monthlyAmount: 400, balance: 20000, estimated: false },
+      { source: 'loan', id: 'l1', label: 'Hipoteca - Banco A', monthlyAmount: 400, balance: 20000, estimated: false, interestRate: 0 },
     ]);
   });
 
@@ -71,7 +71,7 @@ describe('DebtLinesService', () => {
     const lines = await service.getLines(HOUSE);
 
     expect(lines).toEqual([
-      { source: 'cuota', id: 'c1', label: 'Laptop', monthlyAmount: 60, balance: 360, estimated: false },
+      { source: 'cuota', id: 'c1', label: 'Laptop', monthlyAmount: 60, balance: 360, estimated: false, interestRate: 0 },
     ]);
   });
 
@@ -85,7 +85,7 @@ describe('DebtLinesService', () => {
     const lines = await service.getLines(HOUSE);
 
     expect(lines).toEqual([
-      { source: 'card', id: 'k1', label: 'Visa Gold', monthlyAmount: 100, balance: 2000, estimated: true },
+      { source: 'card', id: 'k1', label: 'Visa Gold', monthlyAmount: 100, balance: 2000, estimated: true, interestRate: 0 },
     ]);
   });
 

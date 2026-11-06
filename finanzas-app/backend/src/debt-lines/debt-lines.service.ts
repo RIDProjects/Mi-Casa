@@ -18,6 +18,8 @@ export interface DebtLine {
   balance: number;
   /** True when the monthly amount is an estimate, not a value the user entered. */
   estimated: boolean;
+  /** Annual interest rate in %, used by the payoff simulation (0 when the payment already includes it). */
+  interestRate: number;
 }
 
 // Same convention the debts payoff simulation uses when no minimum is set.
@@ -60,6 +62,7 @@ export class DebtLinesService {
         monthlyAmount: round2(entered ?? balance * ESTIMATED_PAYMENT_RATE),
         balance,
         estimated: entered == null,
+        interestRate: Number(d.interestRate ?? 0),
       });
     }
 
@@ -73,6 +76,7 @@ export class DebtLinesService {
         monthlyAmount: round2(monthly),
         balance: Number(l.deudaActual ?? 0),
         estimated: false,
+        interestRate: 0,
       });
     }
 
@@ -85,6 +89,7 @@ export class DebtLinesService {
         monthlyAmount: round2(Number(c.installmentAmount)),
         balance: round2(remaining * Number(c.installmentAmount)),
         estimated: false,
+        interestRate: 0,
       });
     }
 
@@ -100,6 +105,7 @@ export class DebtLinesService {
         monthlyAmount: round2(balance * ESTIMATED_PAYMENT_RATE),
         balance,
         estimated: true,
+        interestRate: Number(k.tasaAnual ?? 0),
       });
     }
 

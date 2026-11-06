@@ -227,6 +227,11 @@ export class BudgetService {
         return s + this.computeMonthlyAmount(Number(e.amount), e.periodicity);
       }, 0) + autoDebtMonthly;
 
+    const manualDebtMonthly = (budget.categories ?? [])
+      .filter((c) => c.name?.trim().toLowerCase() === 'deudas')
+      .flatMap((c) => c.expenses ?? [])
+      .reduce((s, e) => s + this.computeMonthlyAmount(Number(e.amount), e.periodicity), 0);
+
     const available = totalMonthlyIncome - totalMonthlyExpenses;
     const savingsTargetAmount =
       (totalMonthlyIncome * Number(budget.savingsTargetPercent)) / 100;
@@ -266,6 +271,7 @@ export class BudgetService {
       totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
       autoDebtMonthly: Math.round(autoDebtMonthly * 100) / 100,
+      manualDebtMonthly: Math.round(manualDebtMonthly * 100) / 100,
       available: Math.round(available * 100) / 100,
       savingsTargetAmount: Math.round(savingsTargetAmount * 100) / 100,
       antExpensesTotal: Math.round(antExpensesTotal * 100) / 100,

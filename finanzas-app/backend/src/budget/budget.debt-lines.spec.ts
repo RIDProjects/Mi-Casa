@@ -37,6 +37,7 @@ describe('BudgetService automatic debt lines', () => {
 
     expect(result.autoDebtLines).toEqual(lines);
     expect(result.summary.autoDebtMonthly).toBe(500);
+    expect(result.summary.manualDebtMonthly).toBe(50);
     // 500 (Casa) + 50 (manual Deudas) + 500 (automatic)
     expect(result.summary.totalMonthlyExpenses).toBe(1050);
     expect(result.summary.available).toBe(1950);
