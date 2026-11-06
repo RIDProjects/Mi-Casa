@@ -207,6 +207,7 @@ export const importTransactionsCSV = async (file: File, year: number, month: num
 
 export const summaryAPI = {
   getGlobal: () => api.get('/summary'),
+  getDebtHealth: () => api.get('/summary/debt-health'),
 };
 
 export const cuotasAPI = {

@@ -18,6 +18,8 @@ import { HousesModule } from '../houses/houses.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { HouseholdExpensesModule } from '../household-expenses/household-expenses.module';
 
+import { DebtHealthService } from './debt-health.service';
+
 @Module({
   imports: [
     AuthModule,
@@ -37,6 +39,6 @@ import { HouseholdExpensesModule } from '../household-expenses/household-expense
     HouseholdExpensesModule,
   ],
   controllers: [SummaryController],
-  providers: [SummaryService, UpcomingBillsNotifierService],
+  providers: [SummaryService, UpcomingBillsNotifierService, DebtHealthService],
 })
 export class SummaryModule {}

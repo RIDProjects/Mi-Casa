@@ -8,7 +8,7 @@ describe('SummaryController without an active house', () => {
     getSpendingInsights: jest.fn(),
     getHealthScore: jest.fn(),
   };
-  const controller = new SummaryController(service as any);
+  const controller = new SummaryController(service as any, { getDebtHealth: jest.fn() } as any);
   const req: any = { user: { house: null, activeHouseId: null, houses: [] } };
 
   beforeEach(() => jest.clearAllMocks());

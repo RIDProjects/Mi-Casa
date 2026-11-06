@@ -13,6 +13,7 @@ import { EmergencyFund } from '../database/entities/emergency-fund.entity';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { HousesModule } from '../houses/houses.module';
+import { DebtLinesModule } from '../debt-lines/debt-lines.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { HousesModule } from '../houses/houses.module';
     AuthModule,
     NotificationsModule,
     HousesModule,
+    DebtLinesModule,
   ],
   controllers: [BudgetController],
   providers: [BudgetService],
