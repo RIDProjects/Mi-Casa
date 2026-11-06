@@ -10,6 +10,7 @@ import StatCard from '../components/ui/StatCard';
 import { useAuthStore } from '../store/auth.store';
 import { CurrencyToggle } from '../components/ui/CurrencyToggle';
 import { HealthScore } from '../components/ui/HealthScore';
+import { DebtHealthCard } from '../components/ui/DebtHealthCard';
 import { ErrorState } from '../components/ui/ErrorState';
 import { useCurrencyFormatter } from '../lib/currency';
 import { useCountUp } from '../hooks/useCountUp';
@@ -213,6 +214,13 @@ export default function Dashboard() {
           <StatCard title="Me deben" value={cfmt(debtsSummary.totalTheyOweMe)} icon={<ArrowDownLeft size={20} />} color="green" />
           <StatCard title="Debo" value={cfmt(debtsSummary.totalIOwe)}       icon={<ArrowUpRight size={20} />} color="red" />
           <StatCard title="Balance" value={cfmt(balance)} icon={balance >= 0 ? <Scale size={20} /> : <AlertTriangle size={20} />} color={balance >= 0 ? 'green' : 'red'} />
+        </div>
+      )}
+
+      {/* ── Debt health ── */}
+      {hasPermission('debts', 'view') && (
+        <div className="mb-6">
+          <DebtHealthCard />
         </div>
       )}
 
