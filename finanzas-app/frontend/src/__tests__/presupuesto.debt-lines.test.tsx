@@ -63,6 +63,17 @@ describe('PresupuestoPage automatic debt lines', () => {
     expect(await screen.findByText(/\$550,00\/mes/)).toBeInTheDocument();
   });
 
+  it('still shows the automatic lines when the budget has no Deudas category', async () => {
+    const noDebtCategory = { ...budget, categories: [budget.categories[0]] };
+    (budgetAPI.getAll as jest.Mock).mockResolvedValue({ data: [noDebtCategory] });
+    (budgetAPI.getOne as jest.Mock).mockResolvedValue({ data: noDebtCategory });
+    renderPage();
+
+    const row = (await screen.findByText('Hipoteca - Banco A')).closest('tr') as HTMLElement;
+    expect(within(row).getByText('Automático')).toBeInTheDocument();
+    expect(screen.getByText(/pagos de deuda automáticos/i)).toBeInTheDocument();
+  });
+
   it('marks estimated lines', async () => {
     renderPage();
 
