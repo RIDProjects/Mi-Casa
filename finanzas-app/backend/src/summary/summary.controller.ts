@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Request, UseGuards, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SummaryService } from './summary.service';
+import { DebtHealthService } from './debt-health.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../database/entities/user.entity';
 import { Request as ExpressRequest } from 'express';
@@ -15,7 +16,10 @@ interface AuthRequest extends ExpressRequest {
 @UseGuards(JwtAuthGuard)
 @Controller('summary')
 export class SummaryController {
-  constructor(private readonly summaryService: SummaryService) {}
+  constructor(
+    private readonly summaryService: SummaryService,
+    private readonly debtHealthService: DebtHealthService,
+  ) {}
 
   @Get()
   getSummary(@Request() req: AuthRequest) {
@@ -33,6 +37,11 @@ export class SummaryController {
   @Get('insights')
   getSpendingInsights(@Request() req: AuthRequest) {
     return this.summaryService.getSpendingInsights(requireHouseId(req.user));
+  }
+
+  @Get('debt-health')
+  getDebtHealth(@Request() req: AuthRequest) {
+    return this.debtHealthService.getDebtHealth(requireHouseId(req.user));
   }
 
   @Get('health-score')
