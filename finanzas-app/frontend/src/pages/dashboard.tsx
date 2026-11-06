@@ -123,7 +123,7 @@ export default function Dashboard() {
       <OnboardingBanner
         hasBudget={!!firstBudget}
         hasTransactions={(txSummary?.totalIncome ?? 0) + (txSummary?.totalExpenses ?? 0) > 0}
-        hasGoals={(globalSummary as any)?.totalSavings > 0}
+        hasGoals={((globalSummary as any)?.savingsGoals?.count ?? 0) > 0}
       />
 
       {/* ── Header ── */}
