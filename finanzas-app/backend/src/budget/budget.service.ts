@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -13,6 +13,7 @@ import { EmergencyFund } from '../database/entities/emergency-fund.entity';
 import { NotificationsService } from '../notifications/notifications.service';
 import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
 import { HousesService } from '../houses/houses.service';
+import { DebtLinesService, DebtLine } from '../debt-lines/debt-lines.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
 const EMERGENCY_FUND_NAME = 'Fondo de Emergencia';
@@ -127,7 +128,15 @@ export class BudgetService {
     // Optional so lightweight constructions (tests) keep working.
     @InjectRepository(EmergencyFund)
     private fundRepo?: Repository<EmergencyFund>,
+    // Feeds the automatic "Deudas" lines; optional for lightweight constructions.
+    @Optional()
+    private debtLinesService?: DebtLinesService,
   ) {}
+
+  /** Monthly debt service lines of the house (empty when the service is unavailable). */
+  private async getDebtLines(houseId: string): Promise<DebtLine[]> {
+    return this.debtLinesService ? this.debtLinesService.getLines(houseId) : [];
+  }
 
   private computeMonthlyAmount(
     amount: number,
@@ -207,15 +216,16 @@ export class BudgetService {
     return Math.round(this.computeMonthlyAmount(Number(flagged.amount), flagged.periodicity) * 100) / 100;
   }
 
-  private computeSummary(budget: Budget) {
+  private computeSummary(budget: Budget, autoDebtMonthly = 0) {
     const totalMonthlyIncome =
       budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
 
     const allExpenses = budget.categories?.flatMap((c) => c.expenses ?? []) ?? [];
 
-    const totalMonthlyExpenses = allExpenses.reduce((s, e) => {
-      return s + this.computeMonthlyAmount(Number(e.amount), e.periodicity);
-    }, 0);
+    const totalMonthlyExpenses =
+      allExpenses.reduce((s, e) => {
+        return s + this.computeMonthlyAmount(Number(e.amount), e.periodicity);
+      }, 0) + autoDebtMonthly;
 
     const available = totalMonthlyIncome - totalMonthlyExpenses;
     const savingsTargetAmount =
@@ -255,6 +265,7 @@ export class BudgetService {
     return {
       totalMonthlyIncome: Math.round(totalMonthlyIncome * 100) / 100,
       totalMonthlyExpenses: Math.round(totalMonthlyExpenses * 100) / 100,
+      autoDebtMonthly: Math.round(autoDebtMonthly * 100) / 100,
       available: Math.round(available * 100) / 100,
       savingsTargetAmount: Math.round(savingsTargetAmount * 100) / 100,
       antExpensesTotal: Math.round(antExpensesTotal * 100) / 100,
@@ -321,7 +332,9 @@ export class BudgetService {
       order: { createdAt: 'DESC' },
       ...(limit ? { take: limit } : {}),
     });
-    const result = budgets.map((b) => ({ ...b, summary: this.computeSummary(b) }));
+    const autoDebtLines = await this.getDebtLines(houseId);
+    const autoDebtMonthly = autoDebtLines.reduce((s, l) => s + l.monthlyAmount, 0);
+    const result = budgets.map((b) => ({ ...b, autoDebtLines, summary: this.computeSummary(b, autoDebtMonthly) }));
     if (result[0]) {
       // Fire-and-forget — do NOT await so budget response is never delayed
       void this.notifyBudgetAlerts(houseId, result[0].summary);
@@ -335,7 +348,9 @@ export class BudgetService {
       relations: ['incomeSources', 'categories', 'categories.expenses'],
     });
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
-    return { ...budget, summary: this.computeSummary(budget) };
+    const autoDebtLines = await this.getDebtLines(houseId);
+    const autoDebtMonthly = autoDebtLines.reduce((s, l) => s + l.monthlyAmount, 0);
+    return { ...budget, autoDebtLines, summary: this.computeSummary(budget, autoDebtMonthly) };
   }
 
   async create(dto: CreateBudgetDto, houseId: string) {
