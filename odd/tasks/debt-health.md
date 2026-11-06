@@ -18,8 +18,8 @@ Branch: feat/debt-health (from dev). Option chosen by the user: automatic catego
 - [x] T2 (S3) budget integration: BudgetService adds the automatic lines to the "Deudas" category and to summary totals + tests. Route: inline. Done: 4 new tests (RED: TS errors, no autoDebtLines) -> GREEN, backend 338/338, tsc clean. Commit: see git log (feat(budget): automatic debt lines)
 - [x] T3 (S2,S5) backend debt-health endpoint GET /summary/debt-health: DTI, free margin, payoff horizon, verdict + tests. Route: inline. Done: 12 new tests (RED: module missing) -> GREEN, backend 350/350, tsc clean. Commit: see git log (feat(summary): debt health)
 - [x] T4 (S2,S3) web: dashboard card + automatic lines in the budget Deudas category. Route: inline. Done: 9 new tests (RED: module missing / lines absent) -> GREEN, web 99/99, tsc clean, lint 0 errors. Commit: see git log (feat(web): debt health card)
-- [ ] T5 (S2,S3) mobile: dashboard card + budget lines. Route: inline. Commit: pending
-- [ ] T6 guide/docs update. Route: inline. Commit: pending
+- [x] T5 (S2,S3) mobile: dashboard card + automatic lines in the budget Deudas category screen. Route: inline. Done: 5 new tests (RED 3 failing) -> GREEN, mobile 336/336, tsc clean. Commit: see git log (feat(mobile): debt health card)
+- [x] T6 guide/docs update (guia.html note + debt summary row). Route: inline. Done: guia test passes. Commit: same as T5
 
 ## Log
 - L1 (2026-11-06): "una cosa en presupuesto hay un apartado que es deudas pero tenemos el modulo de deudas eso es funcional a dia de hoy ? podriamos hacer los calculos pertinentes para que desde el dashboard teniendo en cuenta el modulo de deuda y de presupuesto se pueda saber si estoy bien o mal con las deudas y si podre solventarlo en el corto o mediano plazo ?"

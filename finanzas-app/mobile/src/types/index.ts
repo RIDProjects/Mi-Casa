@@ -362,6 +362,35 @@ export interface BudgetSummary {
   plan: BudgetPlan | null;
 }
 
+/** One monthly obligation fed automatically into the budget "Deudas" category. */
+export interface AutoDebtLine {
+  source: 'debt' | 'loan' | 'cuota' | 'card';
+  id: string;
+  label: string;
+  monthlyAmount: number;
+  balance: number;
+  estimated: boolean;
+  interestRate: number;
+}
+
+export type DebtHealthStatus = 'sin_deudas' | 'bien' | 'atencion' | 'riesgo';
+export type DebtHorizon = 'ninguno' | 'corto' | 'mediano' | 'largo' | 'no_alcanza';
+
+/** GET /summary/debt-health */
+export interface DebtHealth {
+  status: DebtHealthStatus;
+  debtToIncomePercent: number | null;
+  monthlyIncome: number;
+  monthlyDebtService: number;
+  available: number;
+  extraPayment: number;
+  totalBalance: number;
+  monthsToPayoff: number;
+  horizon: DebtHorizon;
+  feasible: boolean;
+  lines: AutoDebtLine[];
+}
+
 export interface Budget {
   id: string;
   name: string;
@@ -376,6 +405,7 @@ export interface Budget {
   fixedExpensesCapPercent?: number | string | null;
   incomeSources: BudgetIncomeSource[];
   categories: BudgetCategory[];
+  autoDebtLines?: AutoDebtLine[];
   summary: BudgetSummary;
 }
 

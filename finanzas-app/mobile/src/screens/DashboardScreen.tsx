@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/types';
 import { formatMoney } from '../utils/currency';
 import { Card, ErrorState, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
 import { StatCard } from '../components/common/StatCard';
+import { DebtHealthCard } from '../components/common/DebtHealthCard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -175,6 +176,14 @@ export default function DashboardScreen() {
     retry: 1,
   });
 
+  const { data: debtHealth } = useQuery({
+    queryKey: ['debt-health'],
+    refetchInterval: pollInterval,
+    queryFn: summaryService.getDebtHealth,
+    staleTime: 0,
+    retry: 1,
+  });
+
   const { refreshing, onRefresh } = useManualRefresh(refetch);
 
   const currency = summary?.currency;
@@ -311,6 +320,12 @@ export default function DashboardScreen() {
             </View>
           </Reveal>
         </>
+      )}
+
+      {debtHealth && debtHealth.status !== 'sin_deudas' && (
+        <Reveal index={4}>
+          <DebtHealthCard data={debtHealth} fmt={fmt} />
+        </Reveal>
       )}
 
       <Reveal index={4}>

@@ -3,7 +3,7 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { budgetService } from '../../services/budget.service';
-import { BudgetExpense } from '../../types';
+import { AutoDebtLine, BudgetExpense } from '../../types';
 import { BudgetStackParamList } from '../../navigation/types';
 import { formatMoney } from '../../utils/currency';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
@@ -45,6 +45,23 @@ const createStyles = (c: ThemeColors) =>
     badgeRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
     skeleton: { gap: 14, borderRadius: radius.lg },
   });
+
+function AutoDebtCard({ line }: { line: AutoDebtLine }) {
+  const styles = useThemedStyles(createStyles);
+  return (
+    <Card style={styles.expenseCard}>
+      <View style={styles.expenseHeader}>
+        <Text style={styles.expenseName} numberOfLines={2}>{line.label}</Text>
+        <Text style={styles.expenseMonthly}>{fmt(line.monthlyAmount)}/mes</Text>
+      </View>
+      <Text style={styles.expenseMeta}>Mensual · saldo {fmt(line.balance)}</Text>
+      <View style={styles.badgeRow}>
+        <Badge label="Automático" tone="info" />
+        {line.estimated && <Badge label="Estimado" tone="neutral" />}
+      </View>
+    </Card>
+  );
+}
 
 function ExpenseCard({ expense, onPress }: { expense: BudgetExpense; onPress: () => void }) {
   const styles = useThemedStyles(createStyles);
@@ -145,6 +162,9 @@ export default function CategoryDetailScreen() {
     }
 
     const expenses = category.expenses ?? [];
+    const autoLines = category.name.trim().toLowerCase() === 'deudas' ? budget.autoDebtLines ?? [] : [];
+    const autoTotal = autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
+    const count = expenses.length + autoLines.length;
     return (
       <>
         <Reveal index={0}>
@@ -155,10 +175,10 @@ export default function CategoryDetailScreen() {
           <Card accent={colors.brand}>
             <Text style={styles.eyebrow}>Total mensual</Text>
             <Text style={styles.heroAmount} numberOfLines={1} adjustsFontSizeToFit>
-              {fmt(categoryMonthlyTotal(category))}/mes
+              {fmt(categoryMonthlyTotal(category) + autoTotal)}/mes
             </Text>
             <Text style={styles.heroMeta}>
-              {expenses.length} {expenses.length === 1 ? 'gasto' : 'gastos'}
+              {count} {count === 1 ? 'gasto' : 'gastos'}
             </Text>
           </Card>
         </Reveal>
@@ -179,7 +199,7 @@ export default function CategoryDetailScreen() {
           )}
         </Reveal>
 
-        {expenses.length === 0 ? (
+        {count === 0 ? (
           <Reveal index={3}>
             <Card>
               <EmptyState
@@ -195,6 +215,9 @@ export default function CategoryDetailScreen() {
             <View style={styles.list}>
               {expenses.map((expense) => (
                 <ExpenseCard key={expense.id} expense={expense} onPress={() => setExpenseForm({ open: true, expense })} />
+              ))}
+              {autoLines.map((line) => (
+                <AutoDebtCard key={`${line.source}-${line.id}`} line={line} />
               ))}
             </View>
           </Reveal>
