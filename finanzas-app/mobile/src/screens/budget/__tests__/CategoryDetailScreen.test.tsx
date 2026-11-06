@@ -67,6 +67,48 @@ const expectInvalidated = () => {
   expect(client.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['summary'] });
 };
 
+const autoDebtLines = [
+  { source: 'loan', id: 'l1', label: 'Hipoteca - Banco A', monthlyAmount: 400, balance: 20000, estimated: false, interestRate: 0 },
+  { source: 'card', id: 'k1', label: 'Visa Gold', monthlyAmount: 100, balance: 2000, estimated: true, interestRate: 30 },
+];
+
+describe('CategoryDetailScreen automatic debt lines', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockParams = { categoryId: 'cd' };
+    alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    api.get.mockResolvedValue({
+      data: [{
+        ...budget([{ id: 'cd', name: 'Deudas', sortOrder: 0, isDefault: true, expenses: [exp('e1', 'Pago a Pedro', 50, 'monthly')] }]),
+        autoDebtLines,
+      }],
+    });
+  });
+
+  it('lists the automatic lines read-only after the manual expenses', async () => {
+    renderDetail();
+    expect(await screen.findByText('Hipoteca - Banco A')).toBeTruthy();
+    expect(screen.getByText('Visa Gold')).toBeTruthy();
+    expect(screen.getByText('Pago a Pedro')).toBeTruthy();
+    expect(screen.getAllByText('Automático')).toHaveLength(2);
+    expect(screen.getByText('Estimado')).toBeTruthy();
+  });
+
+  it('adds the automatic lines to the monthly total and the count', async () => {
+    renderDetail();
+    expect(await screen.findByText('US$ 550.00/mes')).toBeTruthy();
+    expect(screen.getByText('3 gastos')).toBeTruthy();
+  });
+
+  it('does not show automatic lines in other categories', async () => {
+    mockParams = { categoryId: 'c1' };
+    api.get.mockResolvedValue({ data: [{ ...budget(), autoDebtLines }] });
+    renderDetail();
+    expect(await screen.findByText('Seguro')).toBeTruthy();
+    expect(screen.queryByText('Hipoteca - Banco A')).toBeNull();
+  });
+});
+
 describe('CategoryDetailScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();

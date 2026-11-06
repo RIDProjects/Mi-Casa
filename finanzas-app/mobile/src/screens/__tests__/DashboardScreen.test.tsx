@@ -27,9 +27,10 @@ interface Routes {
   cards?: any[];
   cuotas?: any[];
   summaryFails?: boolean;
+  debtHealth?: any;
 }
 
-const mockApi = ({ summary, notifications = [], cards = [], cuotas = [], summaryFails }: Routes) => {
+const mockApi = ({ summary, notifications = [], cards = [], cuotas = [], summaryFails, debtHealth }: Routes) => {
   mockGet.mockImplementation((url: string) => {
     if (url === '/summary') {
       return summaryFails ? Promise.reject(new Error('boom')) : Promise.resolve({ data: summary });
@@ -37,6 +38,7 @@ const mockApi = ({ summary, notifications = [], cards = [], cuotas = [], summary
     if (url === '/notifications') return Promise.resolve({ data: notifications });
     if (url === '/credit-cards') return Promise.resolve({ data: cards });
     if (url === '/cuotas') return Promise.resolve({ data: cuotas });
+    if (url === '/summary/debt-health') return Promise.resolve({ data: debtHealth ?? { status: 'sin_deudas' } });
     return Promise.resolve({ data: [] });
   });
 };
@@ -81,6 +83,28 @@ describe('DashboardScreen', () => {
     expect(screen.getByText('25%')).toBeTruthy();
     expect(screen.getByText('75.0%')).toBeTruthy();
     expect(screen.getByText(/Ana/)).toBeTruthy();
+  });
+
+  it('shows the debt health verdict when there are debts', async () => {
+    mockApi({
+      summary: nested(3000, 1000, 2000),
+      debtHealth: {
+        status: 'atencion', debtToIncomePercent: 25, monthlyIncome: 3000, monthlyDebtService: 750,
+        available: 600, extraPayment: 300, totalBalance: 7500, monthsToPayoff: 24, horizon: 'mediano', feasible: true, lines: [],
+      },
+    });
+    renderDashboard();
+    expect(await screen.findByText('Atención con tus deudas')).toBeTruthy();
+    expect(screen.getByText('25%', { exact: true })).toBeTruthy();
+    expect(screen.getByText(/24 meses/)).toBeTruthy();
+    expect(screen.getByText(/mediano plazo/)).toBeTruthy();
+  });
+
+  it('hides the debt health card when there are no debts', async () => {
+    mockApi({ summary: nested(100, 20, 80), debtHealth: { status: 'sin_deudas' } });
+    renderDashboard();
+    expect(await screen.findByText('+US$ 80.00')).toBeTruthy();
+    expect(screen.queryByText('Salud de tus deudas')).toBeNull();
   });
 
   it('shows an error state and retries the summary', async () => {
