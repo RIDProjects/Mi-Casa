@@ -11,6 +11,8 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { useCurrencyStore } from '../store/currency.store';
 import { useCurrencyFormatter } from '../lib/currency';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 import { fmt, MONTH_NAMES } from '../lib/format';
 import { todayLocalISO } from '../lib/dates';
@@ -63,6 +65,14 @@ function ManualExpensesCard({
   title, tone, items, subtotalLabel, subtotal, newLabel, emptyText, onNew, onEdit, onDelete, monedaLocal, fmtLocal, header,
 }: ManualCardProps) {
   const warn = tone === 'warn';
+  // Sortable by column. Amounts are compared in the local currency; the biggest comes first.
+  const { sorted: sortedItems, sort, toggle } = useTableSort<any>(items, {
+    date: (s: any) => s.fecha,
+    description: (s: any) => s.descripcion,
+    category: (s: any) => s.categoria ?? '',
+    place: (s: any) => s.lugar ?? '',
+    amount: (s: any) => s.montoLocal ?? s.montoCUP ?? s.monto,
+  }, { key: 'amount', dir: 'desc' });
   return (
     <section aria-label={title} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
       <div className={`px-4 py-3 border-b border-outline-variant flex items-center gap-2 ${warn ? 'bg-warning/10' : 'bg-surface-container-low'}`}>
@@ -80,11 +90,11 @@ function ManualExpensesCard({
         <table className="w-full text-sm">
           <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
             <tr>
-              <th className="px-3 py-2 text-left">Fecha</th>
-              <th className="px-3 py-2 text-left">Descripción</th>
-              <th className="px-3 py-2 text-left">Categoría</th>
-              <th className="px-3 py-2 text-left">Lugar</th>
-              <th className="px-3 py-2 text-right">Monto</th>
+              <SortableTh label="Fecha" sortKey="date" sort={sort} onSort={toggle} align="left" className="px-3 py-2" />
+              <SortableTh label="Descripción" sortKey="description" sort={sort} onSort={toggle} align="left" className="px-3 py-2" />
+              <SortableTh label="Categoría" sortKey="category" sort={sort} onSort={toggle} align="left" className="px-3 py-2" />
+              <SortableTh label="Lugar" sortKey="place" sort={sort} onSort={toggle} align="left" className="px-3 py-2" />
+              <SortableTh label="Monto" sortKey="amount" sort={sort} onSort={toggle} align="right" className="px-3 py-2" />
               <th className="px-3 py-2 text-center">Acc.</th>
             </tr>
           </thead>
@@ -92,7 +102,7 @@ function ManualExpensesCard({
             {items.length === 0 ? (
               <tr><td colSpan={6} className="px-3 py-8 text-center text-outline text-xs">{emptyText}</td></tr>
             ) : (
-              items.map((s: any) => (
+              sortedItems.map((s: any) => (
                 <tr key={s.id} className="hover:bg-surface-gray">
                   <td className="px-3 py-2 text-on-surface-variant text-xs">{s.fecha}</td>
                   <td className="px-3 py-2 text-on-surface font-medium">{s.descripcion}</td>
@@ -211,6 +221,13 @@ export default function RegistroGastosPage() {
   );
 
   const comprasMercado: any[]   = data?.comprasMercado  ?? [];
+  // Market purchases sortable by column; the biggest total comes first.
+  const { sorted: sortedCompras, sort: comprasSort, toggle: toggleComprasSort } = useTableSort<any>(comprasMercado, {
+    date: (c: any) => c.fecha,
+    description: (c: any) => c.descripcion,
+    category: (c: any) => c.categoria ?? '',
+    total: (c: any) => c.totalLocal ?? c.totalCUP,
+  }, { key: 'total', dir: 'desc' });
   const salidas: any[]          = data?.salidas          ?? [];
   const resumen: any[]          = data?.resumenCategoria ?? [];
   const totalCompras: number    = data?.totalCompras     ?? 0;
@@ -345,17 +362,17 @@ export default function RegistroGastosPage() {
               <table className="w-full text-sm">
                 <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
                   <tr>
-                    <th className="px-3 py-2 text-left">Fecha</th>
-                    <th className="px-3 py-2 text-left">Descripción</th>
-                    <th className="px-3 py-2 text-left">Categoría</th>
-                    <th className="px-3 py-2 text-right">Total {monedaLocal}</th>
+                    <SortableTh label="Fecha" sortKey="date" sort={comprasSort} onSort={toggleComprasSort} align="left" className="px-3 py-2" />
+                    <SortableTh label="Descripción" sortKey="description" sort={comprasSort} onSort={toggleComprasSort} align="left" className="px-3 py-2" />
+                    <SortableTh label="Categoría" sortKey="category" sort={comprasSort} onSort={toggleComprasSort} align="left" className="px-3 py-2" />
+                    <SortableTh label={`Total ${monedaLocal}`} sortKey="total" sort={comprasSort} onSort={toggleComprasSort} align="right" className="px-3 py-2" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
                   {comprasMercado.length === 0 ? (
                     <tr><td colSpan={4} className="px-3 py-8 text-center text-outline text-xs">Sin compras este mes — agrega productos en Lista de la Compra</td></tr>
                   ) : (
-                    comprasMercado.map((c: any, i: number) => (
+                    sortedCompras.map((c: any, i: number) => (
                       <tr key={i} className="hover:bg-surface-gray">
                         <td className="px-3 py-2 text-on-surface-variant text-xs">{c.fecha}</td>
                         <td className="px-3 py-2 text-on-surface font-medium">{c.descripcion}</td>

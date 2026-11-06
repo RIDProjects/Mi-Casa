@@ -13,6 +13,8 @@ import { useCurrencyFormatter, formatNumber } from '../lib/currency';
 import { useCurrencyStore } from '../store/currency.store';
 import { parseLocalDate, todayLocalISO } from '../lib/dates';
 import { getErrorMessage } from '../utils/errors';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const CATEGORIES = [
@@ -188,6 +190,15 @@ export default function TransaccionesPage() {
     { enabled: activeTab === 'Programadas' },
   );
 
+  // Scheduled transactions sortable by column; the biggest amount comes first.
+  const { sorted: sortedRecurring, sort: recSort, toggle: toggleRecSort } = useTableSort<any>(recurringTransactions, {
+    name: (rt: any) => rt.name,
+    category: (rt: any) => rt.category ?? '',
+    day: (rt: any) => rt.dayOfMonth,
+    status: (rt: any) => (rt.isActive ? 'Activa' : 'Pausada'),
+    amount: (rt: any) => rt.amount,
+  }, { key: 'amount', dir: 'desc' });
+
   const createRecurringMut = useMutation((d: any) => recurringTransactionsAPI.create(d), {
     onSuccess: () => {
       toast.success('Recurrente creada');
@@ -330,8 +341,17 @@ export default function TransaccionesPage() {
     });
   }, [transactions, searchTerm, filterTipo, filterCategoria]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE));
-  const paginatedTransactions = filteredTransactions.slice(
+  // Sortable by column across the whole month, then paginated; starts newest first.
+  const { sorted: sortedTransactions, sort: txSort, toggle: toggleTxSort } = useTableSort<any>(filteredTransactions, {
+    date: (t: any) => t.fecha,
+    concept: (t: any) => t.concepto,
+    category: (t: any) => t.categoria ?? '',
+    account: (t: any) => t.metodoPago ?? '',
+    amount: (t: any) => t.monto,
+  }, { key: 'date', dir: 'desc' });
+
+  const totalPages = Math.max(1, Math.ceil(sortedTransactions.length / PAGE_SIZE));
+  const paginatedTransactions = sortedTransactions.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -448,11 +468,11 @@ export default function TransaccionesPage() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-surface-container-low border-b border-outline-variant">
-                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">NOMBRE</th>
-                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CATEGORÍA</th>
-                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">DÍA</th>
-                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">ESTADO</th>
-                  <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-right">MONTO</th>
+                  <SortableTh label="NOMBRE" sortKey="name" sort={recSort} onSort={toggleRecSort} align="left" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="CATEGORÍA" sortKey="category" sort={txSort} onSort={toggleTxSort} align="left" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="DÍA" sortKey="day" sort={recSort} onSort={toggleRecSort} align="center" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="ESTADO" sortKey="status" sort={recSort} onSort={toggleRecSort} align="center" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="MONTO" sortKey="amount" sort={txSort} onSort={toggleTxSort} align="right" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
                   <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">ACC.</th>
                 </tr>
               </thead>
@@ -476,7 +496,7 @@ export default function TransaccionesPage() {
                     </td>
                   </tr>
                 ) : (
-                  recurringTransactions.map((rt: any) => (
+                  sortedRecurring.map((rt: any) => (
                     <tr key={rt.id} className="hover:bg-surface-gray transition-colors group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -692,11 +712,11 @@ export default function TransaccionesPage() {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-surface-container-low border-b border-outline-variant">
-              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">FECHA</th>
-              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CONCEPTO</th>
-              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CATEGORÍA</th>
-              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CUENTA</th>
-              <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-right">MONTO</th>
+              <SortableTh label="FECHA" sortKey="date" sort={txSort} onSort={toggleTxSort} align="left" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+              <SortableTh label="CONCEPTO" sortKey="concept" sort={txSort} onSort={toggleTxSort} align="left" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+              <SortableTh label="CATEGORÍA" sortKey="category" sort={recSort} onSort={toggleRecSort} align="left" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+              <SortableTh label="CUENTA" sortKey="account" sort={txSort} onSort={toggleTxSort} align="left" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+              <SortableTh label="MONTO" sortKey="amount" sort={recSort} onSort={toggleRecSort} align="right" className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
               <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant text-center">ACC.</th>
             </tr>
           </thead>
