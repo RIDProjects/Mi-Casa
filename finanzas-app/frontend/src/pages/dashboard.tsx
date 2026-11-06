@@ -125,6 +125,7 @@ export default function Dashboard() {
         hasBudget={!!firstBudget}
         hasTransactions={(txSummary?.totalIncome ?? 0) + (txSummary?.totalExpenses ?? 0) > 0}
         hasGoals={((globalSummary as any)?.savingsGoals?.count ?? 0) > 0}
+        ready={budgetData !== undefined && globalSummary !== undefined && txSummary !== undefined}
       />
 
       {/* ── Header ── */}

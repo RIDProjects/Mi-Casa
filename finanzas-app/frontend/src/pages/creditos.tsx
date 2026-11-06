@@ -6,6 +6,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import PageHeader from '../components/ui/PageHeader';
 import toast from 'react-hot-toast';
+import { invalidateDebtDerived } from '../lib/debt-cache';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, Landmark, AlertTriangle, RefreshCw, Clock } from 'lucide-react';
 import { getErrorMessage } from '../utils/errors';
@@ -38,6 +39,7 @@ export default function CreditosPage() {
 
   const refreshCache = () => {
     loansAPI.getAll().then(r => qc.setQueryData('loans', r.data));
+    invalidateDebtDerived(qc);
   };
 
   const createMut = useMutation((d: any) => loansAPI.create(d), {
