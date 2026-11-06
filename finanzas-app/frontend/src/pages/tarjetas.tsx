@@ -7,6 +7,7 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
 import toast from 'react-hot-toast';
+import { invalidateDebtDerived } from '../lib/debt-cache';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -62,6 +63,7 @@ export default function TarjetasPage() {
 
   const refreshCache = () => {
     creditCardsAPI.getAll().then(r => qc.setQueryData('credit-cards', r.data));
+    invalidateDebtDerived(qc);
   };
 
   const createMut = useMutation((d: any) => creditCardsAPI.create(d), {

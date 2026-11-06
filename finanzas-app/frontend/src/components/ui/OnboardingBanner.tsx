@@ -24,9 +24,21 @@ interface Props {
   hasBudget: boolean;
   hasTransactions: boolean;
   hasGoals: boolean;
+  /** False while the data behind the steps is still loading, so pending steps never flash. */
+  ready?: boolean;
 }
 
-export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props) {
+// Once every step is done (or the user closes the banner) it never comes back.
+const HIDDEN_KEY = 'mi-casa-onboarding-hidden';
+
+const readHidden = (): boolean => {
+  try { return window.localStorage.getItem(HIDDEN_KEY) === '1'; } catch { return false; }
+};
+const persistHidden = () => {
+  try { window.localStorage.setItem(HIDDEN_KEY, '1'); } catch { /* storage unavailable */ }
+};
+
+export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals, ready = true }: Props) {
   const steps = [
     { ...STEPS[0], done: hasBudget },
     { ...STEPS[1], done: hasTransactions },
@@ -35,14 +47,19 @@ export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props
 
   const allDone = steps.every(s => s.done);
   const [dismissed, setDismissed] = useState(false);
+  // Storage is read after mount (not during render) to avoid a hydration mismatch.
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (!allDone) return;
-    const timer = setTimeout(() => setDismissed(true), 1800);
-    return () => clearTimeout(timer);
-  }, [allDone]);
+    setDismissed(readHidden());
+    setChecked(true);
+  }, []);
 
-  if (dismissed) return null;
+  useEffect(() => {
+    if (ready && allDone) persistHidden();
+  }, [ready, allDone]);
+
+  if (!checked || !ready || dismissed || allDone) return null;
 
   const completedCount = steps.filter(s => s.done).length;
   const pct = Math.round((completedCount / steps.length) * 100);
@@ -65,7 +82,7 @@ export function OnboardingBanner({ hasBudget, hasTransactions, hasGoals }: Props
             <span className="block text-[11px] text-on-surface-variant -mt-0.5">{completedCount} de {steps.length}</span>
           </div>
           <button
-            onClick={() => setDismissed(true)}
+            onClick={() => { persistHidden(); setDismissed(true); }}
             aria-label="Ocultar primeros pasos"
             className="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-variant transition-colors"
           >
