@@ -12,6 +12,8 @@ import ConfirmDialog from '../components/ui/ConfirmDialog';
 import { fmt, MONTH_NAMES } from '../lib/format';
 import { useCurrencyFormatter, toLocalAmount } from '../lib/currency';
 import { ProgressBar } from '../components/ui/ProgressBar';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 const defaultItemForm = { name: '', quantity: 1, unitPrice: 0, currency: '', lugar: '' };
 
@@ -47,6 +49,16 @@ export default function PurchasesPage() {
     toLocalAmount(amount, currencyCode, localCurrency?.currencyCode, rates);
   const hasRate = (currencyCode: string | null | undefined): boolean =>
     !!currencyCode && currencyCode !== localCurrency?.currencyCode && !!rates[currencyCode];
+
+  // Sortable by column. Totals are compared in the local currency; the biggest line comes first.
+  const lineTotalLocal = (i: any) => toLocal(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
+  const { sorted: sortedItems, sort, toggle } = useTableSort<any>(items, {
+    name: (i: any) => i.name,
+    quantity: (i: any) => i.quantity,
+    unitPrice: (i: any) => toLocal(Number(i.unitPrice || 0), i.currency),
+    total: lineTotalLocal,
+    place: (i: any) => i.lugar ?? '',
+  }, { key: 'total', dir: 'desc' });
 
   const totalInLocal = items.reduce((s, i) => {
     return s + toLocal(Number(i.quantity || 0) * Number(i.unitPrice || 0), i.currency);
@@ -232,11 +244,11 @@ export default function PurchasesPage() {
             <table className="w-full text-sm">
               <thead className="bg-surface-container-low font-label-upper text-label-upper text-on-surface-variant">
                 <tr>
-                  <th className="px-3 py-2 text-left">Producto</th>
-                  <th className="px-3 py-2 text-right">Cant.</th>
-                  <th className="px-3 py-2 text-right">Precio Unit.</th>
-                  <th className="px-3 py-2 text-right">Total</th>
-                  <th className="px-3 py-2 text-left">Lugar</th>
+                  <SortableTh label="Producto" sortKey="name" sort={sort} onSort={toggle} align="left" className="px-3 py-2" />
+                  <SortableTh label="Cant." sortKey="quantity" sort={sort} onSort={toggle} align="right" className="px-3 py-2" />
+                  <SortableTh label="Precio Unit." sortKey="unitPrice" sort={sort} onSort={toggle} align="right" className="px-3 py-2" />
+                  <SortableTh label="Total" sortKey="total" sort={sort} onSort={toggle} align="right" className="px-3 py-2" />
+                  <SortableTh label="Lugar" sortKey="place" sort={sort} onSort={toggle} align="left" className="px-3 py-2" />
                   <th className="px-3 py-2 text-center">Acc.</th>
                 </tr>
               </thead>
@@ -248,7 +260,7 @@ export default function PurchasesPage() {
                     </td>
                   </tr>
                 ) : (
-                  items.map((item: any) => {
+                  sortedItems.map((item: any) => {
                     const lineTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
                     const sym = getCurrencySymbol(item.currency);
                     const localTotalLine = toLocal(lineTotal, item.currency);

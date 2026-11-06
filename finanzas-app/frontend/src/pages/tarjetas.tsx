@@ -8,6 +8,8 @@ import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
 import toast from 'react-hot-toast';
 import { invalidateDebtDerived } from '../lib/debt-cache';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 import ActionButtons from '../components/ui/ActionButtons';
 import { Plus, CreditCard, AlertTriangle, RefreshCw } from 'lucide-react';
 
@@ -59,6 +61,15 @@ export default function TarjetasPage() {
     () => creditCardsAPI.getAll().then(r => r.data),
     { staleTime: 0 }
   );
+
+  // Sortable by column; balances start largest first.
+  const { sorted: sortedCards, sort, toggle } = useTableSort<any>(cards, {
+    name: (c: any) => `${c.banco ?? ''} ${c.nombreTarjeta ?? ''}`,
+    balance: (c: any) => c.saldoActual,
+    limit: (c: any) => c.lineaCredito,
+    util: (c: any) => (Number(c.lineaCredito) > 0 ? Number(c.saldoActual || 0) / Number(c.lineaCredito) : 0),
+    rate: (c: any) => c.tasaAnual,
+  }, { key: 'balance', dir: 'desc' });
 
 
   const refreshCache = () => {
@@ -182,17 +193,17 @@ export default function TarjetasPage() {
             <table className="w-full text-sm">
               <thead className="bg-surface-container-low border-b border-outline-variant">
                 <tr>
-                  <th className="px-4 py-3 text-left font-label-upper text-label-upper text-on-surface-variant">Banco / Tarjeta</th>
-                  <th className="px-4 py-3 text-right font-label-upper text-label-upper text-on-surface-variant">Saldo</th>
-                  <th className="px-4 py-3 text-right font-label-upper text-label-upper text-on-surface-variant">Límite</th>
-                  <th className="px-4 py-3 text-center font-label-upper text-label-upper text-on-surface-variant">% Util.</th>
-                  <th className="px-4 py-3 text-right font-label-upper text-label-upper text-on-surface-variant">Tasa</th>
+                  <SortableTh label="Banco / Tarjeta" sortKey="name" sort={sort} onSort={toggle} align="left" className="px-4 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="Saldo" sortKey="balance" sort={sort} onSort={toggle} align="right" className="px-4 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="Límite" sortKey="limit" sort={sort} onSort={toggle} align="right" className="px-4 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="% Util." sortKey="util" sort={sort} onSort={toggle} align="center" className="px-4 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                  <SortableTh label="Tasa" sortKey="rate" sort={sort} onSort={toggle} align="right" className="px-4 py-3 font-label-upper text-label-upper text-on-surface-variant" />
                   <th className="px-4 py-3 text-left font-label-upper text-label-upper text-on-surface-variant">Estado pago</th>
                   <th className="px-4 py-3 text-center font-label-upper text-label-upper text-on-surface-variant">Acc.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {cards.map((c: any) => {
+                {sortedCards.map((c: any) => {
                   const saldo = Number(c.saldoActual || 0);
                   const limite = Number(c.lineaCredito || 0);
                   const util = limite > 0 ? (saldo / limite) * 100 : 0;

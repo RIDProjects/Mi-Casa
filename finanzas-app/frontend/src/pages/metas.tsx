@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 const EMOJI_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '🎓', '💍', '🏖️', '💰', '🏋️', '🎸'];
 
@@ -43,6 +45,15 @@ export default function MetasPage() {
     () => savingsGoalsAPI.getAll().then(r => r.data),
     { staleTime: 0 }
   );
+
+  // Sortable by column; goals start by the largest target.
+  const { sorted: sortedGoals, sort, toggle } = useTableSort<any>(goals, {
+    name: (g: any) => g.nombre,
+    saved: (g: any) => g.ahorrosActuales,
+    target: (g: any) => g.montoMeta,
+    progress: (g: any) => (Number(g.montoMeta) > 0 ? Number(g.ahorrosActuales) / Number(g.montoMeta) : 0),
+    monthly: (g: any) => g.monthlyContribution,
+  }, { key: 'target', dir: 'desc' });
 
 
   const refreshCache = () => {
@@ -460,15 +471,15 @@ export default function MetasPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">META</th>
-                    <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">AHORRADO</th>
-                    <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">META TOTAL</th>
-                    <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">PROGRESO</th>
-                    <th className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant">CUOTA</th>
+                    <SortableTh label="META" sortKey="name" sort={sort} onSort={toggle} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                    <SortableTh label="AHORRADO" sortKey="saved" sort={sort} onSort={toggle} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                    <SortableTh label="META TOTAL" sortKey="target" sort={sort} onSort={toggle} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                    <SortableTh label="PROGRESO" sortKey="progress" sort={sort} onSort={toggle} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
+                    <SortableTh label="CUOTA" sortKey="monthly" sort={sort} onSort={toggle} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-light">
-                  {goals.map((g: any) => {
+                  {sortedGoals.map((g: any) => {
                     const pct = Math.min(
                       g.montoMeta > 0 ? (Number(g.ahorrosActuales) / Number(g.montoMeta)) * 100 : 0,
                       100
