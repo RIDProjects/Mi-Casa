@@ -14,6 +14,9 @@ import { Plus, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { fmt } from '../lib/format';
 import { parseLocalDate } from '../lib/dates';
+import { toLocalAmount } from '../lib/currency';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 type InvestmentType = 'plazo_fijo' | 'fci' | 'acciones' | 'crypto' | 'dolar' | 'propiedades' | 'otros';
 
@@ -70,7 +73,7 @@ const defaultForm = {
 
 export default function InversionesPage() {
   const qc = useQueryClient();
-  const { currencies } = useCurrencyStore();
+  const { currencies, rates } = useCurrencyStore();
   const localCurrency = currencies.find(c => c.isLocal);
   const getCurrencySymbol = (code: string) => currencies.find(c => c.currencyCode === code)?.symbol ?? code;
   const [showModal, setShowModal] = useState(false);
@@ -144,7 +147,21 @@ export default function InversionesPage() {
     editItem ? updateMut.mutate(payload) : createMut.mutate(payload);
   };
 
-  const list = Array.isArray(investments) ? (investments as any[]) : [];
+  const rawList = Array.isArray(investments) ? (investments as any[]) : [];
+
+  // Sortable by column. Amounts are compared in the local currency so a large CUP
+  // figure does not outrank a larger USD one; they start largest first.
+  const invCurrency = (inv: any): string => inv.moneda ?? inv.currency ?? localCurrency?.currencyCode ?? '';
+  const toLocal = (value: unknown, inv: any) => toLocalAmount(Number(value ?? 0), invCurrency(inv), localCurrency?.currencyCode, rates);
+  const { sorted: list, sort, toggle } = useTableSort<any>(rawList, {
+    name: (i: any) => i.nombre ?? i.name ?? '',
+    type: (i: any) => TYPE_LABELS[(i.tipo ?? i.type ?? 'otros') as InvestmentType] ?? '',
+    amount: (i: any) => toLocal(i.monto ?? i.amount, i),
+    currency: (i: any) => invCurrency(i),
+    rate: (i: any) => i.tna ?? i.rate ?? 0,
+    value: (i: any) => toLocal(calcCurrentValue(i), i),
+    due: (i: any) => i.fechaFin ?? i.endDate ?? '',
+  }, { key: 'amount', dir: 'desc' });
 
   const totalsByCurrency: Record<string, number> = {};
   list.forEach(i => {
@@ -206,14 +223,14 @@ export default function InversionesPage() {
             <table className="w-full text-sm">
               <thead className="bg-surface-container-low border-b border-outline-variant">
                 <tr>
-                  {['Nombre', 'Tipo', 'Monto', 'Moneda', 'TNA% / TEA%', 'Valor Actual', 'Vencimiento', 'Acciones'].map(h => (
-                    <th
-                      key={h}
-                      className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  <SortableTh label="Nombre" sortKey="name" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <SortableTh label="Tipo" sortKey="type" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <SortableTh label="Monto" sortKey="amount" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <SortableTh label="Moneda" sortKey="currency" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <SortableTh label="TNA% / TEA%" sortKey="rate" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <SortableTh label="Valor Actual" sortKey="value" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <SortableTh label="Vencimiento" sortKey="due" sort={sort} onSort={toggle} className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap" />
+                  <th scope="col" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant whitespace-nowrap text-left">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">

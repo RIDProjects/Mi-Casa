@@ -16,6 +16,8 @@ import {
 import { CardSkeleton } from '../components/ui/Skeleton';
 import { fmt } from '../lib/format';
 import { getErrorMessage } from '../utils/errors';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
 
 const safeNum = (n: unknown): number => {
@@ -438,6 +440,13 @@ function AssetSection({
 
   const total = assets.reduce((s, a) => s + Number(a.valorEstimado || 0), 0) / divider;
 
+  // Sortable by column; the most valuable asset comes first.
+  const { sorted: sortedAssets, sort, toggle } = useTableSort<any>(assets, {
+    name: (a: any) => a.nombre,
+    value: (a: any) => a.valorEstimado,
+    notes: (a: any) => a.notas ?? '',
+  }, { key: 'value', dir: 'desc' });
+
   return (
     <div className="bg-panel rounded-xl border border-border-light shadow-sm overflow-x-auto mb-4">
       <div className="px-4 py-3 bg-surface-gray border-b border-border-light flex items-center justify-between">
@@ -449,14 +458,14 @@ function AssetSection({
       <table className="w-full text-sm">
         <thead className="bg-surface-gray border-b border-border-light">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-semibold text-on-surface-variant uppercase">Nombre</th>
-            <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Valor</th>
-            <th className="px-4 py-2 text-left text-xs font-semibold text-on-surface-variant uppercase">Notas</th>
+            <SortableTh label="Nombre" sortKey="name" sort={sort} onSort={toggle} align="left" className="px-4 py-2 text-xs font-semibold text-on-surface-variant" />
+            <SortableTh label="Valor" sortKey="value" sort={sort} onSort={toggle} align="right" className="px-4 py-2 text-xs font-semibold text-on-surface-variant" />
+            <SortableTh label="Notas" sortKey="notes" sort={sort} onSort={toggle} align="left" className="px-4 py-2 text-xs font-semibold text-on-surface-variant" />
             <th className="px-4 py-2 text-center text-xs font-semibold text-on-surface-variant uppercase">Acc.</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border-light">
-          {assets.map((a: any) => (
+          {sortedAssets.map((a: any) => (
             <tr key={a.id} className="hover:bg-surface-gray transition-colors">
               <td className="px-4 py-3 font-medium text-on-surface">{a.nombre}</td>
               <td className="px-4 py-3 text-right font-semibold text-ok-ink">

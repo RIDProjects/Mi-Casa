@@ -12,6 +12,8 @@ import PageHeader from '../components/ui/PageHeader';
 import { Input } from '../components/ui/Input';
 import { useCurrencyFormatter } from '../lib/currency';
 import { getErrorMessage } from '../utils/errors';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 const DEFAULT_CATEGORIES = [
   { name: 'Renta o crédito de vivienda', monthlyAmount: 0 },
@@ -126,6 +128,12 @@ export default function EmergencyFundPage() {
   };
 
   const fund = selectedFund || funds[0];
+
+  // Sortable by column; the biggest monthly category comes first.
+  const { sorted: sortedCategories, sort, toggle } = useTableSort<any>(fund?.categories, {
+    name: (c: any) => c.name,
+    amount: (c: any) => c.monthlyAmount,
+  }, { key: 'amount', dir: 'desc' });
   const calc = fund?.calculations;
 
   // Calculate totals
@@ -317,12 +325,12 @@ export default function EmergencyFundPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-surface-container-low border-b">
                         <tr>
-                          <th className="px-4 py-2 text-left text-xs font-semibold text-on-surface-variant uppercase">Categoría</th>
-                          <th className="px-4 py-2 text-right text-xs font-semibold text-on-surface-variant uppercase">Monto mensual</th>
+                          <SortableTh label="Categoría" sortKey="name" sort={sort} onSort={toggle} className="px-4 py-2 text-xs font-semibold text-on-surface-variant" />
+                          <SortableTh label="Monto mensual" sortKey="amount" sort={sort} onSort={toggle} align="right" className="px-4 py-2 text-xs font-semibold text-on-surface-variant" />
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-outline-variant">
-                        {fund.categories?.map((cat: any, idx: number) => (
+                        {sortedCategories.map((cat: any, idx: number) => (
                           <tr key={idx} className="hover:bg-surface-gray">
                             <td className="px-4 py-3 text-on-surface">{cat.name}</td>
                             <td className="px-4 py-3 text-right font-medium text-on-surface">
