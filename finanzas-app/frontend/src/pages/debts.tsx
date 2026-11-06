@@ -13,6 +13,8 @@ import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
 import { getErrorMessage } from '../utils/errors';
 import { useCurrencyFormatter } from '../lib/currency';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '' };
 
@@ -32,6 +34,13 @@ export default function DebtsPage() {
 
   const { data: debts = [], isLoading: loadingDebts, isError: errorDebts, refetch: refetchDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
   const { isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
+
+  // Every table is sortable by its columns; amounts start largest first.
+  const debtSortBy = { person: (d: any) => d.personName, amount: (d: any) => d.amount, note: (d: any) => d.note ?? '' };
+  const initialSort = { key: 'amount', dir: 'desc' as const };
+  const theyOweMeSort = useTableSort(debts.filter((d: any) => d.type === 'they_owe_me' && !d.isPaid), debtSortBy, initialSort);
+  const iOweSort = useTableSort(debts.filter((d: any) => d.type === 'i_owe' && !d.isPaid), debtSortBy, initialSort);
+  const paidSort = useTableSort(debts.filter((d: any) => d.isPaid), { ...debtSortBy, type: (d: any) => d.type }, initialSort);
 
 
   const updateDebtsCache = () => {
@@ -120,9 +129,9 @@ export default function DebtsPage() {
     );
   }
 
-  const theyOweMe = debts.filter((d: any) => d.type === 'they_owe_me' && !d.isPaid);
-  const iOwe = debts.filter((d: any) => d.type === 'i_owe' && !d.isPaid);
-  const paidDebts = debts.filter((d: any) => d.isPaid);
+  const theyOweMe = theyOweMeSort.sorted;
+  const iOwe = iOweSort.sorted;
+  const paidDebts = paidSort.sorted;
 
   const totalTheyOweMe = theyOweMe.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
   const totalIOwe = iOwe.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
@@ -194,9 +203,9 @@ export default function DebtsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Persona</th>
-                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">Monto</th>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Nota</th>
+                <SortableTh label="Persona" sortKey="person" sort={theyOweMeSort.sort} onSort={theyOweMeSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Monto" sortKey="amount" sort={theyOweMeSort.sort} onSort={theyOweMeSort.toggle} align="right" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Nota" sortKey="note" sort={theyOweMeSort.sort} onSort={theyOweMeSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
                 <th className="px-4 py-2 text-center font-label-upper text-label-upper text-on-surface-variant uppercase">Acc.</th>
               </tr>
             </thead>
@@ -248,9 +257,9 @@ export default function DebtsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Persona</th>
-                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">Monto</th>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Nota</th>
+                <SortableTh label="Persona" sortKey="person" sort={iOweSort.sort} onSort={iOweSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Monto" sortKey="amount" sort={iOweSort.sort} onSort={iOweSort.toggle} align="right" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Nota" sortKey="note" sort={iOweSort.sort} onSort={iOweSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
                 <th className="px-4 py-2 text-center font-label-upper text-label-upper text-on-surface-variant uppercase">Acc.</th>
               </tr>
             </thead>
@@ -304,9 +313,9 @@ export default function DebtsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Persona</th>
-                <th className="px-4 py-2 text-right font-label-upper text-label-upper text-on-surface-variant uppercase">Monto</th>
-                <th className="px-4 py-2 text-left font-label-upper text-label-upper text-on-surface-variant uppercase">Tipo</th>
+                <SortableTh label="Persona" sortKey="person" sort={paidSort.sort} onSort={paidSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Monto" sortKey="amount" sort={paidSort.sort} onSort={paidSort.toggle} align="right" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Tipo" sortKey="type" sort={paidSort.sort} onSort={paidSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">

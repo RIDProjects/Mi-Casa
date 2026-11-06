@@ -9,6 +9,8 @@ import { ErrorState } from '../components/ui/ErrorState';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, ChevronDown, Calculator, TrendingUp, TrendingDown, CreditCard, Bug, Pencil, Lock, BrainCircuit, AlertTriangle, Meh, ThumbsUp, Dumbbell, Trophy } from 'lucide-react';
 import { fmt } from '../lib/format';
+import { SortableTh } from '../components/ui/SortableTh';
+import { useTableSort } from '../hooks/useTableSort';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Periodicity = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'fourmonthly' | 'semiannual' | 'annual';
@@ -176,6 +178,13 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
     onError: (e: any) => { toast.error(getErr(e)); },
   });
 
+  // Sortable by column; the biggest monthly expense comes first.
+  const { sorted: sortedExpenses, sort: expenseSort, toggle: toggleExpenseSort } = useTableSort<Expense>(category.expenses, {
+    name: e => e.name,
+    amount: e => e.amount,
+    monthly: e => toMonthly(e.amount, e.periodicity),
+    period: e => PERIODICITY_LABELS[e.periodicity],
+  }, { key: 'monthly', dir: 'desc' });
   const autoTotal = autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
   const catTotal = category.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0) + autoTotal;
 
@@ -227,16 +236,16 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
             <table className="w-full text-left font-body-default">
               <thead>
                 <tr className="font-label-upper text-label-upper text-on-surface-variant bg-surface-container-low border-b border-outline-variant">
-                  <th className="px-6 py-3">Gasto</th>
-                  <th className="px-4 py-3 text-right">Monto</th>
-                  <th className="px-4 py-3 text-right">Mensual</th>
-                  <th className="px-4 py-3 text-center">Período</th>
+                  <SortableTh label="Gasto" sortKey="name" sort={expenseSort} onSort={toggleExpenseSort} className="px-6 py-3" />
+                  <SortableTh label="Monto" sortKey="amount" sort={expenseSort} onSort={toggleExpenseSort} align="right" />
+                  <SortableTh label="Mensual" sortKey="monthly" sort={expenseSort} onSort={toggleExpenseSort} align="right" />
+                  <SortableTh label="Período" sortKey="period" sort={expenseSort} onSort={toggleExpenseSort} align="center" />
                   <th className="px-4 py-3 text-center">Tipo</th>
                   <th className="px-4 py-3 text-center">Acc.</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {category.expenses.map(e => (
+                {sortedExpenses.map(e => (
                   <tr key={e.id} className="hover:bg-surface-gray transition-colors">
                     <td className="px-6 py-3 font-body-default text-on-surface">
                       <InlineEdit
@@ -528,6 +537,14 @@ export default function PresupuestoPage() {
     },
   );
 
+  // Income sources sortable by column; the biggest income comes first.
+  const { sorted: sortedIncome, sort: incomeSort, toggle: toggleIncomeSort } = useTableSort<IncomeSource>(budget?.incomeSources, {
+    name: i => i.name,
+    type: i => INCOME_TYPE_LABELS[i.type] ?? i.type,
+    amount: i => i.amount,
+    annual: i => i.amount,
+  }, { key: 'amount', dir: 'desc' });
+
   if (isLoading || (activeBudgetId && loadingBudget)) {
     return (
       <Layout>
@@ -710,10 +727,10 @@ export default function PresupuestoPage() {
             <table className="w-full text-left font-body-default">
               <thead>
                 <tr className="font-label-upper text-label-upper text-on-surface-variant bg-surface-container-low border-b border-outline-variant">
-                  <th className="px-6 py-3">Fuente</th>
-                  <th className="px-4 py-3 text-center">Tipo</th>
-                  <th className="px-4 py-3 text-right">Monto/mes</th>
-                  <th className="px-4 py-3 text-right">Anual</th>
+                  <SortableTh label="Fuente" sortKey="name" sort={incomeSort} onSort={toggleIncomeSort} className="px-6 py-3" />
+                  <SortableTh label="Tipo" sortKey="type" sort={incomeSort} onSort={toggleIncomeSort} align="center" />
+                  <SortableTh label="Monto/mes" sortKey="amount" sort={incomeSort} onSort={toggleIncomeSort} align="right" />
+                  <SortableTh label="Anual" sortKey="annual" sort={incomeSort} onSort={toggleIncomeSort} align="right" />
                   <th className="w-8" />
                 </tr>
               </thead>
@@ -725,7 +742,7 @@ export default function PresupuestoPage() {
                     </td>
                   </tr>
                 ) : (
-                  incomeSources.map(inc => (
+                  sortedIncome.map(inc => (
                     <tr key={inc.id} className="hover:bg-surface-gray transition-colors">
                       <td className="px-6 py-3 font-body-default text-on-surface">{inc.name}</td>
                       <td className="px-4 py-3 text-center">
