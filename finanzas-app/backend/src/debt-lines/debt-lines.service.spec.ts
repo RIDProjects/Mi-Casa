@@ -50,6 +50,18 @@ describe('DebtLinesService', () => {
     expect(line.estimated).toBe(true);
   });
 
+  it('treats a zero minimum payment as not set and estimates 5% of the balance', async () => {
+    // The debt form saves 0 when the minimum payment is left empty.
+    debts.findAll.mockResolvedValue([
+      { id: 'd1', personName: 'Paypal', type: 'i_owe', amount: '400.00', minimumPayment: '0.00', isPaid: false, interestRate: '0.0000' },
+    ]);
+
+    const [line] = await service.getLines(HOUSE);
+
+    expect(line.monthlyAmount).toBe(20);
+    expect(line.estimated).toBe(true);
+  });
+
   it('takes the monthly payment of every loan with one', async () => {
     loans.findByHouse.mockResolvedValue([
       { id: 'l1', tipo: 'Hipoteca', institucion: 'Banco A', cuotaMensual: 400, deudaActual: 20000 },
