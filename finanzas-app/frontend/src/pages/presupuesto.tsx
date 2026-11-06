@@ -178,12 +178,18 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
     onError: (e: any) => { toast.error(getErr(e)); },
   });
 
-  // Sortable by column; the biggest monthly expense comes first.
-  const { sorted: sortedExpenses, sort: expenseSort, toggle: toggleExpenseSort } = useTableSort<Expense>(category.expenses, {
-    name: e => e.name,
-    amount: e => e.amount,
-    monthly: e => toMonthly(e.amount, e.periodicity),
-    period: e => PERIODICITY_LABELS[e.periodicity],
+  // Manual expenses and the automatic debt lines share one table, so they sort together;
+  // the biggest monthly amount comes first.
+  type Row = { kind: 'manual'; expense: Expense } | { kind: 'auto'; line: AutoDebtLine };
+  const rows: Row[] = [
+    ...category.expenses.map((expense): Row => ({ kind: 'manual', expense })),
+    ...autoLines.map((line): Row => ({ kind: 'auto', line })),
+  ];
+  const { sorted: sortedRows, sort: expenseSort, toggle: toggleExpenseSort } = useTableSort<Row>(rows, {
+    name: r => (r.kind === 'manual' ? r.expense.name : r.line.label),
+    amount: r => (r.kind === 'manual' ? r.expense.amount : r.line.monthlyAmount),
+    monthly: r => (r.kind === 'manual' ? toMonthly(r.expense.amount, r.expense.periodicity) : r.line.monthlyAmount),
+    period: r => (r.kind === 'manual' ? PERIODICITY_LABELS[r.expense.periodicity] : 'Mensual'),
   }, { key: 'monthly', dir: 'desc' });
   const autoTotal = autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
   const catTotal = category.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0) + autoTotal;
@@ -245,7 +251,27 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {sortedExpenses.map(e => (
+                {sortedRows.map(row => {
+                  if (row.kind === 'auto') {
+                    const l = row.line;
+                    return (
+                      <tr key={`auto-${l.source}-${l.id}`} className="bg-surface-container-low/50">
+                        <td className="px-6 py-3 font-body-default text-on-surface">
+                          {l.label}
+                          {l.estimated && <span className="ml-2 font-body-small text-body-small text-outline">(estimado)</span>}
+                        </td>
+                        <td className="px-4 py-3 text-right font-body-default text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                        <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                        <td className="px-4 py-3 text-center font-body-small text-body-small text-outline">Mensual</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="px-2 py-0.5 rounded-full bg-info-container/40 text-info-ink font-label-upper text-label-upper">Automático</span>
+                        </td>
+                        <td className="px-4 py-3" />
+                      </tr>
+                    );
+                  }
+                  const e = row.expense;
+                  return (
                   <tr key={e.id} className="hover:bg-surface-gray transition-colors">
                     <td className="px-6 py-3 font-body-default text-on-surface">
                       <InlineEdit
@@ -331,22 +357,8 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
                       </button>
                     </td>
                   </tr>
-                ))}
-                {autoLines.map(l => (
-                  <tr key={`auto-${l.source}-${l.id}`} className="bg-surface-container-low/50">
-                    <td className="px-6 py-3 font-body-default text-on-surface">
-                      {l.label}
-                      {l.estimated && <span className="ml-2 font-body-small text-body-small text-outline">(estimado)</span>}
-                    </td>
-                    <td className="px-4 py-3 text-right font-body-default text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
-                    <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
-                    <td className="px-4 py-3 text-center font-body-small text-body-small text-outline">Mensual</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="px-2 py-0.5 rounded-full bg-info-container/40 text-info-ink font-label-upper text-label-upper">Automático</span>
-                    </td>
-                    <td className="px-4 py-3" />
-                  </tr>
-                ))}
+                  );
+                })}
               </tbody>
               <tfoot>
                 <tr className="bg-surface-container-low font-bold border-t border-outline-variant">
