@@ -54,7 +54,9 @@ export class DebtLinesService {
     for (const d of debts) {
       if (d.type !== DebtType.I_OWE || d.isPaid) continue;
       const balance = Number(d.amount);
-      const entered = d.minimumPayment != null ? Number(d.minimumPayment) : null;
+      // The debt form saves 0 when the minimum payment is left empty: that means "not set".
+      const minimum = d.minimumPayment != null ? Number(d.minimumPayment) : 0;
+      const entered = minimum > 0 ? minimum : null;
       lines.push({
         source: 'debt',
         id: d.id,
