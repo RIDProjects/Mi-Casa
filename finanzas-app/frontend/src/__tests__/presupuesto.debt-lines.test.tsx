@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import PresupuestoPage from '../pages/presupuesto';
 import { budgetAPI } from '../services/api';
@@ -72,6 +73,26 @@ describe('PresupuestoPage automatic debt lines', () => {
     const row = (await screen.findByText('Hipoteca - Banco A')).closest('tr') as HTMLElement;
     expect(within(row).getByText('Automático')).toBeInTheDocument();
     expect(screen.getByText(/pagos de deuda automáticos/i)).toBeInTheDocument();
+  });
+
+  it('sorts automatic and manual lines together, biggest monthly amount first', async () => {
+    renderPage();
+
+    const row = (await screen.findByText('Hipoteca - Banco A')).closest('tr') as HTMLElement;
+    const table = row.closest('table') as HTMLElement;
+    const names = Array.from(table.querySelectorAll('tbody tr')).map(tr => tr.querySelector('td')?.textContent?.replace(/\s+/g, ' ').trim());
+    expect(names).toEqual(['Hipoteca - Banco A', 'Visa Gold(estimado)', 'Pago a Pedro']);
+  });
+
+  it('re-sorts automatic and manual lines together by name', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const row = (await screen.findByText('Hipoteca - Banco A')).closest('tr') as HTMLElement;
+    const table = row.closest('table') as HTMLElement;
+    await user.click(within(within(table).getByRole('columnheader', { name: /gasto/i })).getByRole('button'));
+    const names = Array.from(table.querySelectorAll('tbody tr')).map(tr => tr.querySelector('td')?.textContent?.replace(/\s+/g, ' ').trim());
+    expect(names).toEqual(['Hipoteca - Banco A', 'Pago a Pedro', 'Visa Gold(estimado)']);
   });
 
   it('marks estimated lines', async () => {
