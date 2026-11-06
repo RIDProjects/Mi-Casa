@@ -24,9 +24,10 @@ interface BudgetPlan {
 
 interface IncomeSource { id: string; name: string; type: string; amount: number; }
 interface Expense { id: string; name: string; amount: number; periodicity: Periodicity; isFixed: boolean; isCreditCard: boolean; isAntExpense: boolean; }
+interface AutoDebtLine { source: 'debt' | 'loan' | 'cuota' | 'card'; id: string; label: string; monthlyAmount: number; balance: number; estimated: boolean; }
 interface Category { id: string; name: string; sortOrder: number; isDefault: boolean; expenses: Expense[]; }
 interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; plan: BudgetPlan | null; }
-interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; fiMultiplier?: number | null; minInvestmentPercent?: number | null; emergencyFundMonths?: number | null; entertainmentPercent?: number | null; fixedExpensesCapPercent?: number | null; incomeSources: IncomeSource[]; categories: Category[]; summary: BudgetSummary; }
+interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; fiMultiplier?: number | null; minInvestmentPercent?: number | null; emergencyFundMonths?: number | null; entertainmentPercent?: number | null; fixedExpensesCapPercent?: number | null; incomeSources: IncomeSource[]; categories: Category[]; autoDebtLines?: AutoDebtLine[]; summary: BudgetSummary; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getErr = (e: any) => e?.response?.data?.message || e?.message || 'Error';
@@ -154,7 +155,9 @@ function InlineEdit({ label, value, display, type, align = 'left', onSave }: {
   );
 }
 
-function CategorySection({ category, onRefresh, onDeleteCategory }: { category: Category; onRefresh: () => void; onDeleteCategory: () => void; }) {
+const isDebtCategory = (name: string) => name.trim().toLowerCase() === 'deudas';
+
+function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory }: { category: Category; autoLines?: AutoDebtLine[]; onRefresh: () => void; onDeleteCategory: () => void; }) {
   const [open, setOpen] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
@@ -173,7 +176,8 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
     onError: (e: any) => { toast.error(getErr(e)); },
   });
 
-  const catTotal = category.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
+  const autoTotal = autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
+  const catTotal = category.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0) + autoTotal;
 
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
@@ -185,7 +189,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
         <div className="flex items-center gap-2">
           <ChevronDown size={15} className={`text-on-surface-variant transition-transform duration-500 ${open ? '' : '-rotate-90'}`} />
           <span className="font-section-title text-section-title text-on-surface">{category.name}</span>
-          <span className="font-body-small text-body-small text-outline">({category.expenses.length})</span>
+          <span className="font-body-small text-body-small text-outline">({category.expenses.length + autoLines.length})</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-card-title text-card-title text-on-surface-variant">${fmt(catTotal)}/mes</span>
@@ -215,7 +219,7 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
       >
         <div className="min-h-0 overflow-hidden">
         <div className="overflow-x-auto">
-          {category.expenses.length === 0 ? (
+          {category.expenses.length === 0 && autoLines.length === 0 ? (
             <p className="px-4 py-3 font-body-small text-body-small text-outline">
               Sin gastos en esta categoría
             </p>
@@ -317,6 +321,21 @@ function CategorySection({ category, onRefresh, onDeleteCategory }: { category: 
                         <Trash2 size={14} />
                       </button>
                     </td>
+                  </tr>
+                ))}
+                {autoLines.map(l => (
+                  <tr key={`auto-${l.source}-${l.id}`} className="bg-surface-container-low/50">
+                    <td className="px-6 py-3 font-body-default text-on-surface">
+                      {l.label}
+                      {l.estimated && <span className="ml-2 font-body-small text-body-small text-outline">(estimado)</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right font-body-default text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                    <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                    <td className="px-4 py-3 text-center font-body-small text-body-small text-outline">Mensual</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="px-2 py-0.5 rounded-full bg-info-container/40 text-info-ink font-label-upper text-label-upper">Automático</span>
+                    </td>
+                    <td className="px-4 py-3" />
                   </tr>
                 ))}
               </tbody>
@@ -977,6 +996,7 @@ export default function PresupuestoPage() {
               key={cat.id}
               category={cat}
               onRefresh={refresh}
+              autoLines={isDebtCategory(cat.name) ? budget.autoDebtLines ?? [] : []}
               onDeleteCategory={() => setDeleteCategoryId(cat.id)}
             />
           ))}
