@@ -1003,6 +1003,34 @@ export default function PresupuestoPage() {
         </div>
       )}
 
+      {/* Without a Deudas category the automatic lines have nowhere to live, but they still count in the totals. */}
+      {(budget.autoDebtLines?.length ?? 0) > 0 && !categories.some(c => isDebtCategory(c.name)) && (
+        <div className="mt-3 bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
+          <div className="px-4 py-3 bg-surface-gray border-b border-outline-variant flex items-center justify-between">
+            <span className="font-section-title text-section-title text-on-surface">Pagos de deuda automáticos</span>
+            <span className="font-card-title text-card-title text-on-surface-variant">
+              ${fmt((budget.autoDebtLines ?? []).reduce((sum, l) => sum + Number(l.monthlyAmount), 0))}/mes
+            </span>
+          </div>
+          <table className="w-full text-left font-body-default">
+            <tbody className="divide-y divide-outline-variant">
+              {(budget.autoDebtLines ?? []).map(l => (
+                <tr key={`orphan-${l.source}-${l.id}`}>
+                  <td className="px-6 py-3 text-on-surface">
+                    {l.label}
+                    {l.estimated && <span className="ml-2 font-body-small text-body-small text-outline">(estimado)</span>}
+                  </td>
+                  <td className="px-4 py-3 text-right text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="px-2 py-0.5 rounded-full bg-info-container/40 text-info-ink font-label-upper text-label-upper">Automático</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {/* ── Modals ── */}
       <Modal
         isOpen={showIncomeModal}

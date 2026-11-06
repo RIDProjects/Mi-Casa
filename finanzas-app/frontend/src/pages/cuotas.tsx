@@ -5,6 +5,7 @@ import { cuotasAPI } from '../services/api';
 import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import toast from 'react-hot-toast';
+import { invalidateDebtDerived } from '../lib/debt-cache';
 import { Plus, CreditCard, Edit2, Trash2, CheckCircle, Calendar, AlertTriangle, RefreshCw } from 'lucide-react';
 import { parseLocalDate } from '../lib/dates';
 import { ProgressBar } from '../components/ui/ProgressBar';
@@ -62,6 +63,7 @@ export default function CuotasPage() {
   const invalidate = () => {
     qc.invalidateQueries('cuotas');
     qc.invalidateQueries('cuotas-summary');
+    invalidateDebtDerived(qc);
   };
 
   const createMut = useMutation((d: any) => cuotasAPI.create(d), {

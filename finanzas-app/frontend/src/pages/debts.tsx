@@ -7,6 +7,7 @@ import Modal from '../components/ui/Modal';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import ActionButtons from '../components/ui/ActionButtons';
 import toast from 'react-hot-toast';
+import { invalidateDebtDerived } from '../lib/debt-cache';
 import { Plus, CheckCircle, DollarSign, Calendar, User, Lock, AlertTriangle, RefreshCw, ArrowDownLeft, ArrowUpRight, Scale } from 'lucide-react';
 import PageHeader from '../components/ui/PageHeader';
 import { Badge } from '../components/ui/Badge';
@@ -36,6 +37,7 @@ export default function DebtsPage() {
   const updateDebtsCache = () => {
     debtsAPI.getAll().then(r => { qc.setQueryData('debts', r.data); });
     debtsAPI.getSummary().then(r => { qc.setQueryData('debtsSummary', r.data); });
+    invalidateDebtDerived(qc);
   };
 
   const createMut = useMutation((d: any) => debtsAPI.create(d), {
