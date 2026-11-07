@@ -698,6 +698,7 @@
           <li><strong>Cuenta:</strong> el email no distingue mayúsculas de minúsculas; al cerrar sesión, el siguiente usuario del dispositivo no ve datos del anterior.</li>
           <li><strong>Presupuesto:</strong> el equivalente mensual usa 52 semanas al año para «Semanal» (≈ 4,33 veces al mes) y dos pagos al mes para «Quincenal» (× 2), de modo que los montos enteros se mantienen enteros.</li>
           <li><strong>Deudas en el Presupuesto:</strong> la categoría «Deudas» suma automáticamente los pagos mensuales de tus préstamos, cuotas activas, deudas que debes (pago mínimo) y tarjetas que no pagas completas (estimado: 5% del saldo). Aparecen con la etiqueta «Automático» y no se editan; tus gastos manuales en esa categoría se conservan, así que elimina los duplicados.</li>
+          <li><strong>Prioridad de las deudas:</strong> en las deudas que debes eliges una prioridad (alta, media o baja; por defecto media). Lo que te deben se descuenta de tus deudas en ese orden, de la más alta a la más baja y, dentro de una prioridad, de la más antigua a la más nueva. Las cubiertas por completo no pasan al presupuesto; la primera que no se alcanza a cubrir pasa solo con lo que falta, y las siguientes con su saldo completo. En el presupuesto entran como pago mensual de ese saldo pendiente (tu pago mínimo, sin pasar de lo que falta, o el 5% si no lo tienes).</li>
           <li><strong>Inversiones:</strong> la moneda de una inversión puede ser cualquiera de las monedas activas de la casa (configuradas en Monedas); por defecto, la moneda local.</li>
           <li><strong>Sesiones:</strong> el botón «Cerrar sesión en todos los dispositivos» del menú lateral cierra de inmediato todas las sesiones abiertas (web y móvil). Restablecer la contraseña también cierra las demás sesiones.</li>
         </ul>
@@ -1235,6 +1236,7 @@
             <tr><td>Total les debo</td><td>Suma de lo pendiente de pagar</td></tr>
             <tr><td>Balance neto</td><td>Diferencia: ¿quedás deudor o acreedor?</td></tr>
             <tr><td>Deudas vencidas</td><td>Alertas de deudas sin pagar hace mucho</td></tr>
+            <tr><td>Cobertura con lo que te deben</td><td>Cuánto de lo que te deben cubre cada deuda tuya (cubierta, parcial o pendiente) y cuánto pasa al presupuesto</td></tr>
             <tr><td>Salud de tus deudas (Inicio)</td><td>Veredicto bien / atención / riesgo según deuda ÷ ingreso (menos de 20%, 20% a 35%, más de 35%) y plazo estimado para saldarlas: corto (hasta 12 meses), mediano (hasta 36) o largo</td></tr>
           </tbody>
         </table>

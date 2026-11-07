@@ -149,7 +149,16 @@ export default function DebtsSummaryScreen() {
     staleTime: 0,
   });
 
+  // What is owed to me applied against the debts I owe by priority; the uncovered part reaches the budget.
+  const { data: offset } = useQuery({
+    queryKey: ['debts-offset'],
+    refetchInterval: pollInterval,
+    queryFn: debtsService.getOffset,
+    staleTime: 0,
+  });
+
   const invalidate = useCallback(() => {
+    qc.invalidateQueries({ queryKey: ['debts-offset'] });
     qc.invalidateQueries({ queryKey: ['debts'] });
     qc.invalidateQueries({ queryKey: ['debtsSummary'] });
   }, [qc]);
@@ -189,7 +198,16 @@ export default function DebtsSummaryScreen() {
   }
 
   const theyOweMe = debts.filter((d) => d.type === 'they_owe_me' && !d.isPaid);
-  const iOwe = debts.filter((d) => d.type === 'i_owe' && !d.isPaid);
+  const PRIORITY_RANK = { alta: 0, media: 1, baja: 2 } as const;
+  // Most urgent first (the order the offset walks them); oldest first inside a priority.
+  const iOwe = debts
+    .filter((d) => d.type === 'i_owe' && !d.isPaid)
+    .sort(
+      (a, b) =>
+        PRIORITY_RANK[a.priority ?? 'media'] - PRIORITY_RANK[b.priority ?? 'media'] ||
+        String(a.createdAt).localeCompare(String(b.createdAt)),
+    );
+  const coverageById = new Map((offset?.items ?? []).map((i) => [i.id, i]));
   const paidDebts = debts.filter((d) => d.isPaid);
 
   const totalTheyOweMe = theyOweMe.reduce((s, d) => s + Number(d.amount), 0);
@@ -233,6 +251,7 @@ export default function DebtsSummaryScreen() {
       <Reveal index={Math.min(index, 6) + 2} style={styles.itemGap}>
         <DebtCard
           debt={item}
+          coverage={coverageById.get(item.id)}
           onMarkPaid={(id) => markPaidMut.mutate(id)}
           onDelete={(id) => deleteMut.mutate(id)}
           onEdit={(id) => navigation.navigate('AddDebt', { debtId: id })}
@@ -321,6 +340,29 @@ export default function DebtsSummaryScreen() {
           </View>
         </Card>
       </Reveal>
+
+      {offset && offset.items.length > 0 ? (
+        <Reveal index={2}>
+          <Card style={styles.heroCard}>
+            <Text style={styles.heroLabel}>Cobertura con lo que te deben</Text>
+            <View style={styles.heroRow}>
+              <View style={styles.heroStat}>
+                <Text style={styles.heroStatLabel}>Cubierto</Text>
+                <Text style={[styles.heroStatValue, { color: colors.okInk }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {fmt(offset.totalCovered)}
+                </Text>
+              </View>
+              <View style={styles.heroDivider} />
+              <View style={styles.heroStat}>
+                <Text style={styles.heroStatLabel}>Pasa al presupuesto</Text>
+                <Text style={[styles.heroStatValue, { color: colors.dangerInk }]} numberOfLines={1} adjustsFontSizeToFit>
+                  {fmt(offset.totalPending)}
+                </Text>
+              </View>
+            </View>
+          </Card>
+        </Reveal>
+      ) : null}
     </View>
   );
 

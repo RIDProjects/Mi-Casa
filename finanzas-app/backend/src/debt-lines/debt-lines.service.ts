@@ -5,6 +5,7 @@ import { CuotasService } from '../cuotas/cuotas.service';
 import { CreditCardsService } from '../credit-cards/credit-cards.service';
 import { DebtType } from '../database/entities/debt.entity';
 import { CardPaymentType } from '../database/entities/credit-card.entity';
+import { computeDebtOffset, OffsetPriority } from '../debts/debt-offset';
 
 export type DebtLineSource = 'debt' | 'loan' | 'cuota' | 'card';
 
@@ -51,18 +52,37 @@ export class DebtLinesService {
 
     const lines: DebtLine[] = [];
 
-    for (const d of debts) {
-      if (d.type !== DebtType.I_OWE || d.isPaid) continue;
-      const balance = Number(d.amount);
+    // What is owed to the house is applied against its debts by priority; only what is
+    // left uncovered is budgeted, with its payment computed on that remaining balance.
+    const unpaid = debts.filter((d: any) => !d.isPaid);
+    const owedToMe = unpaid
+      .filter((d: any) => d.type === DebtType.THEY_OWE_ME)
+      .reduce((s: number, d: any) => s + Number(d.amount), 0);
+    const owing = unpaid.filter((d: any) => d.type === DebtType.I_OWE);
+    const byId = new Map<string, any>(owing.map((d: any) => [d.id, d]));
+    const offset = computeDebtOffset({
+      owedToMe,
+      debts: owing.map((d: any) => ({
+        id: d.id,
+        label: d.personName,
+        amount: Number(d.amount),
+        priority: (d.priority ?? 'media') as OffsetPriority,
+        createdAt: d.createdAt ?? new Date(0),
+      })),
+    });
+
+    for (const item of offset.items) {
+      if (item.pending <= 0) continue;
+      const d = byId.get(item.id);
       // The debt form saves 0 when the minimum payment is left empty: that means "not set".
       const minimum = d.minimumPayment != null ? Number(d.minimumPayment) : 0;
       const entered = minimum > 0 ? minimum : null;
       lines.push({
         source: 'debt',
-        id: d.id,
-        label: d.personName,
-        monthlyAmount: round2(entered ?? balance * ESTIMATED_PAYMENT_RATE),
-        balance,
+        id: item.id,
+        label: item.label,
+        monthlyAmount: round2(entered != null ? Math.min(entered, item.pending) : item.pending * ESTIMATED_PAYMENT_RATE),
+        balance: item.pending,
         estimated: entered == null,
         interestRate: Number(d.interestRate ?? 0),
       });

@@ -28,7 +28,7 @@ describe('DebtLinesService', () => {
   it('uses the minimum payment of unpaid I_OWE debts and ignores paid and they_owe_me ones', async () => {
     debts.findAll.mockResolvedValue([
       { id: 'd1', personName: 'Ana', type: 'i_owe', amount: 1000, minimumPayment: 80, isPaid: false },
-      { id: 'd2', personName: 'Luis', type: 'they_owe_me', amount: 500, minimumPayment: 50, isPaid: false },
+      { id: 'd2', personName: 'Luis', type: 'they_owe_me', amount: 500, minimumPayment: 50, isPaid: true },
       { id: 'd3', personName: 'Eva', type: 'i_owe', amount: 300, minimumPayment: 30, isPaid: true },
     ]);
 
@@ -60,6 +60,72 @@ describe('DebtLinesService', () => {
 
     expect(line.monthlyAmount).toBe(20);
     expect(line.estimated).toBe(true);
+  });
+
+  describe('offset against what is owed to the house', () => {
+    const owe = (id: string, amount: number, over: any = {}) => ({
+      id, personName: id, type: 'i_owe', amount, minimumPayment: null, isPaid: false, priority: 'media', interestRate: 0,
+      createdAt: new Date('2026-01-01T00:00:00Z'), ...over,
+    });
+    const owed = (id: string, amount: number, over: any = {}) => ({ id, personName: id, type: 'they_owe_me', amount, isPaid: false, ...over });
+
+    it('drops the debts fully covered by what is owed and keeps the rest', async () => {
+      debts.findAll.mockResolvedValue([owed('o1', 500), owe('hi', 300, { priority: 'alta', minimumPayment: 20 }), owe('mid', 600, { minimumPayment: 80 })]);
+
+      const lines = await service.getLines(HOUSE);
+
+      // 500 covers "hi" (300) and 200 of "mid"; 400 of "mid" stays
+      expect(lines).toEqual([
+        { source: 'debt', id: 'mid', label: 'mid', monthlyAmount: 80, balance: 400, estimated: false, interestRate: 0 },
+      ]);
+    });
+
+    it('estimates 5% of the uncovered balance when the debt has no minimum payment', async () => {
+      debts.findAll.mockResolvedValue([owed('o1', 500), owe('d', 600)]);
+
+      const [line] = await service.getLines(HOUSE);
+
+      expect(line.balance).toBe(100);
+      expect(line.monthlyAmount).toBe(5);
+      expect(line.estimated).toBe(true);
+    });
+
+    it('caps the minimum payment at the uncovered balance', async () => {
+      debts.findAll.mockResolvedValue([owed('o1', 570), owe('d', 600, { minimumPayment: 80 })]);
+
+      const [line] = await service.getLines(HOUSE);
+
+      expect(line.balance).toBe(30);
+      expect(line.monthlyAmount).toBe(30);
+    });
+
+    it('walks by priority, so the low-priority debt is the one left for the budget', async () => {
+      debts.findAll.mockResolvedValue([
+        owe('low', 100, { priority: 'baja', minimumPayment: 10 }),
+        owe('high', 100, { priority: 'alta', minimumPayment: 10 }),
+        owed('o1', 100),
+      ]);
+
+      const lines = await service.getLines(HOUSE);
+
+      expect(lines.map(l => l.id)).toEqual(['low']);
+    });
+
+    it('does not count what is owed once it is marked as paid', async () => {
+      debts.findAll.mockResolvedValue([owed('o1', 500, { isPaid: true }), owe('d', 200, { minimumPayment: 20 })]);
+
+      const [line] = await service.getLines(HOUSE);
+
+      expect(line.balance).toBe(200);
+    });
+
+    it('treats a debt without priority as media (rows created before the column existed)', async () => {
+      debts.findAll.mockResolvedValue([owe('old', 100, { priority: undefined, minimumPayment: 10 }), owe('hi', 100, { priority: 'alta', minimumPayment: 10 }), owed('o1', 100)]);
+
+      const lines = await service.getLines(HOUSE);
+
+      expect(lines.map(l => l.id)).toEqual(['old']);
+    });
   });
 
   it('takes the monthly payment of every loan with one', async () => {

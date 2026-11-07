@@ -18,7 +18,7 @@ import { debtsService } from '../../services/debts.service';
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: mockNavigate }) }));
 jest.mock('../../services/debts.service', () => ({
-  debtsService: { getAll: jest.fn(), getSummary: jest.fn(), markAsPaid: jest.fn(), delete: jest.fn() },
+  debtsService: { getAll: jest.fn(), getSummary: jest.fn(), getOffset: jest.fn(), markAsPaid: jest.fn(), delete: jest.fn() },
 }));
 
 const svc = debtsService as jest.Mocked<typeof debtsService>;
@@ -39,7 +39,57 @@ const renderScreen = () => {
 };
 
 describe('DebtsSummaryScreen', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    svc.getOffset.mockResolvedValue({ owedToMe: 0, items: [], totalCovered: 0, totalPending: 0, remainingPool: 0 });
+  });
+
+  it('shows the priority and coverage of each debt I owe and what passes to the budget', async () => {
+    svc.getAll.mockResolvedValue([
+      debt({ id: 'o', personName: 'Luis', amount: 200 }),
+      debt({ id: 'a', personName: 'Alba', amount: 100, type: 'i_owe', priority: 'alta' }),
+      debt({ id: 'b', personName: 'Beto', amount: 150, type: 'i_owe', priority: 'media' }),
+      debt({ id: 'c', personName: 'Cata', amount: 80, type: 'i_owe', priority: 'baja' }),
+    ]);
+    svc.getSummary.mockResolvedValue({ totalTheyOweMe: 200, totalIOwe: 330, balance: -130 });
+    svc.getOffset.mockResolvedValue({
+      owedToMe: 200,
+      items: [
+        { id: 'a', label: 'Alba', priority: 'alta', amount: 100, covered: 100, pending: 0, status: 'cubierta' },
+        { id: 'b', label: 'Beto', priority: 'media', amount: 150, covered: 100, pending: 50, status: 'parcial' },
+        { id: 'c', label: 'Cata', priority: 'baja', amount: 80, covered: 0, pending: 80, status: 'pendiente' },
+      ],
+      totalCovered: 200,
+      totalPending: 130,
+      remainingPool: 0,
+    });
+    renderScreen();
+
+    expect(await screen.findByText('Alba')).toBeTruthy();
+    expect(screen.getByText('Prioridad alta')).toBeTruthy();
+    expect(screen.getByText('Prioridad media')).toBeTruthy();
+    expect(screen.getByText('Prioridad baja')).toBeTruthy();
+    expect(screen.getByText('Cubierta')).toBeTruthy();
+    expect(screen.getByText('Parcial · faltan US$ 50.00')).toBeTruthy();
+    expect(screen.getByText('Pendiente')).toBeTruthy();
+    expect(screen.getByText('Pasa al presupuesto')).toBeTruthy();
+    expect(screen.getByText('US$ 130.00')).toBeTruthy();
+  });
+
+  it('lists the debts I owe by priority, highest first', async () => {
+    svc.getAll.mockResolvedValue([
+      debt({ id: 'c', personName: 'Cata', amount: 80, type: 'i_owe', priority: 'baja' }),
+      debt({ id: 'a', personName: 'Alba', amount: 100, type: 'i_owe', priority: 'alta' }),
+      debt({ id: 'b', personName: 'Beto', amount: 150, type: 'i_owe', priority: 'media' }),
+    ]);
+    svc.getSummary.mockResolvedValue({ totalTheyOweMe: 0, totalIOwe: 330, balance: -330 });
+    renderScreen();
+
+    await screen.findByText('Alba');
+    // getAllByText returns the matches in tree order, so this is the order on screen.
+    const names = screen.getAllByText(/^(Alba|Beto|Cata)$/).map((n) => n.props.children);
+    expect(names).toEqual(['Alba', 'Beto', 'Cata']);
+  });
 
   it('shows the skeleton while loading', () => {
     svc.getAll.mockImplementation(() => new Promise(() => {}));
