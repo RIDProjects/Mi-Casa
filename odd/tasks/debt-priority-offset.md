@@ -16,7 +16,7 @@ Branch: feat/debt-priority-offset (from dev).
 ## Tasks
 - [x] T1 (S1) backend: Debt.priority column (alta/media/baja, default media), migration, DTOs. Route: inline. Done: 3 DTO tests (RED 3 failing) -> GREEN; migration written but NOT run on a database (docker daemon off). Commit: see git log (feat(debts): priority offset)
 - [x] T2 (S2-S7) backend: pure computeDebtOffset + DebtLinesService uses it for i_owe debts + GET /debts/offset + tests. Route: inline. Done: 7 offset tests + 6 debt-lines tests (RED 5 failing) -> GREEN, backend 369/369, tsc clean. Commit: same as T1
-- [ ] T3 (S1,S8) web: priority in the debt form/table (badge, sortable) + offset panel on the Debts page. Route: inline. Commit: pending
+- [x] T3 (S1,S8) web: priority in the debt form/table (badge, sortable, default order by priority) + offset panel on the Debts page. Route: inline. Done: 4 new tests (RED 4 failing) -> GREEN, web 128/128, tsc clean, lint 0 errors. Commit: see git log (feat(web): debt priority)
 - [ ] T4 (S1,S8) mobile: priority in the debt form/list + offset summary. Route: inline. Commit: pending
 - [ ] T5 guide/docs. Route: inline. Commit: pending
 

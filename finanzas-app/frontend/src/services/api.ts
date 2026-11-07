@@ -80,6 +80,7 @@ export const housesAPI = {
 export const debtsAPI = {
   getAll: () => api.get('/debts'),
   getSummary: () => api.get('/debts/summary'),
+  getOffset: () => api.get('/debts/offset'),
   create: (data: any) => api.post('/debts', data),
   update: (id: string, data: any) => api.put(`/debts/${id}`, data),
   delete: (id: string) => api.delete(`/debts/${id}`),

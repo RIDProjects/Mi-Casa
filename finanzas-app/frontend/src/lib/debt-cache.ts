@@ -7,7 +7,7 @@ import type { QueryClient } from 'react-query';
  * lag behind what was just saved.
  */
 export function invalidateDebtDerived(qc: Pick<QueryClient, 'invalidateQueries'>) {
-  ['debt-health', 'globalSummary', 'budgetDashboard', 'budgets', 'budget', 'debtsSummary'].forEach((key) =>
+  ['debt-health', 'globalSummary', 'budgetDashboard', 'budgets', 'budget', 'debtsSummary', 'debts-offset'].forEach((key) =>
     qc.invalidateQueries(key),
   );
 }
