@@ -11,7 +11,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { debtsService } from '../../services/debts.service';
-import { CreateDebtDto, Debt, DebtType } from '../../types';
+import { CreateDebtDto, Debt, DebtPriority, DebtType } from '../../types';
 import { DebtsStackParamList } from '../../navigation/types';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius, toneInk, toneTint } from '../../theme/tokens';
@@ -23,6 +23,12 @@ type RouteT = RouteProp<DebtsStackParamList, 'AddDebt'>;
 const TYPES: { value: DebtType; label: string; icon: string; tone: Tone }[] = [
   { value: 'they_owe_me', label: 'ME DEBEN', icon: '💙', tone: 'info' },
   { value: 'i_owe', label: 'LES DEBO', icon: '❤️', tone: 'danger' },
+];
+
+const PRIORITIES: { value: DebtPriority; label: string }[] = [
+  { value: 'alta', label: 'Alta' },
+  { value: 'media', label: 'Media' },
+  { value: 'baja', label: 'Baja' },
 ];
 
 const createStyles = (c: ThemeColors) =>
@@ -43,6 +49,20 @@ const createStyles = (c: ThemeColors) =>
       backgroundColor: c.surfaceContainer,
     },
     typeIcon: { fontSize: 18 },
+    priorityBlock: { gap: 8 },
+    priorityLabel: { fontFamily: fonts.semibold, color: c.onSurface, fontSize: 13 },
+    priorityRow: { flexDirection: 'row', gap: 8 },
+    priorityChip: {
+      flex: 1,
+      paddingVertical: 10,
+      alignItems: 'center',
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: c.border,
+      backgroundColor: c.surfaceContainer,
+    },
+    priorityChipText: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13 },
+    priorityHint: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 12 },
     typeLabel: { fontFamily: fonts.bold, color: c.onSurfaceVariant, fontSize: 13, letterSpacing: 0.5 },
     hint: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: radius.md },
     hintText: { fontFamily: fonts.semibold, fontSize: 13, textAlign: 'center' },
@@ -70,6 +90,7 @@ export default function AddDebtScreen() {
   const [personName, setPersonName] = useState(existingDebt?.personName ?? '');
   const [amount, setAmount] = useState(existingDebt ? String(existingDebt.amount) : '');
   const [note, setNote] = useState(existingDebt?.note ?? '');
+  const [priority, setPriority] = useState<DebtPriority>(existingDebt?.priority ?? 'media');
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['debts'] });
@@ -113,11 +134,13 @@ export default function AddDebtScreen() {
       return;
     }
 
-    const payload = {
+    const payload: CreateDebtDto = {
       personName: personName.trim(),
       amount: parsedAmount,
       note: note.trim() || undefined,
       type: debtType,
+      // The priority only orders the debts I owe; what is owed to me never needs one.
+      ...(debtType === 'i_owe' ? { priority } : {}),
     };
 
     if (isEditing) {
@@ -173,6 +196,31 @@ export default function AddDebtScreen() {
             </View>
 
             {/* Campos */}
+            {debtType === 'i_owe' && (
+              <View style={styles.priorityBlock}>
+                <Text style={styles.priorityLabel}>Prioridad</Text>
+                <View style={styles.priorityRow}>
+                  {PRIORITIES.map(({ value, label }) => {
+                    const active = priority === value;
+                    return (
+                      <TouchableOpacity
+                        key={value}
+                        style={[styles.priorityChip, active && { backgroundColor: toneTint(colors, 'danger'), borderColor: toneInk(colors, 'danger') }]}
+                        onPress={() => setPriority(value)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        disabled={isPending}
+                      >
+                        <Text style={[styles.priorityChipText, active && { color: toneInk(colors, 'danger') }]}>{label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                <Text style={styles.priorityHint}>Las de prioridad alta se cubren primero con lo que te deben; las bajas se presupuestan para después.</Text>
+              </View>
+            )}
+
             <TextField
               label="Nombre de la persona"
               icon="person-outline"

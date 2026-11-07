@@ -27,6 +27,12 @@ export class DebtsController {
     return this.debtsService.getSummary(houseId);
   }
 
+  @Get('offset') @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Lo que te deben aplicado contra tus deudas por prioridad' })
+  getOffset(@Request() req) {
+    const houseId = requireHouseId(req.user);
+    return this.debtsService.getOffset(houseId);
+  }
+
   @Get('payoff') @RequirePermission('debts', 'view') @ApiOperation({ summary: 'Estrategias de pago de deudas' })
   getPayoffStrategies(
     @Request() req,

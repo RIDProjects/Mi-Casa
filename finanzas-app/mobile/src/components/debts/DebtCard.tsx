@@ -13,11 +13,17 @@ import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
 import { Badge, Card } from '../ui';
-import { Debt } from '../../types';
+import { Debt, DebtPriority, DebtCoverageStatus } from '../../types';
 import { formatMoney } from '../../utils/currency';
+
+const PRIORITY_LABEL: Record<DebtPriority, string> = { alta: 'Prioridad alta', media: 'Prioridad media', baja: 'Prioridad baja' };
+const PRIORITY_TONE: Record<DebtPriority, 'danger' | 'warn' | 'neutral'> = { alta: 'danger', media: 'warn', baja: 'neutral' };
+const COVERAGE_TONE: Record<DebtCoverageStatus, 'ok' | 'warn' | 'neutral'> = { cubierta: 'ok', parcial: 'warn', pendiente: 'neutral' };
 
 interface Props {
   debt: Debt;
+  /** How much of this debt is covered by what is owed to me (debts I owe only). */
+  coverage?: { status: DebtCoverageStatus; pending: number };
   onMarkPaid: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
@@ -87,7 +93,7 @@ function RightActions({
   );
 }
 
-export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) {
+export default function DebtCard({ debt, coverage, onMarkPaid, onDelete, onEdit }: Props) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
   const swipeableRef = useRef<SwipeableMethods>(null);
@@ -157,6 +163,19 @@ export default function DebtCard({ debt, onMarkPaid, onDelete, onEdit }: Props) 
             </View>
             <View style={styles.bottom}>
               <Badge label={isTheyOweMe ? 'Me deben' : 'Les debo'} tone={isTheyOweMe ? 'info' : 'danger'} />
+              {!isTheyOweMe && (
+                <Badge label={PRIORITY_LABEL[debt.priority ?? 'media']} tone={PRIORITY_TONE[debt.priority ?? 'media']} />
+              )}
+              {!isTheyOweMe && coverage && (
+                <Badge
+                  label={
+                    coverage.status === 'parcial'
+                      ? `Parcial · faltan ${fmt(coverage.pending)}`
+                      : coverage.status === 'cubierta' ? 'Cubierta' : 'Pendiente'
+                  }
+                  tone={COVERAGE_TONE[coverage.status]}
+                />
+              )}
               {debt.note ? (
                 <Text style={styles.note} numberOfLines={1}>
                   {debt.note}

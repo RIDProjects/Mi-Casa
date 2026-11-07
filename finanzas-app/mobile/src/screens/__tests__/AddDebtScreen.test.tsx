@@ -63,6 +63,35 @@ describe('AddDebtScreen', () => {
     expect(screen.getByText('Tú le debes dinero a alguien')).toBeTruthy();
   });
 
+  it('asks for a priority only on debts I owe, defaulting to Media', () => {
+    renderScreen();
+    expect(screen.queryByText('Prioridad')).toBeNull();
+    fireEvent.press(screen.getByText('LES DEBO'));
+    expect(screen.getByText('Prioridad')).toBeTruthy();
+    for (const label of ['Alta', 'Media', 'Baja']) expect(screen.getByText(label)).toBeTruthy();
+  });
+
+  it('sends the chosen priority', async () => {
+    svc.create.mockResolvedValue({} as any);
+    renderScreen();
+    fireEvent.press(screen.getByText('LES DEBO'));
+    fireEvent.press(screen.getByText('Alta'));
+    fireEvent.changeText(screen.getByPlaceholderText('Ej: Juan, Papá, Empresa X...'), 'Ana');
+    fireEvent.changeText(screen.getByPlaceholderText('0.00'), '50');
+    fireEvent.press(screen.getByText('Registrar deuda'));
+    await waitFor(() => expect(svc.create).toHaveBeenCalledWith(expect.objectContaining({ type: 'i_owe', priority: 'alta' })));
+  });
+
+  it('does not send a priority for what is owed to me', async () => {
+    svc.create.mockResolvedValue({} as any);
+    renderScreen();
+    fireEvent.changeText(screen.getByPlaceholderText('Ej: Juan, Papá, Empresa X...'), 'Ana');
+    fireEvent.changeText(screen.getByPlaceholderText('0.00'), '50');
+    fireEvent.press(screen.getByText('Registrar deuda'));
+    await waitFor(() => expect(svc.create).toHaveBeenCalled());
+    expect(svc.create.mock.calls[0][0]).not.toHaveProperty('priority');
+  });
+
   it('rejects an empty name without calling the mutation', () => {
     renderScreen();
     fireEvent.press(screen.getByText('Registrar deuda'));
@@ -88,7 +117,7 @@ describe('AddDebtScreen', () => {
     fireEvent.changeText(screen.getByPlaceholderText('Descripción adicional...'), '  cena ');
     fireEvent.press(screen.getByText('Registrar deuda'));
     await waitFor(() =>
-      expect(svc.create).toHaveBeenCalledWith({ personName: 'Ana', amount: 12.5, note: 'cena', type: 'i_owe' }),
+      expect(svc.create).toHaveBeenCalledWith({ personName: 'Ana', amount: 12.5, note: 'cena', type: 'i_owe', priority: 'media' }),
     );
     await waitFor(() => expect(mockGoBack).toHaveBeenCalled());
   });

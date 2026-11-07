@@ -16,7 +16,15 @@ import { useCurrencyFormatter } from '../lib/currency';
 import { SortableTh } from '../components/ui/SortableTh';
 import { useTableSort } from '../hooks/useTableSort';
 
-const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', interestRate: '', minimumPayment: '' };
+const defaultForm = { personName: '', amount: '', note: '', type: 'they_owe_me', priority: 'media', interestRate: '', minimumPayment: '' };
+
+const PRIORITIES = [{ v: 'alta', l: 'Alta' }, { v: 'media', l: 'Media' }, { v: 'baja', l: 'Baja' }];
+const PRIORITY_LABEL: Record<string, string> = { alta: 'Alta', media: 'Media', baja: 'Baja' };
+// Higher means more urgent, so sorting descending lists the most urgent first.
+const PRIORITY_RANK: Record<string, number> = { alta: 3, media: 2, baja: 1 };
+const PRIORITY_VARIANT: Record<string, 'red' | 'amber' | 'gray'> = { alta: 'red', media: 'amber', baja: 'gray' };
+const COVERAGE_LABEL: Record<string, string> = { cubierta: 'Cubierta', parcial: 'Parcial', pendiente: 'Pendiente' };
+const COVERAGE_VARIANT: Record<string, 'green' | 'amber' | 'gray'> = { cubierta: 'green', parcial: 'amber', pendiente: 'gray' };
 
 export default function DebtsPage() {
   const qc = useQueryClient();
@@ -34,12 +42,19 @@ export default function DebtsPage() {
 
   const { data: debts = [], isLoading: loadingDebts, isError: errorDebts, refetch: refetchDebts } = useQuery('debts', () => debtsAPI.getAll().then(r => r.data), { staleTime: 0 });
   const { isLoading: loadingSummary } = useQuery('debtsSummary', () => debtsAPI.getSummary().then(r => r.data), { staleTime: 0 });
+  // What is owed to me applied against my debts by priority; only the uncovered part reaches the budget.
+  const { data: offset } = useQuery('debts-offset', () => debtsAPI.getOffset().then(r => r.data), { staleTime: 0, retry: false });
+  const coverageById = new Map<string, any>(((offset?.items ?? []) as any[]).map(i => [i.id, i]));
 
   // Every table is sortable by its columns; amounts start largest first.
   const debtSortBy = { person: (d: any) => d.personName, amount: (d: any) => d.amount, note: (d: any) => d.note ?? '' };
   const initialSort = { key: 'amount', dir: 'desc' as const };
   const theyOweMeSort = useTableSort(debts.filter((d: any) => d.type === 'they_owe_me' && !d.isPaid), debtSortBy, initialSort);
-  const iOweSort = useTableSort(debts.filter((d: any) => d.type === 'i_owe' && !d.isPaid), debtSortBy, initialSort);
+  const iOweSort = useTableSort(
+    debts.filter((d: any) => d.type === 'i_owe' && !d.isPaid),
+    { ...debtSortBy, priority: (d: any) => PRIORITY_RANK[d.priority ?? 'media'] },
+    { key: 'priority', dir: 'desc' as const },
+  );
   const paidSort = useTableSort(debts.filter((d: any) => d.isPaid), { ...debtSortBy, type: (d: any) => d.type }, initialSort);
 
 
@@ -87,6 +102,7 @@ export default function DebtsPage() {
       amount: d.amount,
       note: d.note || '',
       type: d.type,
+      priority: d.priority ?? 'media',
       interestRate: String(d.interestRate ?? ''),
       minimumPayment: String(d.minimumPayment ?? ''),
     });
@@ -193,6 +209,36 @@ export default function DebtsPage() {
         </div>
       )}
 
+      {/* What is owed to me, applied against my debts by priority */}
+      {(offset?.items?.length ?? 0) > 0 && (
+        <section aria-label="Cobertura con lo que te deben" className="bg-panel rounded-2xl shadow-soft border border-border-light p-4 mb-6">
+          <h2 className="text-sm font-bold text-on-surface">Cobertura con lo que te deben</h2>
+          <p className="text-xs text-on-surface-variant mt-0.5">
+            Lo que te deben se descuenta de tus deudas por prioridad (alta, media, baja). Solo lo que no se cubre pasa al presupuesto.
+          </p>
+          <dl className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div>
+              <dt className="text-on-surface-variant">Te deben</dt>
+              <dd className="font-bold text-ok-ink">{cfmt(offset.owedToMe)}</dd>
+            </div>
+            <div>
+              <dt className="text-on-surface-variant">Cubierto</dt>
+              <dd className="font-bold text-on-surface">{cfmt(offset.totalCovered)}</dd>
+            </div>
+            <div>
+              <dt className="text-on-surface-variant">Pasa al presupuesto</dt>
+              <dd className="font-bold text-danger-ink">{cfmt(offset.totalPending)}</dd>
+            </div>
+            {offset.remainingPool > 0 && (
+              <div>
+                <dt className="text-on-surface-variant">Sobrante</dt>
+                <dd className="font-bold text-on-surface">{cfmt(offset.remainingPool)}</dd>
+              </div>
+            )}
+          </dl>
+        </section>
+      )}
+
       {/* Main Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Me deben */}
@@ -258,6 +304,7 @@ export default function DebtsPage() {
             <thead>
               <tr>
                 <SortableTh label="Persona" sortKey="person" sort={iOweSort.sort} onSort={iOweSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
+                <SortableTh label="Prioridad" sortKey="priority" sort={iOweSort.sort} onSort={iOweSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
                 <SortableTh label="Monto" sortKey="amount" sort={iOweSort.sort} onSort={iOweSort.toggle} align="right" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
                 <SortableTh label="Nota" sortKey="note" sort={iOweSort.sort} onSort={iOweSort.toggle} align="left" className="px-4 py-2 font-label-upper text-label-upper text-on-surface-variant" />
                 <th className="px-4 py-2 text-center font-label-upper text-label-upper text-on-surface-variant uppercase">Acc.</th>
@@ -270,6 +317,17 @@ export default function DebtsPage() {
                     {d.personName}
                     {Number(d.interestRate) > 0 && (
                       <div className="mt-0.5"><Badge variant="red">{d.interestRate}% TNA</Badge></div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Badge variant={PRIORITY_VARIANT[d.priority ?? 'media']}>{PRIORITY_LABEL[d.priority ?? 'media']}</Badge>
+                      {coverageById.get(d.id) && (
+                        <Badge variant={COVERAGE_VARIANT[coverageById.get(d.id).status]}>{COVERAGE_LABEL[coverageById.get(d.id).status]}</Badge>
+                      )}
+                    </div>
+                    {coverageById.get(d.id)?.status === 'parcial' && (
+                      <div className="mt-0.5 text-xs text-on-surface-variant">Faltan {cfmt(coverageById.get(d.id).pending)}</div>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right font-medium text-danger-ink">
@@ -289,13 +347,14 @@ export default function DebtsPage() {
               ))}
               {iOwe.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-outline">No debes dinero a nadie</td>
+                  <td colSpan={5} className="px-4 py-8 text-center text-outline">No debes dinero a nadie</td>
                 </tr>
               )}
             </tbody>
             <tfoot className="bg-danger/10 border-t-2 border-danger/25">
               <tr>
                 <td className="px-4 py-3 font-semibold text-on-surface">TOTAL ADEUDADO POR MÍ</td>
+                <td></td>
                 <td className="px-4 py-3 text-right font-bold text-danger-ink">{cfmt(totalIOwe)}</td>
                 <td colSpan={2}></td>
               </tr>
@@ -350,6 +409,15 @@ export default function DebtsPage() {
               ))}
             </div>
           </div>
+          {form.type === 'i_owe' && (
+            <div>
+              <label className="label" htmlFor="debt-priority">Prioridad</label>
+              <select id="debt-priority" className="input" value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}>
+                {PRIORITIES.map(p => <option key={p.v} value={p.v}>{p.l}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-on-surface-variant">Las de prioridad alta se cubren primero con lo que te deben; las bajas se presupuestan para después.</p>
+            </div>
+          )}
           <div>
             <label className="label">Persona</label>
             <input className="input" value={form.personName} onChange={e => setForm({ ...form, personName: e.target.value })} placeholder="Nombre de la persona" required />
