@@ -1,6 +1,6 @@
 import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, IsBoolean, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { DebtType } from '../../database/entities/debt.entity';
+import { DebtType, DebtPriority } from '../../database/entities/debt.entity';
 
 // Field names already match debts.tsx exactly — confirmed via a live curl
 // capture: {"personName":"rosi","amount":"500","note":"","type":"i_owe",
@@ -16,6 +16,8 @@ export class CreateDebtDto {
   @IsOptional() @IsString() note?: string;
 
   @IsEnum(DebtType) type: DebtType;
+
+  @IsOptional() @IsEnum(DebtPriority) priority?: DebtPriority;
 
   @IsOptional() @IsBoolean() isPaid?: boolean;
 

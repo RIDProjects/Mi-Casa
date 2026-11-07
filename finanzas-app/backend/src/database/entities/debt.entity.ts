@@ -3,6 +3,9 @@ import { House } from './house.entity';
 
 export enum DebtType { THEY_OWE_ME = 'they_owe_me', I_OWE = 'i_owe' }
 
+/** Order in which what is owed to the house is applied against its debts. */
+export enum DebtPriority { HIGH = 'alta', MEDIUM = 'media', LOW = 'baja' }
+
 @Entity('debts')
 export class Debt {
   @PrimaryGeneratedColumn('uuid') id: string;
@@ -15,6 +18,7 @@ export class Debt {
 
   @Column('decimal', { precision: 12, scale: 2, nullable: true })
   minimumPayment: number | null;
+  @Column({ type: 'enum', enum: DebtPriority, default: DebtPriority.MEDIUM }) priority: DebtPriority;
   @Column({ default: false }) isPaid: boolean;
   @Column({ nullable: true }) paidAt: Date | null;
   @Index() @ManyToOne(() => House, { nullable: true }) @JoinColumn({ name: 'house_id' }) house: House;

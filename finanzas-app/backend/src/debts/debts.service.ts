@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Debt, DebtType } from '../database/entities/debt.entity';
+import { computeDebtOffset, DebtOffset, OffsetPriority } from './debt-offset';
 
 export interface DebtSnapshot {
   id: string;
@@ -179,6 +180,24 @@ export class DebtsService {
     if (!debt) throw new NotFoundException('Deuda no encontrada');
     await this.debtRepo.remove(debt);
     return { message: 'Deuda eliminada' };
+  }
+
+  /** What is owed to the house applied against its debts by priority (see debt-offset.ts). */
+  async getOffset(houseId: string): Promise<DebtOffset> {
+    const debts = await this.debtRepo.find({ where: { house: { id: houseId }, isPaid: false } });
+    const owedToMe = debts.filter(d => d.type === DebtType.THEY_OWE_ME).reduce((s, d) => s + Number(d.amount), 0);
+    return computeDebtOffset({
+      owedToMe,
+      debts: debts
+        .filter(d => d.type === DebtType.I_OWE)
+        .map(d => ({
+          id: d.id,
+          label: d.personName,
+          amount: Number(d.amount),
+          priority: (d.priority ?? 'media') as OffsetPriority,
+          createdAt: d.createdAt,
+        })),
+    });
   }
 
   async getPayoffStrategies(houseId: string, extraMonthlyPayment: number) {
