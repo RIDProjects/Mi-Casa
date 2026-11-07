@@ -29,12 +29,17 @@ export interface LoginDto {
 
 export type DebtType = 'they_owe_me' | 'i_owe';
 
+/** Order in which what is owed to me is applied against the debts I owe. */
+export type DebtPriority = 'alta' | 'media' | 'baja';
+
 export interface Debt {
   id: string;
   personName: string;
   amount: number;
   note?: string;
   type: DebtType;
+  /** Rows created before the field existed arrive without it (treated as media). */
+  priority?: DebtPriority;
   isPaid: boolean;
   createdAt: string;
   updatedAt: string;
@@ -51,6 +56,27 @@ export interface CreateDebtDto {
   amount: number;
   note?: string;
   type: DebtType;
+  priority?: DebtPriority;
+}
+
+export type DebtCoverageStatus = 'cubierta' | 'parcial' | 'pendiente';
+
+/** GET /debts/offset: what is owed to me applied against my debts by priority. */
+export interface DebtOffset {
+  owedToMe: number;
+  items: {
+    id: string;
+    label: string;
+    priority: DebtPriority;
+    amount: number;
+    covered: number;
+    pending: number;
+    status: DebtCoverageStatus;
+  }[];
+  totalCovered: number;
+  /** What the uncovered part of the debts sends to the budget. */
+  totalPending: number;
+  remainingPool: number;
 }
 
 // ─── Transactions ────────────────────────────────────────────────────────────
