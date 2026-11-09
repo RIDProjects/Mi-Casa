@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { budgetService } from '../../services/budget.service';
 import { AutoDebtLine, BudgetExpense } from '../../types';
 import { BudgetStackParamList } from '../../navigation/types';
-import { formatMoney } from '../../utils/currency';
+import { useMoney } from '../../hooks/useMoney';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
@@ -13,10 +13,9 @@ import type { ThemeColors } from '../../theme/tokens';
 import { ActionBar, Badge, Button, Card, EmptyState, ErrorState, PageHeader, Reveal, Screen, Skeleton } from '../../components/ui';
 import CategoryNameModal from './CategoryNameModal';
 import ExpenseFormModal from './ExpenseFormModal';
-import { categoryMonthlyTotal, errorMessage, invalidateBudget, PERIODICITY_LABELS, toMonthly } from './shared';
+import { categoryAutoLines, categoryMonthlyTotal, errorMessage, invalidateBudget, PERIODICITY_LABELS, toMonthly } from './shared';
 import { useBudgetQuery } from './useBudgetQuery';
 
-const fmt = formatMoney;
 
 type RouteT = RouteProp<BudgetStackParamList, 'CategoryDetail'>;
 
@@ -48,6 +47,7 @@ const createStyles = (c: ThemeColors) =>
 
 function AutoDebtCard({ line }: { line: AutoDebtLine }) {
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   return (
     <Card style={styles.expenseCard}>
       <View style={styles.expenseHeader}>
@@ -65,6 +65,7 @@ function AutoDebtCard({ line }: { line: AutoDebtLine }) {
 
 function ExpenseCard({ expense, onPress }: { expense: BudgetExpense; onPress: () => void }) {
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   return (
     <Card style={styles.expenseCard} onPress={onPress}>
       <View style={styles.expenseHeader}>
@@ -88,6 +89,7 @@ function ExpenseCard({ expense, onPress }: { expense: BudgetExpense; onPress: ()
 export default function CategoryDetailScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const navigation = useNavigation();
   const { categoryId } = useRoute<RouteT>().params;
   const qc = useQueryClient();
@@ -162,7 +164,7 @@ export default function CategoryDetailScreen() {
     }
 
     const expenses = category.expenses ?? [];
-    const autoLines = category.name.trim().toLowerCase() === 'deudas' ? budget.autoDebtLines ?? [] : [];
+    const autoLines = categoryAutoLines(category, budget);
     const autoTotal = autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
     const count = expenses.length + autoLines.length;
     return (

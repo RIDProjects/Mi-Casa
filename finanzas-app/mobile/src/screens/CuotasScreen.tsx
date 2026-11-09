@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cuotasService } from '../services/cuotas.service';
 import { Cuota } from '../types';
-import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { parseLocalDate } from '../utils/dates';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { RootStackParamList } from '../navigation/types';
@@ -74,6 +74,7 @@ function CuotaRow({
 }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const paid = Number(item.paidInstallments || 0);
   const total = Number(item.totalInstallments || 1);
   const monthly = Number(item.installmentAmount || 0);
@@ -111,13 +112,13 @@ function CuotaRow({
           <View style={styles.amountCell}>
             <Text style={styles.label}>Cuota mensual</Text>
             <Text style={[styles.amount, { color: colors.onSurface }]} numberOfLines={1} adjustsFontSizeToFit>
-              {formatMoney(monthly)}
+              {fmt(monthly)}
             </Text>
           </View>
           <View style={styles.amountCell}>
             <Text style={styles.label}>Restante</Text>
             <Text style={[styles.amount, { color: colors.dangerInk }]} numberOfLines={1} adjustsFontSizeToFit>
-              {formatMoney(Math.max(remaining, 0) * monthly)}
+              {fmt(Math.max(remaining, 0) * monthly)}
             </Text>
           </View>
         </View>
@@ -153,6 +154,7 @@ function SkeletonBlocks() {
 export default function CuotasScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
 
@@ -243,13 +245,13 @@ export default function CuotasScreen() {
               <View style={styles.summaryCell}>
                 <Text style={styles.label}>Compromiso mensual</Text>
                 <Text style={[styles.summaryValue, { color: colors.dangerInk }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatMoney(monthly)}
+                  {fmt(monthly)}
                 </Text>
               </View>
               <View style={styles.summaryCell}>
                 <Text style={styles.label}>Deuda total restante</Text>
                 <Text style={[styles.summaryValue, { color: colors.warnInk }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatMoney(remainingDebt)}
+                  {fmt(remainingDebt)}
                 </Text>
               </View>
             </View>
