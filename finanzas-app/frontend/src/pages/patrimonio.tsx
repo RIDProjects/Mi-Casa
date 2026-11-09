@@ -18,7 +18,7 @@ import { fmt } from '../lib/format';
 import { getErrorMessage } from '../utils/errors';
 import { SortableTh } from '../components/ui/SortableTh';
 import { useTableSort } from '../hooks/useTableSort';
-import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
+import { formatAxisMoney, CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR } from '../lib/chart';
 
 const safeNum = (n: unknown): number => {
   const v = Number(n);

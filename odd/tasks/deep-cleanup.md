@@ -9,7 +9,7 @@ Behavior-preserving cleanup of backend, frontend and mobile; branch chore/deep-c
 
 ## Tasks
 - T1 (S1-S4) backend | worker | done: 2 unused findings fixed, 453 lint warnings (was 456), 387 tests | commit: see git log
-- T2 (S1-S4) frontend | worker | commit: pending
+- T2 (S1-S4) frontend | worker + parent | done: 10 unused fixed, unused updateListMut removed, deleted unreferenced ui/index.ts and ui/Table.tsx; 135 tests, tsc/lint clean | commit: see git log
 - T3 (S1-S4) mobile | worker | commit: pending
 - T4 verify all suites, report, PRs to dev | inline | commit: pending
 
