@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { RefreshControl, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../../theme/ThemeContext';
 import LedgerBackground from './LedgerBackground';
+import { TabBarContext } from '../../navigation/TabBarContext';
+
+type Edge = 'top' | 'bottom' | 'left' | 'right';
+
+/** The tab bar already covers the bottom safe area, so a screen above it must not reserve it again. */
+export const effectiveEdges = (edges: Edge[], underTabBar: boolean): Edge[] =>
+  underTabBar ? edges.filter((edge) => edge !== 'bottom') : edges;
 
 interface Props {
   children: React.ReactNode;
@@ -13,18 +20,21 @@ interface Props {
   onRefresh?: () => void;
   contentStyle?: StyleProp<ViewStyle>;
   /** Safe-area edges to respect; tabs screens pass ['top'] by default. */
-  edges?: ('top' | 'bottom' | 'left' | 'right')[];
+  edges?: Edge[];
+  /** Defaults to whether the screen is inside the tab navigator; modals presented over the tab bar pass false. */
+  underTabBar?: boolean;
 }
 
 /** Themed screen shell: ledger background, safe area, status bar and optional pull-to-refresh scroll. */
-export default function Screen({ children, scroll = true, refreshing, onRefresh, contentStyle, edges = ['top'] }: Props) {
+export default function Screen({ children, scroll = true, refreshing, onRefresh, contentStyle, edges = ['top'], underTabBar }: Props) {
   const { colors, isDark } = useTheme();
+  const inTabs = useContext(TabBarContext);
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.surface }]}>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <LedgerBackground />
-      <SafeAreaView style={styles.flex} edges={edges}>
+      <SafeAreaView style={styles.flex} edges={effectiveEdges(edges, underTabBar ?? inTabs)}>
         {scroll ? (
           <ScrollView
             contentContainerStyle={[styles.content, contentStyle]}
