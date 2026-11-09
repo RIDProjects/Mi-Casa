@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { debtsService } from '../../services/debts.service';
 import { Debt } from '../../types';
-import { formatMoney } from '../../utils/currency';
+import { useMoney } from '../../hooks/useMoney';
 import DebtCard from '../../components/debts/DebtCard';
 import { DebtsStackParamList } from '../../navigation/types';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
@@ -38,7 +38,6 @@ import {
 
 type Nav = NativeStackNavigationProp<DebtsStackParamList>;
 
-const fmt = formatMoney;
 
 interface Section {
   key: 'owed' | 'owe' | 'paid';
@@ -123,6 +122,7 @@ export default function DebtsSummaryScreen() {
   const pollInterval = useScreenPolling();
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
 

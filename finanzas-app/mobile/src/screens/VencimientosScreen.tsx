@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { summaryService } from '../services/summary.service';
 import { UpcomingBill } from '../types';
-import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { parseLocalDate } from '../utils/dates';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
@@ -46,6 +46,7 @@ const createStyles = (c: ThemeColors) =>
 function BillRow({ bill }: { bill: UpcomingBill }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const tone = urgencyTone(bill.daysUntilDue);
   const ink = toneInk(colors, tone);
   const icon = TYPE_ICON[bill.type] ?? 'calendar-outline';
@@ -66,7 +67,7 @@ function BillRow({ bill }: { bill: UpcomingBill }) {
           </Text>
         </View>
         <View style={styles.rowRight}>
-          <Text style={styles.rowAmount}>{formatMoney(bill.amount)}</Text>
+          <Text style={styles.rowAmount}>{fmt(bill.amount)}</Text>
           <Text style={[styles.rowDays, { color: ink }]}>
             {bill.daysUntilDue <= 0 ? 'Hoy' : `${bill.daysUntilDue} días`}
           </Text>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useThemedStyles } from '../../theme/ThemeContext';
 import { fonts } from '../../theme/tokens';
@@ -8,8 +9,9 @@ import { Button, Card } from '../../components/ui';
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     flex: { flex: 1 },
-    overlay: { flex: 1, backgroundColor: c.overlay, justifyContent: 'center', padding: 24 },
-    card: { gap: 14, maxHeight: '90%' },
+    overlay: { flex: 1, backgroundColor: c.overlay, justifyContent: 'center', padding: 16 },
+    card: { gap: 14, maxHeight: '100%' },
+    scroll: { flexShrink: 1 },
     title: { fontFamily: fonts.title, color: c.onSurface, fontSize: 18 },
     subtitle: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13, marginTop: 2 },
     body: { gap: 14 },
@@ -49,15 +51,15 @@ export default function FormModal({
 }: Props) {
   const styles = useThemedStyles(createStyles);
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.overlay}>
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <SafeAreaView style={styles.overlay}>
           <Card style={styles.card}>
             <View>
               <Text style={styles.title}>{title}</Text>
               {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             </View>
-            <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
+            <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.body}>
               {children}
             </ScrollView>
             <View style={styles.actions}>
@@ -74,7 +76,7 @@ export default function FormModal({
               />
             ) : null}
           </Card>
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </Modal>
   );

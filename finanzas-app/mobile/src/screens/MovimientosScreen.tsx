@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { transactionsService } from '../services/transactions.service';
 import { Transaction } from '../types';
 import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { parseLocalDate } from '../utils/dates';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { RootStackParamList } from '../navigation/types';
@@ -94,6 +95,7 @@ function TransactionRow({
 }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const isIncome = item.tipo !== 'gasto';
   const ink = isIncome ? colors.okInk : colors.dangerInk;
   const meta = [item.categoria, labelOf(METODO_OPTIONS, item.metodoPago), item.nombreTarjeta]
@@ -107,7 +109,7 @@ function TransactionRow({
           <View style={styles.itemTop}>
             <Text style={styles.itemName} numberOfLines={2}>{item.concepto}</Text>
             <Text style={[styles.itemAmount, { color: ink }]}>
-              {isIncome ? '+' : '-'}{formatMoney(Number(item.monto))}
+              {isIncome ? '+' : '-'}{fmt(Number(item.monto))}
             </Text>
             {!!item.moneda && item.montoOriginal != null && (
               <Text style={styles.itemMeta}>{formatMoney(Number(item.montoOriginal), item.moneda)}</Text>
@@ -142,6 +144,7 @@ function SkeletonBlocks() {
 export default function MovimientosScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
   const now = new Date();
@@ -249,21 +252,21 @@ export default function MovimientosScreen() {
             numberOfLines={1}
             adjustsFontSizeToFit
           >
-            {balance < 0 ? '-' : ''}{formatMoney(Math.abs(balance))}
+            {balance < 0 ? '-' : ''}{fmt(Math.abs(balance))}
           </Text>
           <View style={styles.summaryRow}>
             <View style={styles.summaryRowLabel}>
               <Ionicons name="arrow-up-circle-outline" size={16} color={colors.okInk} />
               <Text style={styles.summaryRowText}>Ingresos</Text>
             </View>
-            <Text style={[styles.summaryRowValue, { color: colors.okInk }]}>{formatMoney(ingresos)}</Text>
+            <Text style={[styles.summaryRowValue, { color: colors.okInk }]}>{fmt(ingresos)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <View style={styles.summaryRowLabel}>
               <Ionicons name="arrow-down-circle-outline" size={16} color={colors.dangerInk} />
               <Text style={styles.summaryRowText}>Gastos</Text>
             </View>
-            <Text style={[styles.summaryRowValue, { color: colors.dangerInk }]}>{formatMoney(gastos)}</Text>
+            <Text style={[styles.summaryRowValue, { color: colors.dangerInk }]}>{fmt(gastos)}</Text>
           </View>
         </Card>
       </Reveal>
