@@ -33,7 +33,7 @@ type Nav = NativeStackNavigationProp<GastosStackParamList>;
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
     flex: { flex: 1 },
-    summary: { marginHorizontal: 16, marginTop: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+    summary: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
     summaryText: { flex: 1, gap: 2 },
     totalLabel: {
       fontFamily: fonts.semibold,
@@ -43,7 +43,7 @@ const createStyles = (c: ThemeColors) =>
       letterSpacing: 0.8,
     },
     totalAmount: { fontFamily: fonts.title, color: c.onSurface, fontSize: 26, letterSpacing: -0.6 },
-    budgetCard: { marginHorizontal: 16, marginTop: 12, gap: 8 },
+    budgetCard: { gap: 8 },
     budgetRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     budgetLabel: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 13 },
     budgetValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15, flexShrink: 1 },
@@ -163,7 +163,11 @@ export default function ShoppingListScreen() {
   const [inputTienda, setInputTienda] = React.useState('');
   const [inputMoneda, setInputMoneda] = React.useState('');
   const monedaItem = inputMoneda || monedaLocal;
-  const monedaOptions = (monthData?.monedas ?? []).map((m) => ({ value: m.code, label: m.code }));
+  // House currencies, plus whatever the items already use, so the picker never depends on a single source.
+  const monedaCodes = Array.from(
+    new Set([monedaLocal, ...(monthData?.monedas ?? []).map((m) => m.code), ...items.map((i) => i.currency)].filter(Boolean) as string[]),
+  );
+  const monedaOptions = monedaCodes.map((code) => ({ value: code, label: code }));
 
   const precioRef = useRef<React.ComponentRef<typeof TextInput>>(null);
   const tiendaRef = useRef<React.ComponentRef<typeof TextInput>>(null);
@@ -327,47 +331,6 @@ export default function ShoppingListScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header con total y botón ver gastos */}
-        <Reveal index={0}>
-          <Card style={styles.summary} accent={colors.brand}>
-            <View style={styles.summaryText}>
-              <Text style={styles.totalLabel}>Total de la compra</Text>
-              <Text style={styles.totalAmount} numberOfLines={2} adjustsFontSizeToFit>{totalText}</Text>
-              <Text style={styles.itemCount}>{items.length} ítem{items.length !== 1 ? 's' : ''}</Text>
-            </View>
-            <Button
-              label="Ver gastos"
-              icon="bar-chart-outline"
-              variant="secondary"
-              small
-              onPress={() => navigation.navigate('ExpenseRegistry')}
-            />
-          </Card>
-        </Reveal>
-
-        <Card style={styles.budgetCard}>
-          {monthBudget > 0 ? (
-            <>
-              <View style={styles.budgetRow}>
-                <Text style={styles.budgetLabel}>Presupuesto</Text>
-                <Text style={styles.budgetValue} numberOfLines={1}>{fmt(monthBudget)}</Text>
-              </View>
-              <ProgressBar value={budgetRatio} tone={monthRemaining < 0 ? 'danger' : 'info'} height={6} />
-              <View style={styles.budgetRow}>
-                <Text style={styles.budgetLabel}>Restante</Text>
-                <Text style={styles.budgetValue} numberOfLines={1}>{fmt(monthRemaining)}</Text>
-              </View>
-            </>
-          ) : (
-            <Text style={styles.budgetHint}>Define «Presupuesto compra» en Presupuesto → Comida.</Text>
-          )}
-          {missingRates.length > 0 && (
-            <Text style={styles.budgetHint}>
-              Sin tasa de cambio para {missingRates.join(', ')}: esos productos no se suman al total.
-            </Text>
-          )}
-        </Card>
-
         {/* Lista de ítems agrupados por lugar */}
         <ScrollView
           style={styles.flex}
@@ -382,6 +345,46 @@ export default function ShoppingListScreen() {
             />
           }
         >
+          {/* Header con total y botón ver gastos */}
+          <Reveal index={0}>
+            <Card style={styles.summary} accent={colors.brand}>
+              <View style={styles.summaryText}>
+                <Text style={styles.totalLabel}>Total de la compra</Text>
+                <Text style={styles.totalAmount} numberOfLines={2} adjustsFontSizeToFit>{totalText}</Text>
+                <Text style={styles.itemCount}>{items.length} ítem{items.length !== 1 ? 's' : ''}</Text>
+              </View>
+              <Button
+                label="Ver gastos"
+                icon="bar-chart-outline"
+                variant="secondary"
+                small
+                onPress={() => navigation.navigate('ExpenseRegistry')}
+              />
+            </Card>
+          </Reveal>
+
+          <Card style={styles.budgetCard}>
+            {monthBudget > 0 ? (
+              <>
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>Presupuesto</Text>
+                  <Text style={styles.budgetValue} numberOfLines={1}>{fmt(monthBudget)}</Text>
+                </View>
+                <ProgressBar value={budgetRatio} tone={monthRemaining < 0 ? 'danger' : 'info'} height={6} />
+                <View style={styles.budgetRow}>
+                  <Text style={styles.budgetLabel}>Restante</Text>
+                  <Text style={styles.budgetValue} numberOfLines={1}>{fmt(monthRemaining)}</Text>
+                </View>
+              </>
+            ) : (
+              <Text style={styles.budgetHint}>Define «Presupuesto compra» en Presupuesto → Comida.</Text>
+            )}
+            {missingRates.length > 0 && (
+              <Text style={styles.budgetHint}>
+                Sin tasa de cambio para {missingRates.join(', ')}: esos productos no se suman al total.
+              </Text>
+            )}
+          </Card>
           {Object.keys(grouped).length === 0 ? (
             <Card>
               <EmptyState
