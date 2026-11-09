@@ -188,7 +188,7 @@ export default function AddHouseholdExpenseScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Screen edges={['bottom']} contentStyle={{ padding: 20 }}>
+      <Screen edges={['bottom']} underTabBar={false} contentStyle={{ padding: 20 }}>
         <Reveal index={0}>
           <Card style={styles.form}>
             <TextField

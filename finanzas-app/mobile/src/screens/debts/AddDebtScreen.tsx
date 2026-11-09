@@ -158,7 +158,7 @@ export default function AddDebtScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Screen edges={['bottom']}>
+      <Screen edges={['bottom']} underTabBar={false}>
         <Reveal index={0}>
           <Card style={styles.form}>
             {/* Toggle de tipo */}
