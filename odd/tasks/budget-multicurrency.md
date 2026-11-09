@@ -19,3 +19,4 @@ Branch feat/budget-multicurrency off dev; PRs go to dev (stacked: backend / mobi
 
 ## Delivery
 - Slice boundary after T1 (609 lines on the branch): stacked PRs backend (T1) -> mobile (T2) -> web (T3) so each review stays focused.
+- L3: "el modulo de gastos de la app de expo me sigue sin dejar seleccionar la moneda y sigue con los problemas de sobre presupuesto" (screenshot: Lista de Compras, Presupuesto US$ 150, Restante US$ -46,718, input "Precio USD" sin selector). Follow-up T5: purchases summary must convert item totals to local at read time; shopping add/edit form needs a currency picker.
