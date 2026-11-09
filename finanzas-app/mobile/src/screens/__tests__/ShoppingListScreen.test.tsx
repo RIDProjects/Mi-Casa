@@ -152,6 +152,32 @@ describe('ShoppingListScreen', () => {
     expect(mockAddItem.mock.calls[0][1]).toMatchObject({ name: 'Chorizo', unitPrice: 1860, currency: 'CUP' });
   });
 
+  it('offers the currencies already used by the items even when the house list is missing', async () => {
+    mockGetMonth.mockResolvedValue({ monedaLocal: 'USD' });
+    mockGetLists.mockResolvedValue([list([{ ...item('i1', 'Chorizo', 1, 1860, 'Mercado'), currency: 'CUP' }])]);
+    mockAddItem.mockResolvedValue({});
+    renderShopping();
+    fireEvent.press(await screen.findByText('CUP'));
+    fireEvent.changeText(screen.getByPlaceholderText('Producto'), 'Papas');
+    fireEvent.changeText(screen.getByPlaceholderText('Precio CUP'), '2430');
+    fireEvent.press(screen.getByText('Agregar'));
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalled());
+    expect(mockAddItem.mock.calls[0][1]).toMatchObject({ currency: 'CUP' });
+  });
+
+  it('keeps the totals and budget cards inside the scrollable list', async () => {
+    mockGetLists.mockResolvedValue([list([item('i1', 'Arroz', 2, 3, 'Mercado')])]);
+    renderShopping();
+    const total = await screen.findByText('Total de la compra');
+    let node: any = total;
+    let inScroll = false;
+    while (node) {
+      if (node.type === 'RCTScrollView') inScroll = true;
+      node = node.parent;
+    }
+    expect(inScroll).toBe(true);
+  });
+
   it('warns when items were left out of the totals because their currency has no rate', async () => {
     mockGetLists.mockResolvedValue([
       { ...list([item('i1', 'Arroz', 2, 3, 'Mercado')]), summary: { total: 6, budget: 150, remaining: 144, status: '', purchased: 0, pending: 1, count: 1, missingRates: ['CUP'] } },
