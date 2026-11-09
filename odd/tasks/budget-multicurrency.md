@@ -9,8 +9,8 @@ Branch feat/budget-multicurrency off dev; PRs go to dev (stacked: backend / mobi
 
 ## Tasks
 - T1 (S1,S3) backend: migration + entity/DTO currency + computeSummary conversion + tests | worker | commit: see git log (feat(budget): currency per line...) | done, 383 backend tests, tsc clean
-- T2 (S2) mobile: picker in ExpenseFormModal/IncomeFormModal, per-line currency display | inline | commit: pending
-- T3 (S2) web: picker in presupuesto forms, per-line currency display | inline | commit: pending
+- T2 (S2) mobile: picker in ExpenseFormModal/IncomeFormModal, per-line currency display | inline | commit: 3ff6ce1 | done, 346 mobile tests
+- T3 (S2) web: picker in presupuesto forms, per-line currency display | worker | commit: see git log (feat(web)...) | done, 135 web tests
 - T4 verify suites, PR to dev; promotion only after user confirms (migration on prod) | inline | commit: pending
 
 ## Log
