@@ -390,7 +390,7 @@ describe('HouseCurrenciesService.setLocal', () => {
   });
 
   it('is a no-op when the target is already the local currency', async () => {
-    manager.findOne.mockImplementation(async (entity: any, opts: any) =>
+    manager.findOne.mockImplementation(async (entity: any) =>
       entity === House ? { id: HOUSE_ID } : entity === HouseCurrency ? USD : null,
     );
 

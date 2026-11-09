@@ -1,4 +1,3 @@
-import React from 'react';
 import ChipSelector from './ChipSelector';
 
 interface Props {

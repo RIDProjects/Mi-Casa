@@ -1,4 +1,3 @@
-import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { GastosStackParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
