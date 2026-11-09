@@ -25,6 +25,7 @@ import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
+import ChipSelector from '../budget/ChipSelector';
 import { Button, Card, EmptyState, ErrorState, ProgressBar, Reveal, Screen, Skeleton, TextField } from '../../components/ui';
 
 type Nav = NativeStackNavigationProp<GastosStackParamList>;
@@ -160,6 +161,9 @@ export default function ShoppingListScreen() {
   const [inputCantidad, setInputCantidad] = React.useState('1');
   const [inputPrecio, setInputPrecio] = React.useState('');
   const [inputTienda, setInputTienda] = React.useState('');
+  const [inputMoneda, setInputMoneda] = React.useState('');
+  const monedaItem = inputMoneda || monedaLocal;
+  const monedaOptions = (monthData?.monedas ?? []).map((m) => ({ value: m.code, label: m.code }));
 
   const precioRef = useRef<React.ComponentRef<typeof TextInput>>(null);
   const tiendaRef = useRef<React.ComponentRef<typeof TextInput>>(null);
@@ -207,6 +211,7 @@ export default function ShoppingListScreen() {
       setInputCantidad('1');
       setInputPrecio('');
       setInputTienda('');
+      setInputMoneda('');
     },
     onError: (err: any) => {
       const msg = err?.response?.data?.message || err?.message || 'Error al guardar los cambios';
@@ -220,9 +225,11 @@ export default function ShoppingListScreen() {
     setInputCantidad(String(item.quantity));
     setInputPrecio(String(item.unitPrice));
     setInputTienda(item.lugar ?? '');
+    setInputMoneda(item.currency ?? '');
   };
 
   const handleCancelEdit = () => {
+    setInputMoneda('');
     setEditingItemId(null);
     setInputProducto('');
     setInputCantidad('1');
@@ -250,6 +257,7 @@ export default function ShoppingListScreen() {
           name: producto,
           quantity: cantidad,
           unitPrice: precio,
+          ...(monedaItem ? { currency: monedaItem } : {}),
           lugar: inputTienda.trim() || undefined,
         },
       });
@@ -260,7 +268,7 @@ export default function ShoppingListScreen() {
       name: producto,
       quantity: cantidad,
       unitPrice: precio,
-      currency: monedaLocal || undefined,
+      currency: monedaItem || undefined,
       lugar: inputTienda.trim() || undefined,
     });
   };
@@ -306,6 +314,7 @@ export default function ShoppingListScreen() {
   const monthBudget = Number(selectedList?.summary?.budget ?? selectedList?.budget ?? 0);
   const monthTotal = Number(selectedList?.summary?.total ?? 0);
   const monthRemaining = Number(selectedList?.summary?.remaining ?? monthBudget - monthTotal);
+  const missingRates = selectedList?.summary?.missingRates ?? [];
   const budgetRatio = monthBudget > 0 ? Math.min(1, monthTotal / monthBudget) : 0;
 
   const saving = addItemMut.isPending || updateItemMut.isPending;
@@ -351,6 +360,11 @@ export default function ShoppingListScreen() {
             </>
           ) : (
             <Text style={styles.budgetHint}>Define «Presupuesto compra» en Presupuesto → Comida.</Text>
+          )}
+          {missingRates.length > 0 && (
+            <Text style={styles.budgetHint}>
+              Sin tasa de cambio para {missingRates.join(', ')}: esos productos no se suman al total.
+            </Text>
           )}
         </Card>
 
@@ -430,6 +444,9 @@ export default function ShoppingListScreen() {
               </TouchableOpacity>
             </View>
           )}
+          {monedaOptions.length > 1 && (
+            <ChipSelector label="Moneda" options={monedaOptions} value={monedaItem} onChange={setInputMoneda} disabled={saving} />
+          )}
           <View style={styles.inputRow}>
             <TextField
               containerStyle={{ flex: 2 }}
@@ -452,7 +469,7 @@ export default function ShoppingListScreen() {
               {...refProps(precioRef)}
               value={inputPrecio}
               onChangeText={setInputPrecio}
-              placeholder={monedaLocal ? `Precio ${monedaLocal}` : 'Precio'}
+              placeholder={monedaItem ? `Precio ${monedaItem}` : 'Precio'}
               keyboardType="decimal-pad"
               returnKeyType="next"
               onSubmitEditing={() => tiendaRef.current?.focus()}
