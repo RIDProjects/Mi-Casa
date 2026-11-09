@@ -8,7 +8,7 @@ Behavior-preserving cleanup of backend, frontend and mobile; branch chore/deep-c
 - S4: Every package must keep tests, tsc and lint green and unchanged in results (baseline: backend 387 tests, frontend 135, mobile 351).
 
 ## Tasks
-- T1 (S1-S4) backend | worker | commit: pending
+- T1 (S1-S4) backend | worker | done: 2 unused findings fixed, 453 lint warnings (was 456), 387 tests | commit: see git log
 - T2 (S1-S4) frontend | worker | commit: pending
 - T3 (S1-S4) mobile | worker | commit: pending
 - T4 verify all suites, report, PRs to dev | inline | commit: pending
