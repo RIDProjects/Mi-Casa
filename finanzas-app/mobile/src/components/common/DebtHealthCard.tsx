@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Card, ProgressBar } from '../ui';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';

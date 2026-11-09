@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -63,7 +63,6 @@ export default function AddHouseholdExpenseScreen() {
         .find((s) => s.id === expenseId)
     : undefined;
 
-  const now = new Date();
   const monthStr = existingExpense?.mes ?? currentMonthLocal();
 
   // The month query already carries this house's currency picker options

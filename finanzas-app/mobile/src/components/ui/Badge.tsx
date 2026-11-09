@@ -1,4 +1,3 @@
-import React from 'react';
 import { StyleProp, Text, View, ViewStyle } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { fonts, Tone, toneInk, toneTint } from '../../theme/tokens';
