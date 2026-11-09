@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { emergencyFundService } from '../services/emergencyFund.service';
 import { EmergencyCoverageStatus, EmergencyFund, EmergencyFundCalculations, EmergencyFundCoverage } from '../types';
-import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
 import { fonts, radius } from '../theme/tokens';
@@ -72,6 +72,7 @@ const toneInk = (c: ThemeColors, tone: Tone): string =>
 function CoverageCard({ coverage }: { coverage: EmergencyFundCoverage }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const status = STATUS[coverage.status] ?? STATUS.critical;
   const months = toNumber(coverage.monthsCovered);
   const target = toNumber(coverage.targetMonths) || 6;
@@ -90,7 +91,7 @@ function CoverageCard({ coverage }: { coverage: EmergencyFundCoverage }) {
             <Badge label={status.label} tone={status.tone} />
           </View>
           <Text style={styles.meta}>{`Meta: ${monthsLabel(target)}`}</Text>
-          <Text style={styles.meta}>{`Gastos promedio: ${formatMoney(toNumber(coverage.monthlyExpenses))}/mes`}</Text>
+          <Text style={styles.meta}>{`Gastos promedio: ${fmt(toNumber(coverage.monthlyExpenses))}/mes`}</Text>
         </View>
       </View>
     </Card>
@@ -100,6 +101,7 @@ function CoverageCard({ coverage }: { coverage: EmergencyFundCoverage }) {
 function FundCard({ fund }: { fund: EmergencyFund }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const calc = getCalculations(fund);
   const saved = toNumber(fund.currentBalance);
   const optimal = toNumber(calc.optimalFund);
@@ -117,7 +119,7 @@ function FundCard({ fund }: { fund: EmergencyFund }) {
           <View>
             <Text style={styles.label}>Ahorrado</Text>
             <Text style={styles.bigValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatMoney(saved)}
+              {fmt(saved)}
             </Text>
           </View>
           <Text style={styles.pct}>{`${Math.round(progress * 100)}%`}</Text>
@@ -127,18 +129,18 @@ function FundCard({ fund }: { fund: EmergencyFund }) {
         <View style={styles.figures}>
           <View style={styles.figureRow}>
             <Text style={styles.figureLabel}>{`Monto óptimo (${monthsLabel(fund.targetMonths)})`}</Text>
-            <Text style={[styles.figureValue, { color: colors.okInk }]}>{formatMoney(optimal)}</Text>
+            <Text style={[styles.figureValue, { color: colors.okInk }]}>{fmt(optimal)}</Text>
           </View>
           <View style={styles.figureRow}>
             <Text style={styles.figureLabel}>{`Monto mínimo (${monthsLabel(fund.minimumMonths)})`}</Text>
-            <Text style={[styles.figureValue, { color: colors.warnInk }]}>{formatMoney(toNumber(calc.minimumFund))}</Text>
+            <Text style={[styles.figureValue, { color: colors.warnInk }]}>{fmt(toNumber(calc.minimumFund))}</Text>
           </View>
           <View style={styles.figureRow}>
             <Text style={styles.figureLabel}>
               {fund.savingPeriodMonths > 0 ? `Ahorro mensual mínimo (${fund.savingPeriodMonths} meses)` : 'Ahorro mensual mínimo'}
             </Text>
             <Text style={styles.figureValue}>
-              {fund.savingPeriodMonths > 0 ? formatMoney(toNumber(calc.monthlySavingsRequired)) : '—'}
+              {fund.savingPeriodMonths > 0 ? fmt(toNumber(calc.monthlySavingsRequired)) : '—'}
             </Text>
           </View>
         </View>
@@ -151,14 +153,14 @@ function FundCard({ fund }: { fund: EmergencyFund }) {
           categories.map((cat, idx) => (
             <View key={cat.id ?? `${cat.name}-${idx}`} style={styles.catRow}>
               <Text style={styles.catName} numberOfLines={1}>{cat.name}</Text>
-              <Text style={styles.catAmount}>{toNumber(cat.monthlyAmount) > 0 ? formatMoney(toNumber(cat.monthlyAmount)) : '-'}</Text>
+              <Text style={styles.catAmount}>{toNumber(cat.monthlyAmount) > 0 ? fmt(toNumber(cat.monthlyAmount)) : '-'}</Text>
             </View>
           ))
         )}
         <View style={styles.divider} />
         <View style={styles.catRow}>
           <Text style={styles.totalLabel}>Total gastos mensuales</Text>
-          <Text style={styles.figureValue}>{formatMoney(toNumber(calc.totalMonthlyExpenses))}</Text>
+          <Text style={styles.figureValue}>{fmt(toNumber(calc.totalMonthlyExpenses))}</Text>
         </View>
       </View>
     </Card>

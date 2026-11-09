@@ -14,7 +14,7 @@ import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
 import { Badge, Card } from '../ui';
 import { Debt, DebtPriority, DebtCoverageStatus } from '../../types';
-import { formatMoney } from '../../utils/currency';
+import { useMoney } from '../../hooks/useMoney';
 
 const PRIORITY_LABEL: Record<DebtPriority, string> = { alta: 'Prioridad alta', media: 'Prioridad media', baja: 'Prioridad baja' };
 const PRIORITY_TONE: Record<DebtPriority, 'danger' | 'warn' | 'neutral'> = { alta: 'danger', media: 'warn', baja: 'neutral' };
@@ -29,7 +29,6 @@ interface Props {
   onEdit: (id: string) => void;
 }
 
-const fmt = formatMoney;
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -96,6 +95,7 @@ function RightActions({
 export default function DebtCard({ debt, coverage, onMarkPaid, onDelete, onEdit }: Props) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const swipeableRef = useRef<SwipeableMethods>(null);
   const isTheyOweMe = debt.type === 'they_owe_me';
 

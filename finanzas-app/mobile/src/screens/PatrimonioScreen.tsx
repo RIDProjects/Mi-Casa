@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { netWorthService } from '../services/netWorth.service';
 import { NetWorthAsset, NetWorthHistoryPoint, NetWorthLiability } from '../types';
-import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
 import { fonts, radius } from '../theme/tokens';
@@ -18,7 +18,8 @@ const toNumber = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const signedMoney = (amount: number): string => `${amount < 0 ? '-' : ''}${formatMoney(Math.abs(amount))}`;
+const signedMoney = (amount: number, fmt: (amount: number) => string): string =>
+  `${amount < 0 ? '-' : ''}${fmt(Math.abs(amount))}`;
 
 // "2026-10-01" -> "Oct 2026" (parsed from the string: no timezone shifts).
 const monthLabel = (month: string): string => {
@@ -58,12 +59,13 @@ const createStyles = (c: ThemeColors) =>
 
 function AssetGroup({ title, items }: { title: string; items: NetWorthAsset[] }) {
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const total = items.reduce((sum, a) => sum + toNumber(a.valorEstimado), 0);
   return (
     <View style={styles.group}>
       <View style={styles.groupHeader}>
         <Text style={styles.label}>{title}</Text>
-        <Text style={styles.rowAmount}>{formatMoney(total)}</Text>
+        <Text style={styles.rowAmount}>{fmt(total)}</Text>
       </View>
       {items.length === 0 ? (
         <Text style={styles.empty}>{`Sin ${title.toLowerCase()} registrados`}</Text>
@@ -71,7 +73,7 @@ function AssetGroup({ title, items }: { title: string; items: NetWorthAsset[] })
         items.map((a) => (
           <View key={a.id} style={styles.row}>
             <Text style={styles.rowName} numberOfLines={1}>{a.nombre}</Text>
-            <Text style={styles.rowAmount}>{formatMoney(toNumber(a.valorEstimado))}</Text>
+            <Text style={styles.rowAmount}>{fmt(toNumber(a.valorEstimado))}</Text>
           </View>
         ))
       )}
@@ -82,6 +84,7 @@ function AssetGroup({ title, items }: { title: string; items: NetWorthAsset[] })
 function History({ points, isLoading, isError }: { points: NetWorthHistoryPoint[]; isLoading: boolean; isError: boolean }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const maxValue = Math.max(0, ...points.map((p) => Math.abs(toNumber(p.netWorth))));
 
   return (
@@ -102,7 +105,7 @@ function History({ points, isLoading, isError }: { points: NetWorthHistoryPoint[
                 <View style={styles.historyTop}>
                   <Text style={styles.historyMonth}>{monthLabel(p.month)}</Text>
                   <Text style={[styles.historyAmount, { color: value >= 0 ? colors.okInk : colors.dangerInk }]}>
-                    {signedMoney(value)}
+                    {signedMoney(value, fmt)}
                   </Text>
                 </View>
                 <ProgressBar value={maxValue > 0 ? Math.abs(value) / maxValue : 0} tone={value >= 0 ? 'ok' : 'danger'} />
@@ -129,6 +132,7 @@ function SkeletonBlocks() {
 export default function PatrimonioScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
 
   const overview = useQuery({
     queryKey: ['net-worth'],
@@ -199,23 +203,23 @@ export default function PatrimonioScreen() {
                   numberOfLines={1}
                   adjustsFontSizeToFit
                 >
-                  {signedMoney(netWorth)}
+                  {signedMoney(netWorth, fmt)}
                 </Text>
               </View>
               <View style={styles.heroRow}>
                 <View style={styles.heroCell}>
                   <Text style={styles.label}>Activos físicos</Text>
-                  <Text style={styles.heroSmall} numberOfLines={1} adjustsFontSizeToFit>{formatMoney(physicalTotal)}</Text>
+                  <Text style={styles.heroSmall} numberOfLines={1} adjustsFontSizeToFit>{fmt(physicalTotal)}</Text>
                 </View>
                 <View style={styles.heroCell}>
                   <Text style={styles.label}>Efectivo y cuentas</Text>
-                  <Text style={styles.heroSmall} numberOfLines={1} adjustsFontSizeToFit>{formatMoney(cashTotal)}</Text>
+                  <Text style={styles.heroSmall} numberOfLines={1} adjustsFontSizeToFit>{fmt(cashTotal)}</Text>
                 </View>
               </View>
               <View style={styles.heroCell}>
                 <Text style={styles.label}>Deudas (tarjetas + créditos)</Text>
                 <Text style={[styles.heroSmall, { color: colors.dangerInk }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {`-${formatMoney(totalDebts)}`}
+                  {`-${fmt(totalDebts)}`}
                 </Text>
               </View>
             </Card>
@@ -243,7 +247,7 @@ export default function PatrimonioScreen() {
                     <View key={`${l.kind}-${l.id}`} style={styles.row}>
                       <Text style={styles.rowName} numberOfLines={1}>{l.nombre}</Text>
                       <Badge label={l.kind === 'card' ? 'Tarjeta' : 'Crédito'} tone="neutral" />
-                      <Text style={[styles.rowAmount, { color: colors.dangerInk }]}>{`-${formatMoney(toNumber(l.monto))}`}</Text>
+                      <Text style={[styles.rowAmount, { color: colors.dangerInk }]}>{`-${fmt(toNumber(l.monto))}`}</Text>
                     </View>
                   ))
                 )}

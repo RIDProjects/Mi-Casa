@@ -3,7 +3,7 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { budgetService } from '../../services/budget.service';
 import { BudgetIncomeSource } from '../../types';
-import { formatMoney } from '../../utils/currency';
+import { useMoney } from '../../hooks/useMoney';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius, toneInk } from '../../theme/tokens';
@@ -13,7 +13,6 @@ import IncomeFormModal from './IncomeFormModal';
 import { errorMessage, INCOME_TYPE_LABELS, invalidateBudget } from './shared';
 import { useBudgetQuery } from './useBudgetQuery';
 
-const fmt = formatMoney;
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -41,6 +40,7 @@ const createStyles = (c: ThemeColors) =>
 export default function IncomeSourcesScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const qc = useQueryClient();
   const { data: budget, isLoading, isError, refetch } = useBudgetQuery();
   const { refreshing, onRefresh } = useManualRefresh(refetch);
