@@ -5,6 +5,7 @@ import { budgetService, ExpensePayload } from '../../services/budget.service';
 import { BudgetExpense, Periodicity } from '../../types';
 import { TextField } from '../../components/ui';
 import ChipSelector from './ChipSelector';
+import CurrencyChips from './CurrencyChips';
 import FormModal from './FormModal';
 import { errorMessage, invalidateBudget, parseAmount, PERIODICITY_OPTIONS } from './shared';
 
@@ -21,16 +22,19 @@ interface Props {
   categoryId: string;
   /** Expense being edited; null/undefined creates a new one. */
   expense?: BudgetExpense | null;
+  currencies?: { code: string; symbol: string }[];
+  localCurrency?: string | null;
   onClose: () => void;
   onDelete?: () => void;
 }
 
-export default function ExpenseFormModal({ visible, categoryId, expense, onClose, onDelete }: Props) {
+export default function ExpenseFormModal({ visible, categoryId, expense, currencies, localCurrency, onClose, onDelete }: Props) {
   const qc = useQueryClient();
   const isEditing = !!expense;
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [periodicity, setPeriodicity] = useState<Periodicity>('monthly');
+  const [currency, setCurrency] = useState('');
   const [flags, setFlags] = useState<Record<FlagKey, boolean>>({ isFixed: false, isCreditCard: false, isAntExpense: false });
   const [errors, setErrors] = useState<{ name?: string; amount?: string }>({});
 
@@ -39,6 +43,7 @@ export default function ExpenseFormModal({ visible, categoryId, expense, onClose
       setName(expense?.name ?? '');
       setAmount(expense ? String(expense.amount) : '');
       setPeriodicity(expense?.periodicity ?? 'monthly');
+      setCurrency(expense?.currencyCode ?? localCurrency ?? '');
       setFlags({
         isFixed: !!expense?.isFixed,
         isCreditCard: !!expense?.isCreditCard,
@@ -46,7 +51,7 @@ export default function ExpenseFormModal({ visible, categoryId, expense, onClose
       });
       setErrors({});
     }
-  }, [visible, expense]);
+  }, [visible, expense, localCurrency]);
 
   const mutation = useMutation({
     mutationFn: (payload: ExpensePayload) =>
@@ -66,7 +71,7 @@ export default function ExpenseFormModal({ visible, categoryId, expense, onClose
     if (isNaN(value) || value < 0) next.amount = 'Ingresa un monto válido (cero o más).';
     setErrors(next);
     if (next.name || next.amount) return;
-    mutation.mutate({ name: trimmed, amount: value, periodicity, ...flags });
+    mutation.mutate({ name: trimmed, amount: value, periodicity, ...flags, ...(currency ? { currencyCode: currency } : {}) });
   };
 
   const busy = mutation.isPending;
@@ -103,6 +108,7 @@ export default function ExpenseFormModal({ visible, categoryId, expense, onClose
         error={errors.amount}
         editable={!busy}
       />
+      <CurrencyChips currencies={currencies} value={currency} onChange={setCurrency} disabled={busy} />
       <ChipSelector label="Periodicidad" options={PERIODICITY_OPTIONS} value={periodicity} onChange={setPeriodicity} disabled={busy} />
       <ChipSelector
         label="Etiquetas"

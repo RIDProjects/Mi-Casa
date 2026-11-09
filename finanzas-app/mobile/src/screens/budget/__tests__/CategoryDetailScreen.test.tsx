@@ -182,6 +182,31 @@ describe('CategoryDetailScreen', () => {
     await waitFor(() => expect(screen.queryByLabelText('Nombre del gasto')).toBeNull());
   });
 
+  it('lets the user pick the currency of a new expense and sends it', async () => {
+    api.get.mockResolvedValue({
+      data: [{
+        ...budget(),
+        localCurrency: 'CUP',
+        currencies: [{ code: 'CUP', symbol: 'CUP$' }, { code: 'USD', symbol: '$' }],
+        rates: { CUP: 1, USD: 450 },
+      }],
+    });
+    api.post.mockResolvedValue({ data: {} });
+    renderDetail();
+    await screen.findByText('Seguro');
+    fireEvent.press(screen.getByText('Nuevo gasto'));
+    fireEvent.changeText(screen.getByLabelText('Nombre del gasto'), 'Hosting');
+    fireEvent.changeText(screen.getByLabelText('Monto'), '10');
+    fireEvent.press(screen.getByText('USD'));
+    fireEvent.press(screen.getByText('Guardar'));
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith(
+        '/budget/categories/c1/expenses',
+        expect.objectContaining({ name: 'Hosting', amount: 10, currencyCode: 'USD' }),
+      ),
+    );
+  });
+
   it('edits an expense prefilled with its values', async () => {
     api.put.mockResolvedValue({ data: {} });
     renderDetail();
