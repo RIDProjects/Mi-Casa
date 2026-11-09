@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   RefreshControl,
 } from 'react-native';
@@ -22,6 +20,7 @@ import { PurchaseItem, CreatePurchaseItemDto, HouseholdExpensesMonth } from '../
 import { formatMoney, formatCurrencyTotals } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
+import { useKeyboardInset } from '../../hooks/useKeyboardInset';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
@@ -118,6 +117,7 @@ export default function ShoppingListScreen() {
   const styles = useThemedStyles(createStyles);
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
+  const { ref: layoutRef, inset: keyboardInset } = useKeyboardInset();
 
   const now = new Date();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -327,10 +327,8 @@ export default function ShoppingListScreen() {
 
   return (
     <Screen scroll={false} edges={['bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <View ref={layoutRef} style={styles.flex}>
+        <View style={[styles.flex, { paddingBottom: keyboardInset }]}>
         {/* Lista de ítems agrupados por lugar */}
         <ScrollView
           style={styles.flex}
@@ -496,7 +494,8 @@ export default function ShoppingListScreen() {
             />
           </View>
         </View>
-      </KeyboardAvoidingView>
+        </View>
+      </View>
     </Screen>
   );
 }
