@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
+import { TabBarContext } from './TabBarContext';
 import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -35,6 +36,7 @@ export default function MainTabs() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   return (
+    <TabBarContext.Provider value>
     <Tab.Navigator
       screenOptions={({ route }) => {
         const name = route.name as TabName;
@@ -82,5 +84,6 @@ export default function MainTabs() {
       <Tab.Screen name="Deudas" component={DebtsStack} />
       <Tab.Screen name="Mas" component={MasStack} />
     </Tab.Navigator>
+    </TabBarContext.Provider>
   );
 }
