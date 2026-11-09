@@ -2,15 +2,16 @@ import { ComponentRef, useCallback, useContext, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { HeaderHeightContext } from '@react-navigation/elements';
 
-/** How much of a view starting at `containerTop` (window coordinates) sits under a header of `headerHeight`. */
+/** How much of a view starting `containerTop` below the top of its screen sits under a header of `headerHeight`. */
 export const headerOverlap = (headerHeight: number, containerTop: number): number =>
   Math.max(0, headerHeight - containerTop);
 
 /**
- * Screens whose first child is not a ScrollView are laid out from the top of the window, behind the
- * native stack header (iOS only auto-adjusts scroll views). This measures where the container really
- * starts and returns the padding that pushes its content below the header; it is 0 when the content
- * already starts under it. Put `ref` and `onLayout` on the screen's root View and apply `paddingTop`.
+ * Content is laid out from the top of its screen, behind the native stack header: iOS only adjusts a
+ * scroll view that is the screen's first child, and not at all in modal sheets. This measures where the
+ * container starts inside its screen (not in the window, so sheets that sit below the top work too) and
+ * returns the padding that pushes it below the header; it is 0 when the content already starts under it.
+ * Put `ref` and `onLayout` on the screen's root View and apply `paddingTop`.
  */
 export function useHeaderOverlap() {
   const headerHeight = useContext(HeaderHeightContext) ?? 0;
@@ -18,7 +19,7 @@ export function useHeaderOverlap() {
   const [paddingTop, setPaddingTop] = useState(0);
 
   const onLayout = useCallback(() => {
-    ref.current?.measureInWindow((_x: number, y: number) => setPaddingTop(headerOverlap(headerHeight, y)));
+    ref.current?.measure((_x: number, y: number) => setPaddingTop(headerOverlap(headerHeight, y)));
   }, [headerHeight]);
 
   return { ref, onLayout, paddingTop };
