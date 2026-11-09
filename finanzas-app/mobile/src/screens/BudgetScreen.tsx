@@ -13,7 +13,7 @@ import type { ThemeColors } from '../theme/tokens';
 import { ActionBar, Button, Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
 import CategoryNameModal from './budget/CategoryNameModal';
 import PlanParamsModal from './budget/PlanParamsModal';
-import { categoryAutoLines, categoryMonthlyTotal } from './budget/shared';
+import { categoryAutoLines, categoryMonthlyTotal, Rates, toLocal } from './budget/shared';
 import { useBudgetQuery } from './budget/useBudgetQuery';
 
 const createStyles = (c: ThemeColors) =>
@@ -79,10 +79,10 @@ const createStyles = (c: ThemeColors) =>
     planValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15, flexShrink: 1 },
   });
 
-function CategoryCard({ cat, autoLines, total, onPress }: { cat: BudgetCategory; autoLines: AutoDebtLine[]; total: number; onPress: () => void }) {
+function CategoryCard({ cat, autoLines, rates, total, onPress }: { cat: BudgetCategory; autoLines: AutoDebtLine[]; rates: Rates; total: number; onPress: () => void }) {
   const styles = useThemedStyles(createStyles);
   const fmt = useMoney();
-  const monthlyTotal = categoryMonthlyTotal(cat) + autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
+  const monthlyTotal = categoryMonthlyTotal(cat, rates) + autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
   const count = cat.expenses.length + autoLines.length;
   const share = total > 0 ? monthlyTotal / total : 0;
 
@@ -185,7 +185,8 @@ export default function BudgetScreen() {
   const heroTone: Tone = overBudget ? 'danger' : usedRatio > 0.8 ? 'warn' : 'ok';
   const categories = budget.categories ?? [];
   const incomeSources = budget.incomeSources ?? [];
-  const incomeSourcesTotal = incomeSources.reduce((sum, i) => sum + Number(i.amount), 0);
+  const incomeSourcesTotal = incomeSources.reduce((sum, i) => sum + (toLocal(Number(i.amount), i.currencyCode, budget.rates) ?? 0), 0);
+  const missingRates = summary?.missingRates ?? [];
   const plan = summary?.plan ?? null;
   const planRows: { label: string; value: number }[] = plan
     ? [
@@ -198,7 +199,7 @@ export default function BudgetScreen() {
     : [];
   const autoLinesOf = (cat: BudgetCategory) => categoryAutoLines(cat, budget);
   const categoriesTotal = categories.reduce(
-    (s, cat) => s + categoryMonthlyTotal(cat) + autoLinesOf(cat).reduce((a, l) => a + Number(l.monthlyAmount), 0),
+    (s, cat) => s + categoryMonthlyTotal(cat, budget.rates) + autoLinesOf(cat).reduce((a, l) => a + Number(l.monthlyAmount), 0),
     0,
   );
 
@@ -225,6 +226,22 @@ export default function BudgetScreen() {
             <Ionicons name="warning-outline" size={20} color={toneInk(colors, 'danger')} />
             <Text style={[styles.alertText, { color: toneInk(colors, 'danger') }]}>
               Los gastos superan los ingresos
+            </Text>
+          </View>
+        </Reveal>
+      )}
+
+      {missingRates.length > 0 && (
+        <Reveal index={1}>
+          <View
+            style={[
+              styles.alertBanner,
+              { backgroundColor: toneTint(colors, 'warn'), borderColor: toneInk(colors, 'warn') + '40' },
+            ]}
+          >
+            <Ionicons name="alert-circle-outline" size={20} color={toneInk(colors, 'warn')} />
+            <Text style={[styles.alertText, { color: toneInk(colors, 'warn') }]}>
+              Sin tasa de cambio para {missingRates.join(', ')}: esas líneas no se suman a los totales.
             </Text>
           </View>
         </Reveal>
@@ -309,6 +326,7 @@ export default function BudgetScreen() {
                 key={cat.id}
                 cat={cat}
                 autoLines={autoLinesOf(cat)}
+                rates={budget.rates}
                 total={categoriesTotal}
                 onPress={() => navigation.navigate('CategoryDetail', { categoryId: cat.id })}
               />

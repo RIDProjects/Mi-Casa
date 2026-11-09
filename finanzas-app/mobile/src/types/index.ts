@@ -346,6 +346,8 @@ export interface BudgetExpense {
   isFixed: boolean;
   isCreditCard: boolean;
   isAntExpense: boolean;
+  /** Null/absent = house local currency. */
+  currencyCode?: string | null;
 }
 
 export interface BudgetIncomeSource {
@@ -353,6 +355,8 @@ export interface BudgetIncomeSource {
   name: string;
   type: string;
   amount: number;
+  /** Null/absent = house local currency. */
+  currencyCode?: string | null;
 }
 
 export interface BudgetCategory {
@@ -386,6 +390,8 @@ export interface BudgetSummary {
     antExpensesWarning: boolean;
   };
   plan: BudgetPlan | null;
+  /** Currencies whose lines were left out of the totals because the house has no rate for them. */
+  missingRates?: string[];
 }
 
 /** One monthly obligation fed automatically into the budget "Deudas" category. */
@@ -432,6 +438,11 @@ export interface Budget {
   incomeSources: BudgetIncomeSource[];
   categories: BudgetCategory[];
   autoDebtLines?: AutoDebtLine[];
+  /** Active house currencies for the line pickers. */
+  currencies?: { code: string; symbol: string }[];
+  localCurrency?: string | null;
+  /** Latest rate to local per currency; null when the house has none. */
+  rates?: Record<string, number | null>;
   summary: BudgetSummary;
 }
 

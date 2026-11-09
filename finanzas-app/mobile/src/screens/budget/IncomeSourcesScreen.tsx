@@ -10,7 +10,7 @@ import { fonts, radius, toneInk } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
 import { ActionBar, Badge, Card, EmptyState, ErrorState, PageHeader, Reveal, Screen, Skeleton } from '../../components/ui';
 import IncomeFormModal from './IncomeFormModal';
-import { errorMessage, INCOME_TYPE_LABELS, invalidateBudget } from './shared';
+import { errorMessage, INCOME_TYPE_LABELS, invalidateBudget, toLocal } from './shared';
 import { useBudgetQuery } from './useBudgetQuery';
 
 
@@ -62,7 +62,7 @@ export default function IncomeSourcesScreen() {
     ]);
 
   const sources = budget?.incomeSources ?? [];
-  const total = sources.reduce((s, i) => s + Number(i.amount), 0);
+  const total = sources.reduce((s, i) => s + (toLocal(Number(i.amount), i.currencyCode, budget?.rates) ?? 0), 0);
 
   const body = () => {
     if (isLoading) {
@@ -123,7 +123,7 @@ export default function IncomeSourcesScreen() {
                       <Text style={styles.name} numberOfLines={2}>{income.name}</Text>
                       <Badge label={INCOME_TYPE_LABELS[income.type] ?? income.type} tone="ok" />
                     </View>
-                    <Text style={styles.amount}>{fmt(Number(income.amount))}</Text>
+                    <Text style={styles.amount}>{fmt(Number(income.amount), income.currencyCode ?? undefined)}</Text>
                   </View>
                 </Card>
               ))}
@@ -154,6 +154,8 @@ export default function IncomeSourcesScreen() {
           visible={form.open}
           budgetId={budget.id}
           income={form.income}
+          currencies={budget.currencies}
+          localCurrency={budget.localCurrency}
           onClose={() => setForm((f) => ({ ...f, open: false }))}
           onDelete={form.income ? () => confirmDelete(form.income!) : undefined}
         />

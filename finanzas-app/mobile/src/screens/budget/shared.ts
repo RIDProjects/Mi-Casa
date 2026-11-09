@@ -55,8 +55,17 @@ export const INCOME_TYPE_OPTIONS = ['salary', 'investment', 'business', 'rental'
 export const toMonthly = (amount: number, periodicity: Periodicity) =>
   Number(amount) / PERIODICITY_FACTOR[periodicity];
 
-export const categoryMonthlyTotal = (cat: BudgetCategory) =>
-  cat.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
+export type Rates = Record<string, number | null> | undefined;
+
+/** Amount in local currency; null when the line's currency has no rate. Without rates, amounts are kept as is. */
+export const toLocal = (amount: number, currencyCode: string | null | undefined, rates: Rates): number | null => {
+  if (!rates || !currencyCode) return amount;
+  const rate = rates[currencyCode];
+  return rate == null ? null : amount * rate;
+};
+
+export const categoryMonthlyTotal = (cat: BudgetCategory, rates?: Rates) =>
+  cat.expenses.reduce((s, e) => s + (toLocal(toMonthly(e.amount, e.periodicity), e.currencyCode, rates) ?? 0), 0);
 
 /** The backend attaches debt payments as `autoDebtLines` instead of expenses; they belong to the 'Deudas' category. */
 export const isDebtsCategory = (cat: BudgetCategory) => cat.name.trim().toLowerCase() === 'deudas';

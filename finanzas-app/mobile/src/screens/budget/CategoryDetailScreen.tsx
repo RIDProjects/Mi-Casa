@@ -64,16 +64,17 @@ function AutoDebtCard({ line }: { line: AutoDebtLine }) {
 }
 
 function ExpenseCard({ expense, onPress }: { expense: BudgetExpense; onPress: () => void }) {
+  const code = expense.currencyCode ?? undefined;
   const styles = useThemedStyles(createStyles);
   const fmt = useMoney();
   return (
     <Card style={styles.expenseCard} onPress={onPress}>
       <View style={styles.expenseHeader}>
         <Text style={styles.expenseName} numberOfLines={2}>{expense.name}</Text>
-        <Text style={styles.expenseMonthly}>{fmt(toMonthly(expense.amount, expense.periodicity))}/mes</Text>
+        <Text style={styles.expenseMonthly}>{fmt(toMonthly(expense.amount, expense.periodicity), code)}/mes</Text>
       </View>
       <Text style={styles.expenseMeta}>
-        {PERIODICITY_LABELS[expense.periodicity]} · {fmt(Number(expense.amount))}
+        {PERIODICITY_LABELS[expense.periodicity]} · {fmt(Number(expense.amount), code)}
       </Text>
       {(expense.isFixed || expense.isCreditCard || expense.isAntExpense) && (
         <View style={styles.badgeRow}>
@@ -177,7 +178,7 @@ export default function CategoryDetailScreen() {
           <Card accent={colors.brand}>
             <Text style={styles.eyebrow}>Total mensual</Text>
             <Text style={styles.heroAmount} numberOfLines={1} adjustsFontSizeToFit>
-              {fmt(categoryMonthlyTotal(category) + autoTotal)}/mes
+              {fmt(categoryMonthlyTotal(category, budget.rates) + autoTotal)}/mes
             </Text>
             <Text style={styles.heroMeta}>
               {count} {count === 1 ? 'gasto' : 'gastos'}
@@ -249,6 +250,8 @@ export default function CategoryDetailScreen() {
             visible={expenseForm.open}
             categoryId={category.id}
             expense={expenseForm.expense}
+            currencies={budget?.currencies}
+            localCurrency={budget?.localCurrency}
             onClose={() => setExpenseForm((f) => ({ ...f, open: false }))}
             onDelete={expenseForm.expense ? () => confirmDeleteExpense(expenseForm.expense!) : undefined}
           />
