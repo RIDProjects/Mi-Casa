@@ -146,6 +146,23 @@ export class BudgetService {
     return this.houseCurrenciesService ? this.houseCurrenciesService.getRates(houseId) : undefined;
   }
 
+  /** Active house currencies for the line currency pickers; local code is null without the service. */
+  private async getCurrencyOptions(
+    houseId: string,
+  ): Promise<{
+    currencies: { code: string; symbol: string }[];
+    localCurrency: string | null;
+    rates: Record<string, number | null>;
+  }> {
+    if (!this.houseCurrenciesService) return { currencies: [], localCurrency: null, rates: {} };
+    const list = await this.houseCurrenciesService.findByHouse(houseId);
+    return {
+      rates: (await this.getRates(houseId)) ?? {},
+      currencies: list.map((c) => ({ code: c.currencyCode, symbol: c.symbol })),
+      localCurrency: list.find((c) => c.isLocal)?.currencyCode ?? null,
+    };
+  }
+
   /**
    * Monthly amount of a budget line in local currency. Null when the line's currency has no
    * rate; lines without currency (or no rates at all) keep their amount as is.
@@ -391,7 +408,8 @@ export class BudgetService {
     const autoDebtLines = await this.getDebtLines(houseId);
     const autoDebtMonthly = autoDebtLines.reduce((s, l) => s + l.monthlyAmount, 0);
     const rates = await this.getRates(houseId);
-    const result = budgets.map((b) => ({ ...b, autoDebtLines, summary: this.computeSummary(b, autoDebtMonthly, rates) }));
+    const options = await this.getCurrencyOptions(houseId);
+    const result = budgets.map((b) => ({ ...b, ...options, autoDebtLines, summary: this.computeSummary(b, autoDebtMonthly, rates) }));
     if (result[0]) {
       // Fire-and-forget — do NOT await so budget response is never delayed
       void this.notifyBudgetAlerts(houseId, result[0].summary);
@@ -408,7 +426,8 @@ export class BudgetService {
     const autoDebtLines = await this.getDebtLines(houseId);
     const autoDebtMonthly = autoDebtLines.reduce((s, l) => s + l.monthlyAmount, 0);
     const rates = await this.getRates(houseId);
-    return { ...budget, autoDebtLines, summary: this.computeSummary(budget, autoDebtMonthly, rates) };
+    const options = await this.getCurrencyOptions(houseId);
+    return { ...budget, ...options, autoDebtLines, summary: this.computeSummary(budget, autoDebtMonthly, rates) };
   }
 
   async create(dto: CreateBudgetDto, houseId: string) {

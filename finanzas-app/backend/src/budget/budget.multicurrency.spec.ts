@@ -36,6 +36,28 @@ describe('BudgetService multi-currency', () => {
     return new BudgetService(budgetRepo, noop, noop, noop, noop, noop, noop, noop, undefined, undefined, houseCurrencies);
   };
 
+  describe('currency options for the forms', () => {
+    it('returns the active house currencies and the local code with the budget', async () => {
+      const budget = makeBudget([], []);
+      const svc = build(budget, RATES, {
+        findByHouse: jest.fn().mockResolvedValue([
+          { currencyCode: 'CUP', symbol: 'CUP$', isLocal: true },
+          { currencyCode: 'USD', symbol: '$', isLocal: false },
+        ]),
+      });
+      const [list] = await svc.findByHouse(HOUSE);
+      const one = await svc.findOne('b1', HOUSE);
+      for (const result of [list, one]) {
+        expect(result.localCurrency).toBe('CUP');
+        expect(result.rates).toEqual(RATES);
+        expect(result.currencies).toEqual([
+          { code: 'CUP', symbol: 'CUP$' },
+          { code: 'USD', symbol: '$' },
+        ]);
+      }
+    });
+  });
+
   describe('summary conversion', () => {
     it('converts a USD income so CUP expenses no longer produce a huge negative', async () => {
       const budget = makeBudget(
