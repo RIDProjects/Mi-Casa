@@ -21,6 +21,7 @@ import { formatMoney, formatCurrencyTotals } from '../../utils/currency';
 import { GastosStackParamList } from '../../navigation/types';
 import { useManualRefresh } from '../../hooks/useManualRefresh';
 import { useKeyboardInset } from '../../hooks/useKeyboardInset';
+import { useHeaderOverlap } from '../../hooks/useHeaderOverlap';
 import { useTheme, useThemedStyles } from '../../theme/ThemeContext';
 import { fonts, radius } from '../../theme/tokens';
 import type { ThemeColors } from '../../theme/tokens';
@@ -118,6 +119,7 @@ export default function ShoppingListScreen() {
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
   const { ref: layoutRef, inset: keyboardInset } = useKeyboardInset();
+  const header = useHeaderOverlap();
 
   const now = new Date();
   const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -326,9 +328,10 @@ export default function ShoppingListScreen() {
   const refProps = (ref: React.RefObject<React.ComponentRef<typeof TextInput> | null>) => ({ ref } as object);
 
   return (
-    <Screen scroll={false} edges={['bottom']}>
+    // The tab bar already covers the bottom safe area, so no bottom edge here (it left a gap under the form).
+    <Screen scroll={false} edges={[]}>
       <View ref={layoutRef} style={styles.flex}>
-        <View style={[styles.flex, { paddingBottom: keyboardInset }]}>
+        <View ref={header.ref} onLayout={header.onLayout} style={[styles.flex, { paddingTop: header.paddingTop, paddingBottom: keyboardInset }]}>
         {/* Lista de ítems agrupados por lugar */}
         <ScrollView
           style={styles.flex}
