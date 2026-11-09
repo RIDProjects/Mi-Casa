@@ -23,7 +23,7 @@ interface CurrencyState {
 
 export const useCurrencyStore = create<CurrencyState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       currencies: [],
       rates: {},
       activeCurrencyCode: '',

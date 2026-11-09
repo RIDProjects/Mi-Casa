@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { CardPaymentType } from '../../database/entities/credit-card.entity';
 

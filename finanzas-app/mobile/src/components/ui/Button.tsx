@@ -1,4 +1,3 @@
-import React from 'react';
 import { ActivityIndicator, Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemedStyles, useTheme } from '../../theme/ThemeContext';

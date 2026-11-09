@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DashboardScreen from '../DashboardScreen';

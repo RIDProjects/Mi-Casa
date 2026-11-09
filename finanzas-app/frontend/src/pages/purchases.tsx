@@ -85,10 +85,6 @@ export default function PurchasesPage() {
     onSuccess: () => qc.invalidateQueries('purchaseLists'),
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
   });
-  const updateListMut = useMutation(({ id, d }: any) => purchasesAPI.updateList(id, d), {
-    onSuccess: () => { toast.success('Configuración guardada'); qc.invalidateQueries('purchaseLists'); },
-    onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },
-  });
   const addItemMut = useMutation(({ listId, d }: any) => purchasesAPI.addItem(listId, d), {
     onSuccess: () => { toast.success('Producto agregado'); setShowItemModal(false); setItemForm(defaultItemForm); qc.invalidateQueries('purchaseLists'); },
     onError: (e: any) => { toast.error(e?.response?.data?.message || 'Error'); },

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Animated, Easing, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { Tone, toneInk } from '../../theme/tokens';
