@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react-native';
 import ProfileScreen from '../ProfileScreen';
 import { ThemeProvider } from '../../theme/ThemeContext';

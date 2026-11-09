@@ -15,14 +15,14 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { useCurrencyFormatter } from '../lib/currency';
 import { useCountUp } from '../hooks/useCountUp';
 import {
-  TrendingUp, TrendingDown, Receipt, Wallet, Banknote, Landmark, Target, ArrowDownLeft, ArrowUpRight,
+  TrendingUp, TrendingDown, Receipt, Banknote, Landmark, Target, ArrowDownLeft, ArrowUpRight,
   Scale, BarChart3, PiggyBank, ShieldCheck, Hash, Home, AlertTriangle,
   ArrowRight, BookOpen, ShoppingCart, Bug, Printer,
 } from 'lucide-react';
 import { Skeleton } from '../components/ui/Skeleton';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { MONTHS } from '../lib/format';
-import { CHART_GRID_STROKE, CHART_TICK, CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM, CHART_CURSOR, CHART_COLORS } from '../lib/chart';
+import { CHART_TOOLTIP, CHART_TOOLTIP_LABEL, CHART_TOOLTIP_ITEM } from '../lib/chart';
 
 const safeNum = (n: unknown): number => { const v = Number(n); return Number.isFinite(v) ? v : 0; };
 
