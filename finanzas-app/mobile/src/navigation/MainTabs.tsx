@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MainTabParamList } from './types';
 import { useTheme } from '../theme/ThemeContext';
 import { fonts } from '../theme/tokens';
@@ -32,6 +33,7 @@ const TAB_LABELS: Record<TabName, string> = {
 
 export default function MainTabs() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => {
@@ -42,8 +44,8 @@ export default function MainTabs() {
             backgroundColor: colors.panel,
             borderTopColor: colors.border,
             borderTopWidth: 1,
-            paddingBottom: 4,
-            height: 62,
+            paddingBottom: 4 + insets.bottom,
+            height: 62 + insets.bottom,
           },
           tabBarActiveTintColor: colors.brand,
           tabBarInactiveTintColor: colors.outline,

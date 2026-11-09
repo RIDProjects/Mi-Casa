@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { BudgetCategory, Periodicity } from '../../types';
+import { AutoDebtLine, Budget, BudgetCategory, Periodicity } from '../../types';
 
 // Mirrors backend PERIODICITY_FACTOR (backend/src/budget/budget.service.ts)
 export const PERIODICITY_FACTOR: Record<Periodicity, number> = {
@@ -57,6 +57,12 @@ export const toMonthly = (amount: number, periodicity: Periodicity) =>
 
 export const categoryMonthlyTotal = (cat: BudgetCategory) =>
   cat.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
+
+/** The backend attaches debt payments as `autoDebtLines` instead of expenses; they belong to the 'Deudas' category. */
+export const isDebtsCategory = (cat: BudgetCategory) => cat.name.trim().toLowerCase() === 'deudas';
+
+export const categoryAutoLines = (cat: BudgetCategory, budget: Pick<Budget, 'autoDebtLines'>): AutoDebtLine[] =>
+  isDebtsCategory(cat) ? budget.autoDebtLines ?? [] : [];
 
 export const errorMessage = (err: any): string => {
   const msg = err?.response?.data?.message || err?.message || 'Error al guardar';

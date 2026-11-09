@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { creditCardsService } from '../services/creditCards.service';
 import { CardPaymentType, CreditCard } from '../types';
-import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { RootStackParamList } from '../navigation/types';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
@@ -85,6 +85,7 @@ function CardRow({
 }) {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const saldo = Number(item.saldoActual || 0);
   const limite = Number(item.lineaCredito || 0);
   const util = limite > 0 ? (saldo / limite) * 100 : 0;
@@ -116,13 +117,13 @@ function CardRow({
           <View style={styles.amountCell}>
             <Text style={styles.label}>Saldo</Text>
             <Text style={[styles.amount, { color: colors.dangerInk }]} numberOfLines={1} adjustsFontSizeToFit>
-              {formatMoney(saldo)}
+              {fmt(saldo)}
             </Text>
           </View>
           <View style={styles.amountCell}>
             <Text style={styles.label}>Disponible</Text>
             <Text style={[styles.amount, { color: colors.okInk }]} numberOfLines={1} adjustsFontSizeToFit>
-              {formatMoney(Math.max(limite - saldo, 0))}
+              {fmt(Math.max(limite - saldo, 0))}
             </Text>
           </View>
           <View style={styles.amountCell}>
@@ -155,6 +156,7 @@ function SkeletonBlocks() {
 export default function TarjetasScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const navigation = useNavigation<Nav>();
   const qc = useQueryClient();
 
@@ -225,13 +227,13 @@ export default function TarjetasScreen() {
               <View style={styles.summaryCell}>
                 <Text style={styles.label}>Deuda total</Text>
                 <Text style={[styles.summaryValue, { color: colors.dangerInk }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatMoney(totalDeuda)}
+                  {fmt(totalDeuda)}
                 </Text>
               </View>
               <View style={styles.summaryCell}>
                 <Text style={styles.label}>Límite total</Text>
                 <Text style={[styles.summaryValue, { color: colors.onSurface }]} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatMoney(totalLimite)}
+                  {fmt(totalLimite)}
                 </Text>
               </View>
             </View>

@@ -37,7 +37,7 @@ export default function LedgerBackground() {
   });
 
   return (
-    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface }]}>
+    <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.surface, overflow: 'hidden' }]}>
       <View style={{ position: 'absolute', top: -180, right: -140, width: 420, height: 420, borderRadius: 210, backgroundColor: colors.glow, opacity: 0.55 }} />
       {lines.map((l) => (
         <View key={l.key} style={[{ position: 'absolute', backgroundColor: colors.grid }, l.style]} />

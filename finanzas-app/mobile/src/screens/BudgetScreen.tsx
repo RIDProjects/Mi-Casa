@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BudgetCategory } from '../types';
+import { AutoDebtLine, BudgetCategory } from '../types';
 import { BudgetStackParamList } from '../navigation/types';
-import { formatMoney } from '../utils/currency';
+import { useMoney } from '../hooks/useMoney';
 import { useManualRefresh } from '../hooks/useManualRefresh';
 import { useTheme, useThemedStyles } from '../theme/ThemeContext';
 import { fonts, radius, Tone, toneInk, toneTint } from '../theme/tokens';
@@ -13,10 +13,8 @@ import type { ThemeColors } from '../theme/tokens';
 import { ActionBar, Button, Card, EmptyState, ErrorState, PageHeader, ProgressBar, ProgressRing, Reveal, Screen, Skeleton } from '../components/ui';
 import CategoryNameModal from './budget/CategoryNameModal';
 import PlanParamsModal from './budget/PlanParamsModal';
-import { categoryMonthlyTotal } from './budget/shared';
+import { categoryAutoLines, categoryMonthlyTotal } from './budget/shared';
 import { useBudgetQuery } from './budget/useBudgetQuery';
-
-const fmt = formatMoney;
 
 const createStyles = (c: ThemeColors) =>
   StyleSheet.create({
@@ -81,9 +79,11 @@ const createStyles = (c: ThemeColors) =>
     planValue: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15, flexShrink: 1 },
   });
 
-function CategoryCard({ cat, total, onPress }: { cat: BudgetCategory; total: number; onPress: () => void }) {
+function CategoryCard({ cat, autoLines, total, onPress }: { cat: BudgetCategory; autoLines: AutoDebtLine[]; total: number; onPress: () => void }) {
   const styles = useThemedStyles(createStyles);
-  const monthlyTotal = categoryMonthlyTotal(cat);
+  const fmt = useMoney();
+  const monthlyTotal = categoryMonthlyTotal(cat) + autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
+  const count = cat.expenses.length + autoLines.length;
   const share = total > 0 ? monthlyTotal / total : 0;
 
   return (
@@ -95,7 +95,7 @@ function CategoryCard({ cat, total, onPress }: { cat: BudgetCategory; total: num
       <ProgressBar value={share} tone="info" height={6} />
       <View style={styles.catFooter}>
         <Text style={styles.catFooterText}>
-          {cat.expenses.length} {cat.expenses.length === 1 ? 'gasto' : 'gastos'}
+          {count} {count === 1 ? 'gasto' : 'gastos'}
         </Text>
         <Text style={styles.catFooterText}>{(share * 100).toFixed(0)}% del total</Text>
       </View>
@@ -116,6 +116,7 @@ function SkeletonBlocks() {
 export default function BudgetScreen() {
   const { colors } = useTheme();
   const styles = useThemedStyles(createStyles);
+  const fmt = useMoney();
   const navigation = useNavigation<NativeStackNavigationProp<BudgetStackParamList>>();
   const [addingCategory, setAddingCategory] = useState(false);
   const [editingPlan, setEditingPlan] = useState(false);
@@ -195,7 +196,11 @@ export default function BudgetScreen() {
         { label: 'Tope gastos fijos', value: plan.fixedExpensesCap },
       ]
     : [];
-  const categoriesTotal = categories.reduce((s, cat) => s + categoryMonthlyTotal(cat), 0);
+  const autoLinesOf = (cat: BudgetCategory) => categoryAutoLines(cat, budget);
+  const categoriesTotal = categories.reduce(
+    (s, cat) => s + categoryMonthlyTotal(cat) + autoLinesOf(cat).reduce((a, l) => a + Number(l.monthlyAmount), 0),
+    0,
+  );
 
   return (
     <Screen scroll={false}>
@@ -303,6 +308,7 @@ export default function BudgetScreen() {
               <CategoryCard
                 key={cat.id}
                 cat={cat}
+                autoLines={autoLinesOf(cat)}
                 total={categoriesTotal}
                 onPress={() => navigation.navigate('CategoryDetail', { categoryId: cat.id })}
               />

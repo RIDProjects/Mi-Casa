@@ -85,6 +85,37 @@ describe('BudgetScreen', () => {
     expect(screen.queryByText('Los gastos superan los ingresos')).toBeNull();
   });
 
+  it('includes the automatic debt lines in the Deudas category card and the shares', async () => {
+    mockGet.mockResolvedValue({
+      data: [
+        budget({
+          categories: [
+            { id: 'c1', name: 'Servicios', sortOrder: 0, isDefault: false, expenses: [exp('e1', 100, 'monthly')] },
+            { id: 'c2', name: 'Deudas', sortOrder: 1, isDefault: true, expenses: [] },
+          ],
+          autoDebtLines: [
+            { id: 'l1', label: 'Visa', monthlyAmount: 200, balance: 900, estimated: false },
+            { id: 'l2', label: 'Hipoteca', monthlyAmount: 100, balance: 5000, estimated: true },
+          ],
+        }),
+      ],
+    });
+    renderBudget();
+    expect(await screen.findByText('US$ 300.00/mes')).toBeTruthy();
+    expect(screen.getByText('2 gastos')).toBeTruthy();
+    expect(screen.getByText('75% del total')).toBeTruthy();
+    expect(screen.getByText('25% del total')).toBeTruthy();
+  });
+
+  it("formats amounts in the house's local currency instead of assuming USD", async () => {
+    mockGet.mockImplementation((url: string) =>
+      Promise.resolve({ data: url === '/summary' ? { localCurrency: 'CUP' } : [budget()] }),
+    );
+    renderBudget();
+    expect(await screen.findByText('150.00 CUP/mes')).toBeTruthy();
+    expect(screen.queryByText('US$ 150.00/mes')).toBeNull();
+  });
+
   it('converts weekly expenses (factor 12/52) to monthly', async () => {
     mockGet.mockResolvedValue({
       data: [budget({ categories: [{ id: 'c1', name: 'Comida', sortOrder: 0, isDefault: false, expenses: [exp('e1', 60, 'weekly')] }] })],
