@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean, IsEnum, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean, IsEnum, Matches, Min } from 'class-validator';
 import { Periodicity } from '../../database/entities/budget.entity';
 
 export class AddExpenseDto {
@@ -13,4 +13,7 @@ export class AddExpenseDto {
   @IsOptional() @IsBoolean() isCreditCard?: boolean;
 
   @IsOptional() @IsBoolean() isAntExpense?: boolean;
+
+  // Null (update only) resets the line to the house local currency.
+  @IsOptional() @IsString() @Matches(/^[A-Z]{3}$/) currencyCode?: string | null;
 }

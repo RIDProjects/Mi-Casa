@@ -129,6 +129,10 @@ export class BudgetExpense {
   @Column({ default: false })
   isShoppingBudget: boolean;
 
+  /** ISO code of the line's currency; null = the house local currency. */
+  @Column({ type: 'varchar', length: 3, nullable: true })
+  currencyCode: string | null;
+
   @Index()
   @ManyToOne(() => BudgetCategory, cat => cat.expenses, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'category_id' })
@@ -151,6 +155,10 @@ export class IncomeSource {
 
   @Column('decimal', { precision: 12, scale: 2, default: 0 })
   amount: number;
+
+  /** ISO code of the line's currency; null = the house local currency. */
+  @Column({ type: 'varchar', length: 3, nullable: true })
+  currencyCode: string | null;
 
   @Index()
   @ManyToOne(() => Budget, b => b.incomeSources, { onDelete: 'CASCADE' })

@@ -14,6 +14,7 @@ import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { HousesModule } from '../houses/houses.module';
 import { DebtLinesModule } from '../debt-lines/debt-lines.module';
+import { HouseCurrenciesModule } from '../house-currencies/house-currencies.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { DebtLinesModule } from '../debt-lines/debt-lines.module';
     NotificationsModule,
     HousesModule,
     DebtLinesModule,
+    HouseCurrenciesModule,
   ],
   controllers: [BudgetController],
   providers: [BudgetService],
