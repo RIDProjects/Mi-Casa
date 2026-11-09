@@ -14,6 +14,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { InAppNotificationsService } from '../notifications/in-app-notifications.service';
 import { HousesService } from '../houses/houses.service';
 import { DebtLinesService, DebtLine } from '../debt-lines/debt-lines.service';
+import { HouseCurrenciesService } from '../house-currencies/house-currencies.service';
 
 const FI_GOAL_NAME = 'Independencia Financiera';
 const EMERGENCY_FUND_NAME = 'Fondo de Emergencia';
@@ -58,12 +59,14 @@ interface AddIncomeDto {
   name: string;
   type?: string;
   amount: number;
+  currencyCode?: string | null;
 }
 
 interface UpdateIncomeDto {
   name?: string;
   type?: string;
   amount?: number;
+  currencyCode?: string | null;
 }
 
 interface AddCategoryDto {
@@ -78,6 +81,7 @@ interface AddExpenseDto {
   isFixed?: boolean;
   isCreditCard?: boolean;
   isAntExpense?: boolean;
+  currencyCode?: string | null;
 }
 
 interface UpdateExpenseDto {
@@ -87,6 +91,7 @@ interface UpdateExpenseDto {
   isFixed?: boolean;
   isCreditCard?: boolean;
   isAntExpense?: boolean;
+  currencyCode?: string | null;
 }
 
 const DEFAULT_CATEGORIES = [
@@ -131,7 +136,61 @@ export class BudgetService {
     // Feeds the automatic "Deudas" lines; optional for lightweight constructions.
     @Optional()
     private debtLinesService?: DebtLinesService,
+    // Converts budget lines to the local currency; optional for lightweight constructions.
+    @Optional()
+    private houseCurrenciesService?: HouseCurrenciesService,
   ) {}
+
+  /** Latest rate to local per currency (local = 1, null = no rate); undefined without the service. */
+  private async getRates(houseId: string): Promise<Record<string, number | null> | undefined> {
+    return this.houseCurrenciesService ? this.houseCurrenciesService.getRates(houseId) : undefined;
+  }
+
+  /** Active house currencies for the line currency pickers; local code is null without the service. */
+  private async getCurrencyOptions(
+    houseId: string,
+  ): Promise<{
+    currencies: { code: string; symbol: string }[];
+    localCurrency: string | null;
+    rates: Record<string, number | null>;
+  }> {
+    if (!this.houseCurrenciesService) return { currencies: [], localCurrency: null, rates: {} };
+    const list = await this.houseCurrenciesService.findByHouse(houseId);
+    return {
+      rates: (await this.getRates(houseId)) ?? {},
+      currencies: list.map((c) => ({ code: c.currencyCode, symbol: c.symbol })),
+      localCurrency: list.find((c) => c.isLocal)?.currencyCode ?? null,
+    };
+  }
+
+  /**
+   * Monthly amount of a budget line in local currency. Null when the line's currency has no
+   * rate; lines without currency (or no rates at all) keep their amount as is.
+   */
+  private toLocalMonthly(
+    line: { amount: number; periodicity: Periodicity; currencyCode?: string | null },
+    rates?: Record<string, number | null>,
+  ): number | null {
+    const monthly = this.computeMonthlyAmount(Number(line.amount), line.periodicity);
+    if (!rates || !line.currencyCode) return monthly;
+    const rate = rates[line.currencyCode];
+    return rate == null ? null : monthly * rate;
+  }
+
+  /**
+   * Normalizes the currency a line is written with: null for empty or the local currency,
+   * otherwise the code, which must be active in the house. Undefined means "not provided".
+   */
+  private async resolveLineCurrency(houseId: string, code: string | null | undefined): Promise<string | null | undefined> {
+    if (code === undefined) return undefined;
+    const normalized = code?.trim().toUpperCase();
+    if (!normalized) return null;
+    if (!this.houseCurrenciesService) return normalized;
+    const active = await this.houseCurrenciesService.findByHouse(houseId);
+    const match = active.find((c) => c.currencyCode === normalized);
+    if (!match) throw new BadRequestException(`La moneda ${normalized} no está activa en esta casa`);
+    return match.isLocal ? null : normalized;
+  }
 
   /** Monthly debt service lines of the house (empty when the service is unavailable). */
   private async getDebtLines(houseId: string): Promise<DebtLine[]> {
@@ -160,14 +219,15 @@ export class BudgetService {
       relations: ['categories', 'categories.expenses'],
     });
     if (!budget) return null;
+    const rates = await this.getRates(houseId);
 
     const lines = (budget.categories ?? [])
       .flatMap((c) => c.expenses ?? [])
       .filter((e) => e.isFixed === true)
-      .map((e) => ({
-        name: e.name,
-        monthlyAmount: Math.round(this.computeMonthlyAmount(Number(e.amount), e.periodicity) * 100) / 100,
-      }));
+      .flatMap((e) => {
+        const monthly = this.toLocalMonthly(e, rates);
+        return monthly == null ? [] : [{ name: e.name, monthlyAmount: Math.round(monthly * 100) / 100 }];
+      });
 
     return {
       lines,
@@ -194,7 +254,8 @@ export class BudgetService {
       .flatMap((c) => c.expenses ?? [])
       .find((e) => norm(e.name) === 'salidas');
     if (!outings) return null;
-    return Math.round(this.computeMonthlyAmount(Number(outings.amount), outings.periodicity) * 100) / 100;
+    const monthly = this.toLocalMonthly(outings, await this.getRates(houseId));
+    return monthly == null ? null : Math.round(monthly * 100) / 100;
   }
 
   /**
@@ -213,24 +274,33 @@ export class BudgetService {
       ?.flatMap((c) => c.expenses ?? [])
       .find((e) => e.isShoppingBudget === true);
     if (!flagged) return null;
-    return Math.round(this.computeMonthlyAmount(Number(flagged.amount), flagged.periodicity) * 100) / 100;
+    const monthly = this.toLocalMonthly(flagged, await this.getRates(houseId));
+    return monthly == null ? null : Math.round(monthly * 100) / 100;
   }
 
-  private computeSummary(budget: Budget, autoDebtMonthly = 0) {
+  private computeSummary(budget: Budget, autoDebtMonthly = 0, rates?: Record<string, number | null>) {
+    const missing = new Set<string>();
+    // Monthly local amount of a line; lines without a rate are left out and reported.
+    const localMonthly = (line: { amount: number; periodicity: Periodicity; currencyCode?: string | null }) => {
+      const value = this.toLocalMonthly(line, rates);
+      if (value == null) {
+        missing.add(line.currencyCode);
+        return 0;
+      }
+      return value;
+    };
+
     const totalMonthlyIncome =
-      budget.incomeSources?.reduce((s, i) => s + Number(i.amount), 0) ?? 0;
+      budget.incomeSources?.reduce((s, i) => s + localMonthly({ ...i, periodicity: Periodicity.MONTHLY }), 0) ?? 0;
 
     const allExpenses = budget.categories?.flatMap((c) => c.expenses ?? []) ?? [];
 
-    const totalMonthlyExpenses =
-      allExpenses.reduce((s, e) => {
-        return s + this.computeMonthlyAmount(Number(e.amount), e.periodicity);
-      }, 0) + autoDebtMonthly;
+    const totalMonthlyExpenses = allExpenses.reduce((s, e) => s + localMonthly(e), 0) + autoDebtMonthly;
 
     const manualDebtMonthly = (budget.categories ?? [])
       .filter((c) => c.name?.trim().toLowerCase() === 'deudas')
       .flatMap((c) => c.expenses ?? [])
-      .reduce((s, e) => s + this.computeMonthlyAmount(Number(e.amount), e.periodicity), 0);
+      .reduce((s, e) => s + localMonthly(e), 0);
 
     const available = totalMonthlyIncome - totalMonthlyExpenses;
     const savingsTargetAmount =
@@ -238,11 +308,7 @@ export class BudgetService {
 
     const antExpensesTotal = allExpenses
       .filter((e) => e.isAntExpense)
-      .reduce(
-        (s, e) =>
-          s + this.computeMonthlyAmount(Number(e.amount), e.periodicity),
-        0,
-      );
+      .reduce((s, e) => s + localMonthly(e), 0);
 
     let advisory: 'ok' | 'warning' | 'danger';
     if (available >= savingsTargetAmount) {
@@ -275,6 +341,7 @@ export class BudgetService {
       available: Math.round(available * 100) / 100,
       savingsTargetAmount: Math.round(savingsTargetAmount * 100) / 100,
       antExpensesTotal: Math.round(antExpensesTotal * 100) / 100,
+      missingRates: [...missing],
       advisory,
       alerts: {
         overBudget: totalMonthlyExpenses > totalMonthlyIncome,
@@ -340,7 +407,9 @@ export class BudgetService {
     });
     const autoDebtLines = await this.getDebtLines(houseId);
     const autoDebtMonthly = autoDebtLines.reduce((s, l) => s + l.monthlyAmount, 0);
-    const result = budgets.map((b) => ({ ...b, autoDebtLines, summary: this.computeSummary(b, autoDebtMonthly) }));
+    const rates = await this.getRates(houseId);
+    const options = await this.getCurrencyOptions(houseId);
+    const result = budgets.map((b) => ({ ...b, ...options, autoDebtLines, summary: this.computeSummary(b, autoDebtMonthly, rates) }));
     if (result[0]) {
       // Fire-and-forget — do NOT await so budget response is never delayed
       void this.notifyBudgetAlerts(houseId, result[0].summary);
@@ -356,7 +425,9 @@ export class BudgetService {
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
     const autoDebtLines = await this.getDebtLines(houseId);
     const autoDebtMonthly = autoDebtLines.reduce((s, l) => s + l.monthlyAmount, 0);
-    return { ...budget, autoDebtLines, summary: this.computeSummary(budget, autoDebtMonthly) };
+    const rates = await this.getRates(houseId);
+    const options = await this.getCurrencyOptions(houseId);
+    return { ...budget, ...options, autoDebtLines, summary: this.computeSummary(budget, autoDebtMonthly, rates) };
   }
 
   async create(dto: CreateBudgetDto, houseId: string) {
@@ -415,9 +486,11 @@ export class BudgetService {
   async addIncome(budgetId: string, houseId: string, dto: AddIncomeDto) {
     const budget = await this.budgetRepo.findOne({ where: { id: budgetId, house: { id: houseId } } });
     if (!budget) throw new NotFoundException('Presupuesto no encontrado');
+    const currencyCode = await this.resolveLineCurrency(houseId, dto.currencyCode);
     const isFirstIncome = await this.hasNoIncome(budgetId);
     const income = this.incomeRepo.create({
       ...dto,
+      ...(currencyCode !== undefined ? { currencyCode } : {}),
       budget: { id: budgetId } as any,
     });
     const saved = await this.incomeRepo.save(income);
@@ -435,7 +508,8 @@ export class BudgetService {
       .leftJoinAndSelect('i.budget', 'b')
       .getOne();
     if (!income) throw new NotFoundException('Fuente de ingreso no encontrada');
-    Object.assign(income, dto);
+    const currencyCode = await this.resolveLineCurrency(houseId, dto.currencyCode);
+    Object.assign(income, dto, currencyCode !== undefined ? { currencyCode } : {});
     const saved = await this.incomeRepo.save(income);
     await this.refreshFiGoalIfExists(income.budget?.id ?? (saved as any)?.budget?.id, houseId);
     return saved;
@@ -516,8 +590,10 @@ export class BudgetService {
       if (!inCategory && !flagged) shopping = { isShoppingBudget: true, name: 'Presupuesto compra' };
     }
     const { isShoppingBudget: _ignored, ...safeDto } = dto as AddExpenseDto & { isShoppingBudget?: boolean };
+    const currencyCode = await this.resolveLineCurrency(houseId, safeDto.currencyCode);
     const expense = this.expenseRepo.create({
       ...safeDto,
+      ...(currencyCode !== undefined ? { currencyCode } : {}),
       ...shopping,
       category: { id: categoryId } as any,
     });
@@ -534,7 +610,8 @@ export class BudgetService {
       .getOne();
     if (!expense) throw new NotFoundException('Gasto no encontrado');
     const { isShoppingBudget: _ignored, ...safeDto } = dto as UpdateExpenseDto & { isShoppingBudget?: boolean };
-    Object.assign(expense, safeDto);
+    const currencyCode = await this.resolveLineCurrency(houseId, safeDto.currencyCode);
+    Object.assign(expense, safeDto, currencyCode !== undefined ? { currencyCode } : {});
     return this.expenseRepo.save(expense);
   }
 

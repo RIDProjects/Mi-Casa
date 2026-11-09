@@ -24,12 +24,14 @@ interface BudgetPlan {
   fixedExpensesCap: number;
 }
 
-interface IncomeSource { id: string; name: string; type: string; amount: number; }
-interface Expense { id: string; name: string; amount: number; periodicity: Periodicity; isFixed: boolean; isCreditCard: boolean; isAntExpense: boolean; }
+interface Currency { code: string; symbol: string; }
+type Rates = Record<string, number | null>;
+interface IncomeSource { id: string; name: string; type: string; amount: number; currencyCode?: string | null; }
+interface Expense { id: string; name: string; amount: number; periodicity: Periodicity; isFixed: boolean; isCreditCard: boolean; isAntExpense: boolean; currencyCode?: string | null; }
 interface AutoDebtLine { source: 'debt' | 'loan' | 'cuota' | 'card'; id: string; label: string; monthlyAmount: number; balance: number; estimated: boolean; }
 interface Category { id: string; name: string; sortOrder: number; isDefault: boolean; expenses: Expense[]; }
-interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; plan: BudgetPlan | null; }
-interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; fiMultiplier?: number | null; minInvestmentPercent?: number | null; emergencyFundMonths?: number | null; entertainmentPercent?: number | null; fixedExpensesCapPercent?: number | null; incomeSources: IncomeSource[]; categories: Category[]; autoDebtLines?: AutoDebtLine[]; summary: BudgetSummary; }
+interface BudgetSummary { totalMonthlyIncome: number; totalMonthlyExpenses: number; available: number; savingsTargetAmount: number; antExpensesTotal: number; missingRates?: string[]; advisory: 'ok' | 'warning' | 'danger'; alerts?: { overBudget?: boolean; antExpensesWarning?: boolean }; plan: BudgetPlan | null; }
+interface Budget { id: string; name: string; year: number; savingsTargetPercent: number; rule: BudgetRule; fiMultiplier?: number | null; minInvestmentPercent?: number | null; emergencyFundMonths?: number | null; entertainmentPercent?: number | null; fixedExpensesCapPercent?: number | null; incomeSources: IncomeSource[]; categories: Category[]; autoDebtLines?: AutoDebtLine[]; currencies?: Currency[]; localCurrency?: string | null; rates?: Rates; summary: BudgetSummary; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getErr = (e: any) => e?.response?.data?.message || e?.message || 'Error';
@@ -53,6 +55,20 @@ const PERIOD_DIVISOR: Record<Periodicity, number> = {
 };
 
 const toMonthly = (amount: number, p: Periodicity) => Number(amount) / PERIOD_DIVISOR[p];
+
+/** Amount in local currency; null when the line's currency has no rate. Without rates, amounts are kept as is. */
+const toLocal = (amount: number, currencyCode: string | null | undefined, rates: Rates | undefined): number | null => {
+  if (!rates || !currencyCode) return amount;
+  const rate = rates[currencyCode];
+  return rate == null ? null : amount * rate;
+};
+
+const localSymbolOf = (currencies: Currency[] | undefined, localCurrency: string | null | undefined) =>
+  currencies?.find(c => c.code === localCurrency)?.symbol ?? '$';
+
+/** Symbol of a line's own currency; lines without one are in the local currency. */
+const lineSymbolOf = (currencyCode: string | null | undefined, currencies: Currency[] | undefined, localSymbol: string) =>
+  currencyCode ? currencies?.find(c => c.code === currencyCode)?.symbol ?? currencyCode : localSymbol;
 
 function savingsRating(pct: number): { icon: JSX.Element; text: string; color: string } {
   if (pct <= 5) return { icon: <AlertTriangle size={16} />, text: 'Muy bajo. Intenta ahorrar más.',           color: 'text-danger-ink' };
@@ -79,9 +95,9 @@ const INCOME_TYPE_LABELS: Record<string, string> = {
   mipyme: 'Negocio / Emprendimiento',
 };
 
-const defaultIncomeForm  = { name: '', type: 'salary', amount: '' };
+const defaultIncomeForm  = { name: '', type: 'salary', amount: '', currencyCode: '' };
 const defaultCategoryForm = { name: '' };
-const defaultExpenseForm = { name: '', amount: '', periodicity: 'monthly' as Periodicity, isFixed: false, isAntExpense: false, isCreditCard: false };
+const defaultExpenseForm = { name: '', amount: '', periodicity: 'monthly' as Periodicity, isFixed: false, isAntExpense: false, isCreditCard: false, currencyCode: '' };
 
 // ─── CategorySection ──────────────────────────────────────────────────────────
 type PlanParams = { fiMultiplier: number; minInvestmentPercent: number; emergencyFundMonths: number; entertainmentPercent: number; fixedExpensesCapPercent: number };
@@ -159,14 +175,17 @@ function InlineEdit({ label, value, display, type, align = 'left', onSave }: {
 
 const isDebtCategory = (name: string) => name.trim().toLowerCase() === 'deudas';
 
-function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory }: { category: Category; autoLines?: AutoDebtLine[]; onRefresh: () => void; onDeleteCategory: () => void; }) {
+function CategorySection({ category, autoLines = [], currencies = [], localCurrency = null, rates, onRefresh, onDeleteCategory }: { category: Category; autoLines?: AutoDebtLine[]; currencies?: Currency[]; localCurrency?: string | null; rates?: Rates; onRefresh: () => void; onDeleteCategory: () => void; }) {
+  const localSym = localSymbolOf(currencies, localCurrency);
+  const multiCurrency = currencies.length > 1;
   const [open, setOpen] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [deleteExpense, setDeleteExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState({ ...defaultExpenseForm });
+  const openAddModal = () => { setForm({ ...defaultExpenseForm, currencyCode: localCurrency ?? '' }); setShowModal(true); };
 
   const addMut = useMutation((d: any) => budgetAPI.addExpense(category.id, d), {
-    onSuccess: () => { toast.success('Gasto agregado'); setShowModal(false); setForm({ ...defaultExpenseForm }); onRefresh(); },
+    onSuccess: () => { toast.success('Gasto agregado'); setShowModal(false); setForm({ ...defaultExpenseForm, currencyCode: localCurrency ?? '' }); onRefresh(); },
     onError: (e: any) => { toast.error(getErr(e)); },
   });
   const delMut = useMutation((id: string) => budgetAPI.deleteExpense(id), {
@@ -192,7 +211,7 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
     period: r => (r.kind === 'manual' ? PERIODICITY_LABELS[r.expense.periodicity] : 'Mensual'),
   }, { key: 'monthly', dir: 'desc' });
   const autoTotal = autoLines.reduce((s, l) => s + Number(l.monthlyAmount), 0);
-  const catTotal = category.expenses.reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0) + autoTotal;
+  const catTotal = category.expenses.reduce((s, e) => s + (toLocal(toMonthly(e.amount, e.periodicity), e.currencyCode, rates) ?? 0), 0) + autoTotal;
 
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-border-light overflow-hidden">
@@ -207,9 +226,9 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
           <span className="font-body-small text-body-small text-outline">({category.expenses.length + autoLines.length})</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="font-card-title text-card-title text-on-surface-variant">${fmt(catTotal)}/mes</span>
+          <span className="font-card-title text-card-title text-on-surface-variant">{localSym}{fmt(catTotal)}/mes</span>
           <button
-            onClick={e => { e.stopPropagation(); setShowModal(true); }}
+            onClick={e => { e.stopPropagation(); openAddModal(); }}
             className="flex items-center gap-1 px-2.5 py-1 text-primary font-label-upper text-label-upper border border-primary/30 hover:bg-primary/5 rounded-lg transition-colors"
           >
             <Plus size={11} /> Gasto
@@ -260,8 +279,8 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
                           {l.label}
                           {l.estimated && <span className="ml-2 font-body-small text-body-small text-outline">(estimado)</span>}
                         </td>
-                        <td className="px-4 py-3 text-right font-body-default text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
-                        <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                        <td className="px-4 py-3 text-right font-body-default text-on-surface-variant">{localSym}{fmt(l.monthlyAmount)}</td>
+                        <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">{localSym}{fmt(l.monthlyAmount)}</td>
                         <td className="px-4 py-3 text-center font-body-small text-body-small text-outline">Mensual</td>
                         <td className="px-4 py-3 text-center">
                           <span className="px-2 py-0.5 rounded-full bg-info-container/40 text-info-ink font-label-upper text-label-upper">Automático</span>
@@ -286,13 +305,23 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
                       <InlineEdit
                         label={`Monto de ${e.name}`}
                         value={e.amount}
-                        display={`$${fmt(e.amount)}`}
+                        display={`${lineSymbolOf(e.currencyCode, currencies, localSym)}${fmt(e.amount)}`}
                         type="number"
                         align="right"
                         onSave={v => updMut.mutate({ id: e.id, data: { amount: parseFloat(v) } })}
                       />
+                      {multiCurrency && (
+                        <select
+                          aria-label={`Moneda de ${e.name}`}
+                          value={e.currencyCode ?? localCurrency ?? ''}
+                          onChange={ev => updMut.mutate({ id: e.id, data: { currencyCode: ev.target.value } })}
+                          className="mt-1 font-body-small text-body-small bg-surface-container border border-outline-variant rounded-lg px-2 py-0.5 text-on-surface-variant cursor-pointer focus:ring-2 focus:ring-primary/30 focus:outline-none"
+                        >
+                          {currencies.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                        </select>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">${fmt(toMonthly(e.amount, e.periodicity))}</td>
+                    <td className="px-4 py-3 text-right font-body-small text-on-surface-variant">{lineSymbolOf(e.currencyCode, currencies, localSym)}{fmt(toMonthly(e.amount, e.periodicity))}</td>
                     <td className="px-4 py-3 text-center">
                       <select
                         value={e.periodicity}
@@ -363,7 +392,7 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
               <tfoot>
                 <tr className="bg-surface-container-low font-bold border-t border-outline-variant">
                   <td colSpan={2} className="px-6 py-3 font-label-upper text-label-upper text-on-surface-variant uppercase">Total mensual</td>
-                  <td className="px-4 py-3 text-right font-card-title text-card-title text-on-surface">${fmt(catTotal)}</td>
+                  <td className="px-4 py-3 text-right font-card-title text-card-title text-on-surface">{localSym}{fmt(catTotal)}</td>
                   <td colSpan={3} />
                 </tr>
               </tfoot>
@@ -375,7 +404,7 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
 
       {/* Add expense modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Agregar gasto — ${category.name}`}>
-        <form onSubmit={ev => { ev.preventDefault(); addMut.mutate({ ...form, amount: parseFloat(form.amount as string) }); }} className="space-y-4">
+        <form onSubmit={ev => { ev.preventDefault(); addMut.mutate({ ...form, amount: parseFloat(form.amount as string), currencyCode: form.currencyCode || undefined }); }} className="space-y-4">
           <div>
             <label className="label">Nombre del gasto</label>
             <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ej: Netflix, Supermercado..." required />
@@ -385,6 +414,14 @@ function CategorySection({ category, autoLines = [], onRefresh, onDeleteCategory
               <label className="label">Monto</label>
               <input type="number" step="0.01" min="0" className="input" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="0.00" required />
             </div>
+            {multiCurrency && (
+              <div>
+                <label className="label" htmlFor="expense-currency">Moneda</label>
+                <select id="expense-currency" aria-label="Moneda" className="input" value={form.currencyCode} onChange={e => setForm({ ...form, currencyCode: e.target.value })}>
+                  {currencies.map(c => <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label className="label">Periodicidad</label>
               <select className="input" value={form.periodicity} onChange={e => setForm({ ...form, periodicity: e.target.value as Periodicity })}>
@@ -553,8 +590,8 @@ export default function PresupuestoPage() {
   const { sorted: sortedIncome, sort: incomeSort, toggle: toggleIncomeSort } = useTableSort<IncomeSource>(budget?.incomeSources, {
     name: i => i.name,
     type: i => INCOME_TYPE_LABELS[i.type] ?? i.type,
-    amount: i => i.amount,
-    annual: i => i.amount,
+    amount: i => toLocal(i.amount, i.currencyCode, budget?.rates) ?? 0,
+    annual: i => toLocal(i.amount, i.currencyCode, budget?.rates) ?? 0,
   }, { key: 'amount', dir: 'desc' });
 
   if (isLoading || (activeBudgetId && loadingBudget)) {
@@ -624,6 +661,10 @@ export default function PresupuestoPage() {
   }
 
   const { summary, incomeSources, categories } = budget;
+  const currencies = budget.currencies ?? [];
+  const localSym = localSymbolOf(currencies, budget.localCurrency);
+  const multiCurrency = currencies.length > 1;
+  const missingRates = summary.missingRates ?? [];
   const totalAnualIngresos   = summary.totalMonthlyIncome * 12;
   const totalAnualGastos     = summary.totalMonthlyExpenses * 12;
   const disponibleAnual      = totalAnualIngresos - totalAnualGastos;
@@ -631,7 +672,7 @@ export default function PresupuestoPage() {
   const antPerDay            = summary.antExpensesTotal > 0 ? summary.antExpensesTotal / 30 : 0;
   const rating               = savingsRating(budget.savingsTargetPercent);
 
-  const gastosFijos       = categories.flatMap(c => c.expenses).filter(e => e.isFixed).reduce((s, e) => s + toMonthly(e.amount, e.periodicity), 0);
+  const gastosFijos       = categories.flatMap(c => c.expenses).filter(e => e.isFixed).reduce((s, e) => s + (toLocal(toMonthly(e.amount, e.periodicity), e.currencyCode, budget.rates) ?? 0), 0);
   const gastosVariables   = summary.totalMonthlyExpenses - gastosFijos;
 
   const advisoryBanner = {
@@ -682,25 +723,32 @@ export default function PresupuestoPage() {
         </div>
       </div>
 
+      {missingRates.length > 0 && (
+        <div role="alert" className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-surface-container border border-warning/30 text-warn-ink font-body-small text-body-small">
+          <AlertTriangle size={16} />
+          <span>Sin tasa de cambio para {missingRates.join(', ')}: esas líneas no se suman a los totales.</span>
+        </div>
+      )}
+
       {/* ── KPI row ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INGRESOS/MES</p>
-          <p className="font-section-title text-lg sm:text-[22px] text-ok-ink">${fmt(summary.totalMonthlyIncome)}</p>
+          <p className="font-section-title text-lg sm:text-[22px] text-ok-ink">{localSym}{fmt(summary.totalMonthlyIncome)}</p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">GASTOS/MES</p>
-          <p className="font-section-title text-lg sm:text-[22px] text-danger-ink">${fmt(summary.totalMonthlyExpenses)}</p>
+          <p className="font-section-title text-lg sm:text-[22px] text-danger-ink">{localSym}{fmt(summary.totalMonthlyExpenses)}</p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">DISPONIBLE/MES</p>
           <p className={`font-section-title text-lg sm:text-[22px] ${summary.available >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
-            ${fmt(Math.abs(summary.available))}
+            {localSym}{fmt(Math.abs(summary.available))}
           </p>
         </div>
         <div className="bg-surface-container-lowest border border-border-light rounded-xl p-4">
           <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">META DE AHORRO</p>
-          <p className="font-section-title text-lg sm:text-[22px] text-primary">${fmt(savingsMonthly)}</p>
+          <p className="font-section-title text-lg sm:text-[22px] text-primary">{localSym}{fmt(savingsMonthly)}</p>
         </div>
       </div>
 
@@ -730,7 +778,7 @@ export default function PresupuestoPage() {
             <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-gray">
               <h3 className="font-section-title text-section-title text-on-surface">Ingresos Promedio Mensuales</h3>
               <button
-                onClick={() => setShowIncomeModal(true)}
+                onClick={() => { setIncomeForm({ ...defaultIncomeForm, currencyCode: budget.localCurrency ?? '' }); setShowIncomeModal(true); }}
                 className="flex items-center gap-1 text-primary font-label-upper text-label-upper hover:underline"
               >
                 <Plus size={12} /> Agregar
@@ -762,12 +810,12 @@ export default function PresupuestoPage() {
                           {INCOME_TYPE_LABELS[inc.type] ?? inc.type}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(inc.amount)}</td>
-                      <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">${fmt(Number(inc.amount) * 12)}</td>
+                      <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">{lineSymbolOf(inc.currencyCode, currencies, localSym)}{fmt(inc.amount)}</td>
+                      <td className="px-4 py-3 text-right font-body-small text-body-small text-on-surface-variant">{lineSymbolOf(inc.currencyCode, currencies, localSym)}{fmt(Number(inc.amount) * 12)}</td>
                       <td className="px-2 py-3 text-center whitespace-nowrap">
                         <button
                           onClick={() => {
-                            setIncomeForm({ name: inc.name, type: inc.type, amount: String(inc.amount) });
+                            setIncomeForm({ name: inc.name, type: inc.type, amount: String(inc.amount), currencyCode: inc.currencyCode ?? budget.localCurrency ?? '' });
                             setEditIncomeId(inc.id);
                             setShowIncomeModal(true);
                           }}
@@ -786,8 +834,8 @@ export default function PresupuestoPage() {
               <tfoot>
                 <tr className="bg-surface-container-low font-bold border-t-2 border-outline-variant">
                   <td className="px-6 py-3 font-card-title text-card-title text-on-surface" colSpan={2}>Total ingresos</td>
-                  <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">${fmt(summary.totalMonthlyIncome)}</td>
-                  <td className="px-4 py-3 text-right font-body-small text-body-small text-ok-ink">${fmt(totalAnualIngresos)}</td>
+                  <td className="px-4 py-3 text-right font-card-title text-card-title text-ok-ink">{localSym}{fmt(summary.totalMonthlyIncome)}</td>
+                  <td className="px-4 py-3 text-right font-body-small text-body-small text-ok-ink">{localSym}{fmt(totalAnualIngresos)}</td>
                   <td />
                 </tr>
                 <tr>
@@ -809,25 +857,25 @@ export default function PresupuestoPage() {
                   <TrendingUp size={14} className="text-ok-ink" />
                   <span className="font-body-default text-on-surface-variant">Ingresos anuales</span>
                 </div>
-                <span className="font-card-title text-card-title text-ok-ink">${fmt(totalAnualIngresos)}</span>
+                <span className="font-card-title text-card-title text-ok-ink">{localSym}{fmt(totalAnualIngresos)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-outline-variant">
                 <div className="flex items-center gap-2">
                   <TrendingDown size={14} className="text-danger-ink" />
                   <span className="font-body-default text-on-surface-variant">Gastos anuales</span>
                 </div>
-                <span className="font-card-title text-card-title text-danger-ink">${fmt(totalAnualGastos)}</span>
+                <span className="font-card-title text-card-title text-danger-ink">{localSym}{fmt(totalAnualGastos)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-outline-variant">
                 <span className="font-body-default text-on-surface font-semibold">Disponible anual</span>
                 <span className={`font-card-title text-card-title ${disponibleAnual >= 0 ? 'text-ok-ink' : 'text-danger-ink'}`}>
-                  ${fmt(Math.abs(disponibleAnual))}
+                  {localSym}{fmt(Math.abs(disponibleAnual))}
                 </span>
               </div>
               <div className="pt-2">
                 <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
                   <span>Gastos fijos</span>
-                  <span>${fmt(gastosFijos)}</span>
+                  <span>{localSym}{fmt(gastosFijos)}</span>
                 </div>
                 <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden mb-2">
                   <div
@@ -837,7 +885,7 @@ export default function PresupuestoPage() {
                 </div>
                 <div className="flex justify-between font-body-small text-body-small text-on-surface-variant mb-1">
                   <span>Gastos variables</span>
-                  <span>${fmt(gastosVariables)}</span>
+                  <span>{localSym}{fmt(gastosVariables)}</span>
                 </div>
                 <div className="w-full bg-outline-variant/20 h-2 rounded-full overflow-hidden">
                   <div
@@ -870,11 +918,11 @@ export default function PresupuestoPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-surface-container rounded-lg p-3 text-center">
                 <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">META MENSUAL</p>
-                <p className="font-card-title text-card-title text-primary">${fmt(savingsMonthly)}</p>
+                <p className="font-card-title text-card-title text-primary">{localSym}{fmt(savingsMonthly)}</p>
               </div>
               <div className="bg-surface-container rounded-lg p-3 text-center">
                 <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">META ANUAL</p>
-                <p className="font-card-title text-card-title text-primary">${fmt(savingsMonthly * 12)}</p>
+                <p className="font-card-title text-card-title text-primary">{localSym}{fmt(savingsMonthly * 12)}</p>
               </div>
             </div>
             <p className={`mt-3 font-body-small text-body-small ${rating.color}`}>
@@ -912,11 +960,11 @@ export default function PresupuestoPage() {
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="bg-surface-container rounded-lg p-3 text-center">
                   <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">AL MES</p>
-                  <p className="font-card-title text-[20px] text-warn-ink">${fmt(summary.antExpensesTotal)}</p>
+                  <p className="font-card-title text-[20px] text-warn-ink">{localSym}{fmt(summary.antExpensesTotal)}</p>
                 </div>
                 <div className="bg-surface-container rounded-lg p-3 text-center">
                   <p className="font-label-upper text-label-upper text-on-surface-variant mb-1">MÁX. POR DÍA</p>
-                  <p className="font-card-title text-[20px] text-warn-ink">${fmt(antPerDay)}</p>
+                  <p className="font-card-title text-[20px] text-warn-ink">{localSym}{fmt(antPerDay)}</p>
                 </div>
               </div>
               {summary.antExpensesTotal > 0 ? (
@@ -971,7 +1019,7 @@ export default function PresupuestoPage() {
           <div className="p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">META FI</p>
-              <p className="font-card-title text-card-title text-primary mb-2">${fmt(summary.plan.fiTarget)}</p>
+              <p className="font-card-title text-card-title text-primary mb-2">{localSym}{fmt(summary.plan.fiTarget)}</p>
               <button
                 onClick={() => syncFiMut.mutate()}
                 disabled={syncFiMut.isLoading}
@@ -982,22 +1030,22 @@ export default function PresupuestoPage() {
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">INVERSIÓN MÍN.</p>
-              <p className="font-card-title text-card-title text-ok-ink">${fmt(summary.plan.minMonthlyInvestment)}/mes</p>
+              <p className="font-card-title text-card-title text-ok-ink">{localSym}{fmt(summary.plan.minMonthlyInvestment)}/mes</p>
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">FONDO EMERGENCIA</p>
-              <p className="font-card-title text-card-title text-primary mb-2">${fmt(summary.plan.emergencyFundTarget)}</p>
+              <p className="font-card-title text-card-title text-primary mb-2">{localSym}{fmt(summary.plan.emergencyFundTarget)}</p>
               <Link href="/emergency-fund" className="font-caption text-caption text-primary hover:underline">
                 Ver fondo →
               </Link>
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">OCIO/MES</p>
-              <p className="font-card-title text-card-title text-warn-ink">${fmt(summary.plan.entertainmentBudget)}</p>
+              <p className="font-card-title text-card-title text-warn-ink">{localSym}{fmt(summary.plan.entertainmentBudget)}</p>
             </div>
             <div className="bg-surface-container rounded-xl p-4 text-center border border-border-light">
               <p className="font-label-upper text-label-upper text-on-surface-variant mb-2">TOPE GASTOS FIJOS</p>
-              <p className="font-card-title text-card-title text-danger-ink">${fmt(summary.plan.fixedExpensesCap)}</p>
+              <p className="font-card-title text-card-title text-danger-ink">{localSym}{fmt(summary.plan.fixedExpensesCap)}</p>
             </div>
           </div>
         </div>
@@ -1024,6 +1072,9 @@ export default function PresupuestoPage() {
             <CategorySection
               key={cat.id}
               category={cat}
+              currencies={currencies}
+              localCurrency={budget.localCurrency}
+              rates={budget.rates}
               onRefresh={refresh}
               autoLines={isDebtCategory(cat.name) ? budget.autoDebtLines ?? [] : []}
               onDeleteCategory={() => setDeleteCategoryId(cat.id)}
@@ -1038,7 +1089,7 @@ export default function PresupuestoPage() {
           <div className="px-4 py-3 bg-surface-gray border-b border-outline-variant flex items-center justify-between">
             <span className="font-section-title text-section-title text-on-surface">Pagos de deuda automáticos</span>
             <span className="font-card-title text-card-title text-on-surface-variant">
-              ${fmt((budget.autoDebtLines ?? []).reduce((sum, l) => sum + Number(l.monthlyAmount), 0))}/mes
+              {localSym}{fmt((budget.autoDebtLines ?? []).reduce((sum, l) => sum + Number(l.monthlyAmount), 0))}/mes
             </span>
           </div>
           <table className="w-full text-left font-body-default">
@@ -1049,7 +1100,7 @@ export default function PresupuestoPage() {
                     {l.label}
                     {l.estimated && <span className="ml-2 font-body-small text-body-small text-outline">(estimado)</span>}
                   </td>
-                  <td className="px-4 py-3 text-right text-on-surface-variant">${fmt(l.monthlyAmount)}</td>
+                  <td className="px-4 py-3 text-right text-on-surface-variant">{localSym}{fmt(l.monthlyAmount)}</td>
                   <td className="px-4 py-3 text-center">
                     <span className="px-2 py-0.5 rounded-full bg-info-container/40 text-info-ink font-label-upper text-label-upper">Automático</span>
                   </td>
@@ -1069,7 +1120,7 @@ export default function PresupuestoPage() {
         <form
           onSubmit={e => {
             e.preventDefault();
-            const data = { ...incomeForm, amount: parseFloat(incomeForm.amount as string) };
+            const data = { ...incomeForm, amount: parseFloat(incomeForm.amount as string), currencyCode: incomeForm.currencyCode || undefined };
             editIncomeId ? updateIncomeMut.mutate(data) : addIncomeMut.mutate(data);
           }}
           className="space-y-4"
@@ -1087,6 +1138,14 @@ export default function PresupuestoPage() {
               <option value="other">Otro</option>
             </select>
           </div>
+          {multiCurrency && (
+            <div>
+              <label className="label" htmlFor="income-currency">Moneda</label>
+              <select id="income-currency" aria-label="Moneda" className="input" value={incomeForm.currencyCode} onChange={e => setIncomeForm({ ...incomeForm, currencyCode: e.target.value })}>
+                {currencies.map(c => <option key={c.code} value={c.code}>{c.code} ({c.symbol})</option>)}
+              </select>
+            </div>
+          )}
           <div><label className="label">Monto mensual</label><input type="number" step="0.01" min="0" className="input" value={incomeForm.amount} onChange={e => setIncomeForm({ ...incomeForm, amount: e.target.value })} placeholder="0.00" required /></div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => { setShowIncomeModal(false); setEditIncomeId(null); setIncomeForm({ ...defaultIncomeForm }); }} className="btn-secondary">Cancelar</button>
