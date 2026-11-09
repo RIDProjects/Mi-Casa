@@ -61,3 +61,43 @@ describe('PurchasesService budget sync', () => {
     expect(listRepo.save.mock.calls[0][0].budget).toBe(100);
   });
 });
+
+describe('PurchasesService multi-currency summary', () => {
+  const build = (items: any[], rates?: Record<string, number | null>) => {
+    const listRepo: any = {
+      find: jest.fn().mockResolvedValue([{ id: 'l1', budget: 0, items }]),
+      findOne: jest.fn(async () => ({ id: 'l1', budget: 0, items })),
+    };
+    const budgetService: any = { getShoppingBudget: jest.fn().mockResolvedValue(150) };
+    const currencies: any = rates ? { getRates: jest.fn().mockResolvedValue(rates) } : undefined;
+    return new PurchasesService(listRepo, {} as any, budgetService, currencies);
+  };
+  const item = (quantity: number, unitPrice: number, currency: string | null) => ({
+    quantity, unitPrice, currency, status: 'pending',
+  });
+
+  it('converts each item to the local currency instead of summing raw amounts', async () => {
+    // local USD; 450 CUP = 1 USD (rate CUP -> USD = 1/450)
+    const service = build(
+      [item(1, 3, 'USD'), item(2, 900, 'CUP'), item(1, 450, null)],
+      { USD: 1, CUP: 1 / 450 },
+    );
+    const res: any = await service.findOneList('l1', 'h1');
+    expect(res.summary.total).toBeCloseTo(3 + 4 + 450, 5);
+    expect(res.summary.missingRates).toEqual([]);
+  });
+
+  it('leaves out items whose currency has no rate and reports them', async () => {
+    const service = build([item(1, 10, 'USD'), item(1, 500, 'EUR')], { USD: 1, EUR: null });
+    const [res]: any[] = await service.findAllLists('h1');
+    expect(res.summary.total).toBe(10);
+    expect(res.summary.remaining).toBe(140);
+    expect(res.summary.missingRates).toEqual(['EUR']);
+  });
+
+  it('keeps raw sums when no rates are available', async () => {
+    const res: any = await build([item(1, 10, 'USD'), item(1, 5, 'CUP')]).findOneList('l1', 'h1');
+    expect(res.summary.total).toBe(15);
+    expect(res.summary.missingRates).toEqual([]);
+  });
+});
