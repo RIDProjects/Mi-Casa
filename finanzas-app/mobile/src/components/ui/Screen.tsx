@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useTheme } from '../../theme/ThemeContext';
 import LedgerBackground from './LedgerBackground';
 import { TabBarContext } from '../../navigation/TabBarContext';
+import { useHeaderOverlap } from '../../hooks/useHeaderOverlap';
 
 type Edge = 'top' | 'bottom' | 'left' | 'right';
 
@@ -29,9 +30,14 @@ interface Props {
 export default function Screen({ children, scroll = true, refreshing, onRefresh, contentStyle, edges = ['top'], underTabBar }: Props) {
   const { colors, isDark } = useTheme();
   const inTabs = useContext(TabBarContext);
+  const header = useHeaderOverlap();
 
   return (
-    <View style={[styles.flex, { backgroundColor: colors.surface }]}>
+    <View
+      ref={header.ref}
+      onLayout={header.onLayout}
+      style={[styles.flex, { backgroundColor: colors.surface, paddingTop: header.paddingTop }]}
+    >
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <LedgerBackground />
       <SafeAreaView style={styles.flex} edges={effectiveEdges(edges, underTabBar ?? inTabs)}>
