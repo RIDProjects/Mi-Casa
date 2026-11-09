@@ -278,6 +278,8 @@ export interface PurchaseListSummary {
   purchased: number;
   pending: number;
   count: number;
+  /** Currencies whose items were left out of `total` because the house has no rate for them. */
+  missingRates?: string[];
 }
 
 export interface PurchaseList {

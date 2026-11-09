@@ -136,6 +136,30 @@ describe('ShoppingListScreen', () => {
     expect(mockAddItem.mock.calls[0][1]).toMatchObject({ name: 'Leche', quantity: 1, unitPrice: 2.5 });
   });
 
+  it('lets the user pick the currency of the new item instead of forcing the local one', async () => {
+    mockGetMonth.mockResolvedValue({
+      monedaLocal: 'USD',
+      monedas: [{ code: 'USD', symbol: '$' }, { code: 'CUP', symbol: 'CUP$' }],
+    });
+    mockGetLists.mockResolvedValue([list([item('i1', 'Arroz', 2, 3, 'Mercado')])]);
+    mockAddItem.mockResolvedValue({});
+    renderShopping();
+    fireEvent.press(await screen.findByText('CUP'));
+    fireEvent.changeText(screen.getByPlaceholderText('Producto'), 'Chorizo');
+    fireEvent.changeText(screen.getByPlaceholderText('Precio CUP'), '1860');
+    fireEvent.press(screen.getByText('Agregar'));
+    await waitFor(() => expect(mockAddItem).toHaveBeenCalled());
+    expect(mockAddItem.mock.calls[0][1]).toMatchObject({ name: 'Chorizo', unitPrice: 1860, currency: 'CUP' });
+  });
+
+  it('warns when items were left out of the totals because their currency has no rate', async () => {
+    mockGetLists.mockResolvedValue([
+      { ...list([item('i1', 'Arroz', 2, 3, 'Mercado')]), summary: { total: 6, budget: 150, remaining: 144, status: '', purchased: 0, pending: 1, count: 1, missingRates: ['CUP'] } },
+    ]);
+    renderShopping();
+    expect(await screen.findByText(/Sin tasa de cambio para CUP/)).toBeTruthy();
+  });
+
   it('switches to edit mode when an item is tapped', async () => {
     mockGetLists.mockResolvedValue([list([item('i1', 'Arroz', 2, 3, 'Mercado')])]);
     renderShopping();
