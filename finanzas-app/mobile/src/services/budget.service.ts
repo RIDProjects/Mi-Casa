@@ -5,6 +5,7 @@ export interface IncomePayload {
   name: string;
   type?: string;
   amount: number;
+  currencyCode?: string | null;
 }
 
 export interface CategoryPayload {
@@ -18,6 +19,7 @@ export interface ExpensePayload {
   isFixed?: boolean;
   isCreditCard?: boolean;
   isAntExpense?: boolean;
+  currencyCode?: string | null;
 }
 
 export type PlanParamKey =

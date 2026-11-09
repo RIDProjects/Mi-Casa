@@ -16,3 +16,6 @@ Branch feat/budget-multicurrency off dev; PRs go to dev (stacked: backend / mobi
 ## Log
 - L1: "ahora mismo con los datos actuales estoy en -47 mil poque ve los cup como usd ademas qeu a la hora de agregar un gasto lo hace en usd obligatorio y deberia dejarme seleccionar la moneda"
 - L2: user chose "Tasa actual al leer (recomendado)" for conversion.
+
+## Delivery
+- Slice boundary after T1 (609 lines on the branch): stacked PRs backend (T1) -> mobile (T2) -> web (T3) so each review stays focused.

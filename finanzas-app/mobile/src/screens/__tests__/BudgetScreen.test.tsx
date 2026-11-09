@@ -116,6 +116,13 @@ describe('BudgetScreen', () => {
     expect(screen.queryByText('US$ 150.00/mes')).toBeNull();
   });
 
+  it('warns when lines were left out because their currency has no rate', async () => {
+    const b = budget();
+    mockGet.mockResolvedValue({ data: [{ ...b, summary: { ...b.summary, missingRates: ['EUR'] } }] });
+    renderBudget();
+    expect(await screen.findByText(/Sin tasa de cambio para EUR/)).toBeTruthy();
+  });
+
   it('converts weekly expenses (factor 12/52) to monthly', async () => {
     mockGet.mockResolvedValue({
       data: [budget({ categories: [{ id: 'c1', name: 'Comida', sortOrder: 0, isDefault: false, expenses: [exp('e1', 60, 'weekly')] }] })],

@@ -5,6 +5,7 @@ import { budgetService, IncomePayload } from '../../services/budget.service';
 import { BudgetIncomeSource } from '../../types';
 import { TextField } from '../../components/ui';
 import ChipSelector from './ChipSelector';
+import CurrencyChips from './CurrencyChips';
 import FormModal from './FormModal';
 import { errorMessage, INCOME_TYPE_OPTIONS, invalidateBudget, parseAmount } from './shared';
 
@@ -13,16 +14,19 @@ interface Props {
   budgetId: string;
   /** Income source being edited; null/undefined creates a new one. */
   income?: BudgetIncomeSource | null;
+  currencies?: { code: string; symbol: string }[];
+  localCurrency?: string | null;
   onClose: () => void;
   onDelete?: () => void;
 }
 
-export default function IncomeFormModal({ visible, budgetId, income, onClose, onDelete }: Props) {
+export default function IncomeFormModal({ visible, budgetId, income, currencies, localCurrency, onClose, onDelete }: Props) {
   const qc = useQueryClient();
   const isEditing = !!income;
   const [name, setName] = useState('');
   const [type, setType] = useState('salary');
   const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState('');
   const [errors, setErrors] = useState<{ name?: string; amount?: string }>({});
 
   useEffect(() => {
@@ -30,9 +34,10 @@ export default function IncomeFormModal({ visible, budgetId, income, onClose, on
       setName(income?.name ?? '');
       setType(income?.type ?? 'salary');
       setAmount(income ? String(income.amount) : '');
+      setCurrency(income?.currencyCode ?? localCurrency ?? '');
       setErrors({});
     }
-  }, [visible, income]);
+  }, [visible, income, localCurrency]);
 
   const mutation = useMutation({
     mutationFn: (payload: IncomePayload) =>
@@ -52,7 +57,7 @@ export default function IncomeFormModal({ visible, budgetId, income, onClose, on
     if (isNaN(value) || value < 0) next.amount = 'Ingresa un monto válido (cero o más).';
     setErrors(next);
     if (next.name || next.amount) return;
-    mutation.mutate({ name: trimmed, type, amount: value });
+    mutation.mutate({ name: trimmed, type, amount: value, ...(currency ? { currencyCode: currency } : {}) });
   };
 
   const busy = mutation.isPending;
@@ -93,6 +98,7 @@ export default function IncomeFormModal({ visible, budgetId, income, onClose, on
         error={errors.amount}
         editable={!busy}
       />
+      <CurrencyChips currencies={currencies} value={currency} onChange={setCurrency} disabled={busy} />
       <ChipSelector label="Tipo de ingreso" options={typeOptions} value={type} onChange={setType} disabled={busy} />
     </FormModal>
   );
