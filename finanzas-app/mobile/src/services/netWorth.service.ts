@@ -12,7 +12,7 @@ export const netWorthService = {
       apiClient.get<any[]>('/loans'),
     ]);
     const liabilities: NetWorthLiability[] = [
-      ...toList<CreditCard>(cardsRes.data).map((c) => ({
+      ...toList<CreditCard>(cardsRes.data).filter((c) => c.tipo !== 'debit').map((c) => ({
         id: c.id,
         nombre: [c.banco, c.nombreTarjeta].filter(Boolean).join(' '),
         monto: Number(c.saldoActual) || 0,

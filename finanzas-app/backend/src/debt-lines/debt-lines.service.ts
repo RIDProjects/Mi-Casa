@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DebtsService } from '../debts/debts.service';
 import { LoansService } from '../loans/loans.service';
 import { CuotasService } from '../cuotas/cuotas.service';
-import { CreditCardsService } from '../credit-cards/credit-cards.service';
+import { CreditCardsService, isCreditCard } from '../credit-cards/credit-cards.service';
 import { DebtType } from '../database/entities/debt.entity';
 import { CardPaymentType } from '../database/entities/credit-card.entity';
 import { computeDebtOffset, OffsetPriority } from '../debts/debt-offset';
@@ -115,7 +115,7 @@ export class DebtLinesService {
       });
     }
 
-    for (const k of cards) {
+    for (const k of cards.filter(isCreditCard)) {
       // A card paid in full each month is regular spending, not debt service.
       if (k.tipoPago === CardPaymentType.FULL) continue;
       const balance = Number(k.saldoActual ?? 0);
