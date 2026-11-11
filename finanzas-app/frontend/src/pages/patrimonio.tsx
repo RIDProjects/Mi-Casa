@@ -65,7 +65,7 @@ export default function PatrimonioPage() {
   );
 
   const totalCardBalances = Array.isArray(cards)
-    ? (cards as any[]).reduce((s, c) => s + Number(c.saldoActual || c.currentBalance || 0), 0)
+    ? (cards as any[]).filter(c => c.tipo !== 'debit').reduce((s, c) => s + Number(c.saldoActual || c.currentBalance || 0), 0)
     : 0;
   const totalLoanDebt = Array.isArray(loans)
     ? (loans as any[]).reduce((s, l) => s + Number(l.deudaActual || l.currentDebt || 0), 0)

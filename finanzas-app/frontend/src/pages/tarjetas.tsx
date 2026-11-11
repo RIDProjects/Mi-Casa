@@ -32,6 +32,7 @@ const ADVISORY: Record<string, { label: string; badge: string }> = {
 };
 
 const defaultForm = {
+  tipo: 'credit',
   banco: '',
   nombreTarjeta: '',
   tasaAnual: '',
@@ -94,6 +95,7 @@ export default function TarjetasPage() {
 
   const handleEdit = (c: any) => {
     setForm({
+      tipo: c.tipo ?? 'credit',
       banco: c.banco,
       nombreTarjeta: c.nombreTarjeta,
       tasaAnual: c.tasaAnual,
@@ -109,12 +111,18 @@ export default function TarjetasPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    editItem ? updateMut.mutate(form) : createMut.mutate(form);
+    // Debit cards are record-only: no limit, rate, dates or payment type.
+    const payload = form.tipo === 'debit'
+      ? { tipo: 'debit', banco: form.banco, nombreTarjeta: form.nombreTarjeta, saldoActual: form.saldoActual }
+      : form;
+    editItem ? updateMut.mutate(payload) : createMut.mutate(payload);
   };
 
   // Summary
-  const totalDeuda = cards.reduce((s: number, c: any) => s + Number(c.saldoActual || 0), 0);
-  const totalLimite = cards.reduce((s: number, c: any) => s + Number(c.lineaCredito || 0), 0);
+  // Debit cards are record-only and never count as debt.
+  const creditCards = cards.filter((c: any) => c.tipo !== 'debit');
+  const totalDeuda = creditCards.reduce((s: number, c: any) => s + Number(c.saldoActual || 0), 0);
+  const totalLimite = creditCards.reduce((s: number, c: any) => s + Number(c.lineaCredito || 0), 0);
   const totalUtilPct = totalLimite > 0 ? (totalDeuda / totalLimite) * 100 : 0;
 
   const summaryColor =
@@ -125,8 +133,8 @@ export default function TarjetasPage() {
   return (
     <Layout>
       <PageHeader
-        title={<><CreditCard size={24} /> Tarjetas de Crédito</>}
-        subtitle="Gestión de tus tarjetas y deuda"
+        title={<><CreditCard size={24} /> Tarjetas</>}
+        subtitle="Tus tarjetas de crédito y débito"
         action={
           <button
             onClick={() => { setForm(defaultForm); setEditItem(null); setShowModal(true); }}
@@ -148,7 +156,7 @@ export default function TarjetasPage() {
       )}
 
       {/* Summary bar */}
-      {!isLoading && !isError && cards.length > 0 && (
+      {!isLoading && !isError && creditCards.length > 0 && (
         <div className="bg-surface-container-lowest rounded-xl border border-outline-variant p-4 mb-6 shadow-sm">
           <div className="flex flex-wrap gap-6 items-center">
             <div>
@@ -204,6 +212,7 @@ export default function TarjetasPage() {
               </thead>
               <tbody className="divide-y divide-outline-variant">
                 {sortedCards.map((c: any) => {
+                  const isDebit = c.tipo === 'debit';
                   const saldo = Number(c.saldoActual || 0);
                   const limite = Number(c.lineaCredito || 0);
                   const util = limite > 0 ? (saldo / limite) * 100 : 0;
@@ -228,23 +237,27 @@ export default function TarjetasPage() {
                       <td className="px-4 py-3">
                         <div className="font-medium text-on-surface flex items-center gap-2">
                           {c.banco}
-                          <Badge variant={utilVariant}>{utilLabel} {util.toFixed(0)}%</Badge>
+                          {isDebit
+                            ? <Badge variant="gray">Débito</Badge>
+                            : <Badge variant={utilVariant}>{utilLabel} {util.toFixed(0)}%</Badge>}
                         </div>
                         <div className="text-xs text-on-surface-variant flex items-center gap-2 mt-0.5">
                           {c.nombreTarjeta}
                           {daysLeft !== null && <Badge variant={urgVariant}>Pago en {daysLeft}d</Badge>}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-danger-ink">{cfmt(saldo)}</td>
-                      <td className="px-4 py-3 text-right text-on-surface-variant">{cfmt(limite)}</td>
+                      <td className={`px-4 py-3 text-right font-semibold ${isDebit ? 'text-on-surface' : 'text-danger-ink'}`}>{cfmt(saldo)}</td>
+                      <td className="px-4 py-3 text-right text-on-surface-variant">{isDebit ? '-' : cfmt(limite)}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${utilizationColor(util)}`}>
-                          {util.toFixed(1)}%
-                        </span>
+                        {isDebit ? <span className="text-outline">-</span> : (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${utilizationColor(util)}`}>
+                            {util.toFixed(1)}%
+                          </span>
+                        )}
                       </td>
-                      <td className="px-4 py-3 text-right text-on-surface-variant">{c.tasaAnual}%</td>
+                      <td className="px-4 py-3 text-right text-on-surface-variant">{isDebit ? '-' : `${c.tasaAnual}%`}</td>
                       <td className="px-4 py-3">
-                        {ADVISORY[c.tipoPago] ? (
+                        {!isDebit && ADVISORY[c.tipoPago] ? (
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${ADVISORY[c.tipoPago].badge}`}
                             title={ADVISORY[c.tipoPago].label}
@@ -276,6 +289,25 @@ export default function TarjetasPage() {
         size="md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label">Tipo de tarjeta</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[{ v: 'credit', l: 'Crédito' }, { v: 'debit', l: 'Débito' }].map(({ v, l }) => (
+                <button
+                  key={v} type="button"
+                  onClick={() => setForm({ ...form, tipo: v })}
+                  className={`py-2 px-3 rounded-lg text-xs font-medium border-2 text-left transition-all ${
+                    form.tipo === v
+                      ? 'border-primary-container bg-primary-container/10 text-info-ink '
+                      : 'border-outline-variant text-on-surface-variant'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label" htmlFor="tarjeta-banco">Banco</label>
@@ -303,7 +335,7 @@ export default function TarjetasPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label" htmlFor="tarjeta-saldo">Saldo actual</label>
+              <label className="label" htmlFor="tarjeta-saldo">{form.tipo === 'debit' ? 'Saldo disponible' : 'Saldo actual'}</label>
               <input
                 id="tarjeta-saldo"
                 type="number"
@@ -316,7 +348,7 @@ export default function TarjetasPage() {
                 required
               />
             </div>
-            <div>
+            {form.tipo !== 'debit' && <div>
               <label className="label" htmlFor="tarjeta-limite">Línea de crédito</label>
               <input
                 id="tarjeta-limite"
@@ -329,9 +361,10 @@ export default function TarjetasPage() {
                 placeholder="0.00"
                 required
               />
-            </div>
+            </div>}
           </div>
 
+          {form.tipo !== 'debit' && <>
           <div>
             <label className="label" htmlFor="tarjeta-tasa">Tasa anual %</label>
             <input
@@ -394,6 +427,7 @@ export default function TarjetasPage() {
               ))}
             </div>
           </div>
+          </>}
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => { setShowModal(false); setEditItem(null); }} className="btn-secondary">
