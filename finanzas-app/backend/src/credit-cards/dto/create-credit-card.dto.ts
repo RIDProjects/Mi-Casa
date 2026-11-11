@@ -1,6 +1,6 @@
 import { IsString, IsNumber, IsOptional, IsEnum, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { CardPaymentType } from '../../database/entities/credit-card.entity';
+import { CardPaymentType, CardType } from '../../database/entities/credit-card.entity';
 
 // Field names already match tarjetas.tsx defaultForm exactly (banco,
 // nombreTarjeta, tasaAnual, saldoActual, lineaCredito, fechaCorte,
@@ -14,6 +14,8 @@ import { CardPaymentType } from '../../database/entities/credit-card.entity';
 const emptyToUndefined = ({ value }: { value: unknown }) => (value === '' ? undefined : value);
 
 export class CreateCreditCardDto {
+  @IsOptional() @Transform(emptyToUndefined) @IsEnum(CardType) tipo?: CardType;
+
   @IsOptional() @IsString() banco?: string;
 
   @IsOptional() @IsString() nombreTarjeta?: string;

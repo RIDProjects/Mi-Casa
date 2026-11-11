@@ -344,11 +344,11 @@ export default function DashboardScreen() {
         </Card>
       </Reveal>
 
-      {creditCards.length > 0 && (
+      {creditCards.some((card) => card.tipo !== 'debit') && (
         <Reveal index={5} style={styles.section}>
           <Text style={styles.sectionTitle}>Tarjetas de crédito</Text>
           <View style={styles.sectionList}>
-            {creditCards.map((card) => {
+            {creditCards.filter((card) => card.tipo !== 'debit').map((card) => {
               const available = card.lineaCredito - card.saldoActual;
               const utilization = card.utilizationPercent ?? (
                 card.lineaCredito > 0

@@ -30,6 +30,21 @@ describe('netWorthService', () => {
     ]);
   });
 
+  it('getOverview leaves debit cards out of the debt', async () => {
+    api.get.mockImplementation(async (url: string) => {
+      if (url === '/credit-cards') {
+        return { data: [
+          { id: 'c1', banco: 'BBVA', nombreTarjeta: 'Visa', saldoActual: '100' },
+          { id: 'd1', banco: 'BBVA', nombreTarjeta: 'Nómina', saldoActual: '900', tipo: 'debit' },
+        ] };
+      }
+      return { data: url === '/loans' ? [] : summary };
+    });
+    const overview = await netWorthService.getOverview();
+    expect(api.get).toHaveBeenCalledWith('/net-worth', { params: { totalCardBalances: 100, totalLoanDebt: 0 } });
+    expect(overview.liabilities).toEqual([{ id: 'c1', nombre: 'BBVA Visa', monto: 100, kind: 'card' }]);
+  });
+
   it('getOverview tolerates non-array cards/loans bodies', async () => {
     api.get.mockImplementation(async (url: string) => ({ data: url === '/net-worth' ? summary : null }));
     const overview = await netWorthService.getOverview();
