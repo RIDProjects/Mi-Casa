@@ -56,7 +56,7 @@ describe('SummaryService.getSummary — household expenses via local snapshot', 
       householdExpensesService,
     );
 
-    return { service, householdExpensesService };
+    return { service, householdExpensesService, creditCardsService };
   }
 
   it('includes householdExpenses.total from sumLocalForMonth, never re-converting at read time', async () => {
@@ -70,6 +70,18 @@ describe('SummaryService.getSummary — household expenses via local snapshot', 
     const currentMonth = new Date().toISOString().slice(0, 7);
     expect(householdExpensesService.sumLocalForMonth).toHaveBeenCalledWith(HOUSE_ID, currentMonth);
     expect(result.householdExpenses).toEqual({ month: currentMonth, total: 4300 });
+  });
+
+  it('leaves debit cards out of the card debt, limit and utilization totals', async () => {
+    const { service, creditCardsService } = buildService(0);
+    creditCardsService.findByHouse.mockResolvedValue([
+      { tipo: 'credit', saldoActual: 300, lineaCredito: 1000 },
+      { tipo: 'debit', saldoActual: 5000, lineaCredito: 0 },
+    ]);
+
+    const result: any = await service.getSummary(HOUSE_ID);
+
+    expect(result.creditCards).toEqual({ totalDebt: 300, totalLimit: 1000, utilizationPct: 30 });
   });
 });
 
@@ -106,6 +118,14 @@ describe('SummaryService.getUpcomingBills — app timezone calendar days', () =>
       ['credit_card', '2026-10-31', 0],
       ['cuota', '2026-10-31', 0],
     ]);
+  });
+
+  it('never lists a debit card as an upcoming bill', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-11-01T02:00:00Z'));
+    const service = build({
+      cards: [{ tipo: 'debit', fechaPago: '31', banco: 'B', nombreTarjeta: 'D', saldoActual: 10 }],
+    });
+    expect(await service.getUpcomingBills('h', 3)).toEqual([]);
   });
 
   it('clamps loan diaPago 31 to the end of February', async () => {

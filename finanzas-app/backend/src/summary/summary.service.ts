@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { BudgetService } from '../budget/budget.service';
 import { DebtsService } from '../debts/debts.service';
-import { CreditCardsService } from '../credit-cards/credit-cards.service';
+import { CreditCardsService, isCreditCard } from '../credit-cards/credit-cards.service';
 import { LoansService } from '../loans/loans.service';
 import { SavingsGoalsService } from '../savings-goals/savings-goals.service';
 import { NetWorthService } from '../net-worth/net-worth.service';
@@ -59,7 +59,7 @@ export class SummaryService {
       bills.push({ type, name, amount, dueDate, daysUntilDue });
     };
 
-    const cards: any[] = await this.creditCardsService.findByHouse(houseId);
+    const cards: any[] = (await this.creditCardsService.findByHouse(houseId)).filter(isCreditCard);
     for (const card of cards) {
       const day = parseInt(card.fechaPago, 10);
       if (!day || isNaN(day)) continue;
@@ -91,7 +91,7 @@ export class SummaryService {
   }
 
   async getSummary(houseId: string) {
-    const [budgets, debtsSummary, cards, loans, goals, funds] = await Promise.all([
+    const [budgets, debtsSummary, allCards, loans, goals, funds] = await Promise.all([
       this.budgetService.findByHouse(houseId, 1),
       this.debtsService.getSummary(houseId),
       this.creditCardsService.findByHouse(houseId),
@@ -100,6 +100,8 @@ export class SummaryService {
       this.emergencyFundService.findAll(houseId),
     ]);
 
+    // Debit cards are record-only: they never count as debt.
+    const cards = allCards.filter(isCreditCard);
     const latestBudget = budgets[0];
     const budgetSummary = (latestBudget as any)?.summary ?? {
       totalMonthlyIncome: 0,
@@ -293,7 +295,7 @@ export class SummaryService {
     };
 
     // 3. Credit card utilization (20 pts)
-    const cards: any[] = await this.creditCardsService.findByHouse(houseId);
+    const cards: any[] = (await this.creditCardsService.findByHouse(houseId)).filter(isCreditCard);
     let cuPts = 0;
     if (cards.length > 0) {
       const totalDebt = cards.reduce((s, c) => s + Number(c.saldoActual ?? 0), 0);
