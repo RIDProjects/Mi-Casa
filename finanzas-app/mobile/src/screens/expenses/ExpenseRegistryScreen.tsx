@@ -101,8 +101,8 @@ const createStyles = (c: ThemeColors) =>
     expenseContent: { flex: 1, gap: 6, paddingLeft: 16 },
     expenseTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     expenseName: { flex: 1, fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14 },
-    expenseAmount: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 14 },
-    expenseBottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    expenseAmount: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 14, flexShrink: 0 },
+    expenseBottom: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
     catBadge: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
     catBadgeText: { fontFamily: fonts.semibold, fontSize: 11 },
     expensePlace: { flexShrink: 1, fontFamily: fonts.regular, color: c.outline, fontSize: 11 },
@@ -111,7 +111,7 @@ const createStyles = (c: ThemeColors) =>
     flex: { flex: 1 },
     section: { gap: 10 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    sectionSubtotal: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13 },
+    sectionSubtotal: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13, flexShrink: 1 },
     budgetCard: { gap: 8 },
     budgetLine: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
     budgetLabel: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8 },
@@ -131,7 +131,8 @@ const createStyles = (c: ThemeColors) =>
     emptyHint: { fontFamily: fonts.regular, color: c.onSurfaceVariant, fontSize: 13, paddingVertical: 4 },
     totalRow: { borderTopWidth: 1, borderTopColor: c.border, paddingTop: 10 },
     totalLabel: { fontFamily: fonts.title, color: c.onSurface, fontSize: 15 },
-    totalValue: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 15 },
+    totalValue: { fontFamily: fonts.title, color: c.dangerInk, fontSize: 15, flexShrink: 1 },
+    skeleton: { gap: 14 },
   });
 
 function CategoryBar({
@@ -202,7 +203,7 @@ function ExpenseRowItem({
           </View>
         </View>
         {item.deletable && (
-          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} accessibilityLabel="Eliminar gasto">
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} hitSlop={8} accessibilityRole="button" accessibilityLabel="Eliminar gasto">
             <Ionicons name="trash-outline" size={16} color={colors.outline} />
           </TouchableOpacity>
         )}
@@ -272,8 +273,9 @@ function OutingsBudgetCard({ outings, currency }: { outings: HouseholdOutings; c
 }
 
 function SkeletonBlocks() {
+  const styles = useThemedStyles(createStyles);
   return (
-    <View testID="expenses-skeleton" style={{ gap: 14 }}>
+    <View testID="expenses-skeleton" style={styles.skeleton}>
       <Skeleton height={72} radius={radius.lg} />
       <Skeleton height={190} radius={radius.lg} />
       <Skeleton height={64} radius={radius.lg} />
@@ -387,7 +389,7 @@ export default function ExpenseRegistryScreen() {
   const monthSelector = (
     <Reveal index={0}>
       <Card padded={false} style={styles.monthSelector}>
-        <TouchableOpacity style={styles.monthArrow} onPress={prevMonth} accessibilityLabel="Mes anterior">
+        <TouchableOpacity style={styles.monthArrow} onPress={prevMonth} accessibilityRole="button" accessibilityLabel="Mes anterior">
           <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.monthCenter}>
@@ -398,6 +400,7 @@ export default function ExpenseRegistryScreen() {
           style={[styles.monthArrow, isCurrentMonth && styles.monthArrowDisabled]}
           onPress={nextMonth}
           disabled={isCurrentMonth}
+          accessibilityRole="button"
           accessibilityLabel="Mes siguiente"
         >
           <Ionicons name="chevron-forward" size={22} color={isCurrentMonth ? colors.outline : colors.onSurface} />
