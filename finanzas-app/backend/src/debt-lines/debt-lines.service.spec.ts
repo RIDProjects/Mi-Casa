@@ -167,6 +167,14 @@ describe('DebtLinesService', () => {
     ]);
   });
 
+  it('never turns a debit card into a debt line', async () => {
+    cards.findByHouse.mockResolvedValue([
+      { id: 'd1', banco: 'Banco', nombreTarjeta: 'Debito', saldoActual: 500, tipo: 'debit', tipoPago: 'minimum' },
+    ]);
+
+    expect(await service.getLines(HOUSE)).toEqual([]);
+  });
+
   it('sums the monthly amount of all lines', async () => {
     loans.findByHouse.mockResolvedValue([{ id: 'l1', tipo: 'A', institucion: 'B', cuotaMensual: 400.5, deudaActual: 1 }]);
     cuotas.getActiveCuotas.mockResolvedValue([

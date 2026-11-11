@@ -8,9 +8,15 @@ export enum CardPaymentType {
   PARTIAL = 'partial',
 }
 
+export enum CardType {
+  CREDIT = 'credit',
+  DEBIT = 'debit',
+}
+
 @Entity('credit_cards')
 export class CreditCard {
   @PrimaryGeneratedColumn('uuid') id: string;
+  @Column({ type: 'enum', enum: CardType, default: CardType.CREDIT }) cardType: CardType;
   @Column() bankName: string;
   @Column() cardName: string;
   @Column('decimal', { precision: 7, scale: 4, default: 0 }) annualRate: number;

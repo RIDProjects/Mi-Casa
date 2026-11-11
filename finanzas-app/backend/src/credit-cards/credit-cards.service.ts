@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreditCard, CardPaymentType } from '../database/entities/credit-card.entity';
+import { CreditCard, CardPaymentType, CardType } from '../database/entities/credit-card.entity';
+
+/** Debit cards are record-only; anything that is not explicitly debit (incl. legacy rows) is credit. */
+export const isCreditCard = (card: { tipo?: string }): boolean => card.tipo !== CardType.DEBIT;
 
 interface CreditCardFrontendDto {
+  tipo?: CardType;
   banco?: string;
   nombreTarjeta?: string;
   tasaAnual?: number;
@@ -35,6 +39,7 @@ export class CreditCardsService {
 
     return {
       id:           card.id,
+      tipo:         card.cardType,
       banco:        card.bankName,
       nombreTarjeta:card.cardName,
       tasaAnual:    card.annualRate,
@@ -52,6 +57,7 @@ export class CreditCardsService {
 
   private fromFrontend(dto: CreditCardFrontendDto): Partial<CreditCard> {
     return {
+      cardType:      dto.tipo,
       bankName:      dto.banco,
       cardName:      dto.nombreTarjeta,
       annualRate:    dto.tasaAnual,
