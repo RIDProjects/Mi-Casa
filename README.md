@@ -1,6 +1,6 @@
 # Mi Casa Pro 🏠
 
-Sistema de gestión financiera del hogar. SaaS web + app móvil (Android/iOS) que reemplaza las planillas Excel de presupuesto, deudas, gastos, metas de ahorro, tarjetas de crédito, créditos y patrimonio.
+Sistema de gestión financiera del hogar. SaaS web + app móvil (Android/iOS) que reemplaza las planillas Excel de presupuesto, deudas, gastos, metas de ahorro, tarjetas de crédito y débito, créditos y patrimonio.
 
 ---
 
@@ -19,7 +19,7 @@ Sistema de gestión financiera del hogar. SaaS web + app móvil (Android/iOS) qu
 - 🔄 **Transacciones** con registro y seguimiento mensual
 - 🎯 **Metas de ahorro** con cálculo de cuota (PMT) y proyección temporal
 - 🤝 **Deudas bidireccionales** (ME DEBEN / LES DEBO) con balance neto
-- 💳 **Tarjetas de crédito**: utilización, límite y estado de pago
+- 💳 **Tarjetas de crédito y débito**: utilización, límite y estado de pago en crédito; las de débito son solo registro (banco, nombre y saldo) y no cuentan como deuda
 - 🏦 **Créditos y préstamos** con tabla de amortización y progreso
 - 📈 **Patrimonio neto** en tiempo real (activos físicos + efectivo − deudas)
 - 🆘 **Fondo de emergencia** con calculadora por categoría de gasto
@@ -63,7 +63,7 @@ Mi Casa Pro
 | Transacciones | `/transacciones` | Registro mensual de movimientos |
 | Metas de Ahorro | `/metas` | Objetivos con cálculo PMT |
 | Deudas | `/debts` | Gestor bidireccional ME DEBEN / LES DEBO |
-| Tarjetas | `/tarjetas` | Crédito, utilización, estado de pago |
+| Tarjetas | `/tarjetas` | Crédito (utilización, estado de pago) y débito (solo registro) |
 | Créditos | `/creditos` | Préstamos con progreso y meses estimados |
 | Patrimonio | `/patrimonio` | Activos físicos/cash − deudas |
 | Fondo Emergencia | `/emergency-fund` | Calculadora con categorías de gasto |
@@ -287,8 +287,10 @@ feasible = false si los pagos no cubren los intereses (sin tiempo total)
 
 **Patrimonio neto**:
 ```
-Neto = (activos físicos + efectivo) − (saldo tarjetas + deuda créditos)
+Neto = (activos físicos + efectivo) − (saldo tarjetas de crédito + deuda créditos)
 ```
+
+Las tarjetas de débito no se restan: no son deuda.
 
 ---
 
