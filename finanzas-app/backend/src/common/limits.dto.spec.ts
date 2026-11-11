@@ -10,6 +10,11 @@ const failed = async (cls: any, body: object) =>
   (await validate(plainToInstance(cls, body))).map((e) => e.property);
 
 describe('numeric column limits', () => {
+  it('accepts a debit card with only bank, name and balance, and rejects an unknown tipo', async () => {
+    expect(await failed(CreateCreditCardDto, { tipo: 'debit', banco: 'B', nombreTarjeta: 'D', saldoActual: 10 })).toHaveLength(0);
+    expect(await failed(CreateCreditCardDto, { tipo: 'prepaid' })).toContain('tipo');
+  });
+
   it('accepts tasaAnual 24 and rejects 150 with a clear message', async () => {
     expect(await failed(CreateCreditCardDto, { tasaAnual: '24' })).toHaveLength(0);
     const [error] = await validate(plainToInstance(CreateCreditCardDto, { tasaAnual: 150 }));

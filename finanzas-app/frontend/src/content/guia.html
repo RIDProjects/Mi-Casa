@@ -564,8 +564,8 @@
     <div class="index-item">
       <div class="index-icon c-purple">💳</div>
       <div class="index-item-text">
-        <div class="index-item-name">Tarjetas de Crédito</div>
-        <div class="index-item-desc">Utilización, límites y estado de pago</div>
+        <div class="index-item-name">Tarjetas</div>
+        <div class="index-item-desc">Crédito y débito: utilización, límites y estado de pago</div>
       </div>
       <div class="index-page-num">08</div>
     </div>
@@ -697,7 +697,7 @@
           <li><strong>Permisos:</strong> los miembros pueden ver, crear, editar y eliminar en todos los módulos; solo los administradores gestionan miembros y monedas.</li>
           <li><strong>Cuenta:</strong> el email no distingue mayúsculas de minúsculas; al cerrar sesión, el siguiente usuario del dispositivo no ve datos del anterior.</li>
           <li><strong>Presupuesto:</strong> el equivalente mensual usa 52 semanas al año para «Semanal» (≈ 4,33 veces al mes) y dos pagos al mes para «Quincenal» (× 2), de modo que los montos enteros se mantienen enteros.</li>
-          <li><strong>Deudas en el Presupuesto:</strong> la categoría «Deudas» suma automáticamente los pagos mensuales de tus préstamos, cuotas activas, deudas que debes (pago mínimo) y tarjetas que no pagas completas (estimado: 5% del saldo). Aparecen con la etiqueta «Automático» y no se editan; tus gastos manuales en esa categoría se conservan, así que elimina los duplicados.</li>
+          <li><strong>Deudas en el Presupuesto:</strong> la categoría «Deudas» suma automáticamente los pagos mensuales de tus préstamos, cuotas activas, deudas que debes (pago mínimo) y tarjetas de crédito que no pagas completas (estimado: 5% del saldo; las de débito no cuentan). Aparecen con la etiqueta «Automático» y no se editan; tus gastos manuales en esa categoría se conservan, así que elimina los duplicados.</li>
           <li><strong>Prioridad de las deudas:</strong> en las deudas que debes eliges una prioridad (alta, media o baja; por defecto media). Lo que te deben se descuenta de tus deudas en ese orden, de la más alta a la más baja y, dentro de una prioridad, de la más antigua a la más nueva. Las cubiertas por completo no pasan al presupuesto; la primera que no se alcanza a cubrir pasa solo con lo que falta, y las siguientes con su saldo completo. En el presupuesto entran como pago mensual de ese saldo pendiente (tu pago mínimo, sin pasar de lo que falta, o el 5% si no lo tienes).</li>
           <li><strong>Inversiones:</strong> la moneda de una inversión puede ser cualquiera de las monedas activas de la casa (configuradas en Monedas); por defecto, la moneda local.</li>
           <li><strong>Sesiones:</strong> el botón «Cerrar sesión en todos los dispositivos» del menú lateral cierra de inmediato todas las sesiones abiertas (web y móvil). Restablecer la contraseña también cierra las demás sesiones.</li>
@@ -1260,8 +1260,8 @@
     <div class="module-badge badge-purple">
       <span>💳</span> Módulo 06
     </div>
-    <h1 class="module-h1 text-purple">Tarjetas de Crédito</h1>
-    <p class="module-tagline">Control de utilización, límites y estado de pago por tarjeta</p>
+    <h1 class="module-h1 text-purple">Tarjetas</h1>
+    <p class="module-tagline">Tarjetas de crédito y débito: utilización, límites y estado de pago</p>
   </div>
 
   <div class="module-body">
@@ -1325,7 +1325,7 @@
             <div class="step-num num-purple">1</div>
             <div class="step-content">
               <div class="step-title">Registra cada tarjeta</div>
-              <div class="step-desc">Nombre del banco, límite total y fecha de corte.</div>
+              <div class="step-desc">Elige el tipo: Crédito o Débito. Crédito pide banco, límite total y fecha de corte. Débito pide solo banco, nombre y saldo disponible.</div>
             </div>
           </div>
           <div class="step">
@@ -1355,7 +1355,15 @@
           <div class="tip-icon">💳</div>
           <div>
             <div class="tip-title text-purple">Impacto en Patrimonio</div>
-            <div class="tip-text" style="color:#5b21b6">Los saldos de tarjetas se suman a los pasivos del módulo Patrimonio Neto automáticamente.</div>
+            <div class="tip-text" style="color:#5b21b6">Los saldos de tarjetas de crédito se suman a los pasivos del módulo Patrimonio Neto automáticamente.</div>
+          </div>
+        </div>
+
+        <div class="tip-box tip-purple" style="margin-top:12px">
+          <div class="tip-icon">🏧</div>
+          <div>
+            <div class="tip-title text-purple">Tarjetas de débito</div>
+            <div class="tip-text" style="color:#5b21b6">Son solo registro: no tienen límite, tasa ni fechas, y nunca cuentan como deuda (ni en el resumen, ni en el presupuesto, ni en Patrimonio Neto). El tipo se elige al crear la tarjeta y no se cambia después.</div>
           </div>
         </div>
 

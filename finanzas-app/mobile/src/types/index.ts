@@ -492,10 +492,15 @@ export interface AppNotification {
 
 export type CardPaymentType = 'full' | 'minimum' | 'stopped' | 'partial';
 
+// Debit cards are record-only (bank, name, balance) and never count as debt.
+// Rows without `tipo` are credit.
+export type CardType = 'credit' | 'debit';
+
 // Backend (credit-cards.service.ts `toFrontend`) returns Spanish field
 // names — this is the actual response contract, not request-body-only.
 export interface CreditCard {
   id: string;
+  tipo?: CardType;
   banco: string;
   nombreTarjeta: string;
   tasaAnual: number;
@@ -513,14 +518,16 @@ export interface CreditCard {
 // Body of POST/PUT /credit-cards (CreateCreditCardDto). fechaCorte/fechaPago
 // are day-of-month strings.
 export interface CreditCardPayload {
+  tipo?: CardType;
   banco: string;
   nombreTarjeta: string;
-  tasaAnual: number;
   saldoActual: number;
-  lineaCredito: number;
+  // Credit-only fields; omitted for debit cards.
+  tasaAnual?: number;
+  lineaCredito?: number;
   fechaCorte?: string;
   fechaPago?: string;
-  tipoPago: CardPaymentType;
+  tipoPago?: CardPaymentType;
 }
 
 // ─── Cuotas ──────────────────────────────────────────────────────────────────

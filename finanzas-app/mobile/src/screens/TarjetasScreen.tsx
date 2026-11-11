@@ -87,6 +87,30 @@ function CardRow({
   const styles = useThemedStyles(createStyles);
   const fmt = useMoney();
   const saldo = Number(item.saldoActual || 0);
+  if (item.tipo === 'debit') {
+    return (
+      <Card padded={false} accent={colors.outline} onPress={() => onEdit(item)}>
+        <View style={styles.cardBody}>
+          <View style={styles.cardTop}>
+            <View style={styles.cardTitles}>
+              <Text style={styles.bank} numberOfLines={2}>{item.banco}</Text>
+              <Text style={styles.cardName} numberOfLines={2}>{item.nombreTarjeta}</Text>
+            </View>
+            <Badge label="Débito" tone="neutral" />
+            <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item)} accessibilityLabel="Eliminar tarjeta">
+              <Ionicons name="trash-outline" size={16} color={colors.outline} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.amountCell}>
+            <Text style={styles.label}>Saldo disponible</Text>
+            <Text style={[styles.amount, { color: colors.onSurface }]} numberOfLines={1} adjustsFontSizeToFit>
+              {fmt(saldo)}
+            </Text>
+          </View>
+        </View>
+      </Card>
+    );
+  }
   const limite = Number(item.lineaCredito || 0);
   const util = limite > 0 ? (saldo / limite) * 100 : 0;
   const tone = cardTone(util);
@@ -171,8 +195,9 @@ export default function TarjetasScreen() {
   const cards = data ?? [];
 
   const { totalDeuda, totalLimite, totalUtil } = useMemo(() => {
-    const debt = cards.reduce((sum, c) => sum + Number(c.saldoActual || 0), 0);
-    const limit = cards.reduce((sum, c) => sum + Number(c.lineaCredito || 0), 0);
+    const credit = cards.filter((c) => c.tipo !== 'debit');
+    const debt = credit.reduce((sum, c) => sum + Number(c.saldoActual || 0), 0);
+    const limit = credit.reduce((sum, c) => sum + Number(c.lineaCredito || 0), 0);
     return { totalDeuda: debt, totalLimite: limit, totalUtil: limit > 0 ? (debt / limit) * 100 : 0 };
   }, [cards]);
 
@@ -219,7 +244,7 @@ export default function TarjetasScreen() {
   const utilInk = globalTone(totalUtil) === 'ok' ? colors.okInk : globalTone(totalUtil) === 'warn' ? colors.warnInk : colors.dangerInk;
 
   const ListHeader =
-    cards.length > 0 ? (
+    cards.some((c) => c.tipo !== 'debit') ? (
       <View style={styles.header}>
         <Reveal index={0}>
           <Card style={styles.summaryCard}>
