@@ -9,9 +9,9 @@ Branch: feat/debit-cards (from main). Flow: PR to dev.
 - S4: Same Tarjetas screen: Crédito/Débito selector in the form; list shows both; debt totals only over credit cards.
 
 ## Tasks
-- T1 (S1-S3) backend: entity `tipo` + migration, DTO, service, summary/debt-lines filters, tests — inline — commit: pending
-- T2 (S1,S2,S4) web: tarjetas.tsx + patrimonio.tsx — inline — commit: pending
-- T3 (S1,S2,S4) mobile: types, form, TarjetasScreen, DashboardScreen, netWorth.service + tests — inline — commit: pending
+- [x] T1 (S1-S3) backend: entity `cardType` + migration, DTO `tipo`, service, summary/debt-lines filters, tests — inline — commit: 80e62aa
+- [x] T2 (S1,S2,S4) web: tarjetas.tsx + patrimonio.tsx — inline — commit: 2309df0
+- [x] T3 (S1,S2,S4) mobile: types, form, TarjetasScreen, DashboardScreen, netWorth.service + tests — inline — commit: this slice
 
 ## Log
 - L1: "vamos al lio me di cuenta que el sistema te deja agregar solo tarjetas de credito y las de debito no"
