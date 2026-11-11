@@ -76,8 +76,10 @@ const createStyles = (c: ThemeColors) =>
     itemContent: { flex: 1, gap: 6, paddingLeft: 16 },
     itemTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     itemName: { flex: 1, fontFamily: fonts.semibold, color: c.onSurface, fontSize: 14 },
+    itemAmountCol: { alignItems: 'flex-end', flexShrink: 0, gap: 2 },
     itemAmount: { fontFamily: fonts.title, fontSize: 14 },
     itemBottom: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    itemOriginal: { fontFamily: fonts.regular, color: c.outline, fontSize: 11 },
     itemMeta: { flexShrink: 1, fontFamily: fonts.regular, color: c.outline, fontSize: 11 },
     itemDate: { fontFamily: fonts.regular, color: c.outline, fontSize: 11, marginLeft: 'auto' },
     deleteBtn: { padding: 12 },
@@ -108,12 +110,14 @@ function TransactionRow({
         <View style={styles.itemContent}>
           <View style={styles.itemTop}>
             <Text style={styles.itemName} numberOfLines={2}>{item.concepto}</Text>
-            <Text style={[styles.itemAmount, { color: ink }]}>
-              {isIncome ? '+' : '-'}{fmt(Number(item.monto))}
-            </Text>
-            {!!item.moneda && item.montoOriginal != null && (
-              <Text style={styles.itemMeta}>{formatMoney(Number(item.montoOriginal), item.moneda)}</Text>
-            )}
+            <View style={styles.itemAmountCol}>
+              <Text style={[styles.itemAmount, { color: ink }]}>
+                {isIncome ? '+' : '-'}{fmt(Number(item.monto))}
+              </Text>
+              {!!item.moneda && item.montoOriginal != null && (
+                <Text style={styles.itemOriginal}>{formatMoney(Number(item.montoOriginal), item.moneda)}</Text>
+              )}
+            </View>
           </View>
           <View style={styles.itemBottom}>
             <Badge label={labelOf(TIPO_OPTIONS, item.tipo)} tone={isIncome ? 'ok' : 'danger'} />
@@ -121,7 +125,7 @@ function TransactionRow({
             <Text style={styles.itemDate}>{formatDay(item.fecha)}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item)} accessibilityLabel="Eliminar movimiento">
+        <TouchableOpacity style={styles.deleteBtn} onPress={() => onDelete(item)} hitSlop={8} accessibilityRole="button" accessibilityLabel="Eliminar movimiento">
           <Ionicons name="trash-outline" size={16} color={colors.outline} />
         </TouchableOpacity>
       </View>
@@ -204,14 +208,14 @@ export default function MovimientosScreen() {
   const monthSelector = (
     <Reveal index={0}>
       <Card padded={false} style={styles.monthSelector}>
-        <TouchableOpacity style={styles.monthArrow} onPress={prevMonth} accessibilityLabel="Mes anterior">
+        <TouchableOpacity style={styles.monthArrow} onPress={prevMonth} accessibilityRole="button" accessibilityLabel="Mes anterior">
           <Ionicons name="chevron-back" size={22} color={colors.onSurface} />
         </TouchableOpacity>
         <View style={styles.monthCenter}>
           <Text style={styles.monthName}>{MONTH_NAMES[month - 1]}</Text>
           <Text style={styles.monthYear}>{year}</Text>
         </View>
-        <TouchableOpacity style={styles.monthArrow} onPress={nextMonth} accessibilityLabel="Mes siguiente">
+        <TouchableOpacity style={styles.monthArrow} onPress={nextMonth} accessibilityRole="button" accessibilityLabel="Mes siguiente">
           <Ionicons name="chevron-forward" size={22} color={colors.onSurface} />
         </TouchableOpacity>
       </Card>
