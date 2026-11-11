@@ -37,15 +37,22 @@ const createStyles = (c: ThemeColors) =>
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
       paddingHorizontal: 14,
-      paddingVertical: 9,
+      minHeight: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
       borderRadius: radius.md,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: c.border,
       backgroundColor: c.surfaceContainer,
     },
-    chipText: { fontFamily: fonts.semibold, color: c.onSurfaceVariant, fontSize: 13 },
+    chipActive: { borderColor: c.brand, backgroundColor: c.panel },
+    chipText: { fontFamily: fonts.medium, color: c.onSurfaceVariant, fontSize: 13 },
+    chipTextActive: { color: c.onSurface, fontFamily: fonts.semibold },
     warning: { fontFamily: fonts.medium, fontSize: 13, color: c.warnInk, backgroundColor: c.warnTint, borderRadius: radius.md, padding: 10 },
     actions: { flexDirection: 'row', gap: 12 },
+    content: { padding: 16 },
+    cancel: { flex: 1 },
+    save: { flex: 2 },
   });
 
 export default function AddHouseholdExpenseScreen() {
@@ -187,11 +194,12 @@ export default function AddHouseholdExpenseScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Screen edges={['bottom']} underTabBar={false} contentStyle={{ padding: 20 }}>
+      <Screen edges={['bottom']} underTabBar={false} contentStyle={styles.content}>
         <Reveal index={0}>
           <Card style={styles.form}>
             <TextField
               label="Descripción"
+              accessibilityLabel="Descripción"
               icon="document-text-outline"
               value={descripcion}
               onChangeText={setDescripcion}
@@ -202,6 +210,7 @@ export default function AddHouseholdExpenseScreen() {
 
             <TextField
               label="Monto"
+              accessibilityLabel="Monto"
               icon="cash-outline"
               value={monto}
               onChangeText={setMonto}
@@ -219,11 +228,13 @@ export default function AddHouseholdExpenseScreen() {
                   return (
                     <TouchableOpacity
                       key={code}
-                      style={[styles.chip, active && { backgroundColor: colors.infoTint, borderColor: colors.brand }]}
+                      style={[styles.chip, active && styles.chipActive]}
                       onPress={() => setMoneda(code)}
                       disabled={isPending}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
                     >
-                      <Text style={[styles.chipText, active && { color: colors.primary }]}>{code}</Text>
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{code}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -232,6 +243,7 @@ export default function AddHouseholdExpenseScreen() {
 
             <TextField
               label="Lugar (opcional)"
+              accessibilityLabel="Lugar (opcional)"
               icon="location-outline"
               value={lugar}
               onChangeText={setLugar}
@@ -250,8 +262,11 @@ export default function AddHouseholdExpenseScreen() {
                       key={c}
                       style={[styles.chip, active && { backgroundColor: color + '26', borderColor: color }]}
                       onPress={() => setCategoria(c)}
+                      disabled={isPending}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
                     >
-                      <Text style={[styles.chipText, active && { color: colors.onSurface }]}>{c}</Text>
+                      <Text style={[styles.chipText, active && styles.chipTextActive]}>{c}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -272,7 +287,7 @@ export default function AddHouseholdExpenseScreen() {
             variant="secondary"
             onPress={() => navigation.goBack()}
             disabled={isPending}
-            style={{ flex: 1 }}
+            style={styles.cancel}
           />
           <Button
             label={isEditing ? 'Guardar cambios' : 'Registrar gasto'}
@@ -280,7 +295,7 @@ export default function AddHouseholdExpenseScreen() {
             onPress={handleSubmit}
             loading={isPending}
             disabled={isDisabled}
-            style={{ flex: 2 }}
+            style={styles.save}
           />
         </Reveal>
       </Screen>
