@@ -97,6 +97,21 @@ describe('TarjetaFormScreen', () => {
     expect(svc.create.mock.calls[0][0].fechaPago).toBeUndefined();
   });
 
+  it('registers a debit card with only bank, name and balance', async () => {
+    svc.create.mockResolvedValue({} as any);
+    renderScreen();
+    fireEvent.press(screen.getByText('Débito'));
+    expect(screen.queryByLabelText('Línea de crédito')).toBeNull();
+    expect(screen.queryByLabelText('Tasa anual %')).toBeNull();
+    expect(screen.queryByLabelText('Fecha de pago (día)')).toBeNull();
+    fireEvent.changeText(screen.getByLabelText('Banco'), 'BBVA');
+    fireEvent.changeText(screen.getByLabelText('Nombre de la tarjeta'), 'Nómina');
+    fireEvent.changeText(screen.getByLabelText('Saldo disponible'), '90,5');
+    fireEvent.press(screen.getByText('Registrar tarjeta'));
+    await waitFor(() => expect(svc.create).toHaveBeenCalled());
+    expect(svc.create).toHaveBeenCalledWith({ tipo: 'debit', banco: 'BBVA', nombreTarjeta: 'Nómina', saldoActual: 90.5 });
+  });
+
   it('shows validation messages and makes no API call', () => {
     renderScreen();
     fireEvent.press(screen.getByText('Registrar tarjeta'));

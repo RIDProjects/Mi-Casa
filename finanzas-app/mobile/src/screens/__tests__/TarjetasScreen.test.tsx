@@ -97,6 +97,19 @@ describe('TarjetasScreen', () => {
     expect(screen.getByText('Dejaste de pagar')).toBeTruthy();
   });
 
+  it('lists a debit card with its available balance and keeps it out of the debt totals', async () => {
+    const debit = { id: 'd1', banco: 'Banco Nómina', nombreTarjeta: 'Débito Sueldo', tipo: 'debit', saldoActual: 5000 };
+    svc.getAll.mockResolvedValue([visa, debit] as any);
+    renderScreen();
+    expect(await screen.findByText('Banco Nómina')).toBeTruthy();
+    expect(screen.getByText('Débito')).toBeTruthy();
+    expect(screen.getByText('Saldo disponible')).toBeTruthy();
+    expect(screen.getByText('US$ 5,000.00')).toBeTruthy();
+    // debt total / limit total only cover the credit card (200 of 1000)
+    expect(screen.getByText('20.0%')).toBeTruthy();
+    expect(screen.getAllByText('US$ 200.00').length).toBeGreaterThan(0);
+  });
+
   it('navigates to the form to create and to edit', async () => {
     svc.getAll.mockResolvedValue([visa] as any);
     renderScreen();

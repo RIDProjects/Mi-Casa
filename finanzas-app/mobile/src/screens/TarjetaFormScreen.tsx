@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platfor
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { creditCardsService } from '../services/creditCards.service';
-import { CardPaymentType, CreditCardPayload } from '../types';
+import { CardPaymentType, CardType, CreditCardPayload } from '../types';
 import { RootStackParamList } from '../navigation/types';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { fonts, radius } from '../theme/tokens';
@@ -76,6 +76,9 @@ export default function TarjetaFormScreen() {
   const existing = route.params?.card;
   const isEditing = !!existing;
 
+  // The card type is chosen when registering and fixed afterwards.
+  const [tipo, setTipo] = useState<CardType>(existing?.tipo ?? 'credit');
+  const isDebit = tipo === 'debit';
   const [banco, setBanco] = useState(existing?.banco ?? '');
   const [nombreTarjeta, setNombreTarjeta] = useState(existing?.nombreTarjeta ?? '');
   const [saldoActual, setSaldoActual] = useState(existing ? String(Number(existing.saldoActual)) : '');
@@ -111,13 +114,20 @@ export default function TarjetaFormScreen() {
     if (!banco.trim()) next.banco = 'Ingresa el banco.';
     if (!nombreTarjeta.trim()) next.nombreTarjeta = 'Ingresa el nombre de la tarjeta.';
     if (isNaN(saldo) || saldo < 0) next.saldoActual = 'El saldo actual no puede ser negativo.';
-    if (isNaN(limite) || limite <= 0) next.lineaCredito = 'La línea de crédito debe ser mayor a cero.';
-    if (isNaN(tasa) || tasa < 0 || tasa > 100) next.tasaAnual = 'La tasa anual debe estar entre 0 y 100 (%)';
-    if (isInvalidDay(fechaCorte)) next.fechaCorte = DAY_ERROR;
-    if (isInvalidDay(fechaPago)) next.fechaPago = DAY_ERROR;
+    if (!isDebit) {
+      if (isNaN(limite) || limite <= 0) next.lineaCredito = 'La línea de crédito debe ser mayor a cero.';
+      if (isNaN(tasa) || tasa < 0 || tasa > 100) next.tasaAnual = 'La tasa anual debe estar entre 0 y 100 (%)';
+      if (isInvalidDay(fechaCorte)) next.fechaCorte = DAY_ERROR;
+      if (isInvalidDay(fechaPago)) next.fechaPago = DAY_ERROR;
+    }
 
     setErrors(next);
     if (Object.keys(next).length > 0) return;
+
+    if (isDebit) {
+      saveMut.mutate({ tipo: 'debit', banco: banco.trim(), nombreTarjeta: nombreTarjeta.trim(), saldoActual: saldo });
+      return;
+    }
 
     const payload: CreditCardPayload = {
       banco: banco.trim(),
@@ -137,6 +147,29 @@ export default function TarjetaFormScreen() {
       <Screen edges={['bottom']}>
         <Reveal index={0}>
           <Card style={styles.form}>
+            {!isEditing && (
+              <View>
+                <Text style={styles.label}>Tipo de tarjeta</Text>
+                <View style={styles.chipRow}>
+                  {([['credit', 'Crédito'], ['debit', 'Débito']] as const).map(([value, label]) => {
+                    const active = tipo === value;
+                    return (
+                      <TouchableOpacity
+                        key={value}
+                        style={[styles.chip, active && styles.chipActive]}
+                        onPress={() => setTipo(value)}
+                        disabled={isPending}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                      >
+                        <Text style={[styles.chipText, active && styles.chipTextActive]}>{label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
             <TextField
               label="Banco"
               accessibilityLabel="Banco"
@@ -164,8 +197,8 @@ export default function TarjetaFormScreen() {
             <View style={styles.row}>
               <View style={styles.col}>
                 <TextField
-                  label="Saldo actual"
-                  accessibilityLabel="Saldo actual"
+                  label={isDebit ? 'Saldo disponible' : 'Saldo actual'}
+                  accessibilityLabel={isDebit ? 'Saldo disponible' : 'Saldo actual'}
                   value={saldoActual}
                   onChangeText={setSaldoActual}
                   placeholder="0.00"
@@ -174,7 +207,7 @@ export default function TarjetaFormScreen() {
                   editable={!isPending}
                 />
               </View>
-              <View style={styles.col}>
+              {!isDebit && <View style={styles.col}>
                 <TextField
                   label="Línea de crédito"
                   accessibilityLabel="Línea de crédito"
@@ -185,9 +218,10 @@ export default function TarjetaFormScreen() {
                   error={errors.lineaCredito}
                   editable={!isPending}
                 />
-              </View>
+              </View>}
             </View>
 
+            {!isDebit && <>
             <TextField
               label="Tasa anual %"
               accessibilityLabel="Tasa anual %"
@@ -249,6 +283,7 @@ export default function TarjetaFormScreen() {
                 })}
               </View>
             </View>
+            </>}
 
             <View style={styles.actions}>
               <Button
